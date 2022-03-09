@@ -14,6 +14,7 @@
   },
   "plugins": ["@typescript-eslint"],
   "rules": {
+    "import/no-anonymous-default-export": [2, {"allowArrowFunction": true}],
     "semi": [2, "always"],
     "@typescript-eslint/explicit-member-accessibility": ["error", {
       "accessibility": "explicit", "overrides": {"properties": "off"}

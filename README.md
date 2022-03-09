@@ -1,9 +1,12 @@
 Setup
 npx create-react-app my-app --template typescript
 
-(https://github.com/typescript-eslint/typescript-eslint/blob/master/docs/getting-started/linting/README.md)
+(Check which eslint, typescript etc. version is required for typescript-eslint: https://github.com/typescript-eslint/typescript-eslint)
+eslint: npm i -D eslint@XXXXX
+
 (https://eslint.org/blog/2019/01/future-typescript-eslint)
-eslint: npm i -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin
+eslint: npm i -D @typescript-eslint/parser
+eslint: npm i -D @typescript-eslint/eslint-plugin
 
 (https://github.com/iamturns/eslint-config-airbnb-typescript)
 eslint: npm i -D eslint-config-airbnb-typescript

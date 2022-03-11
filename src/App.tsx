@@ -7,11 +7,9 @@ import {
 } from 'react-router-dom';
 import TopNav from './components/top-nav/top-nav';
 import './App.css';
-import Footer from './components/footer/footer';
 import {
   HeaderContainer,
   ContentContainer,
-  FooterContainer,
   App,
 } from './App-Items';
 import Lineage from './pages/lineage/lineage';
@@ -29,9 +27,6 @@ export default (): ReactElement => (
             <Route path="/" element={<Navigate to="/lineage"/>}/>
           </Routes>
         </ContentContainer>
-        <FooterContainer>
-          <Footer />
-        </FooterContainer>
       </Router>
     </App>
   </div>

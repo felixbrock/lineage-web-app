@@ -1,7 +1,31 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 
-import G6, { Graph, GraphData, INode } from '@antv/g6';
+import G6, { Graph, GraphData, IEdge, INode } from '@antv/g6';
 import { Lineage } from './lineage-items';
+
+const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
+  const edges: IEdge[] = [];
+
+  if (isUpstream) {
+    node.getInEdges().forEach((edge) => {
+      const source = edge.getSource();
+
+      if (source) edges.push(...getDependentEdges(source, true));
+
+      edges.push(edge);
+    });
+  } else {
+    node.getOutEdges().forEach((edge) => {
+      const target = edge.getTarget();
+
+      if (target) edges.push(...getDependentEdges(target, false));
+
+      edges.push(edge);
+    });
+  }
+
+  return edges;
+};
 
 export default (): ReactElement => {
   const data: GraphData = {
@@ -28,6 +52,25 @@ export default (): ReactElement => {
       { id: '19', label: '19', comboId: 'f' },
       { id: '20', label: '20', comboId: 'f' },
       { id: '21', label: '21', comboId: 'f' },
+      { id: '22', label: '22', comboId: 'g' },
+      { id: '23', label: '23', comboId: 'g' },
+      { id: '24', label: '24', comboId: 'g' },
+      { id: '25', label: '25', comboId: 'g' },
+      { id: '26', label: '26', comboId: 'g' },
+      { id: '27', label: '27', comboId: 'g' },
+      { id: '28', label: '28', comboId: 'g' },
+      { id: '29', label: '29', comboId: 'g' },
+      { id: '30', label: '30', comboId: 'h' },
+      { id: '31', label: '31', comboId: 'h' },
+      { id: '32', label: '32', comboId: 'h' },
+      { id: '33', label: '33', comboId: 'h' },
+      { id: '34', label: '34', comboId: 'h' },
+      { id: '35', label: '35', comboId: 'i' },
+      { id: '36', label: '36', comboId: 'i' },
+      { id: '37', label: '37', comboId: 'i' },
+      { id: '38', label: '38', comboId: 'i' },
+      { id: '39', label: '39', comboId: 'i' },
+      { id: '40', label: '40', comboId: 'i' },
     ],
     edges: [
       {
@@ -94,6 +137,62 @@ export default (): ReactElement => {
         source: '8',
         target: '20',
       },
+      {
+        source: '10',
+        target: '23',
+      },
+      {
+        source: '11',
+        target: '26',
+      },
+      {
+        source: '13',
+        target: '24',
+      },
+      {
+        source: '14',
+        target: '24',
+      },
+      {
+        source: '16',
+        target: '29',
+      },
+      {
+        source: '17',
+        target: '34',
+      },
+      {
+        source: '20',
+        target: '27',
+      },
+      {
+        source: '21',
+        target: '30',
+      },
+      {
+        source: '22',
+        target: '35',
+      },
+      {
+        source: '24',
+        target: '36',
+      },
+      {
+        source: '27',
+        target: '40',
+      },
+      {
+        source: '28',
+        target: '39',
+      },
+      {
+        source: '30',
+        target: '39',
+      },
+      {
+        source: '33',
+        target: '37',
+      },
     ],
     combos: [
       {
@@ -120,6 +219,18 @@ export default (): ReactElement => {
         id: 'f',
         label: 'f',
       },
+      {
+        id: 'g',
+        label: 'g',
+      },
+      {
+        id: 'h',
+        label: 'h',
+      },
+      {
+        id: 'i',
+        label: 'i',
+      },
     ],
   };
 
@@ -128,10 +239,12 @@ export default (): ReactElement => {
   useEffect(() => {
     if (graph) return;
 
+    const hivediveBlue = '#2c25ff';
+
     const container = document.getElementById('lineage');
     if (!container) throw new ReferenceError(`Container for graph not found`);
     const width = container.getBoundingClientRect().width;
-    const height = container.getBoundingClientRect().height || 500;
+    const height = container.getBoundingClientRect().height || 800;
 
     const graphObj = new G6.Graph({
       container,
@@ -156,15 +269,16 @@ export default (): ReactElement => {
         type: 'rect',
         style: {
           lineWidth: 1,
-          stroke: '#5B8FF9',
-          fill: '#C6E5FF',
+          stroke: '#ababab',
+          fill: '#fafaff',
+          radius: 5,
         },
       },
       nodeStateStyles: {
         selected: {
-          stroke: '#666',
-          lineWidth: 2,
-          fill: 'steelblue',
+          stroke: hivediveBlue,
+          lineWidth: 1,
+          shadowBlur: 5,
         },
       },
       defaultEdge: {
@@ -176,15 +290,16 @@ export default (): ReactElement => {
             path: 'M 0,0 L 8,4 L 8,-4 Z',
             fill: '#ffffff',
           },
-          radius: 50,
+          lineWidth: 1,
+          radius: 20,
         },
       },
       edgeStateStyles: {
-        selected: {
-          style: {
-            stroke: '#eb4034',
-          }
-        }
+        nodeSelected: {
+          stroke: hivediveBlue,
+          shadowColor: hivediveBlue,
+          shadowBlur: 2,
+        },
       },
       defaultCombo: {
         type: 'rect',
@@ -205,26 +320,22 @@ export default (): ReactElement => {
     graphObj.on('node:click', (event) => {
       if (!event.item)
         throw new ReferenceError('Clicked node could not be referenced');
-      console.log(event.item.getID());
-      console.log(event);
 
       const isNode = (object: any): object is INode => 'getEdges' in object;
 
       if (!isNode(event.item))
         throw new ReferenceError('Node does not have getEdges member');
 
-      const selectedEdges = graphObj.findAllByState('edge', 'selected');
-      selectedEdges.forEach(edge => edge.clearStates());
+      const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
+      selectedEdges.forEach((edge) => edge.clearStates());
 
-      console.log(selectedEdges);
-      
-      event.item.getEdges().forEach((edge) => {
-       graphObj.setItemState(edge.getID(), 'selected', true); 
+      getDependentEdges(event.item, true).forEach((edge) => {
+        graphObj.setItemState(edge.getID(), 'nodeSelected', true);
       });
-    });
 
-    graphObj.on('nodeselectchange', (event) => {
-      if(!event.select) console.log(event);
+      getDependentEdges(event.item, false).forEach((edge) => {
+        graphObj.setItemState(edge.getID(), 'nodeSelected', true);
+      });
     });
 
     graphObj.data(data);

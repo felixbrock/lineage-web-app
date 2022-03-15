@@ -1,118 +1,40 @@
-import { FaBars } from 'react-icons/fa';
-import { NavLink as Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { FaSearch } from 'react-icons/fa';
 
-export const Nav = styled.nav`
-  background: #000;
+export const SearchBar = styled.div`
+  max-width: 31.25rem;
   display: flex;
-  justify-content: space-between;
-  padding: 0.5rem calc((100vw - 1000px) / 2);
-  z-index: 10;
-
-  /* Third Nav */
-  /* justify-content: flex-start; */
-`;
-
-export const NavLink = styled(Link)`
-  color: #fff;
-  display: flex;
+  flex-direction: row;
   align-items: center;
-  text-decoration: none;
-  padding: 0 1rem;
-  height: 100%;
-  cursor: pointer;
-  margin-top: 15px;
-  margin-bottom: 15px;
-
-  &.active {
-    color: #2c25ff;
-  }
 `;
 
-export const Bars = styled(FaBars)`
-  display: none;
-  color: #fff;
+export const Input = styled.input`
+  width: 100%;
+  height: 2.8rem;
+  background: #f5f5f5;
+  outline: none;
+  border: none;
+  border-radius: 1.625rem;
+  padding: 0 3.5rem 0 1.5rem;
+  font-size: 1rem;
+`;
 
-  @media screen and (max-width: 768px) {
-    display: block;
-    position: absolute;
-    top: 0;
-    right: 0;
-    transform: translate(-100%, 75%);
-    font-size: 1.8rem;
+export const Submit = styled.button`
+  width: 3.5rem;
+  height: 2.8rem;
+  margin-left: -3.5rem;
+  background: none;
+  border: none;
+  outline: none;
+
+  &:hover {
     cursor: pointer;
   }
 `;
 
-export const NavMenu = styled.div`
-  display: flex;
-  align-items: center;
-  margin-right: -24px;
-
-  /* Second Nav */
-  /* margin-right: 24px; */
-
-  /* Third Nav */
-  /* width: 100vw;
-  white-space: nowrap; */
-
-  @media screen and (max-width: 768px) {
-    display: none;
-  }
-`;
-
-export const NavBtn = styled.button`
-  display: flex;
-  align-items: center;
-  margin-right: 24px;
-  margin-top: 15px;
-  margin-bottom: 15px;
-
-  /* Third Nav */
-  /* justify-content: flex-end;
-  width: 100vw; */
-
-  border-radius: 4px;
-  background: #2c25ff;
-  padding: 10px 22px;
-  color: #fff;
-  outline: none;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  text-decoration: none;
-
-  /* Second Nav */
-  margin-left: 24px;
-
-  &:hover {
-    transition: all 0.2s ease-in-out;
-    background: #fff;
-    color: #010606;
-  }
-
-  @media screen and (max-width: 768px) {
-    display: none;
-  }
-`;
-
-export const NavBtnLink = styled(Link)`
-  border-radius: 4px;
-  background: #2c25ff;
-  padding: 10px 22px;
-  color: #fff;
-  outline: none;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  text-decoration: none;
-
-  /* Second Nav */
-  margin-left: 24px;
-
-  &:hover {
-    transition: all 0.2s ease-in-out;
-    background: #fff;
-    color: #010606;
-  }
+export const IconSearch = styled(FaSearch)`
+  width: 24px;
+  height: 24px;
+  viewbox: 0 0 24 24;
+  fill: #666666;
 `;

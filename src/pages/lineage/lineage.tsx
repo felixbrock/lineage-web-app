@@ -16,19 +16,19 @@ import './lineage-items.css';
 
 const data: GraphData = {
   nodes: [
-    { id: '0', label: 'salesOrderID', comboId: 'a' },
-    { id: '1', label: 'countryOfSales', comboId: 'a' },
-    { id: '2', label: 'productCategory', comboId: 'a' },
-    { id: '3', label: 'orderId', comboId: 'b' },
-    { id: '4', label: 'orderedPieces', comboId: 'b' },
+    { id: '0', label: 'sales_order_id', comboId: 'a' },
+    { id: '1', label: 'country_of_sales', comboId: 'a' },
+    { id: '2', label: 'product_category', comboId: 'a' },
+    { id: '3', label: 'order_id', comboId: 'b' },
+    { id: '4', label: 'ordered_pieces', comboId: 'b' },
     { id: '5', label: 'label', comboId: 'b' },
-    { id: '6', label: 'countryOfSales', comboId: 'b' },
+    { id: '6', label: 'country_of_sales', comboId: 'b' },
     { id: '7', label: 'region', comboId: 'c' },
     { id: '8', label: 'type', comboId: 'c' },
     { id: '9', label: 'name', comboId: 'c' },
     { id: '10', label: 'label', comboId: 'd' },
     { id: '11', label: 'id', comboId: 'd' },
-    { id: '12', label: 'storageLocation', comboId: 'd' },
+    { id: '12', label: 'storage_location', comboId: 'd' },
     { id: '13', label: 'distributor', comboId: 'd' },
     { id: '14', label: 'en_country', comboId: 'e' },
     { id: '15', label: 'region', comboId: 'e' },
@@ -38,7 +38,7 @@ const data: GraphData = {
     { id: '19', label: 'role', comboId: 'f' },
     { id: '20', label: 'type', comboId: 'f' },
     { id: '21', label: 'name', comboId: 'f' },
-    { id: '22', label: 'storageLocation', comboId: 'g' },
+    { id: '22', label: 'storage_location', comboId: 'g' },
     { id: '23', label: 'label', comboId: 'g' },
     { id: '24', label: 'distributor', comboId: 'g' },
     { id: '25', label: 'region', comboId: 'g' },
@@ -49,12 +49,12 @@ const data: GraphData = {
     { id: '30', label: 'name', comboId: 'h' },
     { id: '31', label: 'type', comboId: 'h' },
     { id: '32', label: 'type', comboId: 'h' },
-    { id: '33', label: 'isActive', comboId: 'h' },
+    { id: '33', label: 'is_active', comboId: 'h' },
     { id: '34', label: 'region', comboId: 'h' },
-    { id: '35', label: 'storageLocation', comboId: 'i' },
+    { id: '35', label: 'storage_location', comboId: 'i' },
     { id: '36', label: 'distributor', comboId: 'i' },
     { id: '37', label: 'status', comboId: 'i' },
-    { id: '38', label: 'amountOrders', comboId: 'i' },
+    { id: '38', label: 'amount_orders', comboId: 'i' },
     { id: '39', label: 'responsibility', comboId: 'i' },
     { id: '40', label: 'model', comboId: 'i' },
   ],
@@ -223,7 +223,7 @@ const data: GraphData = {
     },
     {
       id: 'i',
-      label: 'report_sales_by_region',
+      label: 'report_regional_sales',
     },
   ],
 };
@@ -252,48 +252,82 @@ const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
   return edges;
 };
 
-const searchData = [
-  {
-    id: 1,
-    text: 'Devpulse',
-  },
-  {
-    id: 2,
-    text: 'Linklinks',
-  },
-  {
-    id: 3,
-    text: 'Centizu',
-  },
-  {
-    id: 4,
-    text: 'Dynabox',
-  },
-  {
-    id: 5,
-    text: 'Avaveo',
-  },
-  {
-    id: 6,
-    text: 'Demivee',
-  },
-  {
-    id: 7,
-    text: 'Jayo',
-  },
-  {
-    id: 8,
-    text: 'Blognation',
-  },
-  {
-    id: 9,
-    text: 'Podcat',
-  },
-  {
-    id: 10,
-    text: 'Layo',
-  },
-];
+declare type Index = {
+  id: string;
+  label: string;
+  type: string;
+  comboId?: string;
+};
+
+const searchData = () => {
+  const searchIndex: Index[] = [];
+
+  if (data.nodes)
+    data.nodes.forEach((node) => {
+      if (!node.label) throw new ReferenceError('Node without label found');
+      if (!node.type) throw new ReferenceError('Node without type found');
+      searchIndex.push({
+        id: node.id,
+        label: typeof node.label === 'string' ? node.label : '',
+        type: 'node',
+        comboId: node.comboId,
+      });
+    });
+
+  if (data.combos)
+    data.combos.forEach((combo) => {
+      if (!combo.label) throw new ReferenceError('Combo without label found');
+      if (!combo.type) throw new ReferenceError('Combo without type found');
+      searchIndex.push({
+        id: combo.id,
+        label: typeof combo.label === 'string' ? combo.label : '',
+        type: 'combo',
+      });
+    });
+
+  return searchIndex;
+};
+//   {
+//     id: 1,
+//     text: 'Devpulse',
+//   },
+//   {
+//     id: 2,
+//     text: 'Linklinks',
+//   },
+//   {
+//     id: 3,
+//     text: 'Centizu',
+//   },
+//   {
+//     id: 4,
+//     text: 'Dynabox',
+//   },
+//   {
+//     id: 5,
+//     text: 'Avaveo',
+//   },
+//   {
+//     id: 6,
+//     text: 'Demivee',
+//   },
+//   {
+//     id: 7,
+//     text: 'Jayo',
+//   },
+//   {
+//     id: 8,
+//     text: 'Blognation',
+//   },
+//   {
+//     id: 9,
+//     text: 'Podcat',
+//   },
+//   {
+//     id: 10,
+//     text: 'Layo',
+//   },
+// ];
 
 const editDistance = (s1: string, s2: string) => {
   const lowerS1 = s1.toLowerCase();
@@ -423,21 +457,43 @@ export default (): ReactElement => {
       return;
     }
 
-    const searchMatches = searchData.filter((element) =>
-      element.text.toLowerCase().startsWith(inputText)
+    let index: Index[] = [];
+    let combo = '';
+    let node = '';
+    if (inputText.includes('.')) {
+      const input = inputText.split('.');
+      combo = input[0];
+      node = input[1];
+
+      const comboIndex = searchData().find(
+        (element) => element.type === 'combo' && element.label === combo
+      );
+      if (!comboIndex) throw new ReferenceError('Typed combo not found');
+
+      index = searchData().filter(
+        (element) =>
+          element.type === 'node' && element.comboId === comboIndex.id
+      );
+    } else {
+      index = searchData().filter((element) => element.type === 'combo');
+      combo = inputText;
+    }
+
+    const searchMatches = index.filter((element) =>
+      element.label.toLowerCase().startsWith(node ? node : combo)
     );
 
     const closestMatch = { text: '', similarity: 0 };
 
     searchMatches.forEach((element) => {
-      const similarityResult = similarity(element.text, inputText);
+      const similarityResult = similarity(element.label, inputText);
       if (similarityResult > closestMatch.similarity) {
-        closestMatch.text = element.text.toLowerCase();
+        closestMatch.text = element.label.toLowerCase();
         closestMatch.similarity = similarityResult;
       }
     });
 
-    setSuggestion(closestMatch.text);
+    setSuggestion(node ? combo + '.' + closestMatch.text : closestMatch.text);
   }, [inputText]);
 
   useEffect(() => {

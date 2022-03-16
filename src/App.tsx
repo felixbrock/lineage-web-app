@@ -5,10 +5,8 @@ import {
   BrowserRouter as Router,
   Navigate,
 } from 'react-router-dom';
-import TopNav from './components/top-nav/top-nav';
 import './App.css';
 import {
-  HeaderContainer,
   ContentContainer,
   App,
 } from './App-Items';
@@ -18,9 +16,6 @@ export default (): ReactElement => (
   <div className="App">
     <App>
       <Router>
-        <HeaderContainer>
-          <TopNav />
-        </HeaderContainer>
         <ContentContainer>
           <Routes>
             <Route path="/lineage" element={<Lineage/>} />

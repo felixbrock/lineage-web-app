@@ -1,14 +1,17 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-
-import G6, {
-  ComboConfig,
-  Graph,
-  GraphData,
-  ICombo,
-  IEdge,
-  INode,
-} from '@antv/g6';
-import { Lineage } from './lineage-items';
+import Logo from '../../components/top-nav/hivedive180.svg';
+import G6, { Graph, GraphData, ICombo, IEdge, INode } from '@antv/g6';
+import {
+  HivediveLogo,
+  IconSearch,
+  Input,
+  InputSuggestion,
+  InputWrapper,
+  Lineage,
+  NavBar,
+  SearchBar,
+  Submit,
+} from './lineage-items';
 
 const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
   const edges: IEdge[] = [];
@@ -32,6 +35,90 @@ const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
   }
 
   return edges;
+};
+
+const searchData = [
+  {
+    id: 1,
+    text: 'Devpulse',
+  },
+  {
+    id: 2,
+    text: 'Linklinks',
+  },
+  {
+    id: 3,
+    text: 'Centizu',
+  },
+  {
+    id: 4,
+    text: 'Dynabox',
+  },
+  {
+    id: 5,
+    text: 'Avaveo',
+  },
+  {
+    id: 6,
+    text: 'Demivee',
+  },
+  {
+    id: 7,
+    text: 'Jayo',
+  },
+  {
+    id: 8,
+    text: 'Blognation',
+  },
+  {
+    id: 9,
+    text: 'Podcat',
+  },
+  {
+    id: 10,
+    text: 'Layo',
+  },
+];
+
+const editDistance = (s1: string, s2: string) => {
+  const lowerS1 = s1.toLowerCase();
+  const lowerS2 = s2.toLowerCase();
+
+  const costs = [];
+  for (let i = 0; i <= lowerS1.length; i++) {
+    let lastValue = i;
+    for (let j = 0; j <= lowerS2.length; j++) {
+      if (i == 0) costs[j] = j;
+      else {
+        if (j > 0) {
+          let newValue = costs[j - 1];
+          if (lowerS1.charAt(i - 1) != lowerS2.charAt(j - 1))
+            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+          costs[j - 1] = lastValue;
+          lastValue = newValue;
+        }
+      }
+    }
+    if (i > 0) costs[s2.length] = lastValue;
+  }
+  return costs[s2.length];
+};
+
+const similarity = (s1: string, s2: string) => {
+  let longer = s1;
+  let shorter = s2;
+  if (s1.length < s2.length) {
+    longer = s2;
+    shorter = s1;
+  }
+  const longerLength = longer.length;
+  if (longerLength === 0) {
+    return 1.0;
+  }
+  return (
+    (longerLength - editDistance(longer, shorter)) /
+    parseFloat(longerLength.toString())
+  );
 };
 
 export default (): ReactElement => {
@@ -242,162 +329,207 @@ export default (): ReactElement => {
   };
 
   const [graph, setGraph] = useState<Graph>();
+  const [inputText, setInputText] = useState('');
+  const [suggestion, setSuggestion] = useState('');
+
+  const handleSearch = () => {
+    console.log(inputText);
+  };
+
+  const handleInput = (event: any) => {
+    //convert input text to lower case
+    const lowerCase = event.target.value.toLowerCase();
+    setInputText(lowerCase);
+  };
+
+  const handleKeyDown = (event: any) => {
+    if (event.keyCode === 39) {
+      setInputText(suggestion);
+    } else if (event.keyCode === 9) {
+      event.preventDefault();
+    }
+  };
+
+  useEffect(() => {
+    if (!inputText) {
+      setSuggestion('');
+      return;
+    }
+
+    const searchMatches = searchData.filter((element) =>
+      element.text.toLowerCase().startsWith(inputText)
+    );
+
+    const closestMatch = { text: '', similarity: 0 };
+
+    searchMatches.forEach((element) => {
+      const similarityResult = similarity(element.text, inputText);
+      if (similarityResult > closestMatch.similarity) {
+        closestMatch.text = element.text.toLowerCase();
+        closestMatch.similarity = similarityResult;
+      }
+    });
+
+    setSuggestion(closestMatch.text);
+  }, [inputText]);
 
   useEffect(() => {
     if (graph) return;
 
-    const collapseIcon = (x: number, y: number, r: number) => {
-      return [
-        ['M', x - r, y],
-        ['a', r, r, 0, 1, 0, r * 2, 0],
-        ['a', r, r, 0, 1, 0, -r * 2, 0],
-        ['M', x - r + 4, y],
-        ['L', x - r + 2 * r - 4, y],
-      ];
-    };
-    const expandIcon = (x: number, y: number, r: number) => {
-      return [
-        ['M', x - r, y],
-        ['a', r, r, 0, 1, 0, r * 2, 0],
-        ['a', r, r, 0, 1, 0, -r * 2, 0],
-        ['M', x - r + 4, y],
-        ['L', x - r + 2 * r - 4, y],
-        ['M', x - r + r, y - r + 4],
-        ['L', x, y + r - 4],
-      ];
-    };
+    // const collapseIcon = (x: number, y: number, r: number) => {
+    //   return [
+    //     ['M', x - r, y],
+    //     ['a', r, r, 0, 1, 0, r * 2, 0],
+    //     ['a', r, r, 0, 1, 0, -r * 2, 0],
+    //     ['M', x - r + 4, y],
+    //     ['L', x - r + 2 * r - 4, y],
+    //   ];
+    // };
+    // const expandIcon = (x: number, y: number, r: number) => {
+    //   return [
+    //     ['M', x - r, y],
+    //     ['a', r, r, 0, 1, 0, r * 2, 0],
+    //     ['a', r, r, 0, 1, 0, -r * 2, 0],
+    //     ['M', x - r + 4, y],
+    //     ['L', x - r + 2 * r - 4, y],
+    //     ['M', x - r + r, y - r + 4],
+    //     ['L', x, y + r - 4],
+    //   ];
+    // };
 
-    G6.registerCombo(
-      'cRect',
-      {
-        drawShape: function drawShape(cfg, group) {
-          if (!cfg) throw new ReferenceError('Combo config not available');
-          if (!group) throw new ReferenceError('Combo group not available');
+    // G6.registerCombo(
+    //   'cRect',
+    //   {
+    //     drawShape: function drawShape(cfg, group) {
+    //       if (!cfg) throw new ReferenceError('Combo config not available');
+    //       if (!group) throw new ReferenceError('Combo group not available');
 
-          const isComboConfig = (object: any): object is ComboConfig =>
-            'padding' in object;
+    //       const isComboConfig = (object: any): object is ComboConfig =>
+    //         'padding' in object;
 
-          if (!isComboConfig(cfg))
-            throw new ReferenceError('Config is not of type combo config');
+    //       if (!isComboConfig(cfg))
+    //         throw new ReferenceError('Config is not of type combo config');
 
-          cfg.padding = cfg.padding || [50, 20, 20, 20];
-          // Get the shape's style, where the style.width and style.height correspond to the width and height in the figure of Illustration of Built-in Rect Combo
-          const style = this.getShapeStyle(cfg);
-          // Add a rect shape as the keyShape which is the same as the extended rect Combo
-          if (!cfg.padding)
-            throw new RangeError('Config padding cannot be null');
+    //       cfg.padding = cfg.padding || [50, 20, 20, 20];
+    //       // Get the shape's style, where the style.width and style.height correspond to the width and height in the figure of Illustration of Built-in Rect Combo
+    //       const style = this.getShapeStyle(cfg);
+    //       // Add a rect shape as the keyShape which is the same as the extended rect Combo
+    //       if (!cfg.padding)
+    //         throw new RangeError('Config padding cannot be null');
 
-          const xRectFormula = (paddingRight: number, paddingLeft: number) =>
-            -style.width / 2 - (paddingRight - paddingLeft) / 2;
+    //       const xRectFormula = (paddingRight: number, paddingLeft: number) =>
+    //         -style.width / 2 - (paddingRight - paddingLeft) / 2;
 
-          const xRect =
-            cfg.padding instanceof Array
-              ? xRectFormula(cfg.padding[3], cfg.padding[1])
-              : xRectFormula(cfg.padding, cfg.padding);
+    //       const xRect =
+    //         cfg.padding instanceof Array
+    //           ? xRectFormula(cfg.padding[3], cfg.padding[1])
+    //           : xRectFormula(cfg.padding, cfg.padding);
 
-          const yRectFormula = (paddingTop: number, paddingBottom: number) =>
-            -style.height / 2 - (paddingTop - paddingBottom) / 2;
-          const yRect =
-            cfg.padding instanceof Array
-              ? yRectFormula(cfg.padding[0], cfg.padding[2])
-              : yRectFormula(cfg.padding, cfg.padding);
+    //       const yRectFormula = (paddingTop: number, paddingBottom: number) =>
+    //         -style.height / 2 - (paddingTop - paddingBottom) / 2;
+    //       const yRect =
+    //         cfg.padding instanceof Array
+    //           ? yRectFormula(cfg.padding[0], cfg.padding[2])
+    //           : yRectFormula(cfg.padding, cfg.padding);
 
-          const rect = group.addShape('rect', {
-            attrs: {
-              ...style,
-              x: xRect,
-              y: yRect,
-              width: style.width,
-              height: style.height,
-            },
-            // draggable: true,
-            name: 'combo-keyShape',
-          });
+    //       const rect = group.addShape('rect', {
+    //         attrs: {
+    //           ...style,
+    //           x: xRect,
+    //           y: yRect,
+    //           width: style.width,
+    //           height: style.height,
+    //         },
+    //         // draggable: true,
+    //         name: 'combo-keyShape',
+    //       });
 
-          const xMarkerFormula = (paddingLeft: number) =>
-            style.width / 2 + paddingLeft;
-          const xMarker =
-            cfg.padding instanceof Array
-              ? xMarkerFormula(cfg.padding[1])
-              : xMarkerFormula(cfg.padding);
+    //       const xMarkerFormula = (paddingLeft: number) =>
+    //         style.width / 2 + paddingLeft;
+    //       const xMarker =
+    //         cfg.padding instanceof Array
+    //           ? xMarkerFormula(cfg.padding[1])
+    //           : xMarkerFormula(cfg.padding);
 
-          const yMarkerFormula = (paddingBottom: number, paddingTop: number) =>
-            (paddingBottom - paddingTop) / 2;
-          const yMarker =
-            cfg.padding instanceof Array
-              ? yMarkerFormula(cfg.padding[2], cfg.padding[0])
-              : yMarkerFormula(cfg.padding, cfg.padding);
+    //       const yMarkerFormula = (paddingBottom: number, paddingTop: number) =>
+    //         (paddingBottom - paddingTop) / 2;
+    //       const yMarker =
+    //         cfg.padding instanceof Array
+    //           ? yMarkerFormula(cfg.padding[2], cfg.padding[0])
+    //           : yMarkerFormula(cfg.padding, cfg.padding);
 
-          // Add the circle on the right
-          group.addShape('marker', {
-            attrs: {
-              ...style,
-              fill: '#fff',
-              opacity: 1,
-              // cfg.style.width and cfg.style.heigth correspond to the innerWidth and innerHeight in the figure of Illustration of Built-in Rect Combo
-              x: xMarker,
-              y: yMarker,
-              r: 10,
-              symbol: collapseIcon,
-            },
-            draggable: true,
-            name: 'combo-marker-shape',
-          });
-          return rect;
-        },
-        // Define the updating logic of the right circle
-        afterUpdate: function afterUpdate(cfg, combo) {
-          if (!cfg) throw new ReferenceError('Combo config not found');
+    //       // Add the circle on the right
+    //       group.addShape('marker', {
+    //         attrs: {
+    //           ...style,
+    //           fill: '#fff',
+    //           opacity: 1,
+    //           // cfg.style.width and cfg.style.heigth correspond to the innerWidth and innerHeight in the figure of Illustration of Built-in Rect Combo
+    //           x: xMarker,
+    //           y: yMarker,
+    //           r: 10,
+    //           symbol: collapseIcon,
+    //         },
+    //         draggable: true,
+    //         name: 'combo-marker-shape',
+    //       });
+    //       return rect;
+    //     },
+    //     // Define the updating logic of the right circle
+    //     afterUpdate: function afterUpdate(cfg, combo) {
+    //       if (!cfg) throw new ReferenceError('Combo config not found');
 
-          if (!cfg.padding)
-            throw new RangeError('Config padding cannot be null');
+    //       if (!cfg.padding)
+    //         throw new RangeError('Config padding cannot be null');
 
-          if (!combo) throw new ReferenceError('Combo not found');
+    //       if (!combo) throw new ReferenceError('Combo not found');
 
-          const isComboConfig = (object: any): object is ComboConfig =>
-            'padding' in object;
+    //       const isComboConfig = (object: any): object is ComboConfig =>
+    //         'padding' in object;
 
-          if (!isComboConfig(cfg))
-            throw new ReferenceError('Config is not of type combo config');
+    //       if (!isComboConfig(cfg))
+    //         throw new ReferenceError('Config is not of type combo config');
 
-          const style = this.getShapeStyle(cfg);
+    //       const style = this.getShapeStyle(cfg);
 
-          const xMarkerFormula = (paddingLeft: number) =>
-            style.width / 2 + paddingLeft;
-          const xMarker =
-            cfg.padding instanceof Array
-              ? xMarkerFormula(cfg.padding[1])
-              : xMarkerFormula(cfg.padding);
+    //       const xMarkerFormula = (paddingLeft: number) =>
+    //         style.width / 2 + paddingLeft;
+    //       const xMarker =
+    //         cfg.padding instanceof Array
+    //           ? xMarkerFormula(cfg.padding[1])
+    //           : xMarkerFormula(cfg.padding);
 
-          const yMarkerFormula = (paddingBottom: number, paddingTop: number) =>
-            (paddingBottom - paddingTop) / 2;
-          const yMarker =
-            cfg.padding instanceof Array
-              ? yMarkerFormula(cfg.padding[2], cfg.padding[0])
-              : yMarkerFormula(cfg.padding, cfg.padding);
+    //       const yMarkerFormula = (paddingBottom: number, paddingTop: number) =>
+    //         (paddingBottom - paddingTop) / 2;
+    //       const yMarker =
+    //         cfg.padding instanceof Array
+    //           ? yMarkerFormula(cfg.padding[2], cfg.padding[0])
+    //           : yMarkerFormula(cfg.padding, cfg.padding);
 
-          const group = combo.get('group');
-          // Find the circle shape in the graphics group of the Combo by name
-          const marker = group.find(
-            (element: any) => element.get('name') === 'combo-marker-shape'
-          );
-          // Update the position of the right circle
-          marker.attr({
-            // cfg.style.width and cfg.style.heigth correspond to the innerWidth and innerHeight in the figure of Illustration of Built-in Rect Combo
-            x: xMarker,
-            y: yMarker,
-            // The property 'collapsed' in the combo data represents the collapsing state of the Combo
-            // Update the symbol according to 'collapsed'
-            symbol: cfg.collapsed ? expandIcon : collapseIcon,
-          });
-        },
-      },
-      'rect'
-    );
+    //       const group = combo.get('group');
+    //       // Find the circle shape in the graphics group of the Combo by name
+    //       const marker = group.find(
+    //         (element: any) => element.get('name') === 'combo-marker-shape'
+    //       );
+    //       // Update the position of the right circle
+    //       marker.attr({
+    //         // cfg.style.width and cfg.style.heigth correspond to the innerWidth and innerHeight in the figure of Illustration of Built-in Rect Combo
+    //         x: xMarker,
+    //         y: yMarker,
+    //         // The property 'collapsed' in the combo data represents the collapsing state of the Combo
+    //         // Update the symbol according to 'collapsed'
+    //         symbol: cfg.collapsed ? expandIcon : collapseIcon,
+    //       });
+    //     },
+    //   },
+    //   'rect'
+    // );
 
     const hivediveBlue = '#2c25ff';
 
     const container = document.getElementById('lineage');
+    console.log(container);
+
     if (!container) throw new ReferenceError(`Container for graph not found`);
     const width = container.getBoundingClientRect().width;
     const height = container.getBoundingClientRect().height || 800;
@@ -411,15 +543,7 @@ export default (): ReactElement => {
       animate: true,
       groupByTypes: false,
       modes: {
-        default: [
-          'drag-canvas',
-          'zoom-canvas',
-          'click-select',
-          {
-            type: 'collapse-expand-combo',
-            relayout: false,
-          },
-        ],
+        default: ['drag-canvas', 'zoom-canvas', 'click-select'],
       },
       layout: {
         type: 'dagre',
@@ -465,12 +589,12 @@ export default (): ReactElement => {
         },
       },
       defaultCombo: {
-        type: 'cRect',
-        // type: 'rect',
-        // style: {
-        //   height: 100,
-        //   width: 100,
-        // },
+        // type: 'cRect',
+        type: 'rect',
+        style: {
+          height: 100,
+          width: 100,
+        },
       },
       comboStateStyles: {
         selected: {
@@ -522,6 +646,9 @@ export default (): ReactElement => {
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         selectedEdges.forEach((edge) => edge.clearStates());
 
+        // todo - attempt to fix edge highlighting bug when selected collapsed combo
+        if (event.target.get('model').collapsed) graphObj.refreshPositions();
+
         event.target.getNodes().forEach((node) => {
           getDependentEdges(node, true).forEach((edge) => {
             graphObj.setItemState(edge.getID(), 'nodeSelected', true);
@@ -534,24 +661,35 @@ export default (): ReactElement => {
       }
     });
 
-    // collapse/expand when click the marker
-    graphObj.on('combo:click', (event) => {
-      if (event.target.get('name') === 'combo-marker-shape') {
-        // graph.collapseExpandCombo(e.item.getModel().id);
-        const isCombo = (object: any): object is ICombo => 'getNodes' in object;
+    // // collapse/expand when click the marker
+    // graphObj.on('combo:click', (event) => {
+    //   if (event.target.get('name') === 'combo-marker-shape') {
+    //     // graph.collapseExpandCombo(e.item.getModel().id);
+    //     const isCombo = (object: any): object is ICombo => 'getNodes' in object;
 
-        if (!isCombo(event.item))
-          throw new ReferenceError('Event item is no combo');
+    //     if (!isCombo(event.item))
+    //       throw new ReferenceError('Event item is no combo');
 
-        graphObj.collapseExpandCombo(event.item);
-        if (graphObj.get('layout')) graphObj.layout();
-        else graphObj.refreshPositions();
-      }
-    });
+    //     graphObj.collapseExpandCombo(event.item);
+    //     if (graphObj.get('layout')) graphObj.layout();
+    //     else graphObj.refreshPositions();
+    //   }
+    // });
 
     graphObj.data(data);
     graphObj.render();
 
+    const node = graphObj.findById('0');
+
+    graphObj.setItemState(node, 'selected', true);
+
+    // Trigger the node click event
+    graphObj.emit('nodeselectchange', {
+      select: true,
+      target: node, // the 'clicked' shape on the node. It uses the keyShape of the node here, you could assign any shapes in the graphics group (node.getContainer()) of the node
+    });
+
+    // todo: collapse combos by default
     // graphObj.getCombos().forEach(combo => graphObj.collapseCombo(combo.getID()));
     // graphObj.render();
 
@@ -560,5 +698,35 @@ export default (): ReactElement => {
     setGraph(graphObj);
   }, []);
 
-  return <Lineage id="lineage" />;
+  return (
+    <Lineage>
+      <NavBar>
+      <HivediveLogo src={Logo} alt="logo" />
+      <SearchBar>
+        <InputWrapper>
+          <Input
+            id="search-bar-1"
+            name="search-bar"
+            type="text"
+            placeholder="e.g. Search for 'f/2' or 'x/5'"
+            value={inputText}
+            onChange={handleInput}
+            onKeyDown={handleKeyDown}
+          />
+          <InputSuggestion
+            id="search-bar-2"
+            name="search-bar"
+            type="text"
+            value={suggestion}
+            onChange={() => {}}
+          />
+        </InputWrapper>
+        <Submit type="submit" onClick={handleSearch}>
+          <IconSearch />
+        </Submit>
+      </SearchBar>
+    </NavBar>
+      <div id="lineage" />
+    </Lineage>
+  );
 };

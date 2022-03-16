@@ -12,50 +12,51 @@ import {
   SearchBar,
   Submit,
 } from './lineage-items';
+import './lineage-items.css';
 
 const data: GraphData = {
   nodes: [
-    { id: '0', label: '0', comboId: 'a' },
-    { id: '1', label: '1', comboId: 'a' },
-    { id: '2', label: '2', comboId: 'a' },
-    { id: '3', label: '3', comboId: 'b' },
-    { id: '4', label: '4', comboId: 'b' },
-    { id: '5', label: '5', comboId: 'b' },
-    { id: '6', label: '6', comboId: 'b' },
-    { id: '7', label: '7', comboId: 'c' },
-    { id: '8', label: '8', comboId: 'c' },
-    { id: '9', label: '9', comboId: 'c' },
-    { id: '10', label: '10', comboId: 'd' },
-    { id: '11', label: '11', comboId: 'd' },
-    { id: '12', label: '12', comboId: 'd' },
-    { id: '13', label: '13', comboId: 'd' },
-    { id: '14', label: '14', comboId: 'e' },
-    { id: '15', label: '15', comboId: 'e' },
-    { id: '16', label: '16', comboId: 'e' },
-    { id: '17', label: '17', comboId: 'f' },
-    { id: '18', label: '18', comboId: 'f' },
-    { id: '19', label: '19', comboId: 'f' },
-    { id: '20', label: '20', comboId: 'f' },
-    { id: '21', label: '21', comboId: 'f' },
-    { id: '22', label: '22', comboId: 'g' },
-    { id: '23', label: '23', comboId: 'g' },
-    { id: '24', label: '24', comboId: 'g' },
-    { id: '25', label: '25', comboId: 'g' },
-    { id: '26', label: '26', comboId: 'g' },
-    { id: '27', label: '27', comboId: 'g' },
-    { id: '28', label: '28', comboId: 'g' },
-    { id: '29', label: '29', comboId: 'g' },
-    { id: '30', label: '30', comboId: 'h' },
-    { id: '31', label: '31', comboId: 'h' },
-    { id: '32', label: '32', comboId: 'h' },
-    { id: '33', label: '33', comboId: 'h' },
-    { id: '34', label: '34', comboId: 'h' },
-    { id: '35', label: '35', comboId: 'i' },
-    { id: '36', label: '36', comboId: 'i' },
-    { id: '37', label: '37', comboId: 'i' },
-    { id: '38', label: '38', comboId: 'i' },
-    { id: '39', label: '39', comboId: 'i' },
-    { id: '40', label: '40', comboId: 'i' },
+    { id: '0', label: 'salesOrderID', comboId: 'a' },
+    { id: '1', label: 'countryOfSales', comboId: 'a' },
+    { id: '2', label: 'productCategory', comboId: 'a' },
+    { id: '3', label: 'orderId', comboId: 'b' },
+    { id: '4', label: 'orderedPieces', comboId: 'b' },
+    { id: '5', label: 'label', comboId: 'b' },
+    { id: '6', label: 'countryOfSales', comboId: 'b' },
+    { id: '7', label: 'region', comboId: 'c' },
+    { id: '8', label: 'type', comboId: 'c' },
+    { id: '9', label: 'name', comboId: 'c' },
+    { id: '10', label: 'label', comboId: 'd' },
+    { id: '11', label: 'id', comboId: 'd' },
+    { id: '12', label: 'storageLocation', comboId: 'd' },
+    { id: '13', label: 'distributor', comboId: 'd' },
+    { id: '14', label: 'en_country', comboId: 'e' },
+    { id: '15', label: 'region', comboId: 'e' },
+    { id: '16', label: 'de_country', comboId: 'e' },
+    { id: '17', label: 'region', comboId: 'f' },
+    { id: '18', label: 'department', comboId: 'f' },
+    { id: '19', label: 'role', comboId: 'f' },
+    { id: '20', label: 'type', comboId: 'f' },
+    { id: '21', label: 'name', comboId: 'f' },
+    { id: '22', label: 'storageLocation', comboId: 'g' },
+    { id: '23', label: 'label', comboId: 'g' },
+    { id: '24', label: 'distributor', comboId: 'g' },
+    { id: '25', label: 'region', comboId: 'g' },
+    { id: '26', label: 'id', comboId: 'g' },
+    { id: '27', label: 'model', comboId: 'g' },
+    { id: '28', label: 'amount', comboId: 'g' },
+    { id: '29', label: 'department', comboId: 'g' },
+    { id: '30', label: 'name', comboId: 'h' },
+    { id: '31', label: 'type', comboId: 'h' },
+    { id: '32', label: 'type', comboId: 'h' },
+    { id: '33', label: 'isActive', comboId: 'h' },
+    { id: '34', label: 'region', comboId: 'h' },
+    { id: '35', label: 'storageLocation', comboId: 'i' },
+    { id: '36', label: 'distributor', comboId: 'i' },
+    { id: '37', label: 'status', comboId: 'i' },
+    { id: '38', label: 'amountOrders', comboId: 'i' },
+    { id: '39', label: 'responsibility', comboId: 'i' },
+    { id: '40', label: 'model', comboId: 'i' },
   ],
   edges: [
     {
@@ -67,14 +68,6 @@ const data: GraphData = {
       target: '4',
     },
     {
-      source: '0',
-      target: '7',
-    },
-    {
-      source: '1',
-      target: '5',
-    },
-    {
       source: '1',
       target: '6',
     },
@@ -83,24 +76,16 @@ const data: GraphData = {
       target: '5',
     },
     {
-      source: '2',
-      target: '8',
-    },
-    {
-      source: '2',
-      target: '9',
-    },
-    {
-      source: '3',
-      target: '21',
-    },
-    {
       source: '3',
       target: '11',
     },
     {
       source: '3',
       target: '12',
+    },
+    {
+      source: '4',
+      target: '28',
     },
     {
       source: '5',
@@ -123,12 +108,24 @@ const data: GraphData = {
       target: '20',
     },
     {
+      source: '8',
+      target: '32',
+    },
+    {
+      source: '9',
+      target: '21',
+    },
+    {
       source: '10',
       target: '23',
     },
     {
       source: '11',
       target: '26',
+    },
+    {
+      source: '12',
+      target: '22',
     },
     {
       source: '13',
@@ -139,7 +136,11 @@ const data: GraphData = {
       target: '24',
     },
     {
-      source: '16',
+      source: '15',
+      target: '25',
+    },
+    {
+      source: '18',
       target: '29',
     },
     {
@@ -148,7 +149,7 @@ const data: GraphData = {
     },
     {
       source: '20',
-      target: '27',
+      target: '31',
     },
     {
       source: '21',
@@ -167,7 +168,15 @@ const data: GraphData = {
       target: '40',
     },
     {
+      source: '27',
+      target: '37',
+    },
+    {
       source: '28',
+      target: '38',
+    },
+    {
+      source: '29',
       target: '39',
     },
     {
@@ -182,39 +191,39 @@ const data: GraphData = {
   combos: [
     {
       id: 'a',
-      label: 'a',
+      label: 'source_salesforce',
     },
     {
       id: 'b',
-      label: 'b',
+      label: 'dim_sales',
     },
     {
       id: 'c',
-      label: 'c',
+      label: 'source_HR',
     },
     {
       id: 'd',
-      label: 'd',
+      label: 'dim_sales_9x5k',
     },
     {
       id: 'e',
-      label: 'e',
+      label: 'dim_region',
     },
     {
       id: 'f',
-      label: 'f',
+      label: 'dim_employee',
     },
     {
       id: 'g',
-      label: 'g',
+      label: 'fact_sales',
     },
     {
       id: 'h',
-      label: 'h',
+      label: 'dim_employee_sales',
     },
     {
       id: 'i',
-      label: 'i',
+      label: 'report_sales_by_region',
     },
   ],
 };
@@ -331,20 +340,47 @@ export default (): ReactElement => {
   const [graph, setGraph] = useState<Graph>();
   const [inputText, setInputText] = useState('');
   const [suggestion, setSuggestion] = useState('');
+  const [info, setInfo] = useState('');
 
   const handleSearch = () => {
     if (!graph || !inputText) return;
-
     const selectedNodes = graph.findAllByState('node', 'selected');
     selectedNodes.forEach((node) => node.clearStates());
 
-    const node = graph.findById(inputText);
-    graph.setItemState(node, 'selected', true);
+    const inputContent = inputText.includes('.')
+      ? inputText.split('.')
+      : [inputText];
+
+    if (!data.combos) throw new ReferenceError('No combos found');
+    const comboConfig = data.combos.find(
+      (combo) => combo.label === inputContent[0]
+    );
+    if (!comboConfig) {
+      setInfo('Queried table not found');
+      return;
+    }
+
+    let id = comboConfig.id;
+
+    if (inputContent.length > 1) {
+      if (!data.nodes) throw new ReferenceError('No nodes found');
+      const nodeConfig = data.nodes.find(
+        (node) => node.label === inputContent[1] && node.comboId === id
+      );
+      if (!nodeConfig) {
+        setInfo('Queried node not found');
+        return;
+      }
+      id = nodeConfig.id;
+    }
+
+    const target = graph.findById(id);
+    graph.setItemState(target, 'selected', true);
 
     // Trigger the node click event
     graph.emit('nodeselectchange', {
       select: true,
-      target: node, // the 'clicked' shape on the node. It uses the keyShape of the node here, you could assign any shapes in the graphics group (node.getContainer()) of the node
+      target, // the 'clicked' shape on the node. It uses the keyShape of the node here, you could assign any shapes in the graphics group (node.getContainer()) of the node
     });
   };
 
@@ -359,11 +395,27 @@ export default (): ReactElement => {
       setInputText(suggestion);
     } else if (event.keyCode === 9) {
       event.preventDefault();
-    }
-    else if (event.keyCode === 13){
+    } else if (event.keyCode === 13) {
       handleSearch();
     }
   };
+
+  const handleInfo = () => {
+    const snackbar = document.getElementById('snackbar');
+    if (!snackbar) throw new ReferenceError('Snackbar element not found');
+    snackbar.className = 'show';
+
+    setTimeout(() => {
+      snackbar.className = snackbar.className.replace('show', '');
+      setInfo('');
+    }, 3000);
+  };
+
+  useEffect(() => {
+    if (!info) return;
+
+    handleInfo();
+  }, [info]);
 
   useEffect(() => {
     if (!inputText) {
@@ -395,8 +447,6 @@ export default (): ReactElement => {
 
     const container = document.getElementById('lineage');
     if (!container) throw new ReferenceError(`Container for graph not found`);
-    
-    
 
     const width = window.innerWidth - 100;
     const height = window.innerHeight - 100;
@@ -423,6 +473,7 @@ export default (): ReactElement => {
         // size: [30, 20],
         type: 'rect',
         style: {
+          width: 130,
           lineWidth: 1,
           stroke: '#ababab',
           fill: '#fafaff',
@@ -458,10 +509,7 @@ export default (): ReactElement => {
       defaultCombo: {
         // type: 'cRect',
         type: 'rect',
-        style: {
-          height: 100,
-          width: 100,
-        },
+        size: 150,
       },
       comboStateStyles: {
         selected: {
@@ -561,7 +609,7 @@ export default (): ReactElement => {
               id="search-bar-1"
               name="search-bar"
               type="text"
-              placeholder="e.g. Search for 'f/2' or 'x/5'"
+              placeholder="e.g. 'fact_sales.label' or 'dim_region'"
               value={inputText}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
@@ -580,6 +628,7 @@ export default (): ReactElement => {
         </SearchBar>
       </NavBar>
       <div id="lineage" />
+      <div id="snackbar">{info}</div>
     </Lineage>
   );
 };

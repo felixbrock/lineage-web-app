@@ -36,7 +36,7 @@ export const Input = styled.input`
   padding-left: 0.5rem;
   padding-right: 1rem;
   height: 2rem;
-  width: 20rem;
+  width: 25rem;
   overflow-wrap: break-word;
   border: 1px solid gray;
   position: absolute;
@@ -58,7 +58,6 @@ export const InputSuggestion = styled(Input)`
 export const Submit = styled.button`
   width: 3.5rem;
   height: 2.8rem;
-  margin-left: -3.5rem;
   background: none;
   border: none;
   outline: none;

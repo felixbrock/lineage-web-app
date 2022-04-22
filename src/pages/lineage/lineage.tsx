@@ -1,6 +1,14 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import Logo from '../../components/top-nav/hivedive180.svg';
-import G6, { Graph, GraphData, ICombo, IEdge, INode } from '@antv/g6';
+import G6, {
+  ComboConfig,
+  Graph,
+  GraphData,
+  ICombo,
+  IEdge,
+  INode,
+  NodeConfig,
+} from '@antv/g6';
 import {
   HivediveLogo,
   IconSearch,
@@ -226,6 +234,67 @@ const data: GraphData = {
       label: 'report_regional_sales',
     },
   ],
+};
+
+/* Returns a  subset of existing data for initial load of page */
+const loadData = (nodeId: string, coveredIds: string[]): GraphData => {
+  coveredIds.push(nodeId);
+
+  if (!data.nodes) return data;
+  const dataNodes = data.nodes;
+
+  if (!data.edges) return data;
+  const dataEdges = data.edges;
+
+  if (!data.combos) return data;
+  const dataCombos = data.combos;
+
+  const node = dataNodes.find((element) => element.id === nodeId);
+  if (!node) return data;
+  const combo = dataCombos.find(
+    (element) => element.id === node.comboId
+  );
+  if (!combo) return data;
+
+  const dependencyEdges = dataEdges.filter(
+    (edge) => edge.source === node.id || edge.target === node.id
+  );
+
+  const isString = (item: string | undefined): item is string => !!item;
+
+  let dependencyNodeIds: string[] = dependencyEdges
+    .map((edge) => [edge.source, edge.target])
+    .flat()
+    .filter(isString);
+  dependencyNodeIds = [...Array.from(new Set(dependencyNodeIds))];
+  dependencyNodeIds.filter(id => !coveredIds.includes(id));
+
+  const isGraphData = (item: GraphData | undefined): item is GraphData => !!item;
+
+  const dataSubsets = dependencyNodeIds
+    .map((id) => loadData(id, coveredIds))
+    .filter(isGraphData);
+
+  const graphData: GraphData = {nodes: [], edges: [], combos: []};
+  dataSubsets.forEach(subset => {
+    graphData.nodes.push(...subset.nodes);
+  })
+
+  let dependencyComboIds: string[] = dependencyNodes
+    .map((element) => element.comboId)
+    .filter(isString);
+
+  dependencyComboIds = [
+    ...Array.from(new Set(dependencyComboIds)),
+  ];
+
+  const allComboNodes = dependencyComboIds.map(id => dataNodes.filter(element => element.comboId === id)).flat().filter(isNode);
+
+  const isCombo = (item: ComboConfig | undefined): item is ComboConfig => !!item;
+
+  const dependencyCombos = dependencyComboIds.map(id => dataCombos.find(element => element.id === id)).filter(isCombo);
+
+  return {nodes: allComboNodes, edges: dependencyEdges, combos: dependencyCombos};
 };
 
 const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
@@ -516,7 +585,12 @@ export default (): ReactElement => {
       animate: true,
       groupByTypes: false,
       modes: {
-        default: ['drag-canvas', 'zoom-canvas', 'click-select'],
+        default: [
+          'drag-canvas',
+          'collapse-expand-combo',
+          'zoom-canvas',
+          'click-select',
+        ],
       },
       layout: {
         type: 'dagre',
@@ -629,21 +703,21 @@ export default (): ReactElement => {
     });
 
     // // collapse/expand when click the marker
-    // graphObj.on('combo:click', (event) => {
-    //   if (event.target.get('name') === 'combo-marker-shape') {
-    //     // graph.collapseExpandCombo(e.item.getModel().id);
-    //     const isCombo = (object: any): object is ICombo => 'getNodes' in object;
+    graphObj.on('combo:click', (event) => {
+      if (event.target.get('name') === 'combo-marker-shape') {
+        // graph.collapseExpandCombo(e.item.getModel().id);
+        const isCombo = (object: any): object is ICombo => 'getNodes' in object;
 
-    //     if (!isCombo(event.item))
-    //       throw new ReferenceError('Event item is no combo');
+        if (!isCombo(event.item))
+          throw new ReferenceError('Event item is no combo');
 
-    //     graphObj.collapseExpandCombo(event.item);
-    //     if (graphObj.get('layout')) graphObj.layout();
-    //     else graphObj.refreshPositions();
-    //   }
-    // });
+        graphObj.collapseExpandCombo(event.item);
+        if (graphObj.get('layout')) graphObj.layout();
+        else graphObj.refreshPositions();
+      }
+    });
 
-    graphObj.data(data);
+    graphObj.data(loadData('12'));
     graphObj.render();
 
     // todo: collapse combos by default

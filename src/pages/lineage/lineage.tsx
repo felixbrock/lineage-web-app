@@ -926,27 +926,14 @@ export default (): ReactElement => {
       // }
     });
 
-    // // collapse/expand when click the marker
-    // graphObj.on('combo:click', (event) => {
-    //   if (event.target.get('name') === 'combo-marker-shape') {
-    //     // graph.collapseExpandCombo(e.item.getModel().id);
-    //     const isCombo = (object: any): object is ICombo => 'getNodes' in object;
-
-    //     if (!isCombo(event.item))
-    //       throw new ReferenceError('Event item is no combo');
-
-    //     graphObj.collapseExpandCombo(event.item);
-    //     if (graphObj.get('layout')) graphObj.layout();
-    //     else graphObj.refreshPositions();
-    //   }
-    // });
-
     const defaultNodeId = '12';
     const defaultData = loadData(defaultNodeId, NodeType.Self, [], []);
 
     graphObj.data(defaultData);
 
     graphObj.render();
+
+    graphObj.emit('node:highlight', {selfNodeId: defaultNodeId});
 
     // if (!defaultData.nodes) throw new ReferenceError('Nodes do not exist');
     // const selfNode = defaultData.nodes.find(

@@ -1,14 +1,6 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import Logo from '../../components/top-nav/hivedive180.svg';
-import G6, {
-  ComboConfig,
-  Graph,
-  GraphData,
-  ICombo,
-  IEdge,
-  INode,
-  NodeConfig,
-} from '@antv/g6';
+import G6, { EdgeConfig, Graph, GraphData, IEdge, INode } from '@antv/g6';
 import {
   HivediveLogo,
   IconSearch,
@@ -21,6 +13,83 @@ import {
   Submit,
 } from './lineage-items';
 import './lineage-items.css';
+
+// const collapseIcon = (x, y, r) => {
+//   return [
+//     ['M', x - r, y],
+//     ['a', r, r, 0, 1, 0, r * 2, 0],
+//     ['a', r, r, 0, 1, 0, -r * 2, 0],
+//     ['M', x - r + 4, y],
+//     ['L', x - r + 2 * r - 4, y],
+//   ];
+// };
+// const expandIcon = (x, y, r) => {
+//   return [
+//     ['M', x - r, y],
+//     ['a', r, r, 0, 1, 0, r * 2, 0],
+//     ['a', r, r, 0, 1, 0, -r * 2, 0],
+//     ['M', x - r + 4, y],
+//     ['L', x - r + 2 * r - 4, y],
+//     ['M', x - r + r, y - r + 4],
+//     ['L', x, y + r - 4],
+//   ];
+// };
+
+// G6.registerCombo(
+//   'cCircle',
+//   {
+//     drawShape: function draw(cfg, group) {
+//       const self = this;
+//       // Get the shape style, where the style.r corresponds to the R in the Illustration of Built-in Rect Combo
+//       const style = self.getShapeStyle(cfg);
+//       // Add a circle shape as keyShape which is the same as the extended 'circle' type Combo
+//       const circle = group.addShape('circle', {
+//         attrs: {
+//           ...style,
+//           x: 0,
+//           y: 0,
+//           r: style.r,
+//         },
+//         draggable: true,
+//         name: 'combo-keyShape',
+//       });
+//       // Add the marker on the bottom
+//       const marker = group.addShape('marker', {
+//         attrs: {
+//           ...style,
+//           fill: '#fff',
+//           opacity: 1,
+//           x: 0,
+//           y: style.r,
+//           r: 10,
+//           symbol: collapseIcon,
+//         },
+//         draggable: true,
+//         name: 'combo-marker-shape',
+//       });
+
+//       return circle;
+//     },
+//     // Define the updating logic for the marker
+//     afterUpdate: function afterUpdate(cfg, combo) {
+//       const self = this;
+//       // Get the shape style, where the style.r corresponds to the R in the Illustration of Built-in Rect Combo
+//       const style = self.getShapeStyle(cfg);
+//       const group = combo.get('group');
+//       // Find the marker shape in the graphics group of the Combo
+//       const marker = group.find((ele) => ele.get('name') === 'combo-marker-shape');
+//       // Update the marker shape
+//       marker.attr({
+//         x: 0,
+//         y: style.r,
+//         // The property 'collapsed' in the combo data represents the collapsing state of the Combo
+//         // Update the symbol according to 'collapsed'
+//         symbol: cfg.collapsed ? expandIcon : collapseIcon,
+//       });
+//     },
+//   },
+//   'circle',
+// );
 
 const data: GraphData = {
   nodes: [
@@ -65,6 +134,57 @@ const data: GraphData = {
     { id: '38', label: 'amount_orders', comboId: 'i' },
     { id: '39', label: 'responsibility', comboId: 'i' },
     { id: '40', label: 'model', comboId: 'i' },
+    // { id: '41', label: 'department', comboId: 'g' },
+    // { id: '42', label: 'department', comboId: 'g' },
+    // { id: '43', label: 'department', comboId: 'g' },
+    // { id: '44', label: 'department', comboId: 'g' },
+    // { id: '45', label: 'department', comboId: 'g' },
+    // { id: '46', label: 'department', comboId: 'g' },
+    // { id: '47', label: 'department', comboId: 'g' },
+    // { id: '48', label: 'department', comboId: 'g' },
+    // { id: '49', label: 'department', comboId: 'g' },
+    // { id: '50', label: 'department', comboId: 'g' },
+    // { id: '51', label: 'department', comboId: 'g' },
+    // { id: '52', label: 'department', comboId: 'g' },
+    // { id: '53', label: 'department', comboId: 'g' },
+    // { id: '54', label: 'department', comboId: 'g' },
+    // { id: '55', label: 'department', comboId: 'g' },
+    // { id: '56', label: 'department', comboId: 'g' },
+    // { id: '57', label: 'department', comboId: 'g' },
+    // { id: '58', label: 'department', comboId: 'g' },
+    // { id: '59', label: 'department', comboId: 'g' },
+    // { id: '60', label: 'department', comboId: 'g' },
+    // { id: '61', label: 'department', comboId: 'g' },
+    // { id: '62', label: 'department', comboId: 'g' },
+    // { id: '63', label: 'department', comboId: 'g' },
+    // { id: '64', label: 'department', comboId: 'g' },
+    // { id: '65', label: 'department', comboId: 'g' },
+    // { id: '66', label: 'department', comboId: 'g' },
+    // { id: '67', label: 'department', comboId: 'g' },
+    // { id: '68', label: 'department', comboId: 'g' },
+    // { id: '69', label: 'department', comboId: 'g' },
+    // { id: '70', label: 'department', comboId: 'g' },
+    // { id: '71', label: 'department', comboId: 'g' },
+    // { id: '72', label: 'department', comboId: 'g' },
+    // { id: '73', label: 'department', comboId: 'g' },
+    // { id: '74', label: 'department', comboId: 'g' },
+    // { id: '75', label: 'department', comboId: 'g' },
+    // { id: '76', label: 'department', comboId: 'g' },
+    // { id: '77', label: 'department', comboId: 'g' },
+    // { id: '78', label: 'department', comboId: 'g' },
+    // { id: '79', label: 'department', comboId: 'g' },
+    // { id: '80', label: 'department', comboId: 'g' },
+    // { id: '81', label: 'department', comboId: 'g' },
+    // { id: '82', label: 'department', comboId: 'g' },
+    // { id: '83', label: 'department', comboId: 'g' },
+    // { id: '84', label: 'department', comboId: 'g' },
+    // { id: '85', label: 'department', comboId: 'g' },
+    // { id: '86', label: 'department', comboId: 'g' },
+    // { id: '87', label: 'department', comboId: 'g' },
+    // { id: '88', label: 'department', comboId: 'g' },
+    // { id: '89', label: 'department', comboId: 'g' },
+    // { id: '90', label: 'department', comboId: 'g' },
+    // { id: '91', label: 'department', comboId: 'g' },
   ],
   edges: [
     {
@@ -236,9 +356,36 @@ const data: GraphData = {
   ],
 };
 
+enum NodeType {
+  Self = 'SELF',
+  Parent = 'PARENT',
+  Child = 'CHILD',
+}
+
+const getNodeIdsToExplore = (edges: EdgeConfig[], coveredNodeIds: string[]) => {
+  const isString = (item: string | undefined): item is string => !!item;
+
+  let nodeIdsToExplore: string[] = edges
+    .map((edge) => [edge.source, edge.target])
+    .flat()
+    .filter(isString);
+  nodeIdsToExplore = [...Array.from(new Set(nodeIdsToExplore))];
+  nodeIdsToExplore = nodeIdsToExplore.filter(
+    (id) => !coveredNodeIds.includes(id)
+  );
+
+  return nodeIdsToExplore;
+};
+
 /* Returns a  subset of existing data for initial load of page */
-const loadData = (nodeId: string, coveredIds: string[]): GraphData => {
-  coveredIds.push(nodeId);
+const loadData = (
+  nodeId: string,
+  nodeType: NodeType,
+  coveredNodeIds: string[],
+  coveredComboIds: string[]
+): GraphData => {
+  const localCoveredNodeIds = coveredNodeIds;
+  const localCoveredComboIds = coveredComboIds;
 
   if (!data.nodes) return data;
   const dataNodes = data.nodes;
@@ -249,52 +396,100 @@ const loadData = (nodeId: string, coveredIds: string[]): GraphData => {
   if (!data.combos) return data;
   const dataCombos = data.combos;
 
-  const node = dataNodes.find((element) => element.id === nodeId);
-  if (!node) return data;
-  const combo = dataCombos.find(
-    (element) => element.id === node.comboId
+  const selfNode = dataNodes.find((element) => element.id === nodeId);
+  if (!selfNode) throw new ReferenceError('Node not found');
+
+  const graphData: GraphData = { nodes: [], edges: [], combos: [] };
+
+  if (!graphData.nodes) throw new ReferenceError('Nodes not available');
+  graphData.nodes.push(selfNode);
+
+  localCoveredNodeIds.push(nodeId);
+
+  if (selfNode.comboId && !localCoveredComboIds.includes(selfNode.comboId)) {
+    const selfCombo = dataCombos.find(
+      (element) => element.id === selfNode.comboId
+    );
+    if (!selfCombo) return data;
+
+    if (!graphData.combos) throw new ReferenceError('Combos not available');
+    graphData.combos.push(selfCombo);
+
+    localCoveredComboIds.push(selfNode.comboId);
+  }
+
+  if (!graphData.edges) throw new ReferenceError('Edges not available');
+
+  const isGraphData = (item: GraphData | undefined): item is GraphData =>
+    !!item;
+
+  if (nodeType === NodeType.Parent || nodeType === NodeType.Self) {
+    const selfParentEdges = dataEdges.filter((edge) => edge.target === nodeId);
+
+    graphData.edges.push(...selfParentEdges);
+
+    const nodeIdsToExplore = getNodeIdsToExplore(
+      selfParentEdges,
+      localCoveredNodeIds
+    );
+
+    const dataSubsets = nodeIdsToExplore
+      .map((id) =>
+        loadData(id, NodeType.Parent, localCoveredNodeIds, localCoveredComboIds)
+      )
+      .filter(isGraphData);
+
+    dataSubsets.forEach((subset) => {
+      if (subset.nodes && graphData.nodes)
+        graphData.nodes.push(...subset.nodes);
+      if (subset.edges && graphData.edges)
+        graphData.edges.push(...subset.edges);
+      if (subset.combos && graphData.combos)
+        graphData.combos.push(...subset.combos);
+    });
+  }
+
+  if (nodeType === NodeType.Child || nodeType === NodeType.Self) {
+    const selfChildEdges = dataEdges.filter((edge) => edge.source === nodeId);
+
+    graphData.edges.push(...selfChildEdges);
+
+    const nodeIdsToExplore = getNodeIdsToExplore(
+      selfChildEdges,
+      localCoveredNodeIds
+    );
+
+    const dataSubsets = nodeIdsToExplore
+      .map((id) =>
+        loadData(id, NodeType.Child, localCoveredNodeIds, localCoveredComboIds)
+      )
+      .filter(isGraphData);
+
+    dataSubsets.forEach((subset) => {
+      if (subset.nodes && graphData.nodes)
+        graphData.nodes.push(...subset.nodes);
+      if (subset.edges && graphData.edges)
+        graphData.edges.push(...subset.edges);
+      if (subset.combos && graphData.combos)
+        graphData.combos.push(...subset.combos);
+    });
+  }
+
+  const selfNodes = dataNodes.filter(
+    (node) =>
+      node.comboId === selfNode.comboId
   );
-  if (!combo) return data;
 
-  const dependencyEdges = dataEdges.filter(
-    (edge) => edge.source === node.id || edge.target === node.id
-  );
+  graphData.nodes.push(...selfNodes);
 
-  const isString = (item: string | undefined): item is string => !!item;
+  const cleanedNodes = graphData.nodes.filter((node, index, self) =>
+  index === self.findIndex((element) => (
+    element.id === node.id
+  )));
 
-  let dependencyNodeIds: string[] = dependencyEdges
-    .map((edge) => [edge.source, edge.target])
-    .flat()
-    .filter(isString);
-  dependencyNodeIds = [...Array.from(new Set(dependencyNodeIds))];
-  dependencyNodeIds.filter(id => !coveredIds.includes(id));
+  graphData.nodes = cleanedNodes;
 
-  const isGraphData = (item: GraphData | undefined): item is GraphData => !!item;
-
-  const dataSubsets = dependencyNodeIds
-    .map((id) => loadData(id, coveredIds))
-    .filter(isGraphData);
-
-  const graphData: GraphData = {nodes: [], edges: [], combos: []};
-  dataSubsets.forEach(subset => {
-    graphData.nodes.push(...subset.nodes);
-  })
-
-  let dependencyComboIds: string[] = dependencyNodes
-    .map((element) => element.comboId)
-    .filter(isString);
-
-  dependencyComboIds = [
-    ...Array.from(new Set(dependencyComboIds)),
-  ];
-
-  const allComboNodes = dependencyComboIds.map(id => dataNodes.filter(element => element.comboId === id)).flat().filter(isNode);
-
-  const isCombo = (item: ComboConfig | undefined): item is ComboConfig => !!item;
-
-  const dependencyCombos = dependencyComboIds.map(id => dataCombos.find(element => element.id === id)).filter(isCombo);
-
-  return {nodes: allComboNodes, edges: dependencyEdges, combos: dependencyCombos};
+  return graphData;
 };
 
 const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
@@ -587,7 +782,6 @@ export default (): ReactElement => {
       modes: {
         default: [
           'drag-canvas',
-          'collapse-expand-combo',
           'zoom-canvas',
           'click-select',
         ],
@@ -640,6 +834,7 @@ export default (): ReactElement => {
         // type: 'cRect',
         type: 'rect',
         size: 150,
+        fixCollapseSize: [80, 10],
       },
       comboStateStyles: {
         selected: {
@@ -658,6 +853,33 @@ export default (): ReactElement => {
         graphObj.changeSize(container.scrollWidth, container.scrollHeight);
       };
 
+
+    graphObj.on('node:highlight', (event) => {      
+      const selfNodeId = event.selfNodeId;
+
+      const isString = (item: unknown): item is string => !!item;
+
+      if (!isString(selfNodeId))
+        throw new ReferenceError('Self node id is not of type string');
+
+      const selfNode = graphObj.findById(selfNodeId);
+  
+      const isNode = (object: any): object is INode => 'getEdges' in object;
+
+      if (!isNode(selfNode))
+        throw new ReferenceError('Event item is no node');
+
+      graphObj.setItemState(selfNodeId, 'selected', true);
+
+      getDependentEdges(selfNode, true).forEach((edge) => {
+        graphObj.setItemState(edge.getID(), 'nodeSelected', true);
+      });
+
+      getDependentEdges(selfNode, false).forEach((edge) => {
+        graphObj.setItemState(edge.getID(), 'nodeSelected', true);
+      });
+    });
+
     graphObj.on('nodeselectchange', (event) => {
       if (!event.select || !event.target) {
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
@@ -671,60 +893,78 @@ export default (): ReactElement => {
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         selectedEdges.forEach((edge) => edge.clearStates());
 
-        getDependentEdges(event.target, true).forEach((edge) => {
-          graphObj.setItemState(edge.getID(), 'nodeSelected', true);
-        });
+        const selfNodeId = event.target.getID();
+        graphObj.data(loadData(selfNodeId, NodeType.Self, [], []));
 
-        getDependentEdges(event.target, false).forEach((edge) => {
-          graphObj.setItemState(edge.getID(), 'nodeSelected', true);
-        });
-      } else if (event.select && event.target.get('type') === 'combo') {
-        const isCombo = (object: any): object is ICombo => 'getNodes' in object;
+        graphObj.render();
 
-        if (!isCombo(event.target))
-          throw new ReferenceError('Event item is no combo');
-
-        const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
-        selectedEdges.forEach((edge) => edge.clearStates());
-
-        // todo - attempt to fix edge highlighting bug when selected collapsed combo
-        if (event.target.get('model').collapsed) graphObj.refreshPositions();
-
-        event.target.getNodes().forEach((node) => {
-          getDependentEdges(node, true).forEach((edge) => {
-            graphObj.setItemState(edge.getID(), 'nodeSelected', true);
-          });
-
-          getDependentEdges(node, false).forEach((edge) => {
-            graphObj.setItemState(edge.getID(), 'nodeSelected', true);
-          });
+        graphObj.emit('node:highlight', {
+          selfNodeId
         });
       }
+      // else if (event.select && event.target.get('type') === 'combo') {
+      //   const isCombo = (object: any): object is ICombo => 'getNodes' in object;
+
+      //   if (!isCombo(event.target))
+      //     throw new ReferenceError('Event item is no combo');
+
+      //   const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
+      //   selectedEdges.forEach((edge) => edge.clearStates());
+
+      //   // todo - attempt to fix edge highlighting bug when selected collapsed combo
+      //   if (event.target.get('model').collapsed) graphObj.refreshPositions();
+
+      //   event.target.getNodes().forEach((node) => {
+      //     getDependentEdges(node, true).forEach((edge) => {
+      //       graphObj.setItemState(edge.getID(), 'nodeSelected', true);
+      //     });
+
+      //     getDependentEdges(node, false).forEach((edge) => {
+      //       graphObj.setItemState(edge.getID(), 'nodeSelected', true);
+      //     });
+      //   });
+      // }
     });
 
     // // collapse/expand when click the marker
-    graphObj.on('combo:click', (event) => {
-      if (event.target.get('name') === 'combo-marker-shape') {
-        // graph.collapseExpandCombo(e.item.getModel().id);
-        const isCombo = (object: any): object is ICombo => 'getNodes' in object;
+    // graphObj.on('combo:click', (event) => {
+    //   if (event.target.get('name') === 'combo-marker-shape') {
+    //     // graph.collapseExpandCombo(e.item.getModel().id);
+    //     const isCombo = (object: any): object is ICombo => 'getNodes' in object;
 
-        if (!isCombo(event.item))
-          throw new ReferenceError('Event item is no combo');
+    //     if (!isCombo(event.item))
+    //       throw new ReferenceError('Event item is no combo');
 
-        graphObj.collapseExpandCombo(event.item);
-        if (graphObj.get('layout')) graphObj.layout();
-        else graphObj.refreshPositions();
-      }
-    });
+    //     graphObj.collapseExpandCombo(event.item);
+    //     if (graphObj.get('layout')) graphObj.layout();
+    //     else graphObj.refreshPositions();
+    //   }
+    // });
 
-    graphObj.data(loadData('12'));
+    const defaultNodeId = '12';
+    const defaultData = loadData(defaultNodeId, NodeType.Self, [], []);
+
+    graphObj.data(defaultData);
+
     graphObj.render();
 
-    // todo: collapse combos by default
-    // graphObj.getCombos().forEach(combo => graphObj.collapseCombo(combo.getID()));
+    // if (!defaultData.nodes) throw new ReferenceError('Nodes do not exist');
+    // const selfNode = defaultData.nodes.find(
+    //   (node) => node.id === defaultNodeId
+    // );
+    // if (!selfNode) throw new ReferenceError('Self node not found');
+
+    // const selfComboId = selfNode.comboId;
+    // if (!selfComboId) throw new ReferenceError('Self combo id not found');
+
+    // if (defaultData.combos)
+    //   defaultData.combos.forEach((combo) => {
+    //     if (combo.id !== selfComboId) graphObj.collapseCombo(combo.id);
+    //   });
+
     // graphObj.render();
 
-    graphObj.fitView();
+    // graphObj.fitView();
 
     setGraph(graphObj);
   }, []);

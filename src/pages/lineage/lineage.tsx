@@ -476,16 +476,15 @@ const loadData = (
   }
 
   const selfNodes = dataNodes.filter(
-    (node) =>
-      node.comboId === selfNode.comboId
+    (node) => node.comboId === selfNode.comboId
   );
 
   graphData.nodes.push(...selfNodes);
 
-  const cleanedNodes = graphData.nodes.filter((node, index, self) =>
-  index === self.findIndex((element) => (
-    element.id === node.id
-  )));
+  const cleanedNodes = graphData.nodes.filter(
+    (node, index, self) =>
+      index === self.findIndex((element) => element.id === node.id)
+  );
 
   graphData.nodes = cleanedNodes;
 
@@ -775,23 +774,17 @@ export default (): ReactElement => {
       container,
       width,
       height,
-      fitView: true,
-      fitViewPadding: 30,
-      animate: true,
       groupByTypes: false,
       modes: {
-        default: [
-          'drag-canvas',
-          'zoom-canvas',
-          'click-select',
-        ],
+        default: ['drag-canvas', 'zoom-canvas', 'click-select'],
       },
       layout: {
         type: 'dagre',
         rankdir: 'LR',
+        align: 'DL',
         sortByCombo: true,
         controlPoints: true,
-        nodesep: 0,
+        nodesep: 1,
       },
       defaultNode: {
         // size: [30, 20],
@@ -853,8 +846,13 @@ export default (): ReactElement => {
         graphObj.changeSize(container.scrollWidth, container.scrollHeight);
       };
 
+    graphObj.on('afterlayout', (event) => {
+      console.log(event);
 
-    graphObj.on('node:highlight', (event) => {      
+      console.log(graphObj.getZoom());
+    });
+
+    graphObj.on('layout:finish', (event) => {
       const selfNodeId = event.selfNodeId;
 
       const isString = (item: unknown): item is string => !!item;
@@ -863,11 +861,10 @@ export default (): ReactElement => {
         throw new ReferenceError('Self node id is not of type string');
 
       const selfNode = graphObj.findById(selfNodeId);
-  
+
       const isNode = (object: any): object is INode => 'getEdges' in object;
 
-      if (!isNode(selfNode))
-        throw new ReferenceError('Event item is no node');
+      if (!isNode(selfNode)) throw new ReferenceError('Event item is no node');
 
       graphObj.setItemState(selfNodeId, 'selected', true);
 
@@ -878,6 +875,8 @@ export default (): ReactElement => {
       getDependentEdges(selfNode, false).forEach((edge) => {
         graphObj.setItemState(edge.getID(), 'nodeSelected', true);
       });
+
+      graphObj.focusItem(selfNode);
     });
 
     graphObj.on('nodeselectchange', (event) => {
@@ -896,10 +895,14 @@ export default (): ReactElement => {
         const selfNodeId = event.target.getID();
         graphObj.data(loadData(selfNodeId, NodeType.Self, [], []));
 
+        console.log(graphObj.getZoom());
+
         graphObj.render();
 
-        graphObj.emit('node:highlight', {
-          selfNodeId
+        console.log(graphObj.getZoom());
+
+        graphObj.emit('layout:finish', {
+          selfNodeId,
         });
       }
       // else if (event.select && event.target.get('type') === 'combo') {
@@ -933,7 +936,7 @@ export default (): ReactElement => {
 
     graphObj.render();
 
-    graphObj.emit('node:highlight', {selfNodeId: defaultNodeId});
+    graphObj.emit('layout:finish', { selfNodeId: defaultNodeId });
 
     // if (!defaultData.nodes) throw new ReferenceError('Nodes do not exist');
     // const selfNode = defaultData.nodes.find(
@@ -950,8 +953,6 @@ export default (): ReactElement => {
     //   });
 
     // graphObj.render();
-
-    // graphObj.fitView();
 
     setGraph(graphObj);
   }, []);

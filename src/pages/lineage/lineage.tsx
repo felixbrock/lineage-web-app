@@ -1,18 +1,8 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import Logo from '../../components/top-nav/hivedive180.svg';
 import G6, { EdgeConfig, Graph, GraphData, IEdge, INode } from '@antv/g6';
-import {
-  HivediveLogo,
-  IconSearch,
-  Input,
-  InputSuggestion,
-  InputWrapper,
-  Lineage,
-  NavBar,
-  SearchBar,
-  Submit,
-} from './lineage-items';
-import './lineage-items.css';
+import { FaSearch } from 'react-icons/fa';
+import './lineage.scss';
 
 // const collapseIcon = (x, y, r) => {
 //   return [
@@ -770,6 +760,8 @@ export default (): ReactElement => {
     const width = window.innerWidth - 100;
     const height = window.innerHeight - 100;
 
+    const grid = new G6.Grid();
+
     const graphObj = new G6.Graph({
       container,
       width,
@@ -836,6 +828,7 @@ export default (): ReactElement => {
           shadowBlur: 5,
         },
       },
+      plugins: [grid]
     });
 
     if (typeof window !== 'undefined')
@@ -958,12 +951,12 @@ export default (): ReactElement => {
   }, []);
 
   return (
-    <Lineage>
-      <NavBar>
-        <HivediveLogo src={Logo} alt="logo" />
-        <SearchBar>
-          <InputWrapper>
-            <Input
+    <div id='lineageContainer'>
+      <div id='navbar'>
+        <img id='logo' src={Logo} alt="logo" />
+        <div id='searchbar'>
+          <div id='inputWrapper'>
+            <input className= 'search'
               id="search-bar-1"
               name="search-bar"
               type="text"
@@ -972,21 +965,21 @@ export default (): ReactElement => {
               onChange={handleInput}
               onKeyDown={handleKeyDown}
             />
-            <InputSuggestion
+            <input className='suggestion'
               id="search-bar-2"
               name="search-bar"
               type="text"
               value={suggestion}
               onChange={() => {}}
             />
-          </InputWrapper>
-          <Submit type="submit" onClick={handleSearch}>
-            <IconSearch />
-          </Submit>
-        </SearchBar>
-      </NavBar>
+          </div>
+          <button id='submit' type="submit" onClick={handleSearch}>
+            <FaSearch id='iconSearch'/>
+          </button>
+        </div>
+      </div>
       <div id="lineage" />
       <div id="snackbar">{info}</div>
-    </Lineage>
+    </div>
   );
 };

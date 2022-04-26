@@ -1,6 +1,10 @@
-import styled from 'styled-components';
+* {
+  font-family: 'Calibri', sans-serif;
+  box-sizing: border-box;
+}
 
-export const App = styled.div`
+/* div */
+#app {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr auto;
@@ -8,17 +12,20 @@ export const App = styled.div`
     'header'
     'content'
     'footer';
-`;
+}
 
-export const HeaderContainer = styled.div`
+/* div */
+#headerContainer {
   grid-area: header;
-`;
+}
 
-export const ContentContainer = styled.div`
+/* div */
+#contentContainer {
   margin: 10px;
   grid-area: content;
-`;
+}
 
-export const FooterContainer = styled.div`
+/* div */
+#footerContainer {
   grid-area: footer;
-`;
+}

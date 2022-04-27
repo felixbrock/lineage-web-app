@@ -1,85 +1,13 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import Logo from '../../components/top-nav/hivedive180.svg';
 import G6, { EdgeConfig, Graph, GraphData, IEdge, INode } from '@antv/g6';
-import { FaSearch } from 'react-icons/fa';
 import './lineage.scss';
+import { FaSearch } from 'react-icons/fa';
+import AceEditor from 'react-ace';
 
-// const collapseIcon = (x, y, r) => {
-//   return [
-//     ['M', x - r, y],
-//     ['a', r, r, 0, 1, 0, r * 2, 0],
-//     ['a', r, r, 0, 1, 0, -r * 2, 0],
-//     ['M', x - r + 4, y],
-//     ['L', x - r + 2 * r - 4, y],
-//   ];
-// };
-// const expandIcon = (x, y, r) => {
-//   return [
-//     ['M', x - r, y],
-//     ['a', r, r, 0, 1, 0, r * 2, 0],
-//     ['a', r, r, 0, 1, 0, -r * 2, 0],
-//     ['M', x - r + 4, y],
-//     ['L', x - r + 2 * r - 4, y],
-//     ['M', x - r + r, y - r + 4],
-//     ['L', x, y + r - 4],
-//   ];
-// };
-
-// G6.registerCombo(
-//   'cCircle',
-//   {
-//     drawShape: function draw(cfg, group) {
-//       const self = this;
-//       // Get the shape style, where the style.r corresponds to the R in the Illustration of Built-in Rect Combo
-//       const style = self.getShapeStyle(cfg);
-//       // Add a circle shape as keyShape which is the same as the extended 'circle' type Combo
-//       const circle = group.addShape('circle', {
-//         attrs: {
-//           ...style,
-//           x: 0,
-//           y: 0,
-//           r: style.r,
-//         },
-//         draggable: true,
-//         name: 'combo-keyShape',
-//       });
-//       // Add the marker on the bottom
-//       const marker = group.addShape('marker', {
-//         attrs: {
-//           ...style,
-//           fill: '#fff',
-//           opacity: 1,
-//           x: 0,
-//           y: style.r,
-//           r: 10,
-//           symbol: collapseIcon,
-//         },
-//         draggable: true,
-//         name: 'combo-marker-shape',
-//       });
-
-//       return circle;
-//     },
-//     // Define the updating logic for the marker
-//     afterUpdate: function afterUpdate(cfg, combo) {
-//       const self = this;
-//       // Get the shape style, where the style.r corresponds to the R in the Illustration of Built-in Rect Combo
-//       const style = self.getShapeStyle(cfg);
-//       const group = combo.get('group');
-//       // Find the marker shape in the graphics group of the Combo
-//       const marker = group.find((ele) => ele.get('name') === 'combo-marker-shape');
-//       // Update the marker shape
-//       marker.attr({
-//         x: 0,
-//         y: style.r,
-//         // The property 'collapsed' in the combo data represents the collapsing state of the Combo
-//         // Update the symbol according to 'collapsed'
-//         symbol: cfg.collapsed ? expandIcon : collapseIcon,
-//       });
-//     },
-//   },
-//   'circle',
-// );
+import 'ace-builds/src-noconflict/mode-pgsql';
+import 'ace-builds/src-noconflict/theme-dracula';
+import 'ace-builds/src-noconflict/ext-language_tools';
 
 const data: GraphData = {
   nodes: [
@@ -124,57 +52,57 @@ const data: GraphData = {
     { id: '38', label: 'amount_orders', comboId: 'i' },
     { id: '39', label: 'responsibility', comboId: 'i' },
     { id: '40', label: 'model', comboId: 'i' },
-    // { id: '41', label: 'department', comboId: 'g' },
-    // { id: '42', label: 'department', comboId: 'g' },
-    // { id: '43', label: 'department', comboId: 'g' },
-    // { id: '44', label: 'department', comboId: 'g' },
-    // { id: '45', label: 'department', comboId: 'g' },
-    // { id: '46', label: 'department', comboId: 'g' },
-    // { id: '47', label: 'department', comboId: 'g' },
-    // { id: '48', label: 'department', comboId: 'g' },
-    // { id: '49', label: 'department', comboId: 'g' },
-    // { id: '50', label: 'department', comboId: 'g' },
-    // { id: '51', label: 'department', comboId: 'g' },
-    // { id: '52', label: 'department', comboId: 'g' },
-    // { id: '53', label: 'department', comboId: 'g' },
-    // { id: '54', label: 'department', comboId: 'g' },
-    // { id: '55', label: 'department', comboId: 'g' },
-    // { id: '56', label: 'department', comboId: 'g' },
-    // { id: '57', label: 'department', comboId: 'g' },
-    // { id: '58', label: 'department', comboId: 'g' },
-    // { id: '59', label: 'department', comboId: 'g' },
-    // { id: '60', label: 'department', comboId: 'g' },
-    // { id: '61', label: 'department', comboId: 'g' },
-    // { id: '62', label: 'department', comboId: 'g' },
-    // { id: '63', label: 'department', comboId: 'g' },
-    // { id: '64', label: 'department', comboId: 'g' },
-    // { id: '65', label: 'department', comboId: 'g' },
-    // { id: '66', label: 'department', comboId: 'g' },
-    // { id: '67', label: 'department', comboId: 'g' },
-    // { id: '68', label: 'department', comboId: 'g' },
-    // { id: '69', label: 'department', comboId: 'g' },
-    // { id: '70', label: 'department', comboId: 'g' },
-    // { id: '71', label: 'department', comboId: 'g' },
-    // { id: '72', label: 'department', comboId: 'g' },
-    // { id: '73', label: 'department', comboId: 'g' },
-    // { id: '74', label: 'department', comboId: 'g' },
-    // { id: '75', label: 'department', comboId: 'g' },
-    // { id: '76', label: 'department', comboId: 'g' },
-    // { id: '77', label: 'department', comboId: 'g' },
-    // { id: '78', label: 'department', comboId: 'g' },
-    // { id: '79', label: 'department', comboId: 'g' },
-    // { id: '80', label: 'department', comboId: 'g' },
-    // { id: '81', label: 'department', comboId: 'g' },
-    // { id: '82', label: 'department', comboId: 'g' },
-    // { id: '83', label: 'department', comboId: 'g' },
-    // { id: '84', label: 'department', comboId: 'g' },
-    // { id: '85', label: 'department', comboId: 'g' },
-    // { id: '86', label: 'department', comboId: 'g' },
-    // { id: '87', label: 'department', comboId: 'g' },
-    // { id: '88', label: 'department', comboId: 'g' },
-    // { id: '89', label: 'department', comboId: 'g' },
-    // { id: '90', label: 'department', comboId: 'g' },
-    // { id: '91', label: 'department', comboId: 'g' },
+    { id: '41', label: 'department', comboId: 'g' },
+    { id: '42', label: 'department', comboId: 'g' },
+    { id: '43', label: 'department', comboId: 'g' },
+    { id: '44', label: 'department', comboId: 'g' },
+    { id: '45', label: 'department', comboId: 'g' },
+    { id: '46', label: 'department', comboId: 'g' },
+    { id: '47', label: 'department', comboId: 'g' },
+    { id: '48', label: 'department', comboId: 'g' },
+    { id: '49', label: 'department', comboId: 'g' },
+    { id: '50', label: 'department', comboId: 'g' },
+    { id: '51', label: 'department', comboId: 'g' },
+    { id: '52', label: 'department', comboId: 'g' },
+    { id: '53', label: 'department', comboId: 'g' },
+    { id: '54', label: 'department', comboId: 'g' },
+    { id: '55', label: 'department', comboId: 'g' },
+    { id: '56', label: 'department', comboId: 'g' },
+    { id: '57', label: 'department', comboId: 'g' },
+    { id: '58', label: 'department', comboId: 'g' },
+    { id: '59', label: 'department', comboId: 'g' },
+    { id: '60', label: 'department', comboId: 'g' },
+    { id: '61', label: 'department', comboId: 'g' },
+    { id: '62', label: 'department', comboId: 'g' },
+    { id: '63', label: 'department', comboId: 'g' },
+    { id: '64', label: 'department', comboId: 'g' },
+    { id: '65', label: 'department', comboId: 'g' },
+    { id: '66', label: 'department', comboId: 'g' },
+    { id: '67', label: 'department', comboId: 'g' },
+    { id: '68', label: 'department', comboId: 'g' },
+    { id: '69', label: 'department', comboId: 'g' },
+    { id: '70', label: 'department', comboId: 'g' },
+    { id: '71', label: 'department', comboId: 'g' },
+    { id: '72', label: 'department', comboId: 'g' },
+    { id: '73', label: 'department', comboId: 'g' },
+    { id: '74', label: 'department', comboId: 'g' },
+    { id: '75', label: 'department', comboId: 'g' },
+    { id: '76', label: 'department', comboId: 'g' },
+    { id: '77', label: 'department', comboId: 'g' },
+    { id: '78', label: 'department', comboId: 'g' },
+    { id: '79', label: 'department', comboId: 'g' },
+    { id: '80', label: 'department', comboId: 'g' },
+    { id: '81', label: 'department', comboId: 'g' },
+    { id: '82', label: 'department', comboId: 'g' },
+    { id: '83', label: 'department', comboId: 'g' },
+    { id: '84', label: 'department', comboId: 'g' },
+    { id: '85', label: 'department', comboId: 'g' },
+    { id: '86', label: 'department', comboId: 'g' },
+    { id: '87', label: 'department', comboId: 'g' },
+    { id: '88', label: 'department', comboId: 'g' },
+    { id: '89', label: 'department', comboId: 'g' },
+    { id: '90', label: 'department', comboId: 'g' },
+    { id: '91', label: 'department', comboId: 'g' },
   ],
   edges: [
     {
@@ -540,47 +468,6 @@ const searchData = () => {
 
   return searchIndex;
 };
-//   {
-//     id: 1,
-//     text: 'Devpulse',
-//   },
-//   {
-//     id: 2,
-//     text: 'Linklinks',
-//   },
-//   {
-//     id: 3,
-//     text: 'Centizu',
-//   },
-//   {
-//     id: 4,
-//     text: 'Dynabox',
-//   },
-//   {
-//     id: 5,
-//     text: 'Avaveo',
-//   },
-//   {
-//     id: 6,
-//     text: 'Demivee',
-//   },
-//   {
-//     id: 7,
-//     text: 'Jayo',
-//   },
-//   {
-//     id: 8,
-//     text: 'Blognation',
-//   },
-//   {
-//     id: 9,
-//     text: 'Podcat',
-//   },
-//   {
-//     id: 10,
-//     text: 'Layo',
-//   },
-// ];
 
 const editDistance = (s1: string, s2: string) => {
   const lowerS1 = s1.toLowerCase();
@@ -628,6 +515,13 @@ export default (): ReactElement => {
   const [inputText, setInputText] = useState('');
   const [suggestion, setSuggestion] = useState('');
   const [info, setInfo] = useState('');
+
+  const closeSidePanel = () => {
+    const panel = document.getElementById('sqlSidepanel');
+    if (!panel) throw new ReferenceError('SQL Panel does not exist');
+    panel.style.visibility = 'hidden';
+    panel.style.opacity = '0';
+  };
 
   const handleSearch = () => {
     if (!graph || !inputText) return;
@@ -754,11 +648,11 @@ export default (): ReactElement => {
 
     const hivediveBlue = '#2c25ff';
 
-    const container = document.getElementById('lineage');
+    const container = document.getElementById('lineageContainer');
     if (!container) throw new ReferenceError(`Container for graph not found`);
 
-    const width = window.innerWidth - 100;
-    const height = window.innerHeight - 100;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
 
     const grid = new G6.Grid();
 
@@ -828,7 +722,7 @@ export default (): ReactElement => {
           shadowBlur: 5,
         },
       },
-      plugins: [grid]
+      plugins: [grid],
     });
 
     if (typeof window !== 'undefined')
@@ -838,12 +732,6 @@ export default (): ReactElement => {
           return;
         graphObj.changeSize(container.scrollWidth, container.scrollHeight);
       };
-
-    graphObj.on('afterlayout', (event) => {
-      console.log(event);
-
-      console.log(graphObj.getZoom());
-    });
 
     graphObj.on('layout:finish', (event) => {
       const selfNodeId = event.selfNodeId;
@@ -874,9 +762,11 @@ export default (): ReactElement => {
 
     graphObj.on('nodeselectchange', (event) => {
       if (!event.select || !event.target) {
+        closeSidePanel();
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         selectedEdges.forEach((edge) => edge.clearStates());
       } else if (event.select && event.target.get('type') === 'node') {
+        closeSidePanel();
         const isNode = (object: any): object is INode => 'getEdges' in object;
 
         if (!isNode(event.target))
@@ -897,29 +787,32 @@ export default (): ReactElement => {
         graphObj.emit('layout:finish', {
           selfNodeId,
         });
+      } else if (event.select && event.target.get('type') === 'combo') {
+        const panel = document.getElementById('sqlSidepanel');
+        if (!panel) throw new ReferenceError('SQL Panel does not exist');
+        panel.style.visibility = 'visible';
+        panel.style.opacity = '1';
+        // const isCombo = (object: any): object is ICombo => 'getNodes' in object;
+
+        // if (!isCombo(event.target))
+        //   throw new ReferenceError('Event item is no combo');
+
+        // const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
+        // selectedEdges.forEach((edge) => edge.clearStates());
+
+        // // todo - attempt to fix edge highlighting bug when selected collapsed combo
+        // if (event.target.get('model').collapsed) graphObj.refreshPositions();
+
+        // event.target.getNodes().forEach((node) => {
+        //   getDependentEdges(node, true).forEach((edge) => {
+        //     graphObj.setItemState(edge.getID(), 'nodeSelected', true);
+        //   });
+
+        //   getDependentEdges(node, false).forEach((edge) => {
+        //     graphObj.setItemState(edge.getID(), 'nodeSelected', true);
+        //   });
+        // });
       }
-      // else if (event.select && event.target.get('type') === 'combo') {
-      //   const isCombo = (object: any): object is ICombo => 'getNodes' in object;
-
-      //   if (!isCombo(event.target))
-      //     throw new ReferenceError('Event item is no combo');
-
-      //   const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
-      //   selectedEdges.forEach((edge) => edge.clearStates());
-
-      //   // todo - attempt to fix edge highlighting bug when selected collapsed combo
-      //   if (event.target.get('model').collapsed) graphObj.refreshPositions();
-
-      //   event.target.getNodes().forEach((node) => {
-      //     getDependentEdges(node, true).forEach((edge) => {
-      //       graphObj.setItemState(edge.getID(), 'nodeSelected', true);
-      //     });
-
-      //     getDependentEdges(node, false).forEach((edge) => {
-      //       graphObj.setItemState(edge.getID(), 'nodeSelected', true);
-      //     });
-      //   });
-      // }
     });
 
     const defaultNodeId = '12';
@@ -951,12 +844,13 @@ export default (): ReactElement => {
   }, []);
 
   return (
-    <div id='lineageContainer'>
-      <div id='navbar'>
-        <img id='logo' src={Logo} alt="logo" />
-        <div id='searchbar'>
-          <div id='inputWrapper'>
-            <input className= 'search'
+    <div id="lineageContainer">
+      <div id="navbar">
+        <img id="logo" src={Logo} alt="logo" />
+        <div id="searchbar">
+          <div id="inputWrapper">
+            <input
+              className="search"
               id="search-bar-1"
               name="search-bar"
               type="text"
@@ -965,7 +859,8 @@ export default (): ReactElement => {
               onChange={handleInput}
               onKeyDown={handleKeyDown}
             />
-            <input className='suggestion'
+            <input
+              className="suggestion"
               id="search-bar-2"
               name="search-bar"
               type="text"
@@ -973,12 +868,38 @@ export default (): ReactElement => {
               onChange={() => {}}
             />
           </div>
-          <button id='submit' type="submit" onClick={handleSearch}>
-            <FaSearch id='iconSearch'/>
+          <button id="submit" type="submit" onClick={handleSearch}>
+            <FaSearch id="iconSearch" />
           </button>
         </div>
       </div>
       <div id="lineage" />
+      <div id="sqlSidepanel" className="sidepanel">
+        <div className="header">
+          <p className="title">SQL Model Logic</p>
+          <button
+            className="closebtn"
+            onClick={closeSidePanel}
+          >
+            &times;
+          </button>
+        </div>
+        <div id="editor" className="content">
+          <AceEditor
+            mode="pgsql"
+            theme="dracula"
+            height="100%"
+            width="100%"
+            fontSize={18}
+            readOnly={true}
+            value={
+              "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test"
+            }
+            wrapEnabled={true}
+            showPrintMargin={false}
+          />
+        </div>
+      </div>
       <div id="snackbar">{info}</div>
     </div>
   );

@@ -1,13 +1,19 @@
+$hivediveBlue: #2c25ff;
+$hivediveGrey: #dfdfdf;
+
 /* div */
 #lineageContainer {
-  height: 100%;
 }
+
+$navbarHeight: 50px;
 
 /* div */
 #navbar {
   display: flex;
   justify-content: space-between;
-}  
+  height: $navbarHeight;
+  border-bottom: 2px solid $hivediveBlue;
+}
 
 /* img */
 #logo {
@@ -45,10 +51,6 @@ input.search {
   border-radius: 50px;
   word-wrap: break-word;
   background-color: transparent;
-  -webkit-border-radius: 50px;
-  -moz-border-radius: 50px;
-  -ms-border-radius: 50px;
-  -o-border-radius: 50px;
 }
 
 input.suggestion {
@@ -81,7 +83,8 @@ input.suggestion {
 
 /* div */
 #lineage {
-  padding: 5px;
+  height: calc(100% - $navbarHeight);
+  width: 100%;
 }
 
 /* The snackbar - position it at the bottom and in the middle of the screen */
@@ -111,21 +114,106 @@ input.suggestion {
 
 /* Animations to fade the snackbar in and out */
 @-webkit-keyframes fadein {
-  from {bottom: 0; opacity: 0;}
-  to {bottom: 30px; opacity: 1;}
+  from {
+    bottom: 0;
+    opacity: 0;
+  }
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
 }
 
 @keyframes fadein {
-  from {bottom: 0; opacity: 0;}
-  to {bottom: 30px; opacity: 1;}
+  from {
+    bottom: 0;
+    opacity: 0;
+  }
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
 }
 
 @-webkit-keyframes fadeout {
-  from {bottom: 30px; opacity: 1;}
-  to {bottom: 0; opacity: 0;}
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+  to {
+    bottom: 0;
+    opacity: 0;
+  }
 }
 
 @keyframes fadeout {
-  from {bottom: 30px; opacity: 1;}
-  to {bottom: 0; opacity: 0;}
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+  to {
+    bottom: 0;
+    opacity: 0;
+  }
+}
+
+$sidePanelMargin: 5px;
+
+.sidepanel {
+  height: calc(100% - $navbarHeight - $sidePanelMargin - $sidePanelMargin);
+  width: 33%;
+  position: fixed;
+  z-index: 1;
+  right: $sidePanelMargin;
+  overflow-x: hidden;
+  visibility: hidden;
+  // background-color: linear-gradient(to bottom right, $hivediveGrey, White);
+  border: 2px solid black;
+  opacity: 1;
+  transition: visibility 0.3s linear, opacity 0.3s linear;
+  padding-top: 50px;
+  margin: $sidePanelMargin 0 $sidePanelMargin $sidePanelMargin;
+  border-radius: 20px;
+}
+
+$headerMargin: 10px;
+
+.sidepanel .header {
+  position: absolute;
+  width: calc(100% - 2 * $headerMargin);
+  top: 0;
+  margin: $headerMargin $headerMargin 0 $headerMargin;
+}
+
+.sidepanel .header .title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+  color: black;
+}
+
+.sidepanel .header .closebtn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 20px;
+  color: black;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.sidepanel .header .closebtn:hover {
+  border: 2px solid;
+  border-radius: 7px;
+  border-color: $hivediveBlue;
+  box-shadow: 0 0 10px $hivediveBlue;
+}
+
+.sidepanel .content {
+  height: 100%;
+  padding: 0 10px 10px 10px;
 }

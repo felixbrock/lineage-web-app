@@ -2,277 +2,268 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import Logo from '../../components/top-nav/hivedive180.svg';
 import G6, { EdgeConfig, Graph, GraphData, IEdge, INode } from '@antv/g6';
 import './lineage.scss';
-import { FaSearch } from 'react-icons/fa';
+// import { FaSearch } from 'react-icons/fa';
 import AceEditor from 'react-ace';
 
 import 'ace-builds/src-noconflict/mode-pgsql';
 import 'ace-builds/src-noconflict/theme-dracula';
 import 'ace-builds/src-noconflict/ext-language_tools';
 
-const data: GraphData = {
-  nodes: [
-    { id: '0', label: 'sales_order_id', comboId: 'a' },
-    { id: '1', label: 'country_of_sales', comboId: 'a' },
-    { id: '2', label: 'product_category', comboId: 'a' },
-    { id: '3', label: 'order_id', comboId: 'b' },
-    { id: '4', label: 'ordered_pieces', comboId: 'b' },
-    { id: '5', label: 'label', comboId: 'b' },
-    { id: '6', label: 'country_of_sales', comboId: 'b' },
-    { id: '7', label: 'region', comboId: 'c' },
-    { id: '8', label: 'type', comboId: 'c' },
-    { id: '9', label: 'name', comboId: 'c' },
-    { id: '10', label: 'label', comboId: 'd' },
-    { id: '11', label: 'id', comboId: 'd' },
-    { id: '12', label: 'storage_location', comboId: 'd' },
-    { id: '13', label: 'distributor', comboId: 'd' },
-    { id: '14', label: 'en_country', comboId: 'e' },
-    { id: '15', label: 'region', comboId: 'e' },
-    { id: '16', label: 'de_country', comboId: 'e' },
-    { id: '17', label: 'region', comboId: 'f' },
-    { id: '18', label: 'department', comboId: 'f' },
-    { id: '19', label: 'role', comboId: 'f' },
-    { id: '20', label: 'type', comboId: 'f' },
-    { id: '21', label: 'name', comboId: 'f' },
-    { id: '22', label: 'storage_location', comboId: 'g' },
-    { id: '23', label: 'label', comboId: 'g' },
-    { id: '24', label: 'distributor', comboId: 'g' },
-    { id: '25', label: 'region', comboId: 'g' },
-    { id: '26', label: 'id', comboId: 'g' },
-    { id: '27', label: 'model', comboId: 'g' },
-    { id: '28', label: 'amount', comboId: 'g' },
-    { id: '29', label: 'department', comboId: 'g' },
-    { id: '30', label: 'name', comboId: 'h' },
-    { id: '31', label: 'type', comboId: 'h' },
-    { id: '32', label: 'type', comboId: 'h' },
-    { id: '33', label: 'is_active', comboId: 'h' },
-    { id: '34', label: 'region', comboId: 'h' },
-    { id: '35', label: 'storage_location', comboId: 'i' },
-    { id: '36', label: 'distributor', comboId: 'i' },
-    { id: '37', label: 'status', comboId: 'i' },
-    { id: '38', label: 'amount_orders', comboId: 'i' },
-    { id: '39', label: 'responsibility', comboId: 'i' },
-    { id: '40', label: 'model', comboId: 'i' },
-    { id: '41', label: 'department', comboId: 'g' },
-    { id: '42', label: 'department', comboId: 'g' },
-    { id: '43', label: 'department', comboId: 'g' },
-    { id: '44', label: 'department', comboId: 'g' },
-    { id: '45', label: 'department', comboId: 'g' },
-    { id: '46', label: 'department', comboId: 'g' },
-    { id: '47', label: 'department', comboId: 'g' },
-    { id: '48', label: 'department', comboId: 'g' },
-    { id: '49', label: 'department', comboId: 'g' },
-    { id: '50', label: 'department', comboId: 'g' },
-    { id: '51', label: 'department', comboId: 'g' },
-    { id: '52', label: 'department', comboId: 'g' },
-    { id: '53', label: 'department', comboId: 'g' },
-    { id: '54', label: 'department', comboId: 'g' },
-    { id: '55', label: 'department', comboId: 'g' },
-    { id: '56', label: 'department', comboId: 'g' },
-    { id: '57', label: 'department', comboId: 'g' },
-    { id: '58', label: 'department', comboId: 'g' },
-    { id: '59', label: 'department', comboId: 'g' },
-    { id: '60', label: 'department', comboId: 'g' },
-    { id: '61', label: 'department', comboId: 'g' },
-    { id: '62', label: 'department', comboId: 'g' },
-    { id: '63', label: 'department', comboId: 'g' },
-    { id: '64', label: 'department', comboId: 'g' },
-    { id: '65', label: 'department', comboId: 'g' },
-    { id: '66', label: 'department', comboId: 'g' },
-    { id: '67', label: 'department', comboId: 'g' },
-    { id: '68', label: 'department', comboId: 'g' },
-    { id: '69', label: 'department', comboId: 'g' },
-    { id: '70', label: 'department', comboId: 'g' },
-    { id: '71', label: 'department', comboId: 'g' },
-    { id: '72', label: 'department', comboId: 'g' },
-    { id: '73', label: 'department', comboId: 'g' },
-    { id: '74', label: 'department', comboId: 'g' },
-    { id: '75', label: 'department', comboId: 'g' },
-    { id: '76', label: 'department', comboId: 'g' },
-    { id: '77', label: 'department', comboId: 'g' },
-    { id: '78', label: 'department', comboId: 'g' },
-    { id: '79', label: 'department', comboId: 'g' },
-    { id: '80', label: 'department', comboId: 'g' },
-    { id: '81', label: 'department', comboId: 'g' },
-    { id: '82', label: 'department', comboId: 'g' },
-    { id: '83', label: 'department', comboId: 'g' },
-    { id: '84', label: 'department', comboId: 'g' },
-    { id: '85', label: 'department', comboId: 'g' },
-    { id: '86', label: 'department', comboId: 'g' },
-    { id: '87', label: 'department', comboId: 'g' },
-    { id: '88', label: 'department', comboId: 'g' },
-    { id: '89', label: 'department', comboId: 'g' },
-    { id: '90', label: 'department', comboId: 'g' },
-    { id: '91', label: 'department', comboId: 'g' },
-  ],
-  edges: [
-    {
-      source: '0',
-      target: '3',
-    },
-    {
-      source: '0',
-      target: '4',
-    },
-    {
-      source: '1',
-      target: '6',
-    },
-    {
-      source: '2',
-      target: '5',
-    },
-    {
-      source: '3',
-      target: '11',
-    },
-    {
-      source: '3',
-      target: '12',
-    },
-    {
-      source: '4',
-      target: '28',
-    },
-    {
-      source: '5',
-      target: '10',
-    },
-    {
-      source: '6',
-      target: '14',
-    },
-    {
-      source: '7',
-      target: '15',
-    },
-    {
-      source: '7',
-      target: '17',
-    },
-    {
-      source: '8',
-      target: '20',
-    },
-    {
-      source: '8',
-      target: '32',
-    },
-    {
-      source: '9',
-      target: '21',
-    },
-    {
-      source: '10',
-      target: '23',
-    },
-    {
-      source: '11',
-      target: '26',
-    },
-    {
-      source: '12',
-      target: '22',
-    },
-    {
-      source: '13',
-      target: '24',
-    },
-    {
-      source: '14',
-      target: '24',
-    },
-    {
-      source: '15',
-      target: '25',
-    },
-    {
-      source: '18',
-      target: '29',
-    },
-    {
-      source: '17',
-      target: '34',
-    },
-    {
-      source: '20',
-      target: '31',
-    },
-    {
-      source: '21',
-      target: '30',
-    },
-    {
-      source: '22',
-      target: '35',
-    },
-    {
-      source: '24',
-      target: '36',
-    },
-    {
-      source: '27',
-      target: '40',
-    },
-    {
-      source: '27',
-      target: '37',
-    },
-    {
-      source: '28',
-      target: '38',
-    },
-    {
-      source: '29',
-      target: '39',
-    },
-    {
-      source: '30',
-      target: '39',
-    },
-    {
-      source: '33',
-      target: '37',
-    },
-  ],
-  combos: [
-    {
-      id: 'a',
-      label: 'source_salesforce',
-    },
-    {
-      id: 'b',
-      label: 'dim_sales',
-    },
-    {
-      id: 'c',
-      label: 'source_HR',
-    },
-    {
-      id: 'd',
-      label: 'dim_sales_9x5k',
-    },
-    {
-      id: 'e',
-      label: 'dim_region',
-    },
-    {
-      id: 'f',
-      label: 'dim_employee',
-    },
-    {
-      id: 'g',
-      label: 'fact_sales',
-    },
-    {
-      id: 'h',
-      label: 'dim_employee_sales',
-    },
-    {
-      id: 'i',
-      label: 'report_regional_sales',
-    },
-  ],
-};
+const nodes = [
+  { id: '0', label: 'sales_order_id', comboId: 'a' },
+  { id: '1', label: 'country_of_sales', comboId: 'a' },
+  { id: '2', label: 'product_category', comboId: 'a' },
+  { id: '3', label: 'order_id', comboId: 'b' },
+  { id: '4', label: 'ordered_pieces', comboId: 'b' },
+  { id: '5', label: 'label', comboId: 'b' },
+  { id: '6', label: 'country_of_sales', comboId: 'b' },
+  { id: '7', label: 'region', comboId: 'c' },
+  { id: '8', label: 'type', comboId: 'c' },
+  { id: '9', label: 'name', comboId: 'c' },
+  { id: '10', label: 'label', comboId: 'd' },
+  { id: '11', label: 'id', comboId: 'd' },
+  { id: '12', label: 'storage_location', comboId: 'd' },
+  { id: '13', label: 'distributor', comboId: 'd' },
+  { id: '14', label: 'en_country', comboId: 'e' },
+  { id: '15', label: 'region', comboId: 'e' },
+  { id: '16', label: 'de_country', comboId: 'e' },
+  { id: '17', label: 'region', comboId: 'f' },
+  { id: '18', label: 'department', comboId: 'f' },
+  { id: '19', label: 'role', comboId: 'f' },
+  { id: '20', label: 'type', comboId: 'f' },
+  { id: '21', label: 'name', comboId: 'f' },
+  { id: '22', label: 'storage_location', comboId: 'g' },
+  { id: '23', label: 'label', comboId: 'g' },
+  { id: '24', label: 'distributor', comboId: 'g' },
+  { id: '25', label: 'region', comboId: 'g' },
+  { id: '26', label: 'id', comboId: 'g' },
+  { id: '27', label: 'model', comboId: 'g' },
+  { id: '28', label: 'amount', comboId: 'g' },
+  { id: '29', label: 'department', comboId: 'g' },
+  { id: '30', label: 'name', comboId: 'h' },
+  { id: '31', label: 'type', comboId: 'h' },
+  { id: '32', label: 'type', comboId: 'h' },
+  { id: '33', label: 'is_active', comboId: 'h' },
+  { id: '34', label: 'region', comboId: 'h' },
+  { id: '35', label: 'storage_location', comboId: 'i' },
+  { id: '36', label: 'distributor', comboId: 'i' },
+  { id: '37', label: 'status', comboId: 'i' },
+  { id: '38', label: 'amount_orders', comboId: 'i' },
+  { id: '39', label: 'responsibility', comboId: 'i' },
+  { id: '40', label: 'model', comboId: 'i' },
+];
+
+const edges = [
+  {
+    source: '0',
+    target: '3',
+  },
+  {
+    source: '0',
+    target: '4',
+  },
+  {
+    source: '1',
+    target: '6',
+  },
+  {
+    source: '2',
+    target: '5',
+  },
+  {
+    source: '3',
+    target: '11',
+  },
+  {
+    source: '3',
+    target: '12',
+  },
+  {
+    source: '4',
+    target: '28',
+  },
+  {
+    source: '5',
+    target: '10',
+  },
+  {
+    source: '6',
+    target: '14',
+  },
+  {
+    source: '7',
+    target: '15',
+  },
+  {
+    source: '7',
+    target: '17',
+  },
+  {
+    source: '8',
+    target: '20',
+  },
+  {
+    source: '8',
+    target: '32',
+  },
+  {
+    source: '9',
+    target: '21',
+  },
+  {
+    source: '10',
+    target: '23',
+  },
+  {
+    source: '11',
+    target: '26',
+  },
+  {
+    source: '12',
+    target: '22',
+  },
+  {
+    source: '13',
+    target: '24',
+  },
+  {
+    source: '14',
+    target: '24',
+  },
+  {
+    source: '15',
+    target: '25',
+  },
+  {
+    source: '18',
+    target: '29',
+  },
+  {
+    source: '17',
+    target: '34',
+  },
+  {
+    source: '20',
+    target: '31',
+  },
+  {
+    source: '21',
+    target: '30',
+  },
+  {
+    source: '22',
+    target: '35',
+  },
+  {
+    source: '24',
+    target: '36',
+  },
+  {
+    source: '27',
+    target: '40',
+  },
+  {
+    source: '27',
+    target: '37',
+  },
+  {
+    source: '28',
+    target: '38',
+  },
+  {
+    source: '29',
+    target: '39',
+  },
+  {
+    source: '30',
+    target: '39',
+  },
+  {
+    source: '33',
+    target: '37',
+  },
+];
+
+// aka tables
+const combos = [
+  {
+    id: 'a',
+    label: 'source_salesforce',
+  },
+  {
+    id: 'b',
+    label: 'dim_sales',
+  },
+  {
+    id: 'c',
+    label: 'source_HR',
+  },
+  {
+    id: 'd',
+    label: 'dim_sales_9x5k',
+  },
+  {
+    id: 'e',
+    label: 'dim_region',
+  },
+  {
+    id: 'f',
+    label: 'dim_employee',
+  },
+  {
+    id: 'g',
+    label: 'fact_sales',
+  },
+  {
+    id: 'h',
+    label: 'dim_employee_sales',
+  },
+  {
+    id: 'i',
+    label: 'report_regional_sales',
+  },
+];
+
+const data: GraphData = { nodes, edges, combos };
+
+const sqlLogic = [
+  {
+    comboId: 'a',
+    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+  },
+  {
+    comboId: 'b',
+    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+  },
+  {
+    comboId: 'c',
+    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+  },
+  {
+    comboId: 'd',
+    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+  },
+  {
+    comboId: 'e',
+    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+  },
+  {
+    comboId: 'f',
+    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+  },
+  {
+    comboId: 'g',
+    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+  },
+  {
+    comboId: 'h',
+    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+  },
+  {
+    comboId: 'i',
+    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+  },
+];
 
 enum NodeType {
   Self = 'SELF',
@@ -280,10 +271,13 @@ enum NodeType {
   Child = 'CHILD',
 }
 
-const getNodeIdsToExplore = (edges: EdgeConfig[], coveredNodeIds: string[]) => {
+const getNodeIdsToExplore = (
+  edgesToExplore: EdgeConfig[],
+  coveredNodeIds: string[]
+) => {
   const isString = (item: string | undefined): item is string => !!item;
 
-  let nodeIdsToExplore: string[] = edges
+  let nodeIdsToExplore: string[] = edgesToExplore
     .map((edge) => [edge.source, edge.target])
     .flat()
     .filter(isString);
@@ -410,27 +404,27 @@ const loadData = (
 };
 
 const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
-  const edges: IEdge[] = [];
+  const dependentEdges: IEdge[] = [];
 
   if (isUpstream) {
     node.getInEdges().forEach((edge) => {
       const source = edge.getSource();
 
-      if (source) edges.push(...getDependentEdges(source, true));
+      if (source) dependentEdges.push(...getDependentEdges(source, true));
 
-      edges.push(edge);
+      dependentEdges.push(edge);
     });
   } else {
     node.getOutEdges().forEach((edge) => {
       const target = edge.getTarget();
 
-      if (target) edges.push(...getDependentEdges(target, false));
+      if (target) dependentEdges.push(...getDependentEdges(target, false));
 
-      edges.push(edge);
+      dependentEdges.push(edge);
     });
   }
 
-  return edges;
+  return dependentEdges;
 };
 
 declare type Index = {
@@ -512,11 +506,14 @@ const similarity = (s1: string, s2: string) => {
 
 export default (): ReactElement => {
   const [graph, setGraph] = useState<Graph>();
+  const [sql, setSQL] = useState('');
   const [inputText, setInputText] = useState('');
   const [suggestion, setSuggestion] = useState('');
   const [info, setInfo] = useState('');
 
   const closeSidePanel = () => {
+    setSQL('');
+
     const panel = document.getElementById('sqlSidepanel');
     if (!panel) throw new ReferenceError('SQL Panel does not exist');
     panel.style.visibility = 'hidden';
@@ -788,6 +785,21 @@ export default (): ReactElement => {
           selfNodeId,
         });
       } else if (event.select && event.target.get('type') === 'combo') {
+        const comboId = event.target.get('id');
+
+        const sqlLogicFilterResults = sqlLogic.filter(
+          (logic) => logic.comboId === comboId
+        );
+
+        if (sqlLogicFilterResults.length > 1)
+          throw new ReferenceError(
+            'Multiple sql models for materialization found'
+          );
+        if (!sqlLogicFilterResults.length)
+          throw new ReferenceError('No sql model for materialization found');
+
+        setSQL(sqlLogicFilterResults[0].sql);
+
         const panel = document.getElementById('sqlSidepanel');
         if (!panel) throw new ReferenceError('SQL Panel does not exist');
         panel.style.visibility = 'visible';
@@ -845,9 +857,9 @@ export default (): ReactElement => {
 
   return (
     <div id="lineageContainer">
-      <div id="navbar">
-        <img id="logo" src={Logo} alt="logo" />
-        <div id="searchbar">
+      <div className="navbar">
+        <img className="logo" src={Logo} alt="logo" />
+        <div id="searchbar" className="searchbar">
           <div id="inputWrapper">
             <input
               className="search"
@@ -868,8 +880,8 @@ export default (): ReactElement => {
               onChange={() => {}}
             />
           </div>
-          <button id="submit" type="submit" onClick={handleSearch}>
-            <FaSearch id="iconSearch" />
+          <button className="submit" type="submit" onClick={handleSearch}>
+            GO
           </button>
         </div>
       </div>
@@ -877,29 +889,26 @@ export default (): ReactElement => {
       <div id="sqlSidepanel" className="sidepanel">
         <div className="header">
           <p className="title">SQL Model Logic</p>
-          <button
-            className="closebtn"
-            onClick={closeSidePanel}
-          >
+          <button className="closebtn" onClick={closeSidePanel}>
             &times;
           </button>
         </div>
         <div id="editor" className="content">
           <AceEditor
+            name="sqlEditor"
             mode="pgsql"
             theme="dracula"
             height="100%"
             width="100%"
             fontSize={18}
             readOnly={true}
-            value={
-              "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test"
-            }
+            value={sql}
             wrapEnabled={true}
             showPrintMargin={false}
           />
         </div>
       </div>
+
       <div id="snackbar">{info}</div>
     </div>
   );

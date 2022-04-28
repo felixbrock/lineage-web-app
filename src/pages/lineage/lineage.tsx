@@ -6,9 +6,10 @@ import './lineage.scss';
 import AceEditor from 'react-ace';
 
 import 'ace-builds/src-noconflict/mode-pgsql';
-import 'ace-builds/src-noconflict/theme-dracula';
+import 'ace-builds/src-noconflict/theme-xcode';
 import 'ace-builds/src-noconflict/ext-language_tools';
 
+// aka columns
 const nodes = [
   { id: '0', label: 'sales_order_id', comboId: 'a' },
   { id: '1', label: 'country_of_sales', comboId: 'a' },
@@ -229,43 +230,43 @@ const data: GraphData = { nodes, edges, combos };
 const sqlLogic = [
   {
     comboId: 'a',
-    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+    sql: "with table as (\n  select 1 as sales_order_id, 'string' as country_of_sales,\n    'category' as product_category\n    \n)\n\nselect *\nfrom table",
   },
   {
     comboId: 'b',
-    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+    sql: 'select sales_order_id as order_id, sales_order_id as ordered_pieces,\n  product_category as label, country_of_sales from source_salesforce\n',
   },
   {
     comboId: 'c',
-    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+    sql: "with table as (\n  select 'region' as region, 'type' as type,\n    'name' as name\n    \n)\n\nselect *\nfrom table",
   },
   {
     comboId: 'd',
-    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+    sql: "with table as (\n  select label, order_id as id, order_id as storage_location, 'distributor' as distributor from dim_sales\n    \n)\n\nselect *\nfrom table",
   },
   {
     comboId: 'e',
-    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+    sql: "with table as (\n  select country_of_sales as en_country, region, 'de_country' as de_country from dim_sales JOIN source_HR \n WHERE dim_sales.label = source_HR.type \n)\n\nselect *\nfrom table",
   },
   {
     comboId: 'f',
-    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+    sql: "with table as (\n  select region, 'department' as department, 'role' as role, type, name from source_HR\n    \n)\n\nselect *\nfrom table",
   },
   {
     comboId: 'g',
-    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+    sql: "with table as (\n  select storage_location, label, CONCAT(distributor, en_country) as distributor \n region, id, 'model' as model,\n ordered_pieces as amount, department\n FROM ((dim_sales_9x5k JOIN dim_region WHERE dim_sales_9x5k.storage_location = dim_region.region)\n JOIN dim_sales WHERE dim_region.region = dim_sales.country_of_sales)\n JOIN dim_employee WHERE dim_region.region = dim_employee.region \n)\n\nselect *\nfrom table",
   },
   {
     comboId: 'h',
-    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+    sql: "with table as (\n  select name, type, 'is_active' as is_active, region from dim_employee \n)\n\nselect *\nfrom table",
   },
   {
     comboId: 'i',
-    sql: "\n\nwith test as (\n    select 1 as col1, 'string' as col2,\n    'firstname' as first_name, 5 as department_id\n    \n)\n\nselect *\nfrom test",
+    sql: 'select storage_location, distributor, CONCAT(model, is_active) as status,\n amount as amount_orders, CONCAT(department, name) as responsibility, model\n from fact_sales join dim_employee_sales\n WHERE fact_sales.region = dim_employee_sales.region\n',
   },
 ];
 
-enum NodeType {
+enum DataLoadNodeType {
   Self = 'SELF',
   Parent = 'PARENT',
   Child = 'CHILD',
@@ -289,10 +290,29 @@ const getNodeIdsToExplore = (
   return nodeIdsToExplore;
 };
 
-/* Returns a  subset of existing data for initial load of page */
+const loadCombo = (comboId: string): GraphData => {
+  if (!data.nodes) return data;
+  const dataNodes = data.nodes;
+
+  if (!data.combos) return data;
+  const dataCombos = data.combos;
+
+  const selfCombo = dataCombos.find((element) => element.id === comboId);
+  if (!selfCombo) throw new ReferenceError('Node not found');
+
+  const selfNodes = dataNodes.filter((node) => node.comboId === comboId);
+
+  return {
+    nodes: selfNodes,
+    edges: [],
+    combos: [selfCombo],
+  };
+};
+
+/* Returns a  subset of existing data for a selected node */
 const loadData = (
   nodeId: string,
-  nodeType: NodeType,
+  nodeType: DataLoadNodeType,
   coveredNodeIds: string[],
   coveredComboIds: string[]
 ): GraphData => {
@@ -335,7 +355,10 @@ const loadData = (
   const isGraphData = (item: GraphData | undefined): item is GraphData =>
     !!item;
 
-  if (nodeType === NodeType.Parent || nodeType === NodeType.Self) {
+  if (
+    nodeType === DataLoadNodeType.Parent ||
+    nodeType === DataLoadNodeType.Self
+  ) {
     const selfParentEdges = dataEdges.filter((edge) => edge.target === nodeId);
 
     graphData.edges.push(...selfParentEdges);
@@ -347,7 +370,12 @@ const loadData = (
 
     const dataSubsets = nodeIdsToExplore
       .map((id) =>
-        loadData(id, NodeType.Parent, localCoveredNodeIds, localCoveredComboIds)
+        loadData(
+          id,
+          DataLoadNodeType.Parent,
+          localCoveredNodeIds,
+          localCoveredComboIds
+        )
       )
       .filter(isGraphData);
 
@@ -361,7 +389,10 @@ const loadData = (
     });
   }
 
-  if (nodeType === NodeType.Child || nodeType === NodeType.Self) {
+  if (
+    nodeType === DataLoadNodeType.Child ||
+    nodeType === DataLoadNodeType.Self
+  ) {
     const selfChildEdges = dataEdges.filter((edge) => edge.source === nodeId);
 
     graphData.edges.push(...selfChildEdges);
@@ -373,7 +404,12 @@ const loadData = (
 
     const dataSubsets = nodeIdsToExplore
       .map((id) =>
-        loadData(id, NodeType.Child, localCoveredNodeIds, localCoveredComboIds)
+        loadData(
+          id,
+          DataLoadNodeType.Child,
+          localCoveredNodeIds,
+          localCoveredComboIds
+        )
       )
       .filter(isGraphData);
 
@@ -437,7 +473,7 @@ declare type Index = {
 const searchData = () => {
   const searchIndex: Index[] = [];
 
-  if (data.nodes)  
+  if (data.nodes)
     data.nodes.forEach((node) => {
       if (!node.label) throw new ReferenceError('Node without label found');
       searchIndex.push({
@@ -537,7 +573,7 @@ export default (): ReactElement => {
     }
 
     let id = comboConfig.id;
-
+    let isOnlyCombo = true;
     if (inputContent.length > 1) {
       if (!data.nodes) throw new ReferenceError('No nodes found');
       const nodeConfig = data.nodes.find(
@@ -548,7 +584,13 @@ export default (): ReactElement => {
         return;
       }
       id = nodeConfig.id;
+      isOnlyCombo = false;
     }
+
+    if (isOnlyCombo) graph.data(loadCombo(id));
+    else graph.data(loadData(id, DataLoadNodeType.Self, [], []));
+
+    graph.render();
 
     const target = graph.findById(id);
     graph.setItemState(target, 'selected', true);
@@ -771,13 +813,9 @@ export default (): ReactElement => {
         selectedEdges.forEach((edge) => edge.clearStates());
 
         const selfNodeId = event.target.getID();
-        graphObj.data(loadData(selfNodeId, NodeType.Self, [], []));
-
-        console.log(graphObj.getZoom());
+        graphObj.data(loadData(selfNodeId, DataLoadNodeType.Self, [], []));
 
         graphObj.render();
-
-        console.log(graphObj.getZoom());
 
         graphObj.emit('layout:finish', {
           selfNodeId,
@@ -826,7 +864,7 @@ export default (): ReactElement => {
     });
 
     const defaultNodeId = '12';
-    const defaultData = loadData(defaultNodeId, NodeType.Self, [], []);
+    const defaultData = loadData(defaultNodeId, DataLoadNodeType.Self, [], []);
 
     graphObj.data(defaultData);
 
@@ -895,7 +933,7 @@ export default (): ReactElement => {
           <AceEditor
             name="sqlEditor"
             mode="pgsql"
-            theme="dracula"
+            theme="xcode"
             height="100%"
             width="100%"
             fontSize={18}

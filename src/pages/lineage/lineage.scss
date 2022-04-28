@@ -175,7 +175,7 @@ $sidePanelMargin: 5px;
   overflow-x: hidden;
   visibility: hidden;
   // background-color: linear-gradient(to bottom right, $hivediveGrey, White);
-  border: 2px solid black;
+  border: 2px solid $hivediveGrey;
   opacity: 1;
   transition: visibility 0.3s linear, opacity 0.3s linear;
   padding-top: 50px;

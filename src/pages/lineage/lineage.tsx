@@ -821,6 +821,9 @@ export default (): ReactElement => {
           selfNodeId,
         });
       } else if (event.select && event.target.get('type') === 'combo') {
+        const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
+        selectedEdges.forEach((edge) => edge.clearStates());
+
         const comboId = event.target.get('id');
 
         const sqlLogicFilterResults = sqlLogic.filter(

@@ -437,10 +437,9 @@ declare type Index = {
 const searchData = () => {
   const searchIndex: Index[] = [];
 
-  if (data.nodes)
+  if (data.nodes)  
     data.nodes.forEach((node) => {
       if (!node.label) throw new ReferenceError('Node without label found');
-      if (!node.type) throw new ReferenceError('Node without type found');
       searchIndex.push({
         id: node.id,
         label: typeof node.label === 'string' ? node.label : '',
@@ -452,7 +451,6 @@ const searchData = () => {
   if (data.combos)
     data.combos.forEach((combo) => {
       if (!combo.label) throw new ReferenceError('Combo without label found');
-      if (!combo.type) throw new ReferenceError('Combo without type found');
       searchIndex.push({
         id: combo.id,
         label: typeof combo.label === 'string' ? combo.label : '',

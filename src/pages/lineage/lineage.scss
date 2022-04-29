@@ -34,8 +34,8 @@ $navbarHeight: 50px;
   transform: translateY(-50%);
 }
 
-/* div */
-#inputWrapper {
+// /* div */
+.inputWrapper {
   display: grid;
   place-items: center;
   width: 100%;
@@ -72,6 +72,8 @@ input.suggestion {
   color: gray;
   cursor: none;
 }
+
+
 
 /* button */
 button.submit {

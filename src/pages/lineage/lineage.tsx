@@ -254,7 +254,7 @@ const sqlLogic = [
   },
   {
     comboId: 'g',
-    sql: "with table as (\n  select storage_location, label, CONCAT(distributor, en_country) as distributor \n region, id, 'model' as model,\n ordered_pieces as amount, department\n FROM ((dim_sales_9x5k JOIN dim_region WHERE dim_sales_9x5k.storage_location = dim_region.region)\n JOIN dim_sales WHERE dim_region.region = dim_sales.country_of_sales)\n JOIN dim_employee WHERE dim_region.region = dim_employee.region \n)\n\nselect *\nfrom table",
+    sql: "with table as (\n  select storage_location, dim_sales_9x5k.label, CONCAT(distributor, en_country) as distributor \n dim_region.region, id, 'model' as model,\n ordered_pieces as amount, department\n FROM ((dim_sales_9x5k JOIN dim_region WHERE dim_sales_9x5k.storage_location = dim_region.region)\n JOIN dim_sales WHERE dim_region.region = dim_sales.country_of_sales)\n JOIN dim_employee WHERE dim_region.region = dim_employee.region \n)\n\nselect *\nfrom table",
   },
   {
     comboId: 'h',
@@ -866,7 +866,7 @@ export default (): ReactElement => {
       }
     });
 
-    const defaultNodeId = '12';
+    const defaultNodeId = '0';
     const defaultData = loadData(defaultNodeId, DataLoadNodeType.Self, [], []);
 
     graphObj.data(defaultData);
@@ -899,7 +899,7 @@ export default (): ReactElement => {
       <div className="navbar">
         <img className="logo" src={Logo} alt="logo" />
         <div id="searchbar" className="searchbar">
-          <div id="inputWrapper">
+          <div className="inputWrapper">
             <input
               className="search"
               id="search-bar-1"
@@ -910,7 +910,7 @@ export default (): ReactElement => {
               onChange={handleInput}
               onKeyDown={handleKeyDown}
             />
-            <input
+              <input
               className="suggestion"
               id="search-bar-2"
               name="search-bar"
@@ -919,10 +919,12 @@ export default (): ReactElement => {
               onChange={() => {}}
             />
           </div>
+
           <button className="submit" type="submit" onClick={handleSearch}>
             GO
           </button>
         </div>
+        
       </div>
       <div id="lineage" />
       <div id="sqlSidepanel" className="sidepanel">

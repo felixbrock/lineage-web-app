@@ -3,7 +3,7 @@ import getRoot from '../../shared/api-root-builder';
 import LineageDto from './lineage-dto';
 
 // TODO - Implement Interface regarding clean architecture
-export default class LineageApiRepositoryImpl {
+export default class LineageApiRepository {
   private static root = getRoot('lineage', '3000', 'api/v1');
 
   public static getOne = async (
@@ -11,7 +11,7 @@ export default class LineageApiRepositoryImpl {
     jwt: string
   ): Promise<LineageDto | null> => {
     try {
-      const apiRoot = await LineageApiRepositoryImpl.root;
+      const apiRoot = await LineageApiRepository.root;
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },

@@ -3,22 +3,21 @@ import getRoot from '../../shared/api-root-builder';
 import LogicDto from './logic-dto';
 
 // TODO - Implement Interface regarding clean architecture
-export default class LogicsApiRepositoryImpl {
+export default class LogicApiRepository {
   private static root = getRoot('logics', '3000', 'api/v1');
 
-  public static getBy = async (
-    params: URLSearchParams,
+  public static getOne = async (
+    id: string,
     jwt: string
-  ): Promise<LogicDto[]> => {
+  ): Promise<LogicDto | null> => {
     try {
-      const apiRoot = await LogicsApiRepositoryImpl.root;
+      const apiRoot = await LogicApiRepository.root;
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
-        params,
       };
 
-      const response = await axios.get(`${apiRoot}`, config);
+      const response = await axios.get(`${apiRoot}/logic/${id}`, config);
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);

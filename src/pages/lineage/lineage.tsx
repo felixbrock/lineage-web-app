@@ -9,263 +9,16 @@ import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-pgsql';
 import 'ace-builds/src-noconflict/theme-xcode';
 import 'ace-builds/src-noconflict/ext-language_tools';
-
-// aka columns
-const nodes = [
-  { id: '0', label: 'sales_order_id', comboId: 'a' },
-  { id: '1', label: 'country_of_sales', comboId: 'a' },
-  { id: '2', label: 'product_category', comboId: 'a' },
-  { id: '3', label: 'order_id', comboId: 'b' },
-  { id: '4', label: 'ordered_pieces', comboId: 'b' },
-  { id: '5', label: 'label', comboId: 'b' },
-  { id: '6', label: 'country_of_sales', comboId: 'b' },
-  { id: '7', label: 'region', comboId: 'c' },
-  { id: '8', label: 'type', comboId: 'c' },
-  { id: '9', label: 'name', comboId: 'c' },
-  { id: '10', label: 'label', comboId: 'd' },
-  { id: '11', label: 'id', comboId: 'd' },
-  { id: '12', label: 'storage_location', comboId: 'd' },
-  { id: '13', label: 'distributor', comboId: 'd' },
-  { id: '14', label: 'en_country', comboId: 'e' },
-  { id: '15', label: 'region', comboId: 'e' },
-  { id: '16', label: 'de_country', comboId: 'e' },
-  { id: '17', label: 'region', comboId: 'f' },
-  { id: '18', label: 'department', comboId: 'f' },
-  { id: '19', label: 'role', comboId: 'f' },
-  { id: '20', label: 'type', comboId: 'f' },
-  { id: '21', label: 'name', comboId: 'f' },
-  { id: '22', label: 'storage_location', comboId: 'g' },
-  { id: '23', label: 'label', comboId: 'g' },
-  { id: '24', label: 'distributor', comboId: 'g' },
-  { id: '25', label: 'region', comboId: 'g' },
-  { id: '26', label: 'id', comboId: 'g' },
-  { id: '27', label: 'model', comboId: 'g' },
-  { id: '28', label: 'amount', comboId: 'g' },
-  { id: '29', label: 'department', comboId: 'g' },
-  { id: '30', label: 'name', comboId: 'h' },
-  { id: '31', label: 'type', comboId: 'h' },
-  { id: '32', label: 'type', comboId: 'h' },
-  { id: '33', label: 'is_active', comboId: 'h' },
-  { id: '34', label: 'region', comboId: 'h' },
-  { id: '35', label: 'storage_location', comboId: 'i' },
-  { id: '36', label: 'distributor', comboId: 'i' },
-  { id: '37', label: 'status', comboId: 'i' },
-  { id: '38', label: 'amount_orders', comboId: 'i' },
-  { id: '39', label: 'responsibility', comboId: 'i' },
-  { id: '40', label: 'model', comboId: 'i' },
-];
-
-const edges = [
-  {
-    source: '0',
-    target: '3',
-  },
-  {
-    source: '0',
-    target: '4',
-  },
-  {
-    source: '1',
-    target: '6',
-  },
-  {
-    source: '2',
-    target: '5',
-  },
-  {
-    source: '3',
-    target: '11',
-  },
-  {
-    source: '3',
-    target: '12',
-  },
-  {
-    source: '4',
-    target: '28',
-  },
-  {
-    source: '5',
-    target: '10',
-  },
-  {
-    source: '6',
-    target: '14',
-  },
-  {
-    source: '7',
-    target: '15',
-  },
-  {
-    source: '7',
-    target: '17',
-  },
-  {
-    source: '8',
-    target: '20',
-  },
-  {
-    source: '8',
-    target: '32',
-  },
-  {
-    source: '9',
-    target: '21',
-  },
-  {
-    source: '10',
-    target: '23',
-  },
-  {
-    source: '11',
-    target: '26',
-  },
-  {
-    source: '12',
-    target: '22',
-  },
-  {
-    source: '13',
-    target: '24',
-  },
-  {
-    source: '14',
-    target: '24',
-  },
-  {
-    source: '15',
-    target: '25',
-  },
-  {
-    source: '18',
-    target: '29',
-  },
-  {
-    source: '17',
-    target: '34',
-  },
-  {
-    source: '20',
-    target: '31',
-  },
-  {
-    source: '21',
-    target: '30',
-  },
-  {
-    source: '22',
-    target: '35',
-  },
-  {
-    source: '24',
-    target: '36',
-  },
-  {
-    source: '27',
-    target: '40',
-  },
-  {
-    source: '27',
-    target: '37',
-  },
-  {
-    source: '28',
-    target: '38',
-  },
-  {
-    source: '29',
-    target: '39',
-  },
-  {
-    source: '30',
-    target: '39',
-  },
-  {
-    source: '33',
-    target: '37',
-  },
-];
-
-// aka tables
-const combos = [
-  {
-    id: 'a',
-    label: 'source_salesforce',
-  },
-  {
-    id: 'b',
-    label: 'dim_sales',
-  },
-  {
-    id: 'c',
-    label: 'source_HR',
-  },
-  {
-    id: 'd',
-    label: 'dim_sales_9x5k',
-  },
-  {
-    id: 'e',
-    label: 'dim_region',
-  },
-  {
-    id: 'f',
-    label: 'dim_employee',
-  },
-  {
-    id: 'g',
-    label: 'fact_sales',
-  },
-  {
-    id: 'h',
-    label: 'dim_employee_sales',
-  },
-  {
-    id: 'i',
-    label: 'report_regional_sales',
-  },
-];
-
-const data: GraphData = { nodes, edges, combos };
-
-const sqlLogic = [
-  {
-    comboId: 'a',
-    sql: "with table as (\n  select 1 as sales_order_id, 'string' as country_of_sales,\n    'category' as product_category\n    \n)\n\nselect *\nfrom table",
-  },
-  {
-    comboId: 'b',
-    sql: 'select sales_order_id as order_id, sales_order_id as ordered_pieces,\n  product_category as label, country_of_sales from source_salesforce\n',
-  },
-  {
-    comboId: 'c',
-    sql: "with table as (\n  select 'region' as region, 'type' as type,\n    'name' as name\n    \n)\n\nselect *\nfrom table",
-  },
-  {
-    comboId: 'd',
-    sql: "with table as (\n  select label, order_id as id, order_id as storage_location, 'distributor' as distributor from dim_sales\n    \n)\n\nselect *\nfrom table",
-  },
-  {
-    comboId: 'e',
-    sql: "with table as (\n  select country_of_sales as en_country, region, 'de_country' as de_country from dim_sales JOIN source_HR \n WHERE dim_sales.label = source_HR.type \n)\n\nselect *\nfrom table",
-  },
-  {
-    comboId: 'f',
-    sql: "with table as (\n  select region, 'department' as department, 'role' as role, type, name from source_HR\n    \n)\n\nselect *\nfrom table",
-  },
-  {
-    comboId: 'g',
-    sql: "with table as (\n  select storage_location, dim_sales_9x5k.label, CONCAT(distributor, en_country) as distributor \n dim_region.region, id, 'model' as model,\n ordered_pieces as amount, department\n FROM ((dim_sales_9x5k JOIN dim_region WHERE dim_sales_9x5k.storage_location = dim_region.region)\n JOIN dim_sales WHERE dim_region.region = dim_sales.country_of_sales)\n JOIN dim_employee WHERE dim_region.region = dim_employee.region \n)\n\nselect *\nfrom table",
-  },
-  {
-    comboId: 'h',
-    sql: "with table as (\n  select name, type, 'is_active' as is_active, region from dim_employee \n)\n\nselect *\nfrom table",
-  },
-  {
-    comboId: 'i',
-    sql: 'select storage_location, distributor, CONCAT(model, is_active) as status,\n amount as amount_orders, CONCAT(department, name) as responsibility, model\n from fact_sales join dim_employee_sales\n WHERE fact_sales.region = dim_employee_sales.region\n',
-  },
-];
+// import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
+// import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
+// import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
+// import DependenciesApiRepository from '../../infrastructure/lineage-api/dependencies/dependencies-api-repository';
+import LineageDto from '../../infrastructure/lineage-api/lineage/lineage-dto';
+// import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
+// import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
+// import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
+// import LogicApiRepository from '../../infrastructure/lineage-api/logics/logics-api-repository';
+import { defaultData, defaultSql } from './test-data';
 
 enum DataLoadNodeType {
   Self = 'SELF',
@@ -291,7 +44,7 @@ const getNodeIdsToExplore = (
   return nodeIdsToExplore;
 };
 
-const loadCombo = (comboId: string): GraphData => {
+const loadCombo = (comboId: string, data: GraphData): GraphData => {
   if (!data.nodes) return data;
   const dataNodes = data.nodes;
 
@@ -310,12 +63,24 @@ const loadCombo = (comboId: string): GraphData => {
   };
 };
 
+/* Compares two nodes based on label. Used for sorting functions */
+const compare = (first: any, second: any) => {
+  if (first.label < second.label) {
+    return -1;
+  }
+  if (first.label > second.label) {
+    return 1;
+  }
+  return 0;
+};
+
 /* Returns a  subset of existing data for a selected node */
 const loadData = (
   nodeId: string,
   nodeType: DataLoadNodeType,
   coveredNodeIds: string[],
-  coveredComboIds: string[]
+  coveredComboIds: string[],
+  data: GraphData
 ): GraphData => {
   const localCoveredNodeIds = coveredNodeIds;
   const localCoveredComboIds = coveredComboIds;
@@ -375,7 +140,8 @@ const loadData = (
           id,
           DataLoadNodeType.Parent,
           localCoveredNodeIds,
-          localCoveredComboIds
+          localCoveredComboIds,
+          data
         )
       )
       .filter(isGraphData);
@@ -409,7 +175,8 @@ const loadData = (
           id,
           DataLoadNodeType.Child,
           localCoveredNodeIds,
-          localCoveredComboIds
+          localCoveredComboIds,
+          data
         )
       )
       .filter(isGraphData);
@@ -435,7 +202,7 @@ const loadData = (
       index === self.findIndex((element) => element.id === node.id)
   );
 
-  graphData.nodes = cleanedNodes;
+  graphData.nodes = cleanedNodes.sort(compare);
 
   return graphData;
 };
@@ -471,7 +238,7 @@ declare type Index = {
   comboId?: string;
 };
 
-const searchData = () => {
+const searchData = (data: GraphData) => {
   const searchIndex: Index[] = [];
 
   if (data.nodes)
@@ -539,12 +306,50 @@ const similarity = (s1: string, s2: string) => {
   );
 };
 
+// const buildData = (
+//   materializations: MaterializationDto[],
+//   columns: ColumnDto[],
+//   dependencies: DependencyDto[]
+// ): GraphData => {
+//   const combos = materializations.map(
+//     (materialization): ComboConfig => ({
+//       id: materialization.id,
+//       label: materialization.name,
+//     })
+//   );
+//   const nodes = columns
+//     .map(
+//       (column): NodeConfig => ({
+//         id: column.id,
+//         label: column.name,
+//         comboId: column.materializationId,
+//       })
+//     )
+//     .sort(compare);
+//   const edges = dependencies.map(
+//     (dependency): EdgeConfig => ({
+//       source: dependency.tailId,
+//       target: dependency.headId,
+//     })
+//   );
+
+//   return { combos, nodes, edges };
+// };
+
 export default (): ReactElement => {
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');
   const [inputText, setInputText] = useState('');
   const [suggestion, setSuggestion] = useState('');
   const [info, setInfo] = useState('');
+  const [lineage, setLineage] = useState<LineageDto>();
+  // const [materializations, setMaterializations] = useState<
+  //   MaterializationDto[]
+  // >([]);
+  // const [columns, setColumns] = useState<ColumnDto[]>([]);
+  // const [dependencies, setDependencies] = useState<DependencyDto[]>([]);
+  const [data, setData] = useState<GraphData>();
+  const [readyToBuild, setReadyToBuild] = useState(false);
 
   const closeSidePanel = () => {
     setSQL('');
@@ -556,6 +361,7 @@ export default (): ReactElement => {
   };
 
   const handleSearch = () => {
+    if (!data) return;
     if (!graph || !inputText) return;
     const selectedNodes = graph.findAllByState('node', 'selected');
     selectedNodes.forEach((node) => node.clearStates());
@@ -588,8 +394,8 @@ export default (): ReactElement => {
       isOnlyCombo = false;
     }
 
-    if (isOnlyCombo) graph.data(loadCombo(id));
-    else graph.data(loadData(id, DataLoadNodeType.Self, [], []));
+    if (isOnlyCombo) graph.data(loadCombo(id, data));
+    else graph.data(loadData(id, DataLoadNodeType.Self, [], [], data));
 
     graph.render();
 
@@ -637,6 +443,7 @@ export default (): ReactElement => {
   }, [info]);
 
   useEffect(() => {
+    if (!data) return;
     if (!inputText) {
       setSuggestion('');
       return;
@@ -650,17 +457,17 @@ export default (): ReactElement => {
       combo = input[0];
       node = input[1];
 
-      const comboIndex = searchData().find(
+      const comboIndex = searchData(data).find(
         (element) => element.type === 'combo' && element.label === combo
       );
       if (!comboIndex) throw new ReferenceError('Typed combo not found');
 
-      index = searchData().filter(
+      index = searchData(data).filter(
         (element) =>
           element.type === 'node' && element.comboId === comboIndex.id
       );
     } else {
-      index = searchData().filter((element) => element.type === 'combo');
+      index = searchData(data).filter((element) => element.type === 'combo');
       combo = inputText;
     }
 
@@ -682,7 +489,25 @@ export default (): ReactElement => {
   }, [inputText]);
 
   useEffect(() => {
-    if (graph) return;
+    if (!readyToBuild) return;
+
+    // setData(buildData(materializations, columns, dependencies));
+    setData(defaultData);
+
+    setReadyToBuild(false);
+  }, [readyToBuild]);
+
+  useEffect(() => {
+    if (!sql) return;
+
+    const panel = document.getElementById('sqlSidepanel');
+    if (!panel) throw new ReferenceError('SQL Panel does not exist');
+    panel.style.visibility = 'visible';
+    panel.style.opacity = '1';
+  }, [sql]);
+
+  useEffect(() => {
+    if (!data) return;
 
     const hivediveBlue = '#2c25ff';
 
@@ -709,12 +534,13 @@ export default (): ReactElement => {
         sortByCombo: true,
         controlPoints: true,
         nodesep: 1,
+        ranksep: 90,
       },
       defaultNode: {
         // size: [30, 20],
         type: 'rect',
         style: {
-          width: 130,
+          width: 300,
           lineWidth: 1,
           stroke: '#ababab',
           fill: '#fafaff',
@@ -750,7 +576,6 @@ export default (): ReactElement => {
       defaultCombo: {
         // type: 'cRect',
         type: 'rect',
-        size: 150,
         fixCollapseSize: [80, 10],
       },
       comboStateStyles: {
@@ -771,21 +596,25 @@ export default (): ReactElement => {
         graphObj.changeSize(container.scrollWidth, container.scrollHeight);
       };
 
-    graphObj.on('layout:finish', (event) => {
-      const selfNodeId = event.selfNodeId;
+    graphObj.on('afterlayout', () => {    
+      graphObj.emit('layout:finish');
+    });
+
+    graphObj.on('layout:finish', () => {
+      const selectedNodeId = graphObj.get('selectedNodeId');     
 
       const isString = (item: unknown): item is string => !!item;
 
-      if (!isString(selfNodeId))
+      if (!isString(selectedNodeId))
         throw new ReferenceError('Self node id is not of type string');
 
-      const selfNode = graphObj.findById(selfNodeId);
+      const selfNode = graphObj.findById(selectedNodeId);
 
       const isNode = (object: any): object is INode => 'getEdges' in object;
 
       if (!isNode(selfNode)) throw new ReferenceError('Event item is no node');
 
-      graphObj.setItemState(selfNodeId, 'selected', true);
+      graphObj.setItemState(selectedNodeId, 'selected', true);
 
       getDependentEdges(selfNode, true).forEach((edge) => {
         graphObj.setItemState(edge.getID(), 'nodeSelected', true);
@@ -796,6 +625,9 @@ export default (): ReactElement => {
       });
 
       graphObj.focusItem(selfNode);
+      
+      graphObj.zoom(graphObj.get('latestZoom') || 1);
+      
     });
 
     graphObj.on('nodeselectchange', (event) => {
@@ -813,37 +645,43 @@ export default (): ReactElement => {
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         selectedEdges.forEach((edge) => edge.clearStates());
 
-        const selfNodeId = event.target.getID();
-        graphObj.data(loadData(selfNodeId, DataLoadNodeType.Self, [], []));
+        const selectedNodeId = event.target.getID();
+        graphObj.data(loadData(selectedNodeId, DataLoadNodeType.Self, [], [], data));
+
+        graphObj.set('latestZoom', graphObj.getZoom());
+        graphObj.set('selectedNodeId', selectedNodeId);
 
         graphObj.render();
-
-        graphObj.emit('layout:finish', {
-          selfNodeId,
-        });
       } else if (event.select && event.target.get('type') === 'combo') {
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         selectedEdges.forEach((edge) => edge.clearStates());
 
-        const comboId = event.target.get('id');
+        // const comboId = event.target.get('id');
 
-        const sqlLogicFilterResults = sqlLogic.filter(
-          (logic) => logic.comboId === comboId
-        );
+        // const combo = materializations.find(
+        //   (materialization) => materialization.id === comboId
+        // );
 
-        if (sqlLogicFilterResults.length > 1)
-          throw new ReferenceError(
-            'Multiple sql models for materialization found'
-          );
-        if (!sqlLogicFilterResults.length)
-          throw new ReferenceError('No sql model for materialization found');
+        // if (!combo)
+        //   throw new ReferenceError(
+        //     'Materialization object for selected combo not found'
+        //   );
 
-        setSQL(sqlLogicFilterResults[0].sql);
+        // console.log(combo.logicId);
 
-        const panel = document.getElementById('sqlSidepanel');
-        if (!panel) throw new ReferenceError('SQL Panel does not exist');
-        panel.style.visibility = 'visible';
-        panel.style.opacity = '1';
+        // LogicApiRepository.getOne(combo.logicId, 'todo-replace').then(
+        //   (logicDto) => {
+        //     console.log(logicDto?.sql);
+
+        //     if (!logicDto)
+        //       throw new ReferenceError('Not able to retrieve logic object');
+
+        //     setSQL(logicDto.sql);
+        //   }
+        // );
+
+        setSQL(defaultSql);
+
         // const isCombo = (object: any): object is ICombo => 'getNodes' in object;
 
         // if (!isCombo(event.target))
@@ -867,14 +705,16 @@ export default (): ReactElement => {
       }
     });
 
-    const defaultNodeId = '0';
-    const defaultData = loadData(defaultNodeId, DataLoadNodeType.Self, [], []);
+    const defaultNodeId = '627160657e3d8066494d4190';
+    // const defaultData = loadData(
+    //   defaultNodeId,
+    //   DataLoadNodeType.Self,
+    //   [],
+    //   [],
+    //   data
+    // );
 
-    graphObj.data(defaultData);
-
-    graphObj.render();
-
-    graphObj.emit('layout:finish', { selfNodeId: defaultNodeId });
+    graphObj.data(data);
 
     // if (!defaultData.nodes) throw new ReferenceError('Nodes do not exist');
     // const selfNode = defaultData.nodes.find(
@@ -890,9 +730,51 @@ export default (): ReactElement => {
     //     if (combo.id !== selfComboId) graphObj.collapseCombo(combo.id);
     //   });
 
-    // graphObj.render();
+    graphObj.set('selectedNodeId', defaultNodeId);
+
+    graphObj.render();
 
     setGraph(graphObj);
+  }, [data]);
+
+  useEffect(() => {
+    if (lineage) return;
+    setLineage({ id: 'todo', createdAt: 1 });
+    setReadyToBuild(true);
+
+    // const lineageId = '62715f897e3d8066494d3f9e';
+
+    // LineageApiRepository.getOne(lineageId, 'todo-replace')
+    //   .then((lineageDto) => {
+    //     if (!lineageDto)
+    //       throw new TypeError('Queried lineage object not found');
+    //     setLineage(lineageDto);
+    //     return MaterializationsApiRepository.getBy(
+    //       new URLSearchParams({ lineageId: lineageId }),
+    //       'todo-replace'
+    //     );
+    //   })
+    //   .then((materializationDtos) => {
+    //     setMaterializations(materializationDtos);
+    //     return ColumnsApiRepository.getBy(
+    //       new URLSearchParams({ lineageId: lineageId }),
+    //       'todo-replace'
+    //     );
+    //   })
+    //   .then((columnDtos) => {
+    //     setColumns(columnDtos);
+    //     return DependenciesApiRepository.getBy(
+    //       new URLSearchParams({ lineageId: lineageId }),
+    //       'todo-replace'
+    //     );
+    //   })
+    //   .then((dependencyDtos) => {
+    //     setDependencies(dependencyDtos);
+    //     setReadyToBuild(true);
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //   });
   }, []);
 
   return (
@@ -911,7 +793,7 @@ export default (): ReactElement => {
               onChange={handleInput}
               onKeyDown={handleKeyDown}
             />
-              <input
+            <input
               className="suggestion"
               id="search-bar-2"
               name="search-bar"
@@ -925,7 +807,6 @@ export default (): ReactElement => {
             GO
           </button>
         </div>
-        
       </div>
       {/* {[false, 'sm', 'md', 'lg', 'xl', 'xxl'].map((expand) => (
     <Navbar key={expand} bg="light" expand={expand} className="mb-3">

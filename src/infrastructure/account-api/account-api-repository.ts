@@ -3,7 +3,7 @@ import getRoot from '../shared/api-root-builder';
 import AccountDto from './account-dto';
 
 // TODO - Implement Interface regarding clean architecture
-export default class AccountApiRepositoryImpl {
+export default class AccountApiRepository {
   private static root = getRoot('account', '8081', 'api/v1');
 
   public static getBy = async (
@@ -11,7 +11,7 @@ export default class AccountApiRepositoryImpl {
     jwt: string
   ): Promise<AccountDto[]> => {
     try {
-      const apiRoot = await AccountApiRepositoryImpl.root;
+      const apiRoot = await AccountApiRepository.root;
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },

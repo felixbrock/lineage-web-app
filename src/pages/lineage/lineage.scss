@@ -14,12 +14,25 @@ $navbarHeight: 50px;
   border-bottom: 2px solid $hivediveBlue;
 }
 
-/* img */
-.navbar .logo {
+.navbar #menu-container {
   position: absolute;
   left: 0%;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.navbar #menu-container:after {
+  content: '';
+  display: inline-block;
+  width: 100%;
+}
+.navbar #menu-container:before {
+  content: '';
+  display: block;
+  margin-top: -1.25em;
 }
 
 /* div */
@@ -76,7 +89,7 @@ input.suggestion {
 
 
 /* button */
-button.submit {
+button.navbar-button {
   width: 60px;
   font-weight: bold;
   font-size: 20px;
@@ -86,7 +99,7 @@ button.submit {
   box-shadow: none;
 }
 
-button.submit:hover {
+button.navbar-button:hover {
   color: $hivediveBlue;
 }
 
@@ -166,6 +179,36 @@ button.submit:hover {
   }
 }
 
+$headerMargin: 10px;
+
+#sidenav {
+  height: calc(100% - $navbarHeight);
+  width: 20%;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  overflow-x: hidden;
+  visibility: hidden;
+  background-color: white;
+  border: 2px solid $hivediveGrey;
+  opacity: 1;
+  transition: visibility 0.3s linear, opacity 0.3s linear;
+  padding-top: 50px;
+}
+
+#sidenav #search 
+  {
+    position: absolute;
+    width: calc(100% - 2 * $headerMargin);
+    top: 0;
+    margin: $headerMargin $headerMargin 0 $headerMargin;
+  }
+
+#sidenav #content {
+  height: 100%;
+  padding: 0 10px 10px 10px;
+}
+
 $sidePanelMargin: 5px;
 
 .sidepanel {
@@ -183,8 +226,6 @@ $sidePanelMargin: 5px;
   padding-top: 50px;
   margin: $sidePanelMargin 0 $sidePanelMargin $sidePanelMargin;
 }
-
-$headerMargin: 10px;
 
 .sidepanel .header {
   position: absolute;

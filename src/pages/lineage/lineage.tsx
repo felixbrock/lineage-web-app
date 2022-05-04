@@ -2,9 +2,8 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import Logo from '../../components/top-nav/hivedive180.svg';
 import G6, { EdgeConfig, Graph, GraphData, IEdge, INode } from '@antv/g6';
 import './lineage.scss';
-// import { FaSearch } from 'react-icons/fa';
-// import Button from 'react-bootstrap/Button';
 import AceEditor from 'react-ace';
+import { FaBars } from 'react-icons/fa';
 
 import 'ace-builds/src-noconflict/mode-pgsql';
 import 'ace-builds/src-noconflict/theme-xcode';
@@ -351,6 +350,17 @@ export default (): ReactElement => {
   const [data, setData] = useState<GraphData>();
   const [readyToBuild, setReadyToBuild] = useState(false);
 
+  const toggleShowSideNav = () => {
+    const sidenav = document.getElementById('sidenav');
+    if (!sidenav) throw new ReferenceError('Sidenav does not exist');
+    console.log(sidenav.style.visibility);
+    console.log(sidenav.style.opacity);
+
+    const visible = sidenav.style.visibility === 'visible';
+    sidenav.style.visibility = visible ? 'hidden' : 'visible';
+    sidenav.style.opacity = visible ? '0' : '1';
+  };
+
   const closeSidePanel = () => {
     setSQL('');
 
@@ -596,12 +606,12 @@ export default (): ReactElement => {
         graphObj.changeSize(container.scrollWidth, container.scrollHeight);
       };
 
-    graphObj.on('afterlayout', () => {    
+    graphObj.on('afterlayout', () => {
       graphObj.emit('layout:finish');
     });
 
     graphObj.on('layout:finish', () => {
-      const selectedNodeId = graphObj.get('selectedNodeId');     
+      const selectedNodeId = graphObj.get('selectedNodeId');
 
       const isString = (item: unknown): item is string => !!item;
 
@@ -625,9 +635,8 @@ export default (): ReactElement => {
       });
 
       graphObj.focusItem(selfNode);
-      
+
       graphObj.zoom(graphObj.get('latestZoom') || 1);
-      
     });
 
     graphObj.on('nodeselectchange', (event) => {
@@ -646,7 +655,9 @@ export default (): ReactElement => {
         selectedEdges.forEach((edge) => edge.clearStates());
 
         const selectedNodeId = event.target.getID();
-        graphObj.data(loadData(selectedNodeId, DataLoadNodeType.Self, [], [], data));
+        graphObj.data(
+          loadData(selectedNodeId, DataLoadNodeType.Self, [], [], data)
+        );
 
         graphObj.set('latestZoom', graphObj.getZoom());
         graphObj.set('selectedNodeId', selectedNodeId);
@@ -776,11 +787,17 @@ export default (): ReactElement => {
     //     console.log(error);
     //   });
   }, []);
-
   return (
     <div id="lineageContainer">
       <div className="navbar">
-        <img className="logo" src={Logo} alt="logo" />
+        <div id="menu-container">
+          <button className="navbar-button" onClick={toggleShowSideNav}>
+            <FaBars />
+          </button>
+
+          <img className="element" src={Logo} alt="logo" />
+        </div>
+
         <div id="searchbar" className="searchbar">
           <div className="inputWrapper">
             <input
@@ -803,59 +820,36 @@ export default (): ReactElement => {
             />
           </div>
 
-          <button className="submit" type="submit" onClick={handleSearch}>
+          <button
+            className="navbar-button"
+            type="submit"
+            onClick={handleSearch}
+          >
             GO
           </button>
         </div>
       </div>
-      {/* {[false, 'sm', 'md', 'lg', 'xl', 'xxl'].map((expand) => (
-    <Navbar key={expand} bg="light" expand={expand} className="mb-3">
-      <Container fluid>
-        <Navbar.Brand href="#">Navbar Offcanvas</Navbar.Brand>
-        <Navbar.Toggle aria-controls={`offcanvasNavbar-expand-${expand}`} />
-        <Navbar.Offcanvas
-          id={`offcanvasNavbar-expand-${expand}`}
-          aria-labelledby={`offcanvasNavbarLabel-expand-${expand}`}
-          placement="end"
+      {/* {
+        <Offcanvas
+          show={showSideNav}
+          onHide={handleCloseSideNav}
+          scroll={true}
+          backdrop={true}
         >
           <Offcanvas.Header closeButton>
-            <Offcanvas.Title id={`offcanvasNavbarLabel-expand-${expand}`}>
-              Offcanvas
-            </Offcanvas.Title>
+            <Offcanvas.Title>Offcanvas</Offcanvas.Title>
           </Offcanvas.Header>
           <Offcanvas.Body>
-            <Nav className="justify-content-end flex-grow-1 pe-3">
-              <Nav.Link href="#action1">Home</Nav.Link>
-              <Nav.Link href="#action2">Link</Nav.Link>
-              <NavDropdown
-                title="Dropdown"
-                id={`offcanvasNavbarDropdown-expand-${expand}`}
-              >
-                <NavDropdown.Item href="#action3">Action</NavDropdown.Item>
-                <NavDropdown.Item href="#action4">
-                  Another action
-                </NavDropdown.Item>
-                <NavDropdown.Divider />
-                <NavDropdown.Item href="#action5">
-                  Something else here
-                </NavDropdown.Item>
-              </NavDropdown>
-            </Nav>
-            <Form className="d-flex">
-              <FormControl
-                type="search"
-                placeholder="Search"
-                className="me-2"
-                aria-label="Search"
-              />
-              <Button variant="outline-success">Search</Button>
-            </Form>
+            Some text as placeholder. In real life you can have the elements you
+            have chosen. Like, text, images, lists, etc.
           </Offcanvas.Body>
-        </Navbar.Offcanvas>
-      </Container>
-    </Navbar>
-  ))} */}
+        </Offcanvas>
+      } */}
       <div id="lineage" />
+      <div id="sidenav" className="sidenav">
+        <div id="search"> hello</div>
+        <div id="content">hi</div>
+      </div>
       <div id="sqlSidepanel" className="sidepanel">
         <div className="header">
           <p className="title">SQL Model Logic</p>

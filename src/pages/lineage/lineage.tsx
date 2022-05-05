@@ -3,7 +3,7 @@ import Logo from '../../components/top-nav/hivedive180.svg';
 import G6, { EdgeConfig, Graph, GraphData, IEdge, INode } from '@antv/g6';
 import './lineage.scss';
 import AceEditor from 'react-ace';
-import { FaBars } from 'react-icons/fa';
+import { MdMenu, MdChevronRight, MdExpandMore} from 'react-icons/md';
 
 import 'ace-builds/src-noconflict/mode-pgsql';
 import 'ace-builds/src-noconflict/theme-xcode';
@@ -18,6 +18,11 @@ import LineageDto from '../../infrastructure/lineage-api/lineage/lineage-dto';
 // import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
 // import LogicApiRepository from '../../infrastructure/lineage-api/logics/logics-api-repository';
 import { defaultData, defaultSql } from './test-data';
+
+import TreeView from '@mui/lab/TreeView';
+// import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+// import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import TreeItem from '@mui/lab/TreeItem';
 
 enum DataLoadNodeType {
   Self = 'SELF',
@@ -201,7 +206,10 @@ const loadData = (
       index === self.findIndex((element) => element.id === node.id)
   );
 
-  graphData.nodes = cleanedNodes.sort(compare);
+  graphData.nodes = cleanedNodes;
+
+  graphData.nodes.sort(compare);
+  if(graphData.combos) graphData.combos.sort(compare);
 
   return graphData;
 };
@@ -349,6 +357,20 @@ export default (): ReactElement => {
   // const [dependencies, setDependencies] = useState<DependencyDto[]>([]);
   const [data, setData] = useState<GraphData>();
   const [readyToBuild, setReadyToBuild] = useState(false);
+  const [expanded, setExpanded] = useState<string[]>([]);
+
+  const toggleSideNavTreeView = (
+    event: React.SyntheticEvent,
+    nodeIds: string[]
+  ) => {
+    setExpanded(nodeIds);
+  };
+
+  const handleTreeViewExpandClick = () => {
+    setExpanded((oldExpanded) =>
+      oldExpanded.length === 0 ? ['1', '5', '6', '7'] : []
+    );
+  };
 
   const toggleShowSideNav = () => {
     const sidenav = document.getElementById('sidenav');
@@ -502,6 +524,9 @@ export default (): ReactElement => {
     if (!readyToBuild) return;
 
     // setData(buildData(materializations, columns, dependencies));
+    
+    defaultData.nodes.sort(compare);
+    defaultData.combos.sort(compare);
     setData(defaultData);
 
     setReadyToBuild(false);
@@ -787,12 +812,43 @@ export default (): ReactElement => {
     //     console.log(error);
     //   });
   }, []);
+
+  const buildTreeViewColumns = (comboId: string): ReactElement[] => {
+    if (!data) return [<></>];
+    if (!data.nodes) return [<></>];
+
+    const relevantColumns = data.nodes.filter(
+      (node) => node.comboId === comboId
+    );
+
+    const columnElements = relevantColumns.map((column) => (
+      <TreeItem nodeId={column.id} label={column.label} />
+    ));
+
+    return columnElements;
+  };
+
+  const buildTreeViewElements = (): ReactElement[] => {
+    console.log('hi');
+    
+    if (!data) return [<></>];
+    if (!data.combos) return [<></>];
+
+    const materializationElements = data.combos.map((combo) => (
+      <TreeItem nodeId={combo.id} label={combo.label}>
+        {buildTreeViewColumns(combo.id)}
+      </TreeItem>
+    ));
+
+    return materializationElements;
+  };
+
   return (
     <div id="lineageContainer">
       <div className="navbar">
         <div id="menu-container">
-          <button className="navbar-button" onClick={toggleShowSideNav}>
-            <FaBars />
+          <button className="hivedive" onClick={toggleShowSideNav}>
+            <MdMenu />
           </button>
 
           <img className="element" src={Logo} alt="logo" />
@@ -821,7 +877,7 @@ export default (): ReactElement => {
           </div>
 
           <button
-            className="navbar-button"
+            className="hivedive"
             type="submit"
             onClick={handleSearch}
           >
@@ -848,7 +904,20 @@ export default (): ReactElement => {
       <div id="lineage" />
       <div id="sidenav" className="sidenav">
         <div id="search"> hello</div>
-        <div id="content">hi</div>
+        <div id="content">
+          <button className='hivedive' onClick={handleTreeViewExpandClick}>
+            {expanded.length === 0 ? 'Expand all' : 'Collapse all'}
+          </button>
+          <TreeView
+            aria-label="controlled"
+            defaultCollapseIcon={<MdChevronRight />}
+            defaultExpandIcon={<MdExpandMore />}
+            expanded={expanded}
+            onNodeToggle={toggleSideNavTreeView}
+          >
+            {data ? buildTreeViewElements() : <></>}
+          </TreeView>
+        </div>
       </div>
       <div id="sqlSidepanel" className="sidepanel">
         <div className="header">

@@ -638,14 +638,15 @@ export default (): ReactElement => {
       }
     });
 
-    const defaultNodeId = '627160657e3d8066494d4190';
-    const initialData = loadData(
-      defaultNodeId,
-      DataLoadNodeType.Self,
-      [],
-      [],
-      data
-    );
+    const defaultNodeId = '627160717e3d8066494d41ff';
+    // const initialData = loadData(
+    //   defaultNodeId,
+    //   DataLoadNodeType.Self,
+    //   [],
+    //   [],
+    //   data
+    // );
+    const initialData = data;
 
     graphObj.data(initialData);
 

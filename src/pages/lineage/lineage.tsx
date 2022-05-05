@@ -3,7 +3,7 @@ import Logo from '../../components/top-nav/hivedive180.svg';
 import G6, { EdgeConfig, Graph, GraphData, IEdge, INode } from '@antv/g6';
 import './lineage.scss';
 import AceEditor from 'react-ace';
-import { MdMenu, MdChevronRight, MdExpandMore} from 'react-icons/md';
+import { MdMenu, MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
 
 import 'ace-builds/src-noconflict/mode-pgsql';
 import 'ace-builds/src-noconflict/theme-xcode';
@@ -17,7 +17,11 @@ import LineageDto from '../../infrastructure/lineage-api/lineage/lineage-dto';
 // import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
 // import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
 // import LogicApiRepository from '../../infrastructure/lineage-api/logics/logics-api-repository';
-import { defaultData, defaultSql } from './test-data';
+import {
+  defaultData,
+  defaultLogics,
+  defaultMaterializations,
+} from './test-data';
 
 import TreeView from '@mui/lab/TreeView';
 // import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -48,24 +52,25 @@ const getNodeIdsToExplore = (
   return nodeIdsToExplore;
 };
 
-// const loadCombo = (comboId: string, data: GraphData): GraphData => {
-//   if (!data.nodes) return data;
-//   const dataNodes = data.nodes;
+/* Loads a specific combo when selected from navigation */
+const loadCombo = (comboId: string, data: GraphData): GraphData => {
+  if (!data.nodes) return data;
+  const dataNodes = data.nodes;
 
-//   if (!data.combos) return data;
-//   const dataCombos = data.combos;
+  if (!data.combos) return data;
+  const dataCombos = data.combos;
 
-//   const selfCombo = dataCombos.find((element) => element.id === comboId);
-//   if (!selfCombo) throw new ReferenceError('Node not found');
+  const selfCombo = dataCombos.find((element) => element.id === comboId);
+  if (!selfCombo) throw new ReferenceError('Node not found');
 
-//   const selfNodes = dataNodes.filter((node) => node.comboId === comboId);
+  const selfNodes = dataNodes.filter((node) => node.comboId === comboId);
 
-//   return {
-//     nodes: selfNodes,
-//     edges: [],
-//     combos: [selfCombo],
-//   };
-// };
+  return {
+    nodes: selfNodes,
+    edges: [],
+    combos: [selfCombo],
+  };
+};
 
 /* Compares two nodes based on label. Used for sorting functions */
 const compare = (first: any, second: any) => {
@@ -209,7 +214,7 @@ const loadData = (
   graphData.nodes = cleanedNodes;
 
   graphData.nodes.sort(compare);
-  if(graphData.combos) graphData.combos.sort(compare);
+  if (graphData.combos) graphData.combos.sort(compare);
 
   return graphData;
 };
@@ -268,6 +273,17 @@ const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
 //   return { combos, nodes, edges };
 // };
 
+type TreeViewElementType = 'node' | 'combo';
+
+const determineType = (id: string, data: GraphData): TreeViewElementType => {
+  if (!data.combos)
+    throw new ReferenceError('Data object is empty. Type cannot be identified');
+  const isCombo = data.combos.filter((element) => element.id === id).length > 0;
+
+  if (isCombo) return 'combo';
+  else return 'node';
+};
+
 export default (): ReactElement => {
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');
@@ -280,26 +296,60 @@ export default (): ReactElement => {
   // const [dependencies, setDependencies] = useState<DependencyDto[]>([]);
   const [data, setData] = useState<GraphData>();
   const [readyToBuild, setReadyToBuild] = useState(false);
-  const [expanded, setExpanded] = useState<string[]>([]);
+  const [expandedTreeViewElementIds, setExpandedTreeViewElementIds] = useState<
+    string[]
+  >([]);
+
+  const handleSelect = (event: React.SyntheticEvent, nodeIds: string) => {
+    if (!data) return;
+    if (!graph) return;
+    if (!nodeIds) return;
+
+    const id = nodeIds;
+
+    const selectedNodes = graph.findAllByState('node', 'selected');
+    selectedNodes.forEach((node) => node.clearStates());
+
+    const selectedCombos = graph.findAllByState('combo', 'selected');
+    selectedCombos.forEach((combo) => combo.clearStates());
+
+    const type = determineType(id, data);
+
+    if (type === 'combo') graph.data(loadCombo(id, data));
+    else if (type === 'node')
+      graph.data(loadData(id, DataLoadNodeType.Self, [], [], data));
+
+    graph.render();
+
+    const target = graph.findById(id);
+
+    graph.setItemState(target, 'selected', true);
+
+    graph.emit('nodeselectchange', {
+      select: true,
+      target,
+    });
+  };
 
   const toggleSideNavTreeView = (
     event: React.SyntheticEvent,
     nodeIds: string[]
-  ) => {
-    setExpanded(nodeIds);
-  };
+  ) => setExpandedTreeViewElementIds(nodeIds);
 
   const handleTreeViewExpandClick = () => {
-    setExpanded((oldExpanded) =>
-      oldExpanded.length === 0 ? ['1', '5', '6', '7'] : []
+    if (!data) return;
+    if (!data.combos) return;
+
+    const comboIds = data.combos.map((combo) => combo.id);
+
+    setExpandedTreeViewElementIds((oldExpanded) =>
+      oldExpanded.length === 0 ? comboIds : []
     );
   };
 
   const toggleShowSideNav = () => {
     const sidenav = document.getElementById('sidenav');
     if (!sidenav) throw new ReferenceError('Sidenav does not exist');
-    console.log(sidenav.style.visibility);
-    console.log(sidenav.style.opacity);
 
     const visible = sidenav.style.visibility === 'visible';
     sidenav.style.visibility = visible ? 'hidden' : 'visible';
@@ -314,55 +364,6 @@ export default (): ReactElement => {
     panel.style.visibility = 'hidden';
     panel.style.opacity = '0';
   };
-
-  // const handleSearch = () => {
-  //   if (!data) return;
-  //   if (!graph || !inputText) return;
-  //   const selectedNodes = graph.findAllByState('node', 'selected');
-  //   selectedNodes.forEach((node) => node.clearStates());
-
-  //   const inputContent = inputText.includes('.')
-  //     ? inputText.split('.')
-  //     : [inputText];
-
-  //   if (!data.combos) throw new ReferenceError('No combos found');
-  //   const comboConfig = data.combos.find(
-  //     (combo) => combo.label === inputContent[0]
-  //   );
-  //   if (!comboConfig) {
-  //     setInfo('Queried table not found');
-  //     return;
-  //   }
-
-  //   let id = comboConfig.id;
-  //   let isOnlyCombo = true;
-  //   if (inputContent.length > 1) {
-  //     if (!data.nodes) throw new ReferenceError('No nodes found');
-  //     const nodeConfig = data.nodes.find(
-  //       (node) => node.label === inputContent[1] && node.comboId === id
-  //     );
-  //     if (!nodeConfig) {
-  //       setInfo('Queried node not found');
-  //       return;
-  //     }
-  //     id = nodeConfig.id;
-  //     isOnlyCombo = false;
-  //   }
-
-  //   if (isOnlyCombo) graph.data(loadCombo(id, data));
-  //   else graph.data(loadData(id, DataLoadNodeType.Self, [], [], data));
-
-  //   graph.render();
-
-  //   const target = graph.findById(id);
-  //   graph.setItemState(target, 'selected', true);
-
-  //   // Trigger the node click event
-  //   graph.emit('nodeselectchange', {
-  //     select: true,
-  //     target, // the 'clicked' shape on the node. It uses the keyShape of the node here, you could assign any shapes in the graphics group (node.getContainer()) of the node
-  //   });
-  // };
 
   const handleInfo = () => {
     const snackbar = document.getElementById('snackbar');
@@ -385,9 +386,17 @@ export default (): ReactElement => {
     if (!readyToBuild) return;
 
     // setData(buildData(materializations, columns, dependencies));
-    
+
     defaultData.nodes.sort(compare);
+    defaultData.nodes.forEach(
+      (element) => (element.label = element.label.toLowerCase())
+    );
+
     defaultData.combos.sort(compare);
+    defaultData.combos.forEach(
+      (element) => (element.label = element.label.toLowerCase())
+    );
+
     setData(defaultData);
 
     setReadyToBuild(false);
@@ -430,17 +439,22 @@ export default (): ReactElement => {
         sortByCombo: true,
         controlPoints: true,
         nodesep: 1,
-        ranksep: 90,
+        ranksep: 120,
       },
       defaultNode: {
         // size: [30, 20],
         type: 'rect',
         style: {
-          width: 300,
+          width: 350,
           lineWidth: 1,
           stroke: '#ababab',
           fill: '#fafaff',
           radius: 5,
+        },
+        labelCfg: {
+          style: {
+            fontSize: 18,
+          },
         },
       },
       nodeStateStyles: {
@@ -472,7 +486,13 @@ export default (): ReactElement => {
       defaultCombo: {
         // type: 'cRect',
         type: 'rect',
+        padding: [30, 20, 10, 20],
         fixCollapseSize: [80, 10],
+        labelCfg: {
+          style: {
+            fontSize: 18,
+          },
+        },
       },
       comboStateStyles: {
         selected: {
@@ -497,30 +517,30 @@ export default (): ReactElement => {
     });
 
     graphObj.on('layout:finish', () => {
-      const selectedNodeId = graphObj.get('selectedNodeId');
+      const selectedElementId = graphObj.get('selectedElementId');
 
       const isString = (item: unknown): item is string => !!item;
 
-      if (!isString(selectedNodeId))
+      if (!isString(selectedElementId))
         throw new ReferenceError('Self node id is not of type string');
 
-      const selfNode = graphObj.findById(selectedNodeId);
+      const element = graphObj.findById(selectedElementId);
 
       const isNode = (object: any): object is INode => 'getEdges' in object;
 
-      if (!isNode(selfNode)) throw new ReferenceError('Event item is no node');
+      if (isNode(element)) {
+        graphObj.setItemState(selectedElementId, 'selected', true);
 
-      graphObj.setItemState(selectedNodeId, 'selected', true);
+        getDependentEdges(element, true).forEach((edge) => {
+          graphObj.setItemState(edge.getID(), 'nodeSelected', true);
+        });
 
-      getDependentEdges(selfNode, true).forEach((edge) => {
-        graphObj.setItemState(edge.getID(), 'nodeSelected', true);
-      });
+        getDependentEdges(element, false).forEach((edge) => {
+          graphObj.setItemState(edge.getID(), 'nodeSelected', true);
+        });
+      }
 
-      getDependentEdges(selfNode, false).forEach((edge) => {
-        graphObj.setItemState(edge.getID(), 'nodeSelected', true);
-      });
-
-      graphObj.focusItem(selfNode);
+      graphObj.focusItem(element);
 
       graphObj.zoom(graphObj.get('latestZoom') || 1);
     });
@@ -546,25 +566,27 @@ export default (): ReactElement => {
         );
 
         graphObj.set('latestZoom', graphObj.getZoom());
-        graphObj.set('selectedNodeId', selectedNodeId);
+        graphObj.set('selectedElementId', selectedNodeId);
 
         graphObj.render();
       } else if (event.select && event.target.get('type') === 'combo') {
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         selectedEdges.forEach((edge) => edge.clearStates());
 
-        // const comboId = event.target.get('id');
+        const comboId = event.target.get('id');
 
         // const combo = materializations.find(
         //   (materialization) => materialization.id === comboId
         // );
 
-        // if (!combo)
-        //   throw new ReferenceError(
-        //     'Materialization object for selected combo not found'
-        //   );
+        const combo = defaultMaterializations.find(
+          (materialization) => materialization.id === comboId
+        );
 
-        // console.log(combo.logicId);
+        if (!combo)
+          throw new ReferenceError(
+            'Materialization object for selected combo not found'
+          );
 
         // LogicApiRepository.getOne(combo.logicId, 'todo-replace').then(
         //   (logicDto) => {
@@ -577,7 +599,21 @@ export default (): ReactElement => {
         //   }
         // );
 
-        setSQL(defaultSql);
+        console.log(combo.logicId);
+
+        const logic = defaultLogics.find(
+          (element) => element.id === combo.logicId
+        );
+
+        if (!logic)
+          throw new ReferenceError('Logic object for selected combo not found');
+
+        setSQL(logic.sql);
+
+        graphObj.set('latestZoom', graphObj.getZoom());
+        graphObj.set('selectedElementId', combo.id);
+
+        graphObj.render();
 
         // const isCombo = (object: any): object is ICombo => 'getNodes' in object;
 
@@ -603,15 +639,15 @@ export default (): ReactElement => {
     });
 
     const defaultNodeId = '627160657e3d8066494d4190';
-    // const defaultData = loadData(
-    //   defaultNodeId,
-    //   DataLoadNodeType.Self,
-    //   [],
-    //   [],
-    //   data
-    // );
+    const initialData = loadData(
+      defaultNodeId,
+      DataLoadNodeType.Self,
+      [],
+      [],
+      data
+    );
 
-    graphObj.data(data);
+    graphObj.data(initialData);
 
     // if (!defaultData.nodes) throw new ReferenceError('Nodes do not exist');
     // const selfNode = defaultData.nodes.find(
@@ -627,7 +663,7 @@ export default (): ReactElement => {
     //     if (combo.id !== selfComboId) graphObj.collapseCombo(combo.id);
     //   });
 
-    graphObj.set('selectedNodeId', defaultNodeId);
+    graphObj.set('selectedElementId', defaultNodeId);
 
     graphObj.render();
 
@@ -683,15 +719,13 @@ export default (): ReactElement => {
     );
 
     const columnElements = relevantColumns.map((column) => (
-      <TreeItem nodeId={column.id} label={column.label} />
+      <TreeItem nodeId={column.id} label={column.label} icon={<MdTag />} />
     ));
 
     return columnElements;
   };
 
   const buildTreeViewElements = (): ReactElement[] => {
-    console.log('hi');
-    
     if (!data) return [<></>];
     if (!data.combos) return [<></>];
 
@@ -708,26 +742,29 @@ export default (): ReactElement => {
     <div id="lineageContainer">
       <div className="navbar">
         <div id="menu-container">
-          <button className="hivedive" onClick={toggleShowSideNav}>
+          <button id="menu-button" onClick={toggleShowSideNav}>
             <MdMenu />
           </button>
 
-          <img className="element" src={Logo} alt="logo" />
+          <img src={Logo} alt="logo" />
         </div>
       </div>
       <div id="lineage" />
       <div id="sidenav" className="sidenav">
         {/* <div id="search"> hello</div> */}
         <div id="content">
-          <button className='hivedive' onClick={handleTreeViewExpandClick}>
-            {expanded.length === 0 ? 'Expand all' : 'Collapse all'}
+          <button className="hivedive" onClick={handleTreeViewExpandClick}>
+            {expandedTreeViewElementIds.length === 0
+              ? 'Expand all'
+              : 'Collapse all'}
           </button>
           <TreeView
             aria-label="controlled"
-            defaultCollapseIcon={<MdChevronRight />}
-            defaultExpandIcon={<MdExpandMore />}
-            expanded={expanded}
+            defaultCollapseIcon={<MdExpandMore />}
+            defaultExpandIcon={<MdChevronRight />}
+            expanded={expandedTreeViewElementIds}
             onNodeToggle={toggleSideNavTreeView}
+            onNodeSelect={handleSelect}
           >
             {data ? buildTreeViewElements() : <></>}
           </TreeView>

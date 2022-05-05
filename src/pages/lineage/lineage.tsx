@@ -48,24 +48,24 @@ const getNodeIdsToExplore = (
   return nodeIdsToExplore;
 };
 
-const loadCombo = (comboId: string, data: GraphData): GraphData => {
-  if (!data.nodes) return data;
-  const dataNodes = data.nodes;
+// const loadCombo = (comboId: string, data: GraphData): GraphData => {
+//   if (!data.nodes) return data;
+//   const dataNodes = data.nodes;
 
-  if (!data.combos) return data;
-  const dataCombos = data.combos;
+//   if (!data.combos) return data;
+//   const dataCombos = data.combos;
 
-  const selfCombo = dataCombos.find((element) => element.id === comboId);
-  if (!selfCombo) throw new ReferenceError('Node not found');
+//   const selfCombo = dataCombos.find((element) => element.id === comboId);
+//   if (!selfCombo) throw new ReferenceError('Node not found');
 
-  const selfNodes = dataNodes.filter((node) => node.comboId === comboId);
+//   const selfNodes = dataNodes.filter((node) => node.comboId === comboId);
 
-  return {
-    nodes: selfNodes,
-    edges: [],
-    combos: [selfCombo],
-  };
-};
+//   return {
+//     nodes: selfNodes,
+//     edges: [],
+//     combos: [selfCombo],
+//   };
+// };
 
 /* Compares two nodes based on label. Used for sorting functions */
 const compare = (first: any, second: any) => {
@@ -238,81 +238,6 @@ const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
   return dependentEdges;
 };
 
-declare type Index = {
-  id: string;
-  label: string;
-  type: string;
-  comboId?: string;
-};
-
-const searchData = (data: GraphData) => {
-  const searchIndex: Index[] = [];
-
-  if (data.nodes)
-    data.nodes.forEach((node) => {
-      if (!node.label) throw new ReferenceError('Node without label found');
-      searchIndex.push({
-        id: node.id,
-        label: typeof node.label === 'string' ? node.label : '',
-        type: 'node',
-        comboId: node.comboId,
-      });
-    });
-
-  if (data.combos)
-    data.combos.forEach((combo) => {
-      if (!combo.label) throw new ReferenceError('Combo without label found');
-      searchIndex.push({
-        id: combo.id,
-        label: typeof combo.label === 'string' ? combo.label : '',
-        type: 'combo',
-      });
-    });
-
-  return searchIndex;
-};
-
-const editDistance = (s1: string, s2: string) => {
-  const lowerS1 = s1.toLowerCase();
-  const lowerS2 = s2.toLowerCase();
-
-  const costs = [];
-  for (let i = 0; i <= lowerS1.length; i++) {
-    let lastValue = i;
-    for (let j = 0; j <= lowerS2.length; j++) {
-      if (i === 0) costs[j] = j;
-      else {
-        if (j > 0) {
-          let newValue = costs[j - 1];
-          if (lowerS1.charAt(i - 1) !== lowerS2.charAt(j - 1))
-            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-          costs[j - 1] = lastValue;
-          lastValue = newValue;
-        }
-      }
-    }
-    if (i > 0) costs[s2.length] = lastValue;
-  }
-  return costs[s2.length];
-};
-
-const similarity = (s1: string, s2: string) => {
-  let longer = s1;
-  let shorter = s2;
-  if (s1.length < s2.length) {
-    longer = s2;
-    shorter = s1;
-  }
-  const longerLength = longer.length;
-  if (longerLength === 0) {
-    return 1.0;
-  }
-  return (
-    (longerLength - editDistance(longer, shorter)) /
-    parseFloat(longerLength.toString())
-  );
-};
-
 // const buildData = (
 //   materializations: MaterializationDto[],
 //   columns: ColumnDto[],
@@ -346,8 +271,6 @@ const similarity = (s1: string, s2: string) => {
 export default (): ReactElement => {
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');
-  const [inputText, setInputText] = useState('');
-  const [suggestion, setSuggestion] = useState('');
   const [info, setInfo] = useState('');
   const [lineage, setLineage] = useState<LineageDto>();
   // const [materializations, setMaterializations] = useState<
@@ -392,70 +315,54 @@ export default (): ReactElement => {
     panel.style.opacity = '0';
   };
 
-  const handleSearch = () => {
-    if (!data) return;
-    if (!graph || !inputText) return;
-    const selectedNodes = graph.findAllByState('node', 'selected');
-    selectedNodes.forEach((node) => node.clearStates());
+  // const handleSearch = () => {
+  //   if (!data) return;
+  //   if (!graph || !inputText) return;
+  //   const selectedNodes = graph.findAllByState('node', 'selected');
+  //   selectedNodes.forEach((node) => node.clearStates());
 
-    const inputContent = inputText.includes('.')
-      ? inputText.split('.')
-      : [inputText];
+  //   const inputContent = inputText.includes('.')
+  //     ? inputText.split('.')
+  //     : [inputText];
 
-    if (!data.combos) throw new ReferenceError('No combos found');
-    const comboConfig = data.combos.find(
-      (combo) => combo.label === inputContent[0]
-    );
-    if (!comboConfig) {
-      setInfo('Queried table not found');
-      return;
-    }
+  //   if (!data.combos) throw new ReferenceError('No combos found');
+  //   const comboConfig = data.combos.find(
+  //     (combo) => combo.label === inputContent[0]
+  //   );
+  //   if (!comboConfig) {
+  //     setInfo('Queried table not found');
+  //     return;
+  //   }
 
-    let id = comboConfig.id;
-    let isOnlyCombo = true;
-    if (inputContent.length > 1) {
-      if (!data.nodes) throw new ReferenceError('No nodes found');
-      const nodeConfig = data.nodes.find(
-        (node) => node.label === inputContent[1] && node.comboId === id
-      );
-      if (!nodeConfig) {
-        setInfo('Queried node not found');
-        return;
-      }
-      id = nodeConfig.id;
-      isOnlyCombo = false;
-    }
+  //   let id = comboConfig.id;
+  //   let isOnlyCombo = true;
+  //   if (inputContent.length > 1) {
+  //     if (!data.nodes) throw new ReferenceError('No nodes found');
+  //     const nodeConfig = data.nodes.find(
+  //       (node) => node.label === inputContent[1] && node.comboId === id
+  //     );
+  //     if (!nodeConfig) {
+  //       setInfo('Queried node not found');
+  //       return;
+  //     }
+  //     id = nodeConfig.id;
+  //     isOnlyCombo = false;
+  //   }
 
-    if (isOnlyCombo) graph.data(loadCombo(id, data));
-    else graph.data(loadData(id, DataLoadNodeType.Self, [], [], data));
+  //   if (isOnlyCombo) graph.data(loadCombo(id, data));
+  //   else graph.data(loadData(id, DataLoadNodeType.Self, [], [], data));
 
-    graph.render();
+  //   graph.render();
 
-    const target = graph.findById(id);
-    graph.setItemState(target, 'selected', true);
+  //   const target = graph.findById(id);
+  //   graph.setItemState(target, 'selected', true);
 
-    // Trigger the node click event
-    graph.emit('nodeselectchange', {
-      select: true,
-      target, // the 'clicked' shape on the node. It uses the keyShape of the node here, you could assign any shapes in the graphics group (node.getContainer()) of the node
-    });
-  };
-
-  const handleInput = (event: any) => {
-    //convert input text to lower case
-    const lowerCase = event.target.value.toLowerCase();
-    setInputText(lowerCase);
-  };
-
-  const handleKeyDown = (event: any) => {
-    if (event.keyCode === 39) {
-      setInputText(suggestion);
-    } else if (event.keyCode === 9) {
-      event.preventDefault();
-    } else if (event.keyCode === 13) {
-      handleSearch();
-    }
-  };
+  //   // Trigger the node click event
+  //   graph.emit('nodeselectchange', {
+  //     select: true,
+  //     target, // the 'clicked' shape on the node. It uses the keyShape of the node here, you could assign any shapes in the graphics group (node.getContainer()) of the node
+  //   });
+  // };
 
   const handleInfo = () => {
     const snackbar = document.getElementById('snackbar');
@@ -473,52 +380,6 @@ export default (): ReactElement => {
 
     handleInfo();
   }, [info]);
-
-  useEffect(() => {
-    if (!data) return;
-    if (!inputText) {
-      setSuggestion('');
-      return;
-    }
-
-    let index: Index[] = [];
-    let combo = '';
-    let node = '';
-    if (inputText.includes('.')) {
-      const input = inputText.split('.');
-      combo = input[0];
-      node = input[1];
-
-      const comboIndex = searchData(data).find(
-        (element) => element.type === 'combo' && element.label === combo
-      );
-      if (!comboIndex) throw new ReferenceError('Typed combo not found');
-
-      index = searchData(data).filter(
-        (element) =>
-          element.type === 'node' && element.comboId === comboIndex.id
-      );
-    } else {
-      index = searchData(data).filter((element) => element.type === 'combo');
-      combo = inputText;
-    }
-
-    const searchMatches = index.filter((element) =>
-      element.label.toLowerCase().startsWith(node ? node : combo)
-    );
-
-    const closestMatch = { text: '', similarity: 0 };
-
-    searchMatches.forEach((element) => {
-      const similarityResult = similarity(element.label, inputText);
-      if (similarityResult > closestMatch.similarity) {
-        closestMatch.text = element.label.toLowerCase();
-        closestMatch.similarity = similarityResult;
-      }
-    });
-
-    setSuggestion(node ? combo + '.' + closestMatch.text : closestMatch.text);
-  }, [inputText]);
 
   useEffect(() => {
     if (!readyToBuild) return;
@@ -853,57 +714,10 @@ export default (): ReactElement => {
 
           <img className="element" src={Logo} alt="logo" />
         </div>
-
-        <div id="searchbar" className="searchbar">
-          <div className="inputWrapper">
-            <input
-              className="search"
-              id="search-bar-1"
-              name="search-bar"
-              type="text"
-              placeholder="e.g. 'fact_sales.label' or 'dim_region'"
-              value={inputText}
-              onChange={handleInput}
-              onKeyDown={handleKeyDown}
-            />
-            <input
-              className="suggestion"
-              id="search-bar-2"
-              name="search-bar"
-              type="text"
-              value={suggestion}
-              onChange={() => {}}
-            />
-          </div>
-
-          <button
-            className="hivedive"
-            type="submit"
-            onClick={handleSearch}
-          >
-            GO
-          </button>
-        </div>
       </div>
-      {/* {
-        <Offcanvas
-          show={showSideNav}
-          onHide={handleCloseSideNav}
-          scroll={true}
-          backdrop={true}
-        >
-          <Offcanvas.Header closeButton>
-            <Offcanvas.Title>Offcanvas</Offcanvas.Title>
-          </Offcanvas.Header>
-          <Offcanvas.Body>
-            Some text as placeholder. In real life you can have the elements you
-            have chosen. Like, text, images, lists, etc.
-          </Offcanvas.Body>
-        </Offcanvas>
-      } */}
       <div id="lineage" />
       <div id="sidenav" className="sidenav">
-        <div id="search"> hello</div>
+        {/* <div id="search"> hello</div> */}
         <div id="content">
           <button className='hivedive' onClick={handleTreeViewExpandClick}>
             {expanded.length === 0 ? 'Expand all' : 'Collapse all'}

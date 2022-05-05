@@ -35,26 +35,6 @@ $navbarHeight: 50px;
   margin-top: -1.25em;
 }
 
-/* div */
-.navbar .searchbar {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  width: 450px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  transform: translateY(-50%);
-}
-
-// /* div */
-.inputWrapper {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  position: relative;
-}
-
 #border-glow {
   border: 1px solid;
   border-radius: 7px;
@@ -62,35 +42,8 @@ $navbarHeight: 50px;
   box-shadow: 0 0 10px $hivediveBlue;
 }
 
-input.search {
-  font-size: inherit;
-  height: 2rem;
-  width: 25rem;
-  overflow-wrap: break-word;
-  border: 1px solid gray;
-  position: absolute;
-  border-radius: 5px;
-  word-wrap: break-word;
-  background-color: transparent;
-}
-
-input.search:focus {
-  outline: none;
-  @extend #border-glow;
-}
-
-input.suggestion {
-  @extend input, .search;
-  z-index: -1;
-  color: gray;
-  cursor: none;
-}
-
-
-
 /* button */
 button.hivedive {
-  width: auto;
   font-weight: bold;
   font-size: 20px;
   color: black;
@@ -101,6 +54,12 @@ button.hivedive {
 
 button.hivedive:hover {
   color: $hivediveBlue;
+}
+
+#menu-button {
+  @extend button, .hivedive;
+  width: 30px;
+  height: 20px;
 }
 
 /* div */

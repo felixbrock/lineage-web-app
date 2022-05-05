@@ -28,6 +28,8 @@ import TreeView from '@mui/lab/TreeView';
 // import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TreeItem from '@mui/lab/TreeItem';
 
+import TextField from '@mui/material/TextField';
+
 enum DataLoadNodeType {
   Self = 'SELF',
   Parent = 'PARENT',
@@ -299,6 +301,10 @@ export default (): ReactElement => {
   const [expandedTreeViewElementIds, setExpandedTreeViewElementIds] = useState<
     string[]
   >([]);
+  const [allTreeViewElements, setAllTreeViewElements] = useState<
+    ReactElement[]
+  >([]);
+  const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
 
   const handleSelect = (event: React.SyntheticEvent, nodeIds: string) => {
     if (!data) return;
@@ -411,8 +417,40 @@ export default (): ReactElement => {
     panel.style.opacity = '1';
   }, [sql]);
 
+  const buildTreeViewColumns = (comboId: string): ReactElement[] => {
+    if (!data) return [<></>];
+    if (!data.nodes) return [<></>];
+
+    const relevantColumns = data.nodes.filter(
+      (node) => node.comboId === comboId
+    );
+
+    const columnElements = relevantColumns.map((column) => (
+      <TreeItem nodeId={column.id} label={column.label} icon={<MdTag />} />
+    ));
+
+    return columnElements;
+  };
+
+  const buildTreeViewElements = (): ReactElement[] => {
+    if (!data) return [<></>];
+    if (!data.combos) return [<></>];
+
+    const materializationElements = data.combos.map((combo) => (
+      <TreeItem nodeId={combo.id} label={combo.label}>
+        {buildTreeViewColumns(combo.id)}
+      </TreeItem>
+    ));
+
+    return materializationElements;
+  };
+
   useEffect(() => {
     if (!data) return;
+
+    const elements = buildTreeViewElements();
+    setAllTreeViewElements(elements);
+    setTreeViewElements(elements);
 
     const hivediveBlue = '#2c25ff';
 
@@ -599,8 +637,6 @@ export default (): ReactElement => {
         //   }
         // );
 
-        console.log(combo.logicId);
-
         const logic = defaultLogics.find(
           (element) => element.id === combo.logicId
         );
@@ -711,32 +747,36 @@ export default (): ReactElement => {
     //   });
   }, []);
 
-  const buildTreeViewColumns = (comboId: string): ReactElement[] => {
-    if (!data) return [<></>];
-    if (!data.nodes) return [<></>];
+  const handleSearchChange = (event: any) => {
+    if (!allTreeViewElements) return;
 
-    const relevantColumns = data.nodes.filter(
-      (node) => node.comboId === comboId
-    );
+    const value = event.target.value;
+    if (!value) setAllTreeViewElements(allTreeViewElements);
 
-    const columnElements = relevantColumns.map((column) => (
-      <TreeItem nodeId={column.id} label={column.label} icon={<MdTag />} />
-    ));
+    const isReactElement = (element: any): element is ReactElement => !!element;
 
-    return columnElements;
-  };
+    const newTreeViewElements = allTreeViewElements
+      .map((element: ReactElement) => {
+        if (element.props.label.includes(value)) return element;
 
-  const buildTreeViewElements = (): ReactElement[] => {
-    if (!data) return [<></>];
-    if (!data.combos) return [<></>];
+        const relevantChildren = element.props.children
+          .map((child: ReactElement) => {
+            if (child.props.label.includes(value)) return child;
+            return null;
+          })
+          .filter(isReactElement);
 
-    const materializationElements = data.combos.map((combo) => (
-      <TreeItem nodeId={combo.id} label={combo.label}>
-        {buildTreeViewColumns(combo.id)}
-      </TreeItem>
-    ));
+        if (!relevantChildren.length) return null;
 
-    return materializationElements;
+        return (
+          <TreeItem nodeId={element.props.nodeId} label={element.props.label}>
+            {relevantChildren}
+          </TreeItem>
+        );
+      })
+      .filter(isReactElement);
+
+    setTreeViewElements(newTreeViewElements);
   };
 
   return (
@@ -752,7 +792,9 @@ export default (): ReactElement => {
       </div>
       <div id="lineage" />
       <div id="sidenav" className="sidenav">
-        {/* <div id="search"> hello</div> */}
+        <div id="search">
+          <TextField label="Search" onChange={handleSearchChange} fullWidth={true} />
+        </div>
         <div id="content">
           <button className="hivedive" onClick={handleTreeViewExpandClick}>
             {expandedTreeViewElementIds.length === 0
@@ -767,7 +809,7 @@ export default (): ReactElement => {
             onNodeToggle={toggleSideNavTreeView}
             onNodeSelect={handleSelect}
           >
-            {data ? buildTreeViewElements() : <></>}
+            {data ? treeViewElements : <></>}
           </TreeView>
         </div>
       </div>

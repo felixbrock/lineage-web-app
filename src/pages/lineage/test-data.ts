@@ -5415,31 +5415,10 @@ export const defaultData =  {
     {
       "source": "62715f907e3d8066494d40a0",
       "target": "627160727e3d8066494d4263"
-    },
-    
-        //62715f8e7e3d8066494d3fad
-        //62715f8e7e3d8066494d3fac
-    
+    },    
     {
       "source": "62715f907e3d8066494d409f",
       "target": "62715f907e3d8066494d4022"
-    },
-     
-    {
-      "source": "",
-      "target": ""
-    }, 
-    {
-      "source": "",
-      "target": ""
-    }, 
-    {
-      "source": "",
-      "target": ""
-    }, 
-    {
-      "source": "",
-      "target": ""
     },
   ]
 };

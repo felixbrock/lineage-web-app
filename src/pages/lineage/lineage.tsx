@@ -3,7 +3,7 @@ import Logo from '../../components/top-nav/hivedive180.svg';
 import G6, { EdgeConfig, Graph, GraphData, IEdge, INode } from '@antv/g6';
 import './lineage.scss';
 import AceEditor from 'react-ace';
-import { MdMenu, MdChevronRight, MdExpandMore } from 'react-icons/md';
+import { MdMenu, MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
 
 import 'ace-builds/src-noconflict/mode-pgsql';
 import 'ace-builds/src-noconflict/theme-xcode';
@@ -528,21 +528,17 @@ export default (): ReactElement => {
 
       const isNode = (object: any): object is INode => 'getEdges' in object;
 
-      if (isNode(element)){
-
+      if (isNode(element)) {
         graphObj.setItemState(selectedElementId, 'selected', true);
 
         getDependentEdges(element, true).forEach((edge) => {
           graphObj.setItemState(edge.getID(), 'nodeSelected', true);
         });
-  
+
         getDependentEdges(element, false).forEach((edge) => {
           graphObj.setItemState(edge.getID(), 'nodeSelected', true);
         });
-
       }
-
-
 
       graphObj.focusItem(element);
 
@@ -604,7 +600,6 @@ export default (): ReactElement => {
         // );
 
         console.log(combo.logicId);
-        
 
         const logic = defaultLogics.find(
           (element) => element.id === combo.logicId
@@ -644,15 +639,15 @@ export default (): ReactElement => {
     });
 
     const defaultNodeId = '627160657e3d8066494d4190';
-    // const defaultData = loadData(
-    //   defaultNodeId,
-    //   DataLoadNodeType.Self,
-    //   [],
-    //   [],
-    //   data
-    // );
+    const initialData = loadData(
+      defaultNodeId,
+      DataLoadNodeType.Self,
+      [],
+      [],
+      data
+    );
 
-    graphObj.data(data);
+    graphObj.data(initialData);
 
     // if (!defaultData.nodes) throw new ReferenceError('Nodes do not exist');
     // const selfNode = defaultData.nodes.find(
@@ -724,7 +719,7 @@ export default (): ReactElement => {
     );
 
     const columnElements = relevantColumns.map((column) => (
-      <TreeItem nodeId={column.id} label={column.label} />
+      <TreeItem nodeId={column.id} label={column.label} icon={<MdTag />} />
     ));
 
     return columnElements;

@@ -68,6 +68,103 @@ button.hivedive:hover {
   width: 100%;
 }
 
+$headerMargin: 10px;
+
+#sidenav {
+  height: calc(100% - $navbarHeight);
+  width: 400px;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  overflow-x: hidden;
+  visibility: hidden;
+  background-color: white;
+  border: 2px solid $hivediveGrey;
+  opacity: 1;
+  transition: visibility 0.3s linear, opacity 0.3s linear;
+  padding-top: 70px;
+  overflow-y: hidden;
+}
+
+#sidenav #search {
+  position: absolute;
+  width: calc(100% - 2 * $headerMargin);
+  top: 0;
+  margin: $headerMargin $headerMargin 0 $headerMargin;
+  background-color: whitesmoke;
+}
+
+#sidenav #control {
+  height: 40px;
+  display: flex;
+  margin: 0 10px 10px 10px;
+  background-color: whitesmoke;
+}
+
+#sidenav #content {
+  height: 100%;
+  padding: 0 10px 10px 10px;
+  margin: 0 10px 10px 10px;
+  overflow-y: auto;
+}
+
+
+
+$sidePanelMargin: 5px;
+
+.sidepanel {
+  height: calc(100% - $navbarHeight - $sidePanelMargin - $sidePanelMargin);
+  width: 33%;
+  position: fixed;
+  z-index: 1;
+  right: $sidePanelMargin;
+  overflow-x: hidden;
+  visibility: hidden;
+  // background-color: linear-gradient(to bottom right, $hivediveGrey, White);
+  border: 2px solid $hivediveGrey;
+  opacity: 1;
+  transition: visibility 0.3s linear, opacity 0.3s linear;
+  padding-top: 50px;
+  margin: $sidePanelMargin 0 $sidePanelMargin $sidePanelMargin;
+}
+
+.sidepanel .header {
+  position: absolute;
+  width: calc(100% - 2 * $headerMargin);
+  top: 0;
+  margin: $headerMargin $headerMargin 0 $headerMargin;
+}
+
+.sidepanel .header .title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+  color: black;
+}
+
+.sidepanel .header .closebtn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 20px;
+  color: black;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.sidepanel .header .closebtn:hover {
+  @extend #border-glow;
+}
+
+.sidepanel .content {
+  height: 100%;
+  padding: 0 10px 10px 10px;
+}
+
 /* The snackbar - position it at the bottom and in the middle of the screen */
 #snackbar {
   visibility: hidden; /* Hidden by default. Visible on click */
@@ -136,92 +233,4 @@ button.hivedive:hover {
     bottom: 0;
     opacity: 0;
   }
-}
-
-$headerMargin: 10px;
-
-#sidenav {
-  height: calc(100% - $navbarHeight);
-  width: 400px;
-  position: fixed;
-  z-index: 1;
-  left: 0;
-  overflow-x: hidden;
-  visibility: hidden;
-  background-color: white;
-  border: 2px solid $hivediveGrey;
-  opacity: 1;
-  transition: visibility 0.3s linear, opacity 0.3s linear;
-  padding-top: 70px;
-}
-
-#sidenav #search {
-  position: absolute;
-  width: calc(100% - 2 * $headerMargin);
-  top: 0;
-  margin: $headerMargin $headerMargin 0 $headerMargin;
-  background-color: whitesmoke;
-}
-
-#sidenav #content {
-  height: 100%;
-  padding: 0 10px 10px 10px;
-  margin: 10px;
-}
-
-
-
-$sidePanelMargin: 5px;
-
-.sidepanel {
-  height: calc(100% - $navbarHeight - $sidePanelMargin - $sidePanelMargin);
-  width: 33%;
-  position: fixed;
-  z-index: 1;
-  right: $sidePanelMargin;
-  overflow-x: hidden;
-  visibility: hidden;
-  // background-color: linear-gradient(to bottom right, $hivediveGrey, White);
-  border: 2px solid $hivediveGrey;
-  opacity: 1;
-  transition: visibility 0.3s linear, opacity 0.3s linear;
-  padding-top: 50px;
-  margin: $sidePanelMargin 0 $sidePanelMargin $sidePanelMargin;
-}
-
-.sidepanel .header {
-  position: absolute;
-  width: calc(100% - 2 * $headerMargin);
-  top: 0;
-  margin: $headerMargin $headerMargin 0 $headerMargin;
-}
-
-.sidepanel .header .title {
-  position: absolute;
-  top: 0;
-  left: 0;
-  font-size: 20px;
-  font-weight: bold;
-  margin: 0;
-  color: black;
-}
-
-.sidepanel .header .closebtn {
-  position: absolute;
-  top: 0;
-  right: 0;
-  font-size: 20px;
-  color: black;
-  border: 0;
-  background: none;
-  box-shadow: none;
-}
-
-.sidepanel .header .closebtn:hover {
-  @extend #border-glow;
-}
-
-.sidepanel .content {
-  height: 100%;
-  padding: 0 10px 10px 10px;
 }

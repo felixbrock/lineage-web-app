@@ -793,14 +793,20 @@ export default (): ReactElement => {
       <div id="lineage" />
       <div id="sidenav" className="sidenav">
         <div id="search">
-          <TextField label="Search" onChange={handleSearchChange} fullWidth={true} />
+          <TextField
+            label="Search"
+            onChange={handleSearchChange}
+            fullWidth={true}
+          />
         </div>
-        <div id="content">
+        <div id="control">
           <button className="hivedive" onClick={handleTreeViewExpandClick}>
             {expandedTreeViewElementIds.length === 0
               ? 'Expand all'
               : 'Collapse all'}
           </button>
+        </div>
+        <div id="content">
           <TreeView
             aria-label="controlled"
             defaultCollapseIcon={<MdExpandMore />}

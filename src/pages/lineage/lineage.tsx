@@ -519,7 +519,7 @@ export default (): ReactElement => {
       },
       defaultEdge: {
         type: 'cubic-horizontal',
-        color: '#e2e2e2',
+        color: '#808080',
         style: {
           endArrow: {
             path: 'M 0,0 L 8,4 L 8,-4 Z',
@@ -631,11 +631,11 @@ export default (): ReactElement => {
 
         let combo: MaterializationDto | undefined;
         if (showRealData)
-          combo = defaultMaterializations.find(
+          combo = materializations.find(
             (materialization) => materialization.id === comboId
           );
         else
-          combo = materializations.find(
+          combo = defaultMaterializations.find(
             (materialization) => materialization.id === comboId
           );
 

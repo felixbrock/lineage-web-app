@@ -103,17 +103,19 @@ $headerMargin: 10px;
   background-color: whitesmoke;
 }
 
+$controlHeight: 40px;
+
 #sidenav #control {
-  height: 40px;
+  height: $controlHeight;
   display: flex;
   margin: 0 10px 10px 10px;
 }
 
 #sidenav #content {
-  height: 100%;
+  height: calc(100% - $controlHeight);
   padding: 0 10px 10px 10px;
   margin: 0 10px 10px 10px;
-  overflow-y: auto;
+  overflow-y: scroll;
 }
 
 

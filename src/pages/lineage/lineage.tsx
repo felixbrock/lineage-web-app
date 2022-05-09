@@ -355,6 +355,15 @@ export default (): ReactElement => {
     nodeIds: string[]
   ) => setExpandedTreeViewElementIds(nodeIds);
 
+  const handleShowAll = () => {
+    if (!data) return;
+    if (!graph) return;
+
+    graph.data(data);
+
+    graph.render();
+  };
+
   const handleTreeViewExpandClick = () => {
     if (!data) return;
     if (!data.combos) return;
@@ -739,6 +748,12 @@ export default (): ReactElement => {
   }, [data]);
 
   useEffect(() => {
+    if(!graph) return;
+
+    toggleShowSideNav();
+  }, [graph]);
+
+  useEffect(() => {
     if (lineage) return;
 
     if (showRealData) {
@@ -840,6 +855,12 @@ export default (): ReactElement => {
               ? 'Expand all'
               : 'Collapse all'}
           </button>
+          <button
+            className="control-button"
+            onClick={handleShowAll}
+          >
+            Show all
+          </button>
         </div>
         <div id="content">
           <TreeView
@@ -868,7 +889,7 @@ export default (): ReactElement => {
             theme="xcode"
             height="100%"
             width="100%"
-            fontSize={18}
+            fontSize={16}
             readOnly={true}
             value={sql}
             wrapEnabled={true}

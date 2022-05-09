@@ -22909,93 +22909,101 @@ export const defaultData = {
       source: '62715f917e3d8066494d40bf',
       target: '627160727e3d8066494d4251',
     },
+
+    // v_daily_storage_usage_stg
     {
-      source: '',
-      target: '',
+      source: '62715f8f7e3d8066494d3fd6',
+      target: '627160707e3d8066494d41e9',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f8f7e3d8066494d3fd6',
+      target: '627160707e3d8066494d41ea',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f8f7e3d8066494d3fd7',
+      target: '627160707e3d8066494d41eb',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f8f7e3d8066494d3fd7',
+      target: '627160707e3d8066494d41ee',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f8f7e3d8066494d3fd8',
+      target: '627160707e3d8066494d41ec',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f8f7e3d8066494d3fd8',
+      target: '627160707e3d8066494d41ef',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f8f7e3d8066494d3fd9',
+      target: '627160707e3d8066494d41ed',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f8f7e3d8066494d3fd9',
+      target: '627160707e3d8066494d41f0',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f8f7e3d8066494d3fd7',
+      target: '627160707e3d8066494d41f1',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f8f7e3d8066494d3fd8',
+      target: '627160707e3d8066494d41f1',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f8f7e3d8066494d3fd9',
+      target: '627160707e3d8066494d41f1',
+    },
+
+    // v_database_daily_storage_usage_stg
+    {
+      source: '62715f917e3d8066494d40f0',
+      target: '627160787e3d8066494d42b7',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f917e3d8066494d40f0',
+      target: '627160787e3d8066494d42b6',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f917e3d8066494d40f1',
+      target: '627160787e3d8066494d42b8',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f917e3d8066494d40f1',
+      target: '627160787e3d8066494d42b9',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f917e3d8066494d40f4',
+      target: '627160787e3d8066494d42ba',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f917e3d8066494d40f4',
+      target: '627160787e3d8066494d42bc',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f917e3d8066494d40f4',
+      target: '627160787e3d8066494d42be',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f917e3d8066494d40f5',
+      target: '627160787e3d8066494d42bb',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f917e3d8066494d40f5',
+      target: '627160787e3d8066494d42bd',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f917e3d8066494d40f5',
+      target: '627160787e3d8066494d42be',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f917e3d8066494d40f3',
+      target: '627160787e3d8066494d42bf',
     },
     {
-      source: '',
-      target: '',
+      source: '62715f917e3d8066494d40f3',
+      target: '627160787e3d8066494d42c0',
     },
     {
       source: '',

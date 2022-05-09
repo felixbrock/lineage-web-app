@@ -1,6 +1,14 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import Logo from '../../components/top-nav/hivedive180.svg';
-import G6, { EdgeConfig, Graph, GraphData, IEdge, INode } from '@antv/g6';
+import G6, {
+  ComboConfig,
+  EdgeConfig,
+  Graph,
+  GraphData,
+  IEdge,
+  INode,
+  NodeConfig,
+} from '@antv/g6';
 import './lineage.scss';
 import AceEditor from 'react-ace';
 import { MdMenu, MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
@@ -8,15 +16,15 @@ import { MdMenu, MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
 import 'ace-builds/src-noconflict/mode-pgsql';
 import 'ace-builds/src-noconflict/theme-xcode';
 import 'ace-builds/src-noconflict/ext-language_tools';
-// import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
-// import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
-// import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
-// import DependenciesApiRepository from '../../infrastructure/lineage-api/dependencies/dependencies-api-repository';
+import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
+import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
+import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
+import DependenciesApiRepository from '../../infrastructure/lineage-api/dependencies/dependencies-api-repository';
 import LineageDto from '../../infrastructure/lineage-api/lineage/lineage-dto';
-// import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
-// import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
-// import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
-// import LogicApiRepository from '../../infrastructure/lineage-api/logics/logics-api-repository';
+import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
+import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
+import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
+import LogicApiRepository from '../../infrastructure/lineage-api/logics/logics-api-repository';
 import {
   defaultData,
   defaultLogics,
@@ -29,6 +37,9 @@ import TreeView from '@mui/lab/TreeView';
 import TreeItem from '@mui/lab/TreeItem';
 
 import TextField from '@mui/material/TextField';
+
+const showRealData = false;
+const lineageId = '627929bf08bead50ede9b472';
 
 enum DataLoadNodeType {
   Self = 'SELF',
@@ -245,35 +256,37 @@ const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
   return dependentEdges;
 };
 
-// const buildData = (
-//   materializations: MaterializationDto[],
-//   columns: ColumnDto[],
-//   dependencies: DependencyDto[]
-// ): GraphData => {
-//   const combos = materializations.map(
-//     (materialization): ComboConfig => ({
-//       id: materialization.id,
-//       label: materialization.name,
-//     })
-//   );
-//   const nodes = columns
-//     .map(
-//       (column): NodeConfig => ({
-//         id: column.id,
-//         label: column.name,
-//         comboId: column.materializationId,
-//       })
-//     )
-//     .sort(compare);
-//   const edges = dependencies.map(
-//     (dependency): EdgeConfig => ({
-//       source: dependency.tailId,
-//       target: dependency.headId,
-//     })
-//   );
+const buildData = (
+  materializations: MaterializationDto[],
+  columns: ColumnDto[],
+  dependencies: DependencyDto[]
+): GraphData => {
+  const combos = materializations
+    .map(
+      (materialization): ComboConfig => ({
+        id: materialization.id,
+        label: materialization.name.toLowerCase(),
+      })
+    )
+    .sort(compare);
+  const nodes = columns
+    .map(
+      (column): NodeConfig => ({
+        id: column.id,
+        label: column.name.toLowerCase(),
+        comboId: column.materializationId,
+      })
+    )
+    .sort(compare);
+  const edges = dependencies.map(
+    (dependency): EdgeConfig => ({
+      source: dependency.tailId,
+      target: dependency.headId,
+    })
+  );
 
-//   return { combos, nodes, edges };
-// };
+  return { combos, nodes, edges };
+};
 
 type TreeViewElementType = 'node' | 'combo';
 
@@ -291,11 +304,11 @@ export default (): ReactElement => {
   const [sql, setSQL] = useState('');
   const [info, setInfo] = useState('');
   const [lineage, setLineage] = useState<LineageDto>();
-  // const [materializations, setMaterializations] = useState<
-  //   MaterializationDto[]
-  // >([]);
-  // const [columns, setColumns] = useState<ColumnDto[]>([]);
-  // const [dependencies, setDependencies] = useState<DependencyDto[]>([]);
+  const [materializations, setMaterializations] = useState<
+    MaterializationDto[]
+  >([]);
+  const [columns, setColumns] = useState<ColumnDto[]>([]);
+  const [dependencies, setDependencies] = useState<DependencyDto[]>([]);
   const [data, setData] = useState<GraphData>();
   const [readyToBuild, setReadyToBuild] = useState(false);
   const [expandedTreeViewElementIds, setExpandedTreeViewElementIds] = useState<
@@ -391,19 +404,21 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!readyToBuild) return;
 
-    // setData(buildData(materializations, columns, dependencies));
+    if (showRealData)
+      setData(buildData(materializations, columns, dependencies));
+    else {
+      defaultData.nodes.sort(compare);
+      defaultData.nodes.forEach(
+        (element) => (element.label = element.label.toLowerCase())
+      );
 
-    defaultData.nodes.sort(compare);
-    defaultData.nodes.forEach(
-      (element) => (element.label = element.label.toLowerCase())
-    );
+      defaultData.combos.sort(compare);
+      defaultData.combos.forEach(
+        (element) => (element.label = element.label.toLowerCase())
+      );
 
-    defaultData.combos.sort(compare);
-    defaultData.combos.forEach(
-      (element) => (element.label = element.label.toLowerCase())
-    );
-
-    setData(defaultData);
+      setData(defaultData);
+    }
 
     setReadyToBuild(false);
   }, [readyToBuild]);
@@ -564,7 +579,8 @@ export default (): ReactElement => {
 
       const element = graphObj.findById(selectedElementId);
 
-      const isNode = (object: any): object is INode => 'getEdges' in object;
+      const isNode = (object: any): object is INode =>
+        object && 'getEdges' in object;
 
       if (isNode(element)) {
         graphObj.setItemState(selectedElementId, 'selected', true);
@@ -613,38 +629,46 @@ export default (): ReactElement => {
 
         const comboId = event.target.get('id');
 
-        // const combo = materializations.find(
-        //   (materialization) => materialization.id === comboId
-        // );
-
-        const combo = defaultMaterializations.find(
-          (materialization) => materialization.id === comboId
-        );
+        let combo: MaterializationDto | undefined;
+        if (showRealData)
+          combo = defaultMaterializations.find(
+            (materialization) => materialization.id === comboId
+          );
+        else
+          combo = materializations.find(
+            (materialization) => materialization.id === comboId
+          );
 
         if (!combo)
           throw new ReferenceError(
             'Materialization object for selected combo not found'
           );
 
-        // LogicApiRepository.getOne(combo.logicId, 'todo-replace').then(
-        //   (logicDto) => {
-        //     console.log(logicDto?.sql);
+        if (showRealData) {
+          LogicApiRepository.getOne(combo.logicId, 'todo-replace').then(
+            (logicDto) => {
+              console.log(logicDto?.sql);
 
-        //     if (!logicDto)
-        //       throw new ReferenceError('Not able to retrieve logic object');
+              if (!logicDto)
+                throw new ReferenceError('Not able to retrieve logic object');
 
-        //     setSQL(logicDto.sql);
-        //   }
-        // );
+              setSQL(logicDto.sql);
+            }
+          );
+        } else {
+          const checkedCombo = combo;
 
-        const logic = defaultLogics.find(
-          (element) => element.id === combo.logicId
-        );
+          const logic = defaultLogics.find(
+            (element) => element.id === checkedCombo.logicId
+          );
 
-        if (!logic)
-          throw new ReferenceError('Logic object for selected combo not found');
+          if (!logic)
+            throw new ReferenceError(
+              'Logic object for selected combo not found'
+            );
 
-        setSQL(logic.sql);
+          setSQL(logic.sql);
+        }
 
         graphObj.set('latestZoom', graphObj.getZoom());
         graphObj.set('selectedElementId', combo.id);
@@ -674,7 +698,13 @@ export default (): ReactElement => {
       }
     });
 
-    const defaultNodeId = '627160717e3d8066494d41ff';
+    let defaultNodeId = '';
+    if (showRealData) {
+      if (data.nodes) defaultNodeId = data.nodes[0].id;
+    } else {
+      defaultNodeId = '627160717e3d8066494d41ff';
+    }
+
     // const initialData = loadData(
     //   defaultNodeId,
     //   DataLoadNodeType.Self,
@@ -682,6 +712,7 @@ export default (): ReactElement => {
     //   [],
     //   data
     // );
+
     const initialData = data;
 
     graphObj.data(initialData);
@@ -709,42 +740,43 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (lineage) return;
-    setLineage({ id: 'todo', createdAt: 1 });
-    setReadyToBuild(true);
 
-    // const lineageId = '62715f897e3d8066494d3f9e';
-
-    // LineageApiRepository.getOne(lineageId, 'todo-replace')
-    //   .then((lineageDto) => {
-    //     if (!lineageDto)
-    //       throw new TypeError('Queried lineage object not found');
-    //     setLineage(lineageDto);
-    //     return MaterializationsApiRepository.getBy(
-    //       new URLSearchParams({ lineageId: lineageId }),
-    //       'todo-replace'
-    //     );
-    //   })
-    //   .then((materializationDtos) => {
-    //     setMaterializations(materializationDtos);
-    //     return ColumnsApiRepository.getBy(
-    //       new URLSearchParams({ lineageId: lineageId }),
-    //       'todo-replace'
-    //     );
-    //   })
-    //   .then((columnDtos) => {
-    //     setColumns(columnDtos);
-    //     return DependenciesApiRepository.getBy(
-    //       new URLSearchParams({ lineageId: lineageId }),
-    //       'todo-replace'
-    //     );
-    //   })
-    //   .then((dependencyDtos) => {
-    //     setDependencies(dependencyDtos);
-    //     setReadyToBuild(true);
-    //   })
-    //   .catch((error) => {
-    //     console.log(error);
-    //   });
+    if (showRealData) {
+      LineageApiRepository.getOne(lineageId, 'todo-replace')
+        .then((lineageDto) => {
+          if (!lineageDto)
+            throw new TypeError('Queried lineage object not found');
+          setLineage(lineageDto);
+          return MaterializationsApiRepository.getBy(
+            new URLSearchParams({ lineageId: lineageId }),
+            'todo-replace'
+          );
+        })
+        .then((materializationDtos) => {
+          setMaterializations(materializationDtos);
+          return ColumnsApiRepository.getBy(
+            new URLSearchParams({ lineageId: lineageId }),
+            'todo-replace'
+          );
+        })
+        .then((columnDtos) => {
+          setColumns(columnDtos);
+          return DependenciesApiRepository.getBy(
+            new URLSearchParams({ lineageId: lineageId }),
+            'todo-replace'
+          );
+        })
+        .then((dependencyDtos) => {
+          setDependencies(dependencyDtos);
+          setReadyToBuild(true);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
+      setLineage({ id: 'todo', createdAt: 1 });
+      setReadyToBuild(true);
+    }
   }, []);
 
   const handleSearchChange = (event: any) => {
@@ -800,7 +832,10 @@ export default (): ReactElement => {
           />
         </div>
         <div id="control">
-          <button className="control-button" onClick={handleTreeViewExpandClick}>
+          <button
+            className="control-button"
+            onClick={handleTreeViewExpandClick}
+          >
             {expandedTreeViewElementIds.length === 0
               ? 'Expand all'
               : 'Collapse all'}

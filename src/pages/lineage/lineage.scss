@@ -45,7 +45,6 @@ $navbarHeight: 50px;
 /* button */
 button.hivedive {
   font-weight: bold;
-  font-size: 20px;
   color: black;
   border: 0;
   background: none;
@@ -54,10 +53,12 @@ button.hivedive {
 
 button.hivedive:hover {
   color: $hivediveBlue;
+  border-color: $hivediveBlue;
 }
 
 #menu-button {
   @extend button, .hivedive;
+  font-size: 20px;
   width: 30px;
   height: 20px;
 }
@@ -86,6 +87,14 @@ $headerMargin: 10px;
   overflow-y: hidden;
 }
 
+#sidenav .control-button {
+  @extend button, .hivedive;
+  font-size: 12px;
+  border: 2px solid black;
+  border-radius: 3px;
+  margin: 7px 3px 7px 3px;
+}
+
 #sidenav #search {
   position: absolute;
   width: calc(100% - 2 * $headerMargin);
@@ -98,7 +107,6 @@ $headerMargin: 10px;
   height: 40px;
   display: flex;
   margin: 0 10px 10px 10px;
-  background-color: whitesmoke;
 }
 
 #sidenav #content {

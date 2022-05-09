@@ -800,7 +800,7 @@ export default (): ReactElement => {
           />
         </div>
         <div id="control">
-          <button className="hivedive" onClick={handleTreeViewExpandClick}>
+          <button className="control-button" onClick={handleTreeViewExpandClick}>
             {expandedTreeViewElementIds.length === 0
               ? 'Expand all'
               : 'Collapse all'}

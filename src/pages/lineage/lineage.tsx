@@ -711,7 +711,7 @@ export default (): ReactElement => {
     if (showRealData) {
       if (data.nodes) defaultNodeId = data.nodes[0].id;
     } else {
-      defaultNodeId = '627160717e3d8066494d41ff';
+      defaultNodeId = '62715f907e3d8066494d409f';
     }
 
     // const initialData = loadData(

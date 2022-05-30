@@ -12,6 +12,7 @@ import G6, {
 import './lineage.scss';
 import AceEditor from 'react-ace';
 import { MdMenu, MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
+import MetricsGraph, { DefaultOptions } from '../../components/metrics-graph';
 
 import 'ace-builds/src-noconflict/mode-pgsql';
 import 'ace-builds/src-noconflict/theme-xcode';
@@ -37,6 +38,8 @@ import TreeView from '@mui/lab/TreeView';
 import TreeItem from '@mui/lab/TreeItem';
 
 import TextField from '@mui/material/TextField';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 
 const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
@@ -302,6 +305,7 @@ const determineType = (id: string, data: GraphData): TreeViewElementType => {
 export default (): ReactElement => {
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');
+  const [columnTest, setColumnTest] = useState('');
   const [info, setInfo] = useState('');
   const [lineage, setLineage] = useState<LineageDto>();
   const [materializations, setMaterializations] = useState<
@@ -318,6 +322,11 @@ export default (): ReactElement => {
     ReactElement[]
   >([]);
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
+  const [tabIndex, setTabIndex] = React.useState(0);
+
+  const handleTabIndexChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabIndex(newValue);
+  };
 
   const handleSelect = (event: React.SyntheticEvent, nodeIds: string) => {
     if (!data) return;
@@ -384,11 +393,21 @@ export default (): ReactElement => {
     sidenav.style.opacity = visible ? '0' : '1';
   };
 
-  const closeSidePanel = () => {
+  const closeMatSidePanel = () => {
     setSQL('');
 
-    const panel = document.getElementById('sqlSidepanel');
-    if (!panel) throw new ReferenceError('SQL Panel does not exist');
+    const panel = document.getElementById('materializationSidePanel');
+    if (!panel)
+      throw new ReferenceError('Materialization Panel does not exist');
+    panel.style.visibility = 'hidden';
+    panel.style.opacity = '0';
+  };
+
+  const closeColSidePanel = () => {
+    setColumnTest('');
+
+    const panel = document.getElementById('columnSidePanel');
+    if (!panel) throw new ReferenceError('Column Panel does not exist');
     panel.style.visibility = 'hidden';
     panel.style.opacity = '0';
   };
@@ -435,11 +454,20 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!sql) return;
 
-    const panel = document.getElementById('sqlSidepanel');
+    const panel = document.getElementById('materializationSidePanel');
     if (!panel) throw new ReferenceError('SQL Panel does not exist');
     panel.style.visibility = 'visible';
     panel.style.opacity = '1';
   }, [sql]);
+
+  useEffect(() => {
+    if (!columnTest) return;
+
+    const panel = document.getElementById('columnSidePanel');
+    if (!panel) throw new ReferenceError('Column Panel does not exist');
+    panel.style.visibility = 'visible';
+    panel.style.opacity = '1';
+  }, [columnTest]);
 
   const buildTreeViewColumns = (comboId: string): ReactElement[] => {
     if (!data) return [<></>];
@@ -609,12 +637,17 @@ export default (): ReactElement => {
     });
 
     graphObj.on('nodeselectchange', (event) => {
-      if (!event.select || !event.target) {
-        closeSidePanel();
+      const clearStates = () => {
+        closeMatSidePanel();
+        closeColSidePanel();
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         selectedEdges.forEach((edge) => edge.clearStates());
-      } else if (event.select && event.target.get('type') === 'node') {
-        closeSidePanel();
+      };
+
+      if (!event.target) clearStates();
+      else if (!event.select) clearStates();
+      else if (event.target.get('type') === 'node') {
+        closeMatSidePanel();
         const isNode = (object: any): object is INode => 'getEdges' in object;
 
         if (!isNode(event.target))
@@ -628,25 +661,27 @@ export default (): ReactElement => {
           loadData(selectedNodeId, DataLoadNodeType.Self, [], [], data)
         );
 
+        setColumnTest(Date.now().toString());
+
         graphObj.set('latestZoom', graphObj.getZoom());
         graphObj.set('selectedElementId', selectedNodeId);
 
         graphObj.render();
-      } else if (event.select && event.target.get('type') === 'combo') {
+      } else if (event.target.get('type') === 'combo') {
+        closeColSidePanel();
+
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         selectedEdges.forEach((edge) => edge.clearStates());
 
         const comboId = event.target.get('id');
 
-        let combo: MaterializationDto | undefined;
-        if (showRealData)
-          combo = materializations.find(
-            (materialization) => materialization.id === comboId
-          );
-        else
-          combo = defaultMaterializations.find(
-            (materialization) => materialization.id === comboId
-          );
+        const materializationsToSearch = showRealData
+          ? materializations
+          : defaultMaterializations;
+
+        const combo = materializationsToSearch.find(
+          (materialization) => materialization.id === comboId
+        );
 
         if (!combo)
           throw new ReferenceError(
@@ -707,12 +742,10 @@ export default (): ReactElement => {
       }
     });
 
-    let defaultNodeId = '';
-    if (showRealData) {
-      if (data.nodes) defaultNodeId = data.nodes[0].id;
-    } else {
-      defaultNodeId = '62715f907e3d8066494d409f';
-    }
+    const defaultNodeId =
+      showRealData && data.nodes
+        ? data.nodes[0].id
+        : '62715f907e3d8066494d409f';
 
     // const initialData = loadData(
     //   defaultNodeId,
@@ -748,7 +781,7 @@ export default (): ReactElement => {
   }, [data]);
 
   useEffect(() => {
-    if(!graph) return;
+    if (!graph) return;
 
     toggleShowSideNav();
   }, [graph]);
@@ -855,10 +888,7 @@ export default (): ReactElement => {
               ? 'Expand all'
               : 'Collapse all'}
           </button>
-          <button
-            className="control-button"
-            onClick={handleShowAll}
-          >
+          <button className="control-button" onClick={handleShowAll}>
             Show all
           </button>
         </div>
@@ -875,10 +905,10 @@ export default (): ReactElement => {
           </TreeView>
         </div>
       </div>
-      <div id="sqlSidepanel" className="sidepanel">
+      <div id="materializationSidePanel" className="sidepanel">
         <div className="header">
           <p className="title">SQL Model Logic</p>
-          <button className="closebtn" onClick={closeSidePanel}>
+          <button className="closebtn" onClick={closeMatSidePanel}>
             &times;
           </button>
         </div>
@@ -895,6 +925,26 @@ export default (): ReactElement => {
             wrapEnabled={true}
             showPrintMargin={false}
           />
+        </div>
+      </div>
+      <div id="columnSidePanel" className="sidepanel">
+        <div className="header">
+          <p className="title">Insights</p>
+          <button className="closebtn" onClick={closeColSidePanel}>
+            &times;
+          </button>
+        </div>
+        <div className="content">
+          <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
+            <Tab label="Observability" />
+            <Tab label="Anomaly" />
+          </Tabs>
+          <p>Test Header</p>
+          <MetricsGraph option={DefaultOptions}></MetricsGraph>
+          <p>Test Header</p>
+          <MetricsGraph option={DefaultOptions}></MetricsGraph>
+          <p>Test Header</p>
+          <MetricsGraph option={DefaultOptions}></MetricsGraph>
         </div>
       </div>
       <div id="snackbar">{info}</div>

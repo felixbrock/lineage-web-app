@@ -1,4 +1,4 @@
-$hivediveBlue: #2c25ff;
+$hivediveBlue: rgb(43, 36, 255);
 $hivediveGrey: #dfdfdf;
 
 /* div */
@@ -45,7 +45,7 @@ $navbarHeight: 50px;
 /* button */
 button.hivedive {
   font-weight: bold;
-  color: black;
+  color: #000000;
   border: 0;
   background: none;
   box-shadow: none;
@@ -136,6 +136,7 @@ $sidePanelMargin: 5px;
   transition: visibility 0.3s linear, opacity 0.3s linear;
   padding-top: 50px;
   margin: $sidePanelMargin 0 $sidePanelMargin $sidePanelMargin;
+  background-color: white;
 }
 
 .sidepanel .header {

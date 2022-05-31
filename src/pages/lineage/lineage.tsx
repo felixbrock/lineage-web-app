@@ -12,7 +12,11 @@ import G6, {
 import './lineage.scss';
 import AceEditor from 'react-ace';
 import { MdMenu, MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
-import MetricsGraph, { DefaultOptions } from '../../components/metrics-graph';
+import MetricsGraph, {
+  FreshnessDefaultOption,
+  OutlierDefaultOption,
+  PopulationDefaultOption,
+} from '../../components/metrics-graph';
 
 import 'ace-builds/src-noconflict/mode-pgsql';
 import 'ace-builds/src-noconflict/theme-xcode';
@@ -30,6 +34,7 @@ import {
   defaultData,
   defaultLogics,
   defaultMaterializations,
+  defaultAnomalyStates,
 } from './test-data';
 
 import TreeView from '@mui/lab/TreeView';
@@ -40,6 +45,8 @@ import TreeItem from '@mui/lab/TreeItem';
 import TextField from '@mui/material/TextField';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import BasicCard from '../../components/card';
+import BasicTable from '../../components/table';
 
 const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
@@ -324,7 +331,10 @@ export default (): ReactElement => {
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
   const [tabIndex, setTabIndex] = React.useState(0);
 
-  const handleTabIndexChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabIndexChange = (
+    event: React.SyntheticEvent,
+    newValue: number
+  ) => {
     setTabIndex(newValue);
   };
 
@@ -553,6 +563,11 @@ export default (): ReactElement => {
           lineWidth: 1,
           shadowBlur: 5,
         },
+        anomalyNodeSelected: {
+          stroke: '#db1d33',
+          lineWidth: 1,
+          shadowBlur: 5,
+        },
       },
       defaultEdge: {
         type: 'cubic-horizontal',
@@ -570,6 +585,11 @@ export default (): ReactElement => {
         nodeSelected: {
           stroke: hivediveBlue,
           shadowColor: hivediveBlue,
+          shadowBlur: 2,
+        },
+        anomalyNodeSelected: {
+          stroke: '#db1d33',
+          shadowColor: '#db1d33',
           shadowBlur: 2,
         },
       },
@@ -620,14 +640,39 @@ export default (): ReactElement => {
         object && 'getEdges' in object;
 
       if (isNode(element)) {
-        graphObj.setItemState(selectedElementId, 'selected', true);
+        const anomalyState = defaultAnomalyStates.find(
+          (state) => state.id === selectedElementId
+        );
+        if (!anomalyState) throw new ReferenceError('Anomaly state not found');
+        graphObj.setItemState(
+          selectedElementId,
+          anomalyState.hasNewAnomaly ? 'anomalyNodeSelected' : 'selected',
+          true
+        );
 
         getDependentEdges(element, true).forEach((edge) => {
-          graphObj.setItemState(edge.getID(), 'nodeSelected', true);
+          const sourceId = edge.getSource().getID();
+          const sourceAnomalyState = defaultAnomalyStates.find(
+            (state) => state.id === sourceId
+          );
+          if (!sourceAnomalyState)
+            throw new ReferenceError('Anomaly state not found');
+
+          graphObj.setItemState(
+            edge.getID(),
+            sourceAnomalyState.hasNewAnomaly
+              ? 'anomalyNodeSelected'
+              : 'nodeSelected',
+            true
+          );
         });
 
         getDependentEdges(element, false).forEach((edge) => {
-          graphObj.setItemState(edge.getID(), 'nodeSelected', true);
+          graphObj.setItemState(
+            edge.getID(),
+            anomalyState.hasNewAnomaly ? 'anomalyNodeSelected' : 'nodeSelected',
+            true
+          );
         });
       }
 
@@ -641,7 +686,12 @@ export default (): ReactElement => {
         closeMatSidePanel();
         closeColSidePanel();
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
-        selectedEdges.forEach((edge) => edge.clearStates());
+        const selectedAnomalyEdges = graphObj.findAllByState(
+          'edge',
+          'anomalyNodeSelected'
+        );
+        const edges = selectedEdges.concat(selectedAnomalyEdges);
+        edges.forEach((edge) => edge.clearStates());
       };
 
       if (!event.target) clearStates();
@@ -654,7 +704,12 @@ export default (): ReactElement => {
           throw new ReferenceError('Event item is no node');
 
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
-        selectedEdges.forEach((edge) => edge.clearStates());
+        const selectedAnomalyEdges = graphObj.findAllByState(
+          'edge',
+          'anomalyNodeSelected'
+        );
+        const edges = selectedEdges.concat(selectedAnomalyEdges);
+        edges.forEach((edge) => edge.clearStates());
 
         const selectedNodeId = event.target.getID();
         graphObj.data(
@@ -671,7 +726,12 @@ export default (): ReactElement => {
         closeColSidePanel();
 
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
-        selectedEdges.forEach((edge) => edge.clearStates());
+        const selectedAnomalyEdges = graphObj.findAllByState(
+          'edge',
+          'anomalyNodeSelected'
+        );
+        const edges = selectedEdges.concat(selectedAnomalyEdges);
+        edges.forEach((edge) => edge.clearStates());
 
         const comboId = event.target.get('id');
 
@@ -936,15 +996,22 @@ export default (): ReactElement => {
         </div>
         <div className="content">
           <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
-            <Tab label="Observability" />
-            <Tab label="Anomaly" />
+            <Tab label="Insights" />
+            <Tab label="Alerts" />
           </Tabs>
-          <p>Test Header</p>
-          <MetricsGraph option={DefaultOptions}></MetricsGraph>
-          <p>Test Header</p>
-          <MetricsGraph option={DefaultOptions}></MetricsGraph>
-          <p>Test Header</p>
-          <MetricsGraph option={DefaultOptions}></MetricsGraph>
+          {tabIndex === 0 ? (
+            <>
+              {BasicCard()}
+              <p>Outlier</p>
+              <MetricsGraph option={OutlierDefaultOption}></MetricsGraph>
+              <p>Freshness</p>
+              <MetricsGraph option={FreshnessDefaultOption}></MetricsGraph>
+              <p>Population</p>
+              <MetricsGraph option={PopulationDefaultOption}></MetricsGraph>
+            </>
+          ) : (
+            <>{BasicTable()}</>
+          )}
         </div>
       </div>
       <div id="snackbar">{info}</div>

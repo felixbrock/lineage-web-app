@@ -3,7 +3,7 @@ import { init, getInstanceByDom } from 'echarts';
 import type { CSSProperties } from 'react';
 import type { EChartsOption, ECharts, SetOptionOpts } from 'echarts';
 
-export const DefaultOptions: EChartsOption =  {
+export const OutlierDefaultOption : EChartsOption =  {   
   xAxis: {
     type: 'category',
     boundaryGap: false
@@ -15,7 +15,8 @@ export const DefaultOptions: EChartsOption =  {
   visualMap: {
     show: false,
     dimension: 0,
-    pieces: [
+    pieces:
+     [
       {
         gt: 1,
         lt: 3,
@@ -34,23 +35,119 @@ export const DefaultOptions: EChartsOption =  {
         // width: 2
       },
       areaStyle: {},
-      data: [
-        ['2019-10-10', 200],
-        ['2019-10-11', 560],
-        ['2019-10-12', 750],
-        ['2019-10-13', 580],
-        ['2019-10-14', 250],
-        ['2019-10-15', 300],
-        ['2019-10-16', 450],
-        ['2019-10-17', 300],
-        ['2019-10-18', 100]
-      ]
+      data: [        ['2022-06-10', 200],
+      ['2022-06-11', 560],
+      ['2022-06-12', 750],
+      ['2022-06-13', 580],
+      ['2022-06-14', 250],
+      ['2022-06-15', 300],
+      ['2022-06-16', 450],
+      ['2022-06-17', 300],
+      ['2022-06-18', 100]],
     }
   ],
   tooltip: {
     trigger: 'axis',
   },
 };
+
+export const FreshnessDefaultOption : EChartsOption =  {   
+  xAxis: {
+    type: 'category',
+    boundaryGap: false
+  },
+  yAxis: {
+    type: 'value',
+    boundaryGap: [0, '30%']
+  },
+  visualMap: {
+    show: false,
+    dimension: 0,
+    pieces:
+     [
+      {
+        gt: 1,
+        lt: 3,
+        color: '#db1d33',
+        colorAlpha: .2,
+      },
+
+    ]
+  },
+  series: [
+    {
+      type: 'line',
+      smooth: true,
+      lineStyle: {
+        color: '#2b24ff',
+        // width: 2
+      },
+      areaStyle: {},
+      data: [        ['2022-06-10', 1023],
+      ['2022-06-11', 830],
+      ['2022-06-12', 765],
+      ['2022-06-13', 200],
+      ['2022-06-14', 902],
+      ['2022-06-15', 1202],
+      ['2022-06-16', 1002],
+      ['2022-06-17', 1005],
+      ['2022-06-18', 1015]],
+    }
+  ],
+  tooltip: {
+    trigger: 'axis',
+  },
+};
+
+export const PopulationDefaultOption : EChartsOption =  {   
+  xAxis: {
+    type: 'category',
+    boundaryGap: false
+  },
+  yAxis: {
+    type: 'value',
+    boundaryGap: [0, '30%']
+  },
+  visualMap: {
+    show: false,
+    dimension: 0,
+    pieces:
+     [
+      {
+        gt: 1,
+        lt: 3,
+        color: '#db1d33',
+        colorAlpha: .2,
+      },
+
+    ]
+  },
+  series: [
+    {
+      type: 'line',
+      smooth: true,
+      lineStyle: {
+        color: '#2b24ff',
+        // width: 2
+      },
+      areaStyle: {},
+      data: [['2022-06-10', 12],
+      ['2022-06-11', 15],
+      ['2022-06-12', 54],
+      ['2022-06-13', 301],
+      ['2022-06-14', 42],
+      ['2022-06-15', 9],
+      ['2022-06-16', 32],
+      ['2022-06-17', 31],
+      ['2022-06-18', 22]],
+    }
+  ],
+  tooltip: {
+    trigger: 'axis',
+  },
+};
+
+
 
 export interface ReactEChartsProps {
   option: EChartsOption;

@@ -95,6 +95,21 @@ $headerMargin: 10px;
   margin: 7px 3px 7px 3px;
 }
 
+#sidenav .filter-button {
+  @extend button, .hivedive;
+  font-size: 12px;
+  border: 2px solid $hivediveBlue;
+  color: $hivediveBlue;
+  border-radius: 3px;
+  margin: 7px 3px 7px 3px;
+}
+
+#sidenav .filter-button:hover {
+  color: black;
+  border-color: black;
+}
+
+
 #sidenav #search {
   position: absolute;
   width: calc(100% - 2 * $headerMargin);

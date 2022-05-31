@@ -328,8 +328,11 @@ export default (): ReactElement => {
   const [allTreeViewElements, setAllTreeViewElements] = useState<
     ReactElement[]
   >([]);
+  const [filteredTreeViewElements, setFilteredTreeViewElements] = useState<ReactElement[]>([]);
+  const [searchedTreeViewElements, setSearchedTreeViewElements] = useState<ReactElement[]>([]);
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
   const [tabIndex, setTabIndex] = React.useState(0);
+  const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
 
   const handleTabIndexChange = (
     event: React.SyntheticEvent,
@@ -383,6 +386,82 @@ export default (): ReactElement => {
     graph.render();
   };
 
+  const handleFilterAnomalies = () => {
+    if (!allTreeViewElements) return;
+
+    if (anomalyFilterOn) {
+      setFilteredTreeViewElements([]);
+      setTreeViewElements(searchedTreeViewElements.length ? searchedTreeViewElements: allTreeViewElements);
+    setAnomalyFilterOn(!anomalyFilterOn);
+return;
+    }
+
+    const isReactElement = (element: any): element is ReactElement => !!element;
+
+    const newTreeViewElements = treeViewElements
+      .map((element: ReactElement) => {
+        if (element.props.sx.color !== 'black') return element;
+
+        const relevantChildren = element.props.children
+          .map((child: ReactElement) => {
+            if (child.props.sx.color !== 'black') return child;
+            return null;
+          })
+          .filter(isReactElement);
+
+        if (!relevantChildren.length) return null;
+
+        return (
+          <TreeItem nodeId={element.props.nodeId} label={element.props.label} sx={element.props.sx}>
+            {relevantChildren}
+          </TreeItem>
+        );
+      })
+      .filter(isReactElement);
+
+    setFilteredTreeViewElements(newTreeViewElements);
+
+    setAnomalyFilterOn(!anomalyFilterOn);
+  };
+
+  const handleSearchChange = (event: any) => {
+    if (!allTreeViewElements) return;
+
+    const value = event.target.value;
+    if (!value) {
+      setSearchedTreeViewElements([]);
+      setTreeViewElements(allTreeViewElements);
+      return;
+    };
+
+    const isReactElement = (element: any): element is ReactElement => !!element;
+
+    const populationToSearch = anomalyFilterOn ? filteredTreeViewElements: allTreeViewElements;
+
+    const newTreeViewElements = populationToSearch
+      .map((element: ReactElement) => {
+        if (element.props.label.includes(value)) return element;
+
+        const relevantChildren = element.props.children
+          .map((child: ReactElement) => {
+            if (child.props.label.includes(value)) return child;
+            return null;
+          })
+          .filter(isReactElement);
+
+        if (!relevantChildren.length) return null;
+
+        return (
+          <TreeItem nodeId={element.props.nodeId} label={element.props.label} sx={element.props.sx}>
+            {relevantChildren}
+          </TreeItem>
+        );
+      })
+      .filter(isReactElement);
+
+    setSearchedTreeViewElements(newTreeViewElements);
+  };
+
   const handleTreeViewExpandClick = () => {
     if (!data) return;
     if (!data.combos) return;
@@ -434,6 +513,20 @@ export default (): ReactElement => {
   };
 
   useEffect(() => {
+    if(!filteredTreeViewElements.length) return;
+
+    setTreeViewElements(filteredTreeViewElements);
+
+  }, [filteredTreeViewElements]);
+
+  useEffect(() => {
+    if(!searchedTreeViewElements.length) return;
+
+    setTreeViewElements(searchedTreeViewElements);
+
+  }, [searchedTreeViewElements]);
+
+  useEffect(() => {
     if (!info) return;
 
     handleInfo();
@@ -479,30 +572,60 @@ export default (): ReactElement => {
     panel.style.opacity = '1';
   }, [columnTest]);
 
-  const buildTreeViewColumns = (comboId: string): ReactElement[] => {
-    if (!data) return [<></>];
-    if (!data.nodes) return [<></>];
-
-    const relevantColumns = data.nodes.filter(
-      (node) => node.comboId === comboId
+  const buildTreeViewColumn = (
+    column: any,
+    defaultColor: string,
+    anomalyColor: string
+  ): ReactElement => {
+    const hasNewAnomaly = defaultAnomalyStates.find(
+      (element) => element.id === column.id
     );
+    if (!hasNewAnomaly) throw new ReferenceError('Anomaly state not found');
 
-    const columnElements = relevantColumns.map((column) => (
-      <TreeItem nodeId={column.id} label={column.label} icon={<MdTag />} />
-    ));
-
-    return columnElements;
+    return (
+      <TreeItem
+        nodeId={column.id}
+        label={column.label}
+        icon={<MdTag />}
+        sx={{
+          color: hasNewAnomaly.hasNewAnomaly ? anomalyColor : defaultColor,
+        }}
+      />
+    );
   };
 
   const buildTreeViewElements = (): ReactElement[] => {
     if (!data) return [<></>];
     if (!data.combos) return [<></>];
 
-    const materializationElements = data.combos.map((combo) => (
-      <TreeItem nodeId={combo.id} label={combo.label}>
-        {buildTreeViewColumns(combo.id)}
-      </TreeItem>
-    ));
+    const defaultColor = 'black';
+    const anomalyColor = '#db1d33';
+
+    const materializationElements = data.combos.map((combo): ReactElement => {
+      if (!data.nodes) return <></>;
+
+      const relevantColumns = data.nodes.filter(
+        (node) => node.comboId === combo.id
+      );
+
+      const columnElements = relevantColumns.map((column) =>
+        buildTreeViewColumn(column, defaultColor, anomalyColor)
+      );
+
+      const hasAnomalyChilds = columnElements.some(
+        (element) => element.props.sx.color !== defaultColor
+      );
+
+      return (
+        <TreeItem
+          nodeId={combo.id}
+          label={combo.label}
+          sx={{ color: hasAnomalyChilds ? anomalyColor : defaultColor }}
+        >
+          {columnElements}
+        </TreeItem>
+      );
+    });
 
     return materializationElements;
   };
@@ -887,38 +1010,6 @@ export default (): ReactElement => {
     }
   }, []);
 
-  const handleSearchChange = (event: any) => {
-    if (!allTreeViewElements) return;
-
-    const value = event.target.value;
-    if (!value) setAllTreeViewElements(allTreeViewElements);
-
-    const isReactElement = (element: any): element is ReactElement => !!element;
-
-    const newTreeViewElements = allTreeViewElements
-      .map((element: ReactElement) => {
-        if (element.props.label.includes(value)) return element;
-
-        const relevantChildren = element.props.children
-          .map((child: ReactElement) => {
-            if (child.props.label.includes(value)) return child;
-            return null;
-          })
-          .filter(isReactElement);
-
-        if (!relevantChildren.length) return null;
-
-        return (
-          <TreeItem nodeId={element.props.nodeId} label={element.props.label}>
-            {relevantChildren}
-          </TreeItem>
-        );
-      })
-      .filter(isReactElement);
-
-    setTreeViewElements(newTreeViewElements);
-  };
-
   return (
     <div id="lineageContainer">
       <div className="navbar">
@@ -950,6 +1041,9 @@ export default (): ReactElement => {
           </button>
           <button className="control-button" onClick={handleShowAll}>
             Show all
+          </button>
+          <button className={anomalyFilterOn? 'filter-button': 'control-button'} onClick={handleFilterAnomalies}>
+          Filter Anomalies
           </button>
         </div>
         <div id="content">
@@ -996,17 +1090,17 @@ export default (): ReactElement => {
         </div>
         <div className="content">
           <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
-            <Tab label="Insights" />
-            <Tab label="Alerts" />
+            <Tab label="Overview" />
+            <Tab label="Alert History" />
           </Tabs>
           {tabIndex === 0 ? (
             <>
               {BasicCard()}
-              <p>Outlier</p>
+              <h4>Distribution</h4>
               <MetricsGraph option={OutlierDefaultOption}></MetricsGraph>
-              <p>Freshness</p>
+              <h4>Freshness</h4>
               <MetricsGraph option={FreshnessDefaultOption}></MetricsGraph>
-              <p>Population</p>
+              <h4>Population</h4>
               <MetricsGraph option={PopulationDefaultOption}></MetricsGraph>
             </>
           ) : (

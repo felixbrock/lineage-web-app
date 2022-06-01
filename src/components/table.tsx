@@ -7,108 +7,47 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
-const rows = [
-  { date: '5/8/2022', type: 'Outlier', severeness: 'High' },
-  { date: '5/7/2022', type: 'Freshness', severeness: 'Medium' },
-  { date: '5/26/2022', type: 'Freshness', severeness: 'Medium' },
-  { date: '5/30/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/28/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/9/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/2/2022', type: 'Outlier', severeness: 'High' },
-  { date: '5/10/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/2/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/14/2022', type: 'Population', severeness: 'Low' },
-  { date: '5/26/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/30/2022', type: 'Population', severeness: 'High' },
-  { date: '5/24/2022', type: 'Population', severeness: 'Low' },
-  { date: '5/20/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/8/2022', type: 'Freshness', severeness: 'High' },
-  { date: '5/25/2022', type: 'Population', severeness: 'Low' },
-  { date: '5/21/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/20/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/2/2022', type: 'Population', severeness: 'Medium' },
-  { date: '5/7/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/12/2022', type: 'Outlier', severeness: 'Medium' },
-  { date: '5/12/2022', type: 'Freshness', severeness: 'High' },
-  { date: '5/12/2022', type: 'Population', severeness: 'Medium' },
-  { date: '5/8/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/23/2022', type: 'Outlier', severeness: 'Medium' },
-  { date: '5/15/2022', type: 'Freshness', severeness: 'High' },
-  { date: '5/14/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/6/2022', type: 'Freshness', severeness: 'High' },
-  { date: '5/18/2022', type: 'Population', severeness: 'Medium' },
-  { date: '5/26/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/29/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/9/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/27/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/7/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/11/2022', type: 'Population', severeness: 'Medium' },
-  { date: '5/2/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/5/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/13/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/4/2022', type: 'Freshness', severeness: 'Medium' },
-  { date: '5/21/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/23/2022', type: 'Population', severeness: 'Low' },
-  { date: '5/20/2022', type: 'Freshness', severeness: 'Medium' },
-  { date: '5/5/2022', type: 'Population', severeness: 'High' },
-  { date: '5/29/2022', type: 'Population', severeness: 'Medium' },
-  { date: '5/28/2022', type: 'Outlier', severeness: 'High' },
-  { date: '5/13/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/6/2022', type: 'Outlier', severeness: 'Medium' },
-  { date: '5/8/2022', type: 'Population', severeness: 'Medium' },
-  { date: '5/24/2022', type: 'Outlier', severeness: 'Medium' },
-  { date: '5/30/2022', type: 'Outlier', severeness: 'Medium' },
-  { date: '5/14/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/1/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/13/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/3/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/19/2022', type: 'Outlier', severeness: 'Medium' },
-  { date: '5/26/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/5/2022', type: 'Outlier', severeness: 'Medium' },
-  { date: '5/14/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/10/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/7/2022', type: 'Population', severeness: 'High' },
-  { date: '5/16/2022', type: 'Population', severeness: 'Medium' },
-  { date: '5/20/2022', type: 'Population', severeness: 'Medium' },
-  { date: '5/14/2022', type: 'Outlier', severeness: 'High' },
-  { date: '5/1/2022', type: 'Population', severeness: 'Low' },
-  { date: '5/9/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/23/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/3/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/25/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/19/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/19/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/5/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/24/2022', type: 'Population', severeness: 'Low' },
-  { date: '5/2/2022', type: 'Population', severeness: 'Low' },
-  { date: '5/14/2022', type: 'Outlier', severeness: 'Medium' },
-  { date: '5/10/2022', type: 'Freshness', severeness: 'Medium' },
-  { date: '5/30/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/2/2022', type: 'Population', severeness: 'Low' },
-  { date: '5/5/2022', type: 'Outlier', severeness: 'Medium' },
-  { date: '5/4/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/28/2022', type: 'Outlier', severeness: 'Medium' },
-  { date: '5/3/2022', type: 'Population', severeness: 'Low' },
-  { date: '5/24/2022', type: 'Outlier', severeness: 'Medium' },
-  { date: '5/13/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/14/2022', type: 'Outlier', severeness: 'Medium' },
-  { date: '5/20/2022', type: 'Population', severeness: 'Low' },
-  { date: '5/2/2022', type: 'Population', severeness: 'Low' },
-  { date: '5/20/2022', type: 'Population', severeness: 'Medium' },
-  { date: '5/16/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/19/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/24/2022', type: 'Population', severeness: 'Medium' },
-  { date: '5/9/2022', type: 'Population', severeness: 'Low' },
-  { date: '5/30/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/8/2022', type: 'Outlier', severeness: 'High' },
-  { date: '5/6/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/11/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/19/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/14/2022', type: 'Freshness', severeness: 'High' },
-  { date: '5/29/2022', type: 'Outlier', severeness: 'Low' },
-  { date: '5/1/2022', type: 'Freshness', severeness: 'Low' },
-  { date: '5/26/2022', type: 'Freshness', severeness: 'Low' },
-];
+const rows = [{
+  date: "2022-06-01",
+  type: "Distribution",
+  deviation: "-781%"
+}, {
+  date: "2022-05-14",
+  type: "Nullness",
+  deviation: "195%"
+}, {
+  date: "2022-05-03",
+  type: "Distribution",
+  deviation: "-240%"
+}, {
+  date: "2022-05-03",
+  type: "Distribution",
+  deviation: "-269%"
+}, {
+  date: "2022-05-01",
+  type: "Nullness",
+  deviation: "312%"
+}, {
+  date: "2022-04-19",
+  type: "Distribution",
+  deviation: "-282%"
+}, {
+  date: "2022-04-19",
+  type: "Nullness",
+  deviation: "311%"
+}, {
+  date: "2022-04-13",
+  type: "Freshness",
+  deviation: "402%"
+}, {
+  date: "2022-04-05",
+  type: "Distribution",
+  deviation: "325%"
+}, {
+  date: "2022-04-28",
+  type: "Nullness",
+  deviation: "653%"
+}]; 
 
 export default function BasicTable() {
   return (
@@ -131,7 +70,7 @@ export default function BasicTable() {
                 {row.date}
               </TableCell>
               <TableCell align="right">{row.type}</TableCell>
-              <TableCell align="right">{row.severeness}</TableCell>
+              <TableCell align="right">{row.deviation}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -1,40 +1,40 @@
-import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import { Avatar, CardHeader } from '@mui/material';
+import { BsSlack } from 'react-icons/bs';
 
-const bull = (
-  <Box
-    component="span"
-    sx={{ display: 'inline-block', mx: '2px', transform: 'scale(0.8)' }}
-  >
-    TEST
-  </Box>
-);
 
 export default function BasicCard() {
   return (
     <Card sx={{ minWidth: 275 }}>
+      <CardHeader
+        avatar={
+          <Avatar sx={{ bgcolor: '#2b24ff' }} aria-label="recipe">
+            {<BsSlack />}
+          </Avatar>
+        }
+        title="Slack Notification"
+        subheader="June 01, 2022"
+      />
       <CardContent>
         <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-          Word of the Day
+          Newest Anomaly Alert
         </Typography>
         <Typography variant="h5" component="div">
-          be{bull}nev{bull}o{bull}lent
+          Value of 200 at deviation of -781%
         </Typography>
         <Typography sx={{ mb: 1.5 }} color="text.secondary">
-          adjective
+        Data distribution significantly lower than expected
         </Typography>
         <Typography variant="body2">
-          well meaning and kindly.
-          <br />
-          {'"a benevolent smile"'}
+          Expected range: 1485 - 1601
         </Typography>
       </CardContent>
       <CardActions>
-        <Button size="small">Learn More</Button>
+        <Button size="small">Mark as Read</Button>
       </CardActions>
     </Card>
   );

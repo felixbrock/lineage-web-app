@@ -1,5 +1,5 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-import Logo from '../../components/top-nav/hivedive180.svg';
+// import Logo from '../../components/top-nav/hivedive180.svg';
 import G6, {
   ComboConfig,
   EdgeConfig,
@@ -14,8 +14,8 @@ import AceEditor from 'react-ace';
 import { MdMenu, MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
 import MetricsGraph, {
   FreshnessDefaultOption,
-  OutlierDefaultOption,
-  PopulationDefaultOption,
+  DistributionDefaultOption,
+  NullnessDefaultOption,
 } from '../../components/metrics-graph';
 
 import 'ace-builds/src-noconflict/mode-pgsql';
@@ -621,6 +621,7 @@ return;
           nodeId={combo.id}
           label={combo.label}
           sx={{ color: hasAnomalyChilds ? anomalyColor : defaultColor }}
+          endIcon={<MdTag />}
         >
           {columnElements}
         </TreeItem>
@@ -797,6 +798,13 @@ return;
             true
           );
         });
+      }
+      else {
+        graphObj.setItemState(
+          selectedElementId,
+          'selected',
+          true
+        );
       }
 
       graphObj.focusItem(element);
@@ -1018,7 +1026,7 @@ return;
             <MdMenu />
           </button>
 
-          <img src={Logo} alt="logo" />
+          {/* <img src={Logo} alt="logo" /> */}
         </div>
       </div>
       <div id="lineage" />
@@ -1095,13 +1103,13 @@ return;
           </Tabs>
           {tabIndex === 0 ? (
             <>
-              {BasicCard()}
+              <div className='card'>{BasicCard()}</div>
               <h4>Distribution</h4>
-              <MetricsGraph option={OutlierDefaultOption}></MetricsGraph>
+              <MetricsGraph option={DistributionDefaultOption}></MetricsGraph>
               <h4>Freshness</h4>
               <MetricsGraph option={FreshnessDefaultOption}></MetricsGraph>
-              <h4>Population</h4>
-              <MetricsGraph option={PopulationDefaultOption}></MetricsGraph>
+              <h4>Nullness</h4>
+              <MetricsGraph option={NullnessDefaultOption}></MetricsGraph>
             </>
           ) : (
             <>{BasicTable()}</>

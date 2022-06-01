@@ -3,7 +3,7 @@ import { init, getInstanceByDom } from 'echarts';
 import type { CSSProperties } from 'react';
 import type { EChartsOption, ECharts, SetOptionOpts } from 'echarts';
 
-export const OutlierDefaultOption : EChartsOption =  {   
+export const DistributionDefaultOption : EChartsOption =  {   
   xAxis: {
     type: 'category',
     boundaryGap: false
@@ -18,8 +18,8 @@ export const OutlierDefaultOption : EChartsOption =  {
     pieces:
      [
       {
-        gt: 1,
-        lt: 3,
+        gt: 7,
+        lt: 8,
         color: '#db1d33',
         colorAlpha: .2,
       },
@@ -35,15 +35,15 @@ export const OutlierDefaultOption : EChartsOption =  {
         // width: 2
       },
       areaStyle: {},
-      data: [        ['2022-06-10', 200],
-      ['2022-06-11', 560],
-      ['2022-06-12', 750],
-      ['2022-06-13', 580],
-      ['2022-06-14', 250],
-      ['2022-06-15', 300],
-      ['2022-06-16', 450],
-      ['2022-06-17', 300],
-      ['2022-06-18', 100]],
+      data: [        ['2022-06-01', 211],
+      ['2022-05-31', 1560],
+      ['2022-05-30', 1551],
+      ['2022-05-29', 1580],
+      ['2022-05-28', 1574],
+      ['2022-05-27', 1602],
+      ['2022-05-26', 1534],
+      ['2022-05-25', 1561],
+      ['2022-05-24', 1589]].reverse(),
     }
   ],
   tooltip: {
@@ -58,6 +58,9 @@ export const FreshnessDefaultOption : EChartsOption =  {
   },
   yAxis: {
     type: 'value',
+    axisLabel: {
+      formatter: '{value} h'
+    },
     boundaryGap: [0, '30%']
   },
   visualMap: {
@@ -66,8 +69,8 @@ export const FreshnessDefaultOption : EChartsOption =  {
     pieces:
      [
       {
-        gt: 1,
-        lt: 3,
+        gt: 3,
+        lt: 5,
         color: '#db1d33',
         colorAlpha: .2,
       },
@@ -83,15 +86,15 @@ export const FreshnessDefaultOption : EChartsOption =  {
         // width: 2
       },
       areaStyle: {},
-      data: [        ['2022-06-10', 1023],
-      ['2022-06-11', 830],
-      ['2022-06-12', 765],
-      ['2022-06-13', 200],
-      ['2022-06-14', 902],
-      ['2022-06-15', 1202],
-      ['2022-06-16', 1002],
-      ['2022-06-17', 1005],
-      ['2022-06-18', 1015]],
+      data: [['2022-06-01 1pm', 132],
+      ['2022-06-01 11am', 131],
+      ['2022-06-01 09am', 130],
+      ['2022-06-01 07am', 132],
+      ['2022-06-01 05am', 240],
+      ['2022-06-01 04am', 129],
+      ['2022-06-01 03am', 127],
+      ['2022-06-01 02am', 120],
+      ['2022-06-01 12am', 128]].reverse(),
     }
   ],
   tooltip: {
@@ -99,7 +102,7 @@ export const FreshnessDefaultOption : EChartsOption =  {
   },
 };
 
-export const PopulationDefaultOption : EChartsOption =  {   
+export const NullnessDefaultOption : EChartsOption =  {   
   xAxis: {
     type: 'category',
     boundaryGap: false
@@ -114,8 +117,8 @@ export const PopulationDefaultOption : EChartsOption =  {
     pieces:
      [
       {
-        gt: 1,
-        lt: 3,
+        gt: 4,
+        lt: 6,
         color: '#db1d33',
         colorAlpha: .2,
       },
@@ -131,15 +134,15 @@ export const PopulationDefaultOption : EChartsOption =  {
         // width: 2
       },
       areaStyle: {},
-      data: [['2022-06-10', 12],
-      ['2022-06-11', 15],
-      ['2022-06-12', 54],
-      ['2022-06-13', 301],
-      ['2022-06-14', 42],
-      ['2022-06-15', 9],
-      ['2022-06-16', 32],
-      ['2022-06-17', 31],
-      ['2022-06-18', 22]],
+      data: [        ['2022-06-01', 531],
+      ['2022-05-31', 601],
+      ['2022-05-30', 598],
+      ['2022-05-29', 1561],
+      ['2022-05-28', 576],
+      ['2022-05-27', 599],
+      ['2022-05-26', 564],
+      ['2022-05-25', 602],
+      ['2022-05-24', 595]].reverse(),
     }
   ],
   tooltip: {

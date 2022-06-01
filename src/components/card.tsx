@@ -24,13 +24,13 @@ export default function BasicCard() {
           Newest Anomaly Alert
         </Typography>
         <Typography variant="h5" component="div">
-          Value of 200 at deviation of -781%
+          Value of <span style={{color: '#db1d33'}}>47,011</span> at deviation of   <span style={{color: '#db1d33'}}>448%</span>
         </Typography>
         <Typography sx={{ mb: 1.5 }} color="text.secondary">
         Data distribution significantly lower than expected
         </Typography>
         <Typography variant="body2">
-          Expected range: 1485 - 1601
+          Expected range: 4,129 - 17,521
         </Typography>
       </CardContent>
       <CardActions>

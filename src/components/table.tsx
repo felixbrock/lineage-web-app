@@ -10,7 +10,7 @@ import Paper from '@mui/material/Paper';
 const rows = [{
   date: "2022-06-01",
   type: "Distribution",
-  deviation: "-781%"
+  deviation: "448%"
 }, {
   date: "2022-05-14",
   type: "Nullness",
@@ -18,11 +18,11 @@ const rows = [{
 }, {
   date: "2022-05-03",
   type: "Distribution",
-  deviation: "-240%"
+  deviation: "56%"
 }, {
   date: "2022-05-03",
   type: "Distribution",
-  deviation: "-269%"
+  deviation: "69%"
 }, {
   date: "2022-05-01",
   type: "Nullness",
@@ -30,7 +30,7 @@ const rows = [{
 }, {
   date: "2022-04-19",
   type: "Distribution",
-  deviation: "-282%"
+  deviation: "82%"
 }, {
   date: "2022-04-19",
   type: "Nullness",

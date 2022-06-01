@@ -29,21 +29,20 @@ export const DistributionDefaultOption : EChartsOption =  {
   series: [
     {
       type: 'line',
-      smooth: true,
       lineStyle: {
         color: '#2b24ff',
         // width: 2
       },
       areaStyle: {},
-      data: [        ['2022-06-01', 211],
-      ['2022-05-31', 1560],
-      ['2022-05-30', 1551],
-      ['2022-05-29', 1580],
-      ['2022-05-28', 1574],
-      ['2022-05-27', 1602],
-      ['2022-05-26', 1534],
-      ['2022-05-25', 1561],
-      ['2022-05-24', 1589]].reverse(),
+      data: [        ['2022-06-01', 47011],
+      ['2022-05-31', 10560],
+      ['2022-05-30', 12351],
+      ['2022-05-29', 8680],
+      ['2022-05-28', 6874],
+      ['2022-05-27', 11502],
+      ['2022-05-26', 9534],
+      ['2022-05-25', 11361],
+      ['2022-05-24', 10689]].reverse(),
     }
   ],
   tooltip: {
@@ -59,7 +58,7 @@ export const FreshnessDefaultOption : EChartsOption =  {
   yAxis: {
     type: 'value',
     axisLabel: {
-      formatter: '{value} h'
+      formatter: '{value} min'
     },
     boundaryGap: [0, '30%']
   },
@@ -80,7 +79,6 @@ export const FreshnessDefaultOption : EChartsOption =  {
   series: [
     {
       type: 'line',
-      smooth: true,
       lineStyle: {
         color: '#2b24ff',
         // width: 2
@@ -90,7 +88,7 @@ export const FreshnessDefaultOption : EChartsOption =  {
       ['2022-06-01 11am', 131],
       ['2022-06-01 09am', 130],
       ['2022-06-01 07am', 132],
-      ['2022-06-01 05am', 240],
+      ['2022-06-01 05am', 540],
       ['2022-06-01 04am', 129],
       ['2022-06-01 03am', 127],
       ['2022-06-01 02am', 120],
@@ -128,7 +126,6 @@ export const NullnessDefaultOption : EChartsOption =  {
   series: [
     {
       type: 'line',
-      smooth: true,
       lineStyle: {
         color: '#2b24ff',
         // width: 2

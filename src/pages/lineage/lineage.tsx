@@ -5,6 +5,7 @@ import G6, {
   EdgeConfig,
   Graph,
   GraphData,
+  ICombo,
   IEdge,
   INode,
   NodeConfig,
@@ -761,7 +762,13 @@ return;
       const element = graphObj.findById(selectedElementId);
 
       const isNode = (object: any): object is INode =>
-        object && 'getEdges' in object;
+        object && 'getType' in object && object.getType() === 'node';
+
+        const isCombo = (object: any): object is ICombo =>
+        object && 'getType' in object && object.getType() === 'combo';
+
+        console.log(isNode(element), isCombo(element));
+
 
       if (isNode(element)) {
         const anomalyState = defaultAnomalyStates.find(
@@ -799,7 +806,7 @@ return;
           );
         });
       }
-      else {
+      else if (isCombo(element)) {
         graphObj.setItemState(
           selectedElementId,
           'selected',

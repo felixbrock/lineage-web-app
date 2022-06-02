@@ -12,7 +12,7 @@ export default function BasicCard() {
     <Card sx={{ minWidth: 275 }}>
       <CardHeader
         avatar={
-          <Avatar sx={{ bgcolor: '#2b24ff' }} aria-label="recipe">
+          <Avatar sx={{ bgcolor: '#6f47ef' }} aria-label="recipe">
             {<BsSlack />}
           </Avatar>
         }

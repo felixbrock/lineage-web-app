@@ -1,5 +1,5 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-// import Logo from '../../components/top-nav/hivedive180.svg';
+import Logo from '../../components/top-nav/cito-header.png';
 import G6, {
   ComboConfig,
   EdgeConfig,
@@ -11,7 +11,8 @@ import G6, {
   NodeConfig,
 } from '@antv/g6';
 import './lineage.scss';
-import AceEditor from 'react-ace';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { MdMenu, MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
 import MetricsGraph, {
   FreshnessDefaultOption,
@@ -19,9 +20,6 @@ import MetricsGraph, {
   NullnessDefaultOption,
 } from '../../components/metrics-graph';
 
-import 'ace-builds/src-noconflict/mode-pgsql';
-import 'ace-builds/src-noconflict/theme-xcode';
-import 'ace-builds/src-noconflict/ext-language_tools';
 import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
 import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
 import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
@@ -639,7 +637,7 @@ return;
     setAllTreeViewElements(elements);
     setTreeViewElements(elements);
 
-    const hivediveBlue = '#2c25ff';
+    const hivediveBlue = '#6f47ef';
 
     const container = document.getElementById('lineageContainer');
     if (!container) throw new ReferenceError(`Container for graph not found`);
@@ -767,7 +765,6 @@ return;
         const isCombo = (object: any): object is ICombo =>
         object && 'getType' in object && object.getType() === 'combo';
 
-        console.log(isNode(element), isCombo(element));
 
 
       if (isNode(element)) {
@@ -1033,7 +1030,8 @@ return;
             <MdMenu />
           </button>
 
-          {/* <img src={Logo} alt="logo" /> */}
+          
+          <img height='40' width='150' src={Logo} alt="logo" />
         </div>
       </div>
       <div id="lineage" />
@@ -1082,18 +1080,9 @@ return;
           </button>
         </div>
         <div id="editor" className="content">
-          <AceEditor
-            name="sqlEditor"
-            mode="pgsql"
-            theme="xcode"
-            height="100%"
-            width="100%"
-            fontSize={16}
-            readOnly={true}
-            value={sql}
-            wrapEnabled={true}
-            showPrintMargin={false}
-          />
+          <SyntaxHighlighter language="sql" style={dracula} showLineNumbers={true} wrapLongLines={false}>
+      {sql}
+    </SyntaxHighlighter>
         </div>
       </div>
       <div id="columnSidePanel" className="sidepanel">

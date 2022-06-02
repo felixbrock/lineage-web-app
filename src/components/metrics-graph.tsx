@@ -30,7 +30,7 @@ export const DistributionDefaultOption : EChartsOption =  {
     {
       type: 'line',
       lineStyle: {
-        color: '#2b24ff',
+        color: '#6f47ef',
         // width: 2
       },
       areaStyle: {},
@@ -80,7 +80,7 @@ export const FreshnessDefaultOption : EChartsOption =  {
     {
       type: 'line',
       lineStyle: {
-        color: '#2b24ff',
+        color: '#6f47ef',
         // width: 2
       },
       areaStyle: {},
@@ -127,7 +127,7 @@ export const NullnessDefaultOption : EChartsOption =  {
     {
       type: 'line',
       lineStyle: {
-        color: '#2b24ff',
+        color: '#6f47ef',
         // width: 2
       },
       areaStyle: {},

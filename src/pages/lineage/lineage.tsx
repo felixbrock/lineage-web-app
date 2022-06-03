@@ -327,8 +327,12 @@ export default (): ReactElement => {
   const [allTreeViewElements, setAllTreeViewElements] = useState<
     ReactElement[]
   >([]);
-  const [filteredTreeViewElements, setFilteredTreeViewElements] = useState<ReactElement[]>([]);
-  const [searchedTreeViewElements, setSearchedTreeViewElements] = useState<ReactElement[]>([]);
+  const [filteredTreeViewElements, setFilteredTreeViewElements] = useState<
+    ReactElement[]
+  >([]);
+  const [searchedTreeViewElements, setSearchedTreeViewElements] = useState<
+    ReactElement[]
+  >([]);
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
   const [tabIndex, setTabIndex] = React.useState(0);
   const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
@@ -390,9 +394,13 @@ export default (): ReactElement => {
 
     if (anomalyFilterOn) {
       setFilteredTreeViewElements([]);
-      setTreeViewElements(searchedTreeViewElements.length ? searchedTreeViewElements: allTreeViewElements);
-    setAnomalyFilterOn(!anomalyFilterOn);
-return;
+      setTreeViewElements(
+        searchedTreeViewElements.length
+          ? searchedTreeViewElements
+          : allTreeViewElements
+      );
+      setAnomalyFilterOn(!anomalyFilterOn);
+      return;
     }
 
     const isReactElement = (element: any): element is ReactElement => !!element;
@@ -411,7 +419,11 @@ return;
         if (!relevantChildren.length) return null;
 
         return (
-          <TreeItem nodeId={element.props.nodeId} label={element.props.label} sx={element.props.sx}>
+          <TreeItem
+            nodeId={element.props.nodeId}
+            label={element.props.label}
+            sx={element.props.sx}
+          >
             {relevantChildren}
           </TreeItem>
         );
@@ -431,11 +443,13 @@ return;
       setSearchedTreeViewElements([]);
       setTreeViewElements(allTreeViewElements);
       return;
-    };
+    }
 
     const isReactElement = (element: any): element is ReactElement => !!element;
 
-    const populationToSearch = anomalyFilterOn ? filteredTreeViewElements: allTreeViewElements;
+    const populationToSearch = anomalyFilterOn
+      ? filteredTreeViewElements
+      : allTreeViewElements;
 
     const newTreeViewElements = populationToSearch
       .map((element: ReactElement) => {
@@ -451,7 +465,11 @@ return;
         if (!relevantChildren.length) return null;
 
         return (
-          <TreeItem nodeId={element.props.nodeId} label={element.props.label} sx={element.props.sx}>
+          <TreeItem
+            nodeId={element.props.nodeId}
+            label={element.props.label}
+            sx={element.props.sx}
+          >
             {relevantChildren}
           </TreeItem>
         );
@@ -512,17 +530,15 @@ return;
   };
 
   useEffect(() => {
-    if(!filteredTreeViewElements.length) return;
+    if (!filteredTreeViewElements.length) return;
 
     setTreeViewElements(filteredTreeViewElements);
-
   }, [filteredTreeViewElements]);
 
   useEffect(() => {
-    if(!searchedTreeViewElements.length) return;
+    if (!searchedTreeViewElements.length) return;
 
     setTreeViewElements(searchedTreeViewElements);
-
   }, [searchedTreeViewElements]);
 
   useEffect(() => {
@@ -762,10 +778,8 @@ return;
       const isNode = (object: any): object is INode =>
         object && 'getType' in object && object.getType() === 'node';
 
-        const isCombo = (object: any): object is ICombo =>
+      const isCombo = (object: any): object is ICombo =>
         object && 'getType' in object && object.getType() === 'combo';
-
-
 
       if (isNode(element)) {
         const anomalyState = defaultAnomalyStates.find(
@@ -802,18 +816,15 @@ return;
             true
           );
         });
-      }
-      else if (isCombo(element)) {
-        graphObj.setItemState(
-          selectedElementId,
-          'selected',
-          true
-        );
+      } else if (isCombo(element)) {
+        graphObj.setItemState(selectedElementId, 'selected', true);
       }
 
-      graphObj.focusItem(element);
+      const zoom = graphObj.get('latestZoom') || 1;
 
-      graphObj.zoom(graphObj.get('latestZoom') || 1);
+      graphObj.zoom(zoom);
+
+      graphObj.focusItem(element);    
     });
 
     graphObj.on('nodeselectchange', (event) => {
@@ -1030,8 +1041,7 @@ return;
             <MdMenu />
           </button>
 
-          
-          <img height='40' width='150' src={Logo} alt="logo" />
+          <img height="40" width="150" src={Logo} alt="logo" />
         </div>
       </div>
       <div id="lineage" />
@@ -1055,8 +1065,11 @@ return;
           <button className="control-button" onClick={handleShowAll}>
             Show all
           </button>
-          <button className={anomalyFilterOn? 'filter-button': 'control-button'} onClick={handleFilterAnomalies}>
-          Filter Anomalies
+          <button
+            className={anomalyFilterOn ? 'filter-button' : 'control-button'}
+            onClick={handleFilterAnomalies}
+          >
+            Filter Anomalies
           </button>
         </div>
         <div id="content">
@@ -1080,9 +1093,14 @@ return;
           </button>
         </div>
         <div id="editor" className="content">
-          <SyntaxHighlighter language="sql" style={dracula} showLineNumbers={true} wrapLongLines={false}>
-      {sql}
-    </SyntaxHighlighter>
+          <SyntaxHighlighter
+            language="sql"
+            style={dracula}
+            showLineNumbers={true}
+            wrapLongLines={false}
+          >
+            {sql}
+          </SyntaxHighlighter>
         </div>
       </div>
       <div id="columnSidePanel" className="sidepanel">
@@ -1099,7 +1117,7 @@ return;
           </Tabs>
           {tabIndex === 0 ? (
             <>
-              <div className='card'>{BasicCard()}</div>
+              <div className="card">{BasicCard()}</div>
               <h4>Distribution</h4>
               <MetricsGraph option={DistributionDefaultOption}></MetricsGraph>
               <h4>Freshness</h4>

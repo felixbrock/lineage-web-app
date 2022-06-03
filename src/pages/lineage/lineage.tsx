@@ -46,6 +46,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import BasicCard from '../../components/card';
 import BasicTable from '../../components/table';
+import { Auth } from 'aws-amplify';
 
 const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
@@ -309,10 +310,14 @@ const determineType = (id: string, data: GraphData): TreeViewElementType => {
 };
 
 export default (): ReactElement => {
+  const [accountId, setAccountId] = useState('');
+  const [user, setUser] = useState<any>();
+  const [jwt, setJwt] = useState('');
+
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');
   const [columnTest, setColumnTest] = useState('');
-  const [info, setInfo] = useState('');
+  // const [info, setInfo] = useState('');
   const [lineage, setLineage] = useState<LineageDto>();
   const [materializations, setMaterializations] = useState<
     MaterializationDto[]
@@ -518,74 +523,16 @@ export default (): ReactElement => {
     panel.style.opacity = '0';
   };
 
-  const handleInfo = () => {
-    const snackbar = document.getElementById('snackbar');
-    if (!snackbar) throw new ReferenceError('Snackbar element not found');
-    snackbar.className = 'show';
+  // const handleInfo = () => {
+  //   const snackbar = document.getElementById('snackbar');
+  //   if (!snackbar) throw new ReferenceError('Snackbar element not found');
+  //   snackbar.className = 'show';
 
-    setTimeout(() => {
-      snackbar.className = snackbar.className.replace('show', '');
-      setInfo('');
-    }, 3000);
-  };
-
-  useEffect(() => {
-    if (!filteredTreeViewElements.length) return;
-
-    setTreeViewElements(filteredTreeViewElements);
-  }, [filteredTreeViewElements]);
-
-  useEffect(() => {
-    if (!searchedTreeViewElements.length) return;
-
-    setTreeViewElements(searchedTreeViewElements);
-  }, [searchedTreeViewElements]);
-
-  useEffect(() => {
-    if (!info) return;
-
-    handleInfo();
-  }, [info]);
-
-  useEffect(() => {
-    if (!readyToBuild) return;
-
-    if (showRealData)
-      setData(buildData(materializations, columns, dependencies));
-    else {
-      defaultData.nodes.sort(compare);
-      defaultData.nodes.forEach(
-        (element) => (element.label = element.label.toLowerCase())
-      );
-
-      defaultData.combos.sort(compare);
-      defaultData.combos.forEach(
-        (element) => (element.label = element.label.toLowerCase())
-      );
-
-      setData(defaultData);
-    }
-
-    setReadyToBuild(false);
-  }, [readyToBuild]);
-
-  useEffect(() => {
-    if (!sql) return;
-
-    const panel = document.getElementById('materializationSidePanel');
-    if (!panel) throw new ReferenceError('SQL Panel does not exist');
-    panel.style.visibility = 'visible';
-    panel.style.opacity = '1';
-  }, [sql]);
-
-  useEffect(() => {
-    if (!columnTest) return;
-
-    const panel = document.getElementById('columnSidePanel');
-    if (!panel) throw new ReferenceError('Column Panel does not exist');
-    panel.style.visibility = 'visible';
-    panel.style.opacity = '1';
-  }, [columnTest]);
+  //   setTimeout(() => {
+  //     snackbar.className = snackbar.className.replace('show', '');
+  //     setInfo('');
+  //   }, 3000);
+  // };
 
   const buildTreeViewColumn = (
     column: any,
@@ -645,6 +592,150 @@ export default (): ReactElement => {
 
     return materializationElements;
   };
+
+  const renderAutomations = () => {
+    setUser(undefined);
+    setJwt('');
+    setAccountId('');
+
+    Auth.currentAuthenticatedUser()
+      .then((cognitoUser) => setUser(cognitoUser))
+      .catch((error) => {
+        console.log(error);
+
+        Auth.federatedSignIn();
+      });
+  };
+
+  useEffect(renderAutomations, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    Auth.currentSession()
+      .then((session) => {
+        const accessToken = session.getAccessToken();
+
+        const token = accessToken.getJwtToken();
+        setJwt(token);
+
+        // return AccountApiRepository.getBy(new URLSearchParams({}), token);
+        return [{id: 'todo'}];
+      })
+      .then((accounts) => {
+        // if (!accounts.length) throw new Error(`No accounts found for user`);
+
+        // if (accounts.length > 1)
+        //   throw new Error(`Multiple accounts found for user`);
+
+        // setAccountId(accounts[0].id);
+        setAccountId(accounts[0].id);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [user]);
+
+  useEffect(() => {
+    if (!accountId || lineage) return;
+
+    if (!jwt) throw new Error('No user authorization found');
+
+    if (showRealData) {
+      LineageApiRepository.getOne(lineageId, 'todo-replace')
+        .then((lineageDto) => {
+          if (!lineageDto)
+            throw new TypeError('Queried lineage object not found');
+          setLineage(lineageDto);
+          return MaterializationsApiRepository.getBy(
+            new URLSearchParams({ lineageId: lineageId }),
+            'todo-replace'
+          );
+        })
+        .then((materializationDtos) => {
+          setMaterializations(materializationDtos);
+          return ColumnsApiRepository.getBy(
+            new URLSearchParams({ lineageId: lineageId }),
+            'todo-replace'
+          );
+        })
+        .then((columnDtos) => {
+          setColumns(columnDtos);
+          return DependenciesApiRepository.getBy(
+            new URLSearchParams({ lineageId: lineageId }),
+            'todo-replace'
+          );
+        })
+        .then((dependencyDtos) => {
+          setDependencies(dependencyDtos);
+          setReadyToBuild(true);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
+      setLineage({ id: 'todo', createdAt: 1 });
+      setReadyToBuild(true);
+    }
+  }, [accountId]);
+
+  useEffect(() => {
+    if (!filteredTreeViewElements.length) return;
+
+    setTreeViewElements(filteredTreeViewElements);
+  }, [filteredTreeViewElements]);
+
+  useEffect(() => {
+    if (!searchedTreeViewElements.length) return;
+
+    setTreeViewElements(searchedTreeViewElements);
+  }, [searchedTreeViewElements]);
+
+  // useEffect(() => {
+  //   if (!info) return;
+
+  //   handleInfo();
+  // }, [info]);
+
+  useEffect(() => {
+    if (!readyToBuild) return;
+
+    if (showRealData)
+      setData(buildData(materializations, columns, dependencies));
+    else {
+      defaultData.nodes.sort(compare);
+      defaultData.nodes.forEach(
+        (element) => (element.label = element.label.toLowerCase())
+      );
+
+      defaultData.combos.sort(compare);
+      defaultData.combos.forEach(
+        (element) => (element.label = element.label.toLowerCase())
+      );
+
+      setData(defaultData);
+    }
+
+    setReadyToBuild(false);
+  }, [readyToBuild]);
+
+  useEffect(() => {
+    if (!sql) return;
+
+    const panel = document.getElementById('materializationSidePanel');
+    if (!panel) throw new ReferenceError('SQL Panel does not exist');
+    panel.style.visibility = 'visible';
+    panel.style.opacity = '1';
+  }, [sql]);
+
+  useEffect(() => {
+    if (!columnTest) return;
+
+    const panel = document.getElementById('columnSidePanel');
+    if (!panel) throw new ReferenceError('Column Panel does not exist');
+    panel.style.visibility = 'visible';
+    panel.style.opacity = '1';
+  }, [columnTest]);
 
   useEffect(() => {
     if (!data) return;
@@ -824,7 +915,7 @@ export default (): ReactElement => {
 
       graphObj.zoom(zoom);
 
-      graphObj.focusItem(element);    
+      graphObj.focusItem(element);
     });
 
     graphObj.on('nodeselectchange', (event) => {
@@ -924,27 +1015,6 @@ export default (): ReactElement => {
         graphObj.set('selectedElementId', combo.id);
 
         graphObj.render();
-
-        // const isCombo = (object: any): object is ICombo => 'getNodes' in object;
-
-        // if (!isCombo(event.target))
-        //   throw new ReferenceError('Event item is no combo');
-
-        // const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
-        // selectedEdges.forEach((edge) => edge.clearStates());
-
-        // // todo - attempt to fix edge highlighting bug when selected collapsed combo
-        // if (event.target.get('model').collapsed) graphObj.refreshPositions();
-
-        // event.target.getNodes().forEach((node) => {
-        //   getDependentEdges(node, true).forEach((edge) => {
-        //     graphObj.setItemState(edge.getID(), 'nodeSelected', true);
-        //   });
-
-        //   getDependentEdges(node, false).forEach((edge) => {
-        //     graphObj.setItemState(edge.getID(), 'nodeSelected', true);
-        //   });
-        // });
       }
     });
 
@@ -953,31 +1023,9 @@ export default (): ReactElement => {
         ? data.nodes[0].id
         : '62715f907e3d8066494d409f';
 
-    // const initialData = loadData(
-    //   defaultNodeId,
-    //   DataLoadNodeType.Self,
-    //   [],
-    //   [],
-    //   data
-    // );
-
     const initialData = data;
 
     graphObj.data(initialData);
-
-    // if (!defaultData.nodes) throw new ReferenceError('Nodes do not exist');
-    // const selfNode = defaultData.nodes.find(
-    //   (node) => node.id === defaultNodeId
-    // );
-    // if (!selfNode) throw new ReferenceError('Self node not found');
-
-    // const selfComboId = selfNode.comboId;
-    // if (!selfComboId) throw new ReferenceError('Self combo id not found');
-
-    // if (defaultData.combos)
-    //   defaultData.combos.forEach((combo) => {
-    //     if (combo.id !== selfComboId) graphObj.collapseCombo(combo.id);
-    //   });
 
     graphObj.set('selectedElementId', defaultNodeId);
 
@@ -991,47 +1039,6 @@ export default (): ReactElement => {
 
     toggleShowSideNav();
   }, [graph]);
-
-  useEffect(() => {
-    if (lineage) return;
-
-    if (showRealData) {
-      LineageApiRepository.getOne(lineageId, 'todo-replace')
-        .then((lineageDto) => {
-          if (!lineageDto)
-            throw new TypeError('Queried lineage object not found');
-          setLineage(lineageDto);
-          return MaterializationsApiRepository.getBy(
-            new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
-          );
-        })
-        .then((materializationDtos) => {
-          setMaterializations(materializationDtos);
-          return ColumnsApiRepository.getBy(
-            new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
-          );
-        })
-        .then((columnDtos) => {
-          setColumns(columnDtos);
-          return DependenciesApiRepository.getBy(
-            new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
-          );
-        })
-        .then((dependencyDtos) => {
-          setDependencies(dependencyDtos);
-          setReadyToBuild(true);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    } else {
-      setLineage({ id: 'todo', createdAt: 1 });
-      setReadyToBuild(true);
-    }
-  }, []);
 
   return (
     <div id="lineageContainer">
@@ -1130,7 +1137,7 @@ export default (): ReactElement => {
           )}
         </div>
       </div>
-      <div id="snackbar">{info}</div>
+      {/* <div id="snackbar">{info}</div> */}
     </div>
   );
 };

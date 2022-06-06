@@ -44,9 +44,13 @@ import TreeItem from '@mui/lab/TreeItem';
 import TextField from '@mui/material/TextField';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import Button from '@mui/material/Button';
 import BasicCard from '../../components/card';
 import BasicTable from '../../components/table';
 import { Auth } from 'aws-amplify';
+import { CognitoHostedUIIdentityProvider } from '@aws-amplify/auth';
+
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
@@ -56,6 +60,17 @@ enum DataLoadNodeType {
   Parent = 'PARENT',
   Child = 'CHILD',
 }
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#6f47ef',
+    },
+    secondary: {
+      main: '#000000',
+    },
+  },
+});
 
 const getNodeIdsToExplore = (
   edgesToExplore: EdgeConfig[],
@@ -603,7 +618,7 @@ export default (): ReactElement => {
       .catch((error) => {
         console.log(error);
 
-        Auth.federatedSignIn();
+        Auth.federatedSignIn({provider: CognitoHostedUIIdentityProvider.Google });
       });
   };
 
@@ -1041,6 +1056,7 @@ export default (): ReactElement => {
   }, [graph]);
 
   return (
+    <ThemeProvider theme={theme}>
     <div id="lineageContainer">
       <div className="navbar">
         <div id="menu-container">
@@ -1049,6 +1065,9 @@ export default (): ReactElement => {
           </button>
 
           <img height="40" width="150" src={Logo} alt="logo" />
+        </div>
+        <div id="sign-out-container">
+        <Button onClick={() => Auth.signOut()} color="secondary">Sign Out</Button>
         </div>
       </div>
       <div id="lineage" />
@@ -1139,5 +1158,6 @@ export default (): ReactElement => {
       </div>
       {/* <div id="snackbar">{info}</div> */}
     </div>
+    </ThemeProvider>
   );
 };

@@ -23,6 +23,15 @@ $navbarHeight: 50px;
   flex-direction: row;
   align-items: center;
 }
+.navbar #sign-out-container {
+  position: absolute;
+  right: 0%;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
 
 .navbar #menu-container:after {
   content: '';

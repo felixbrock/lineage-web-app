@@ -26,7 +26,7 @@ export default (): ReactElement => {
     },
     oauth: {
       scope: ['email', 'openid', ],
-      responseType: 'token',
+      responseType: 'code',
       ...oAuthEnvConfig,
     },
   });

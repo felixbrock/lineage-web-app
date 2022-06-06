@@ -1067,7 +1067,7 @@ export default (): ReactElement => {
           <img height="40" width="150" src={Logo} alt="logo" />
         </div>
         <div id="sign-out-container">
-        <Button onClick={() => Auth.signOut()} color="secondary">Sign Out</Button>
+        <Button onClick={() => Auth.signOut()} color="secondary" size="large">Sign Out</Button>
         </div>
       </div>
       <div id="lineage" />

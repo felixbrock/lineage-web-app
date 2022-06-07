@@ -615,6 +615,8 @@ export default (): ReactElement => {
     Auth.currentAuthenticatedUser()
       .then((cognitoUser) => setUser(cognitoUser))
       .catch((error) => {
+        console.log('XXXXXXXXXXXXXXXXXX');
+        
         console.log(error);
 
         Auth.federatedSignIn();

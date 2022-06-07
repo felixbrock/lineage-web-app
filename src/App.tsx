@@ -11,7 +11,6 @@ import Lineage from './pages/lineage/lineage';
 import { authEnvConfig, oAuthEnvConfig } from './config';
 
 export default (): ReactElement => {
-  
   Amplify.configure({
     Auth: {
       region: 'eu-central-1',
@@ -25,7 +24,7 @@ export default (): ReactElement => {
       ...authEnvConfig,
     },
     oauth: {
-      scope: ['email', 'openid', ],
+      scope: ['email', 'openid'],
       responseType: 'code',
       ...oAuthEnvConfig,
     },
@@ -37,9 +36,13 @@ export default (): ReactElement => {
 
   useEffect(() => {
     Auth.currentAuthenticatedUser()
-      .then((cognitoUser) => setUser(cognitoUser))
+      .then((cognitoUser) => {
+        if (!user) setUser(cognitoUser);
+      })
       .catch((error) => {
         console.log(error);
+
+        setUser(undefined);
 
         Auth.federatedSignIn();
       });
@@ -50,17 +53,17 @@ export default (): ReactElement => {
 
     setApp(
       <div className="App">
-      <div id='app'>
-        <Router>
-          <div id='ContentContainer'>
-            <Routes>
-              <Route path="/lineage" element={<Lineage/>} />
-              <Route path="/" element={<Navigate to="/lineage"/>}/>
-            </Routes>
-          </div>
-        </Router>
+        <div id="app">
+          <Router>
+            <div id="ContentContainer">
+              <Routes>
+                <Route path="/lineage" element={<Lineage />} />
+                <Route path="/" element={<Navigate to="/lineage" />} />
+              </Routes>
+            </div>
+          </Router>
+        </div>
       </div>
-    </div>
     );
   }, [user]);
 

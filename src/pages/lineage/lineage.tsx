@@ -607,17 +607,15 @@ export default (): ReactElement => {
     return materializationElements;
   };
 
-  const renderAutomations = () => {
-    setUser(undefined);
-    setJwt('');
-    setAccountId('');
-
+  const renderAutomations = () => { 
     Auth.currentAuthenticatedUser()
       .then((cognitoUser) => setUser(cognitoUser))
-      .catch((error) => {
-        console.log('XXXXXXXXXXXXXXXXXX');
-        
+      .catch((error) => {      
         console.log(error);
+
+        setUser(undefined);
+        setJwt('');
+        setAccountId('');
 
         Auth.federatedSignIn();
       });

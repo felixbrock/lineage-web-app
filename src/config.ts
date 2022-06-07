@@ -5,8 +5,8 @@ const getAuthEnvConfig = (): any => {
 
   switch (process.env.REACT_APP_STAGE) {
     case 'development':
-      authEnvConfig.userPoolId = 'todo';
-      authEnvConfig.userPoolWebClientId = 'todo';
+      authEnvConfig.userPoolId = 'eu-central-1_OOQzjVWkK';
+      authEnvConfig.userPoolWebClientId = '56q0bao2fjhkcq6dldvcf039sj';
       break;
     case 'test':
       authEnvConfig.userPoolId = 'eu-central-1_X27xCNSof';
@@ -30,9 +30,9 @@ const getOAuthEnvConfig = (): any => {
 
   switch (process.env.REACT_APP_STAGE) {
     case 'development':
-      oAuthEnvConfig.domain = 'citodata.auth.eu-central-1.amazoncognito.com';
-      oAuthEnvConfig.redirectSignIn = 'http://localhost:3006/';
-      oAuthEnvConfig.redirectSignOut = 'http://localhost:3006/';
+      oAuthEnvConfig.domain = 'auth-dev-citodata.auth.eu-central-1.amazoncognito.com';
+      oAuthEnvConfig.redirectSignIn = 'http://localhost:3006';
+      oAuthEnvConfig.redirectSignOut = 'http://localhost:3006';
       break;
     case 'test':
       oAuthEnvConfig.domain = 'auth-staging.citodata.com';
@@ -41,8 +41,8 @@ const getOAuthEnvConfig = (): any => {
       break;
     case 'production':
       oAuthEnvConfig.domain = 'auth.citodata.com';
-      oAuthEnvConfig.redirectSignIn = 'https://app.citodata.com/';
-      oAuthEnvConfig.redirectSignOut = 'https://citodata.com/';
+      oAuthEnvConfig.redirectSignIn = 'https://app.citodata.com';
+      oAuthEnvConfig.redirectSignOut = 'https://citodata.com';
       break;
     default:
       break;

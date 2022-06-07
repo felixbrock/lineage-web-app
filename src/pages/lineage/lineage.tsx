@@ -48,7 +48,6 @@ import Button from '@mui/material/Button';
 import BasicCard from '../../components/card';
 import BasicTable from '../../components/table';
 import { Auth } from 'aws-amplify';
-import { CognitoHostedUIIdentityProvider } from '@aws-amplify/auth';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
@@ -618,7 +617,7 @@ export default (): ReactElement => {
       .catch((error) => {
         console.log(error);
 
-        Auth.federatedSignIn({provider: CognitoHostedUIIdentityProvider.Google });
+        Auth.federatedSignIn();
       });
   };
 

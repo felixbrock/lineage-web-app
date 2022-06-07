@@ -40,6 +40,8 @@ export default (): ReactElement => {
         if (!user) setUser(cognitoUser);
       })
       .catch((error) => {
+        console.log('YYYYYYYYYYYYYYYYYYYYYY');
+
         console.log(error);
 
         setUser(undefined);

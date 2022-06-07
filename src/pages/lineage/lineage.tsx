@@ -610,7 +610,9 @@ export default (): ReactElement => {
   const renderAutomations = () => { 
     Auth.currentAuthenticatedUser()
       .then((cognitoUser) => setUser(cognitoUser))
-      .catch((error) => {      
+      .catch((error) => { 
+        console.log('XXXXXXXXXXXXXXXXXXXXXX');
+             
         console.log(error);
 
         setUser(undefined);

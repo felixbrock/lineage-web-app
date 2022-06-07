@@ -8,13 +8,13 @@ const getAuthEnvConfig = (): any => {
       authEnvConfig.userPoolId = 'eu-central-1_7Y1FT2rcP';
       authEnvConfig.userPoolWebClientId = '38ikjjvjc46uanhgnqqm6i93nb';
       break;
-    // case 'test':
-    //   authEnvConfig.userPoolId = 'eu-central-1_ITfib17Uu';
-    //   authEnvConfig.userPoolWebClientId = '4uat3ul6agn2dsipki1kvifq0b';
-    //   break;
+    case 'test':
+      authEnvConfig.userPoolId = 'eu-central-1_Ihv7vslyU';
+      authEnvConfig.userPoolWebClientId = '1qs7bqg7o3s2bqh2bmbg0j55ki';
+      break;
     case 'production':
-      authEnvConfig.userPoolId = 'eu-central-1_NTf5yG8C1';
-      authEnvConfig.userPoolWebClientId = '2a6q1v6s81dbsi3ms373mt5kdc';
+      authEnvConfig.userPoolId = 'todo';
+      authEnvConfig.userPoolWebClientId = 'todo';
       break;
     default:
       break;
@@ -34,11 +34,11 @@ const getOAuthEnvConfig = (): any => {
       oAuthEnvConfig.redirectSignIn = 'http://localhost:3006/';
       oAuthEnvConfig.redirectSignOut = 'http://localhost:3006/';
       break;
-    // case 'test':
-    //   oAuthEnvConfig.domain = 'auth-test.hivedive.io';
-    //   oAuthEnvConfig.redirectSignIn = 'https://app-test.hivedive.io';
-    //   oAuthEnvConfig.redirectSignOut = 'https://app-test.hivedive.io';
-    //   break;
+    case 'test':
+      oAuthEnvConfig.domain = 'auth-staging.citodata.com';
+      oAuthEnvConfig.redirectSignIn = 'https://app-staging.citodata.com';
+      oAuthEnvConfig.redirectSignOut = 'https://app-staging.citodata.com';
+      break;
     case 'production':
       oAuthEnvConfig.domain = 'auth.citodata.com';
       oAuthEnvConfig.redirectSignIn = 'https://app.citodata.com/';

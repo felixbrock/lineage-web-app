@@ -5,12 +5,12 @@ const getAuthEnvConfig = (): any => {
 
   switch (process.env.REACT_APP_STAGE) {
     case 'development':
-      authEnvConfig.userPoolId = 'eu-central-1_7Y1FT2rcP';
-      authEnvConfig.userPoolWebClientId = '38ikjjvjc46uanhgnqqm6i93nb';
+      authEnvConfig.userPoolId = 'todo';
+      authEnvConfig.userPoolWebClientId = 'todo';
       break;
     case 'test':
-      authEnvConfig.userPoolId = 'eu-central-1_Ihv7vslyU';
-      authEnvConfig.userPoolWebClientId = '1qs7bqg7o3s2bqh2bmbg0j55ki';
+      authEnvConfig.userPoolId = 'eu-central-1_X27xCNSof';
+      authEnvConfig.userPoolWebClientId = 'lh7qnvrevedkem43b7qvpjhl';
       break;
     case 'production':
       authEnvConfig.userPoolId = 'todo';

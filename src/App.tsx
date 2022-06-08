@@ -11,6 +11,10 @@ import Lineage from './pages/lineage/lineage';
 import { authEnvConfig, oAuthEnvConfig } from './config';
 
 export default (): ReactElement => {
+  console.log(authEnvConfig);
+  console.log(oAuthEnvConfig);
+  
+
   Auth.configure({
     Auth: {
       region: 'eu-central-1',

@@ -15,9 +15,15 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { MdMenu, MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
 import MetricsGraph, {
-  FreshnessDefaultOption,
-  DistributionDefaultOption,
-  NullnessDefaultOption,
+  defaultDistributionData,
+  defaultFreshnessData,
+  defaultNullnessData,
+  defaultOption,
+  defaultYAxis,
+  defaultYAxisTime,
+  effectiveRateSampleDistributionData,
+  effectiveRateSampleFreshnessData,
+  effectiveRateSampleNullnessData,
 } from '../../components/metrics-graph';
 
 import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
@@ -355,6 +361,7 @@ export default (): ReactElement => {
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
   const [tabIndex, setTabIndex] = React.useState(0);
   const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState('');
 
   const handleTabIndexChange = (
     event: React.SyntheticEvent,
@@ -607,12 +614,12 @@ export default (): ReactElement => {
     return materializationElements;
   };
 
-  const renderAutomations = () => { 
+  const renderAutomations = () => {
     Auth.currentAuthenticatedUser()
       .then((cognitoUser) => setUser(cognitoUser))
-      .catch((error) => { 
+      .catch((error) => {
         console.log('XXXXXXXXXXXXXXXXXXXXXX');
-             
+
         console.log(error);
 
         setUser(undefined);
@@ -636,7 +643,7 @@ export default (): ReactElement => {
         setJwt(token);
 
         // return AccountApiRepository.getBy(new URLSearchParams({}), token);
-        return [{id: 'todo'}];
+        return [{ id: 'todo' }];
       })
       .then((accounts) => {
         // if (!accounts.length) throw new Error(`No accounts found for user`);
@@ -964,15 +971,16 @@ export default (): ReactElement => {
         const edges = selectedEdges.concat(selectedAnomalyEdges);
         edges.forEach((edge) => edge.clearStates());
 
-        const selectedNodeId = event.target.getID();
-        graphObj.data(
-          loadData(selectedNodeId, DataLoadNodeType.Self, [], [], data)
-        );
+        const id = event.target.getID();
+
+        setSelectedNodeId(id);
+
+        graphObj.data(loadData(id, DataLoadNodeType.Self, [], [], data));
 
         setColumnTest(Date.now().toString());
 
         graphObj.set('latestZoom', graphObj.getZoom());
-        graphObj.set('selectedElementId', selectedNodeId);
+        graphObj.set('selectedElementId', id);
 
         graphObj.render();
       } else if (event.target.get('type') === 'combo') {
@@ -1058,107 +1066,157 @@ export default (): ReactElement => {
 
   return (
     <ThemeProvider theme={theme}>
-    <div id="lineageContainer">
-      <div className="navbar">
-        <div id="menu-container">
-          <button id="menu-button" onClick={toggleShowSideNav}>
-            <MdMenu />
-          </button>
+      <div id="lineageContainer">
+        <div className="navbar">
+          <div id="menu-container">
+            <button id="menu-button" onClick={toggleShowSideNav}>
+              <MdMenu />
+            </button>
 
-          <img height="40" width="150" src={Logo} alt="logo" />
+            <img height="40" width="150" src={Logo} alt="logo" />
+          </div>
+          <div id="sign-out-container">
+            <Button
+              onClick={() => Auth.signOut()}
+              color="secondary"
+              size="large"
+            >
+              Sign Out
+            </Button>
+          </div>
         </div>
-        <div id="sign-out-container">
-        <Button onClick={() => Auth.signOut()} color="secondary" size="large">Sign Out</Button>
+        <div id="lineage" />
+        <div id="sidenav" className="sidenav">
+          <div id="search">
+            <TextField
+              label="Search"
+              onChange={handleSearchChange}
+              fullWidth={true}
+            />
+          </div>
+          <div id="control">
+            <button
+              className="control-button"
+              onClick={handleTreeViewExpandClick}
+            >
+              {expandedTreeViewElementIds.length === 0
+                ? 'Expand all'
+                : 'Collapse all'}
+            </button>
+            <button className="control-button" onClick={handleShowAll}>
+              Show all
+            </button>
+            <button
+              className={anomalyFilterOn ? 'filter-button' : 'control-button'}
+              onClick={handleFilterAnomalies}
+            >
+              Filter Anomalies
+            </button>
+          </div>
+          <div id="content">
+            <TreeView
+              aria-label="controlled"
+              defaultCollapseIcon={<MdExpandMore />}
+              defaultExpandIcon={<MdChevronRight />}
+              expanded={expandedTreeViewElementIds}
+              onNodeToggle={toggleSideNavTreeView}
+              onNodeSelect={handleSelect}
+            >
+              {data ? treeViewElements : <></>}
+            </TreeView>
+          </div>
         </div>
+        <div id="materializationSidePanel" className="sidepanel">
+          <div className="header">
+            <p className="title">SQL Model Logic</p>
+            <button className="closebtn" onClick={closeMatSidePanel}>
+              &times;
+            </button>
+          </div>
+          <div id="editor" className="content">
+            <SyntaxHighlighter
+              language="sql"
+              style={dracula}
+              showLineNumbers={true}
+              wrapLongLines={false}
+            >
+              {sql}
+            </SyntaxHighlighter>
+          </div>
+        </div>
+        <div id="columnSidePanel" className="sidepanel">
+          <div className="header">
+            <p className="title">Insights</p>
+            <button className="closebtn" onClick={closeColSidePanel}>
+              &times;
+            </button>
+          </div>
+          <div className="content">
+            <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
+              <Tab label="Overview" />
+              <Tab label="Alert History" />
+            </Tabs>
+            {tabIndex === 0 ? (
+              <>
+                <div className="card">{selectedNodeId === '62715f907e3d8066494d401f'
+                      ?BasicCard(20.6, 448, 3.4, 5.6) : BasicCard(47011, 448, 4129, 17521)}</div>
+                <h4>Distribution</h4>
+                <MetricsGraph
+                  option={
+                    selectedNodeId === '62715f907e3d8066494d401f'
+                      ? defaultOption(
+                          defaultYAxis,
+                          effectiveRateSampleDistributionData,
+                          7,
+                          8
+                        )
+                      : defaultOption(
+                          defaultYAxis,
+                          defaultDistributionData,
+                          7,
+                          8
+                        )
+                  }
+                ></MetricsGraph>
+                <h4>Freshness</h4>
+                <MetricsGraph
+                  option={
+                    selectedNodeId === '62715f907e3d8066494d401f'
+                      ? defaultOption(
+                          defaultYAxis,
+                          effectiveRateSampleFreshnessData,
+                          5,
+                          7
+                        )
+                      : defaultOption(
+                          defaultYAxisTime,
+                          defaultFreshnessData,
+                          3,
+                          5
+                        )
+                  }
+                ></MetricsGraph>
+                <h4>Nullness</h4>
+                <MetricsGraph
+                  option={
+                    selectedNodeId === '62715f907e3d8066494d401f'
+                      ? defaultOption(
+                          defaultYAxis,
+                          effectiveRateSampleNullnessData,
+                          1,
+                          3
+                        )
+                      : defaultOption(defaultYAxis, defaultNullnessData, 4, 6)
+                  }
+                ></MetricsGraph>
+              </>
+            ) : (
+              <>{BasicTable()}</>
+            )}
+          </div>
+        </div>
+        {/* <div id="snackbar">{info}</div> */}
       </div>
-      <div id="lineage" />
-      <div id="sidenav" className="sidenav">
-        <div id="search">
-          <TextField
-            label="Search"
-            onChange={handleSearchChange}
-            fullWidth={true}
-          />
-        </div>
-        <div id="control">
-          <button
-            className="control-button"
-            onClick={handleTreeViewExpandClick}
-          >
-            {expandedTreeViewElementIds.length === 0
-              ? 'Expand all'
-              : 'Collapse all'}
-          </button>
-          <button className="control-button" onClick={handleShowAll}>
-            Show all
-          </button>
-          <button
-            className={anomalyFilterOn ? 'filter-button' : 'control-button'}
-            onClick={handleFilterAnomalies}
-          >
-            Filter Anomalies
-          </button>
-        </div>
-        <div id="content">
-          <TreeView
-            aria-label="controlled"
-            defaultCollapseIcon={<MdExpandMore />}
-            defaultExpandIcon={<MdChevronRight />}
-            expanded={expandedTreeViewElementIds}
-            onNodeToggle={toggleSideNavTreeView}
-            onNodeSelect={handleSelect}
-          >
-            {data ? treeViewElements : <></>}
-          </TreeView>
-        </div>
-      </div>
-      <div id="materializationSidePanel" className="sidepanel">
-        <div className="header">
-          <p className="title">SQL Model Logic</p>
-          <button className="closebtn" onClick={closeMatSidePanel}>
-            &times;
-          </button>
-        </div>
-        <div id="editor" className="content">
-          <SyntaxHighlighter
-            language="sql"
-            style={dracula}
-            showLineNumbers={true}
-            wrapLongLines={false}
-          >
-            {sql}
-          </SyntaxHighlighter>
-        </div>
-      </div>
-      <div id="columnSidePanel" className="sidepanel">
-        <div className="header">
-          <p className="title">Insights</p>
-          <button className="closebtn" onClick={closeColSidePanel}>
-            &times;
-          </button>
-        </div>
-        <div className="content">
-          <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
-            <Tab label="Overview" />
-            <Tab label="Alert History" />
-          </Tabs>
-          {tabIndex === 0 ? (
-            <>
-              <div className="card">{BasicCard()}</div>
-              <h4>Distribution</h4>
-              <MetricsGraph option={DistributionDefaultOption}></MetricsGraph>
-              <h4>Freshness</h4>
-              <MetricsGraph option={FreshnessDefaultOption}></MetricsGraph>
-              <h4>Nullness</h4>
-              <MetricsGraph option={NullnessDefaultOption}></MetricsGraph>
-            </>
-          ) : (
-            <>{BasicTable()}</>
-          )}
-        </div>
-      </div>
-      {/* <div id="snackbar">{info}</div> */}
-    </div>
     </ThemeProvider>
   );
 };

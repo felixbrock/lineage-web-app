@@ -1,5 +1,5 @@
 import { ReactElement, useEffect, useState } from 'react';
-import Amplify, { Auth } from 'aws-amplify';
+import { Auth } from 'aws-amplify';
 import {
   Routes,
   Route,
@@ -11,7 +11,7 @@ import Lineage from './pages/lineage/lineage';
 import { authEnvConfig, oAuthEnvConfig } from './config';
 
 export default (): ReactElement => {
-  Amplify.configure({
+  Auth.configure({
     Auth: {
       region: 'eu-central-1',
       mandatorySignIn: true,

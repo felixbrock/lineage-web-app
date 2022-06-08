@@ -7,44 +7,49 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
+const getSampleDate = (dayOffset = 0): Date => {
+  const date = new Date();
+  date.setDate(new Date().getDate() + dayOffset);
+return date;};
+
 const rows = [{
-  date: "2022-06-01",
+  date: getSampleDate().toISOString().split('T')[0],
   type: "Distribution",
   deviation: "448%"
 }, {
-  date: "2022-05-14",
+  date: getSampleDate(-16).toISOString().split('T')[0],
   type: "Nullness",
   deviation: "195%"
 }, {
-  date: "2022-05-03",
+  date: getSampleDate(-27).toISOString().split('T')[0],
   type: "Distribution",
   deviation: "56%"
 }, {
-  date: "2022-05-03",
+  date: getSampleDate(-27).toISOString().split('T')[0],
   type: "Distribution",
   deviation: "69%"
 }, {
-  date: "2022-05-01",
+  date: getSampleDate(-29).toISOString().split('T')[0],
   type: "Nullness",
   deviation: "312%"
 }, {
-  date: "2022-04-19",
+  date: getSampleDate(-40).toISOString().split('T')[0],
   type: "Distribution",
   deviation: "82%"
 }, {
-  date: "2022-04-19",
+  date: getSampleDate(-40).toISOString().split('T')[0],
   type: "Nullness",
   deviation: "311%"
 }, {
-  date: "2022-04-13",
+  date: getSampleDate(-46).toISOString().split('T')[0],
   type: "Freshness",
   deviation: "402%"
 }, {
-  date: "2022-04-05",
+  date: getSampleDate(-54).toISOString().split('T')[0],
   type: "Distribution",
   deviation: "325%"
 }, {
-  date: "2022-04-28",
+  date: getSampleDate(-63).toISOString().split('T')[0],
   type: "Nullness",
   deviation: "653%"
 }]; 

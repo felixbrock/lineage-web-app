@@ -3,28 +3,30 @@ import { init, getInstanceByDom } from 'echarts';
 import type { CSSProperties } from 'react';
 import type { EChartsOption, ECharts, SetOptionOpts } from 'echarts';
 
-export const DistributionDefaultOption : EChartsOption =  {   
+const distributionDefaultData = [
+  47011, 10560, 12351, 8680, 6874, 11502, 9534, 11361, 10689,
+];
+
+export const DistributionDefaultOption: EChartsOption = {
   xAxis: {
     type: 'category',
-    boundaryGap: false
+    boundaryGap: false,
   },
   yAxis: {
     type: 'value',
-    boundaryGap: [0, '30%']
+    boundaryGap: [0, '30%'],
   },
   visualMap: {
     show: false,
     dimension: 0,
-    pieces:
-     [
+    pieces: [
       {
         gt: 7,
         lt: 8,
         color: '#db1d33',
-        colorAlpha: .2,
+        colorAlpha: 0.2,
       },
-
-    ]
+    ],
   },
   series: [
     {
@@ -34,47 +36,45 @@ export const DistributionDefaultOption : EChartsOption =  {
         // width: 2
       },
       areaStyle: {},
-      data: [        ['2022-06-01', 47011],
-      ['2022-05-31', 10560],
-      ['2022-05-30', 12351],
-      ['2022-05-29', 8680],
-      ['2022-05-28', 6874],
-      ['2022-05-27', 11502],
-      ['2022-05-26', 9534],
-      ['2022-05-25', 11361],
-      ['2022-05-24', 10689]].reverse(),
-    }
+      data: distributionDefaultData
+        .map((element, index) => {
+          const date = new Date();
+          date.setDate(date.getDate() - index);
+          return [date.toISOString().split('T')[0], element];
+        })
+        .reverse(),
+    },
   ],
   tooltip: {
     trigger: 'axis',
   },
 };
 
-export const FreshnessDefaultOption : EChartsOption =  {   
+const freshnessDefaultData = [132, 131, 130, 132, 540, 129, 127, 120, 128];
+
+export const FreshnessDefaultOption: EChartsOption = {
   xAxis: {
     type: 'category',
-    boundaryGap: false
+    boundaryGap: false,
   },
   yAxis: {
     type: 'value',
     axisLabel: {
-      formatter: '{value} min'
+      formatter: '{value} min',
     },
-    boundaryGap: [0, '30%']
+    boundaryGap: [0, '30%'],
   },
   visualMap: {
     show: false,
     dimension: 0,
-    pieces:
-     [
+    pieces: [
       {
         gt: 3,
         lt: 5,
         color: '#db1d33',
-        colorAlpha: .2,
+        colorAlpha: 0.2,
       },
-
-    ]
+    ],
   },
   series: [
     {
@@ -84,44 +84,52 @@ export const FreshnessDefaultOption : EChartsOption =  {
         // width: 2
       },
       areaStyle: {},
-      data: [['2022-06-01 1pm', 132],
-      ['2022-06-01 11am', 131],
-      ['2022-06-01 09am', 130],
-      ['2022-06-01 07am', 132],
-      ['2022-06-01 05am', 540],
-      ['2022-06-01 04am', 129],
-      ['2022-06-01 03am', 127],
-      ['2022-06-01 02am', 120],
-      ['2022-06-01 12am', 128]].reverse(),
-    }
+      data: freshnessDefaultData
+      .map((element, index) => {
+        const date = new Date();
+        date.setDate(date.getDate() - index);
+        return [date.toISOString().split('T')[0], element];
+      })
+      .reverse(),
+    },
   ],
   tooltip: {
     trigger: 'axis',
   },
 };
 
-export const NullnessDefaultOption : EChartsOption =  {   
+const nullnessDefaultData =  [
+  531,
+  601,
+  598,
+  1561,
+  576,
+  599,
+  564,
+  602,
+  595,
+];
+
+export const NullnessDefaultOption: EChartsOption = {
   xAxis: {
     type: 'category',
-    boundaryGap: false
+    boundaryGap: false,
   },
   yAxis: {
     type: 'value',
-    boundaryGap: [0, '30%']
+    boundaryGap: [0, '30%'],
   },
   visualMap: {
     show: false,
     dimension: 0,
-    pieces:
-     [
+    pieces: [
       {
         gt: 4,
         lt: 6,
         color: '#db1d33',
-        colorAlpha: .2,
+        colorAlpha: 0.2,
       },
-
-    ]
+    ],
   },
   series: [
     {
@@ -131,23 +139,19 @@ export const NullnessDefaultOption : EChartsOption =  {
         // width: 2
       },
       areaStyle: {},
-      data: [        ['2022-06-01', 531],
-      ['2022-05-31', 601],
-      ['2022-05-30', 598],
-      ['2022-05-29', 1561],
-      ['2022-05-28', 576],
-      ['2022-05-27', 599],
-      ['2022-05-26', 564],
-      ['2022-05-25', 602],
-      ['2022-05-24', 595]].reverse(),
-    }
+      data: nullnessDefaultData
+      .map((element, index) => {
+        const date = new Date();
+        date.setDate(date.getDate() - index);
+        return [date.toISOString().split('T')[0], element];
+      })
+      .reverse(),
+    },
   ],
   tooltip: {
     trigger: 'axis',
   },
 };
-
-
 
 export interface ReactEChartsProps {
   option: EChartsOption;

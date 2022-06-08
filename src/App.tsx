@@ -46,8 +46,9 @@ export default (): ReactElement => {
 
         setUser(undefined);
 
-        Auth.federatedSignIn();
-      });
+        return Auth.federatedSignIn();
+      })
+      .then(() => console.log('authenticated'));
   }, []);
 
   useEffect(() => {

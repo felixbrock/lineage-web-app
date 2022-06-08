@@ -627,7 +627,8 @@ export default (): ReactElement => {
         setAccountId('');
 
         Auth.federatedSignIn();
-      });
+      })
+      .then(() => console.log('authenticated'));
   };
 
   useEffect(renderAutomations, []);
@@ -1158,8 +1159,11 @@ export default (): ReactElement => {
             </Tabs>
             {tabIndex === 0 ? (
               <>
-                <div className="card">{selectedNodeId === '62715f907e3d8066494d401f'
-                      ?BasicCard(20.6, 448, 3.4, 5.6) : BasicCard(47011, 448, 4129, 17521)}</div>
+                <div className="card">
+                  {selectedNodeId === '62715f907e3d8066494d401f'
+                    ? BasicCard(20.6, 448, 3.4, 5.6)
+                    : BasicCard(47011, 448, 4129, 17521)}
+                </div>
                 <h4>Distribution</h4>
                 <MetricsGraph
                   option={

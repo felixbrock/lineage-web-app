@@ -1160,7 +1160,7 @@ export default (): ReactElement => {
             {tabIndex === 0 ? (
               <>
                 <div className="card">
-                  {selectedNodeId === '62715f907e3d8066494d401f'
+                  {selectedNodeId === '627160717e3d8066494d41ff'
                     ? BasicCard(20.6, 448, 3.4, 5.6)
                     // : BasicCard(47011, 448, 4129, 17521)}
                     :<></>}
@@ -1168,7 +1168,7 @@ export default (): ReactElement => {
                 <h4>Distribution</h4>
                 <MetricsGraph
                   option={
-                    selectedNodeId === '62715f907e3d8066494d401f'
+                    selectedNodeId === '627160717e3d8066494d41ff'
                       ? defaultOption(
                           defaultYAxis,
                           effectiveRateSampleDistributionData,
@@ -1186,7 +1186,7 @@ export default (): ReactElement => {
                 <h4>Freshness</h4>
                 <MetricsGraph
                   option={
-                    selectedNodeId === '62715f907e3d8066494d401f'
+                    selectedNodeId === '627160717e3d8066494d41ff'
                       ? defaultOption(
                           defaultYAxis,
                           effectiveRateSampleFreshnessData,
@@ -1204,7 +1204,7 @@ export default (): ReactElement => {
                 <h4>Nullness</h4>
                 <MetricsGraph
                   option={
-                    selectedNodeId === '62715f907e3d8066494d401f'
+                    selectedNodeId === '627160717e3d8066494d41ff'
                       ? defaultOption(
                           defaultYAxis,
                           effectiveRateSampleNullnessData,

@@ -25222,7 +25222,7 @@ export const defaultAnomalyStates = [
   { "id": "62715f907e3d8066494d4091", "hasNewAnomaly": false },
   { "id": "62715f907e3d8066494d409f", "hasNewAnomaly": false },
   { "id": "62715f917e3d8066494d40c4", "hasNewAnomaly": false },
-  { "id": "62715f917e3d8066494d40f7", "hasNewAnomaly": false },
+  { "id": "62715f917e3d8066494d40f7", "hasNewAnomaly": true },
   { "id": "62715f917e3d8066494d40fc", "hasNewAnomaly": false },
   { "id": "62715f907e3d8066494d40a4", "hasNewAnomaly": false },
   { "id": "62715f907e3d8066494d4093", "hasNewAnomaly": false },

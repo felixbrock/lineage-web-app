@@ -53,7 +53,6 @@ import Tab from '@mui/material/Tab';
 import Button from '@mui/material/Button';
 import BasicCard from '../../components/card';
 import BasicTable from '../../components/table';
-import { Auth } from 'aws-amplify';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
@@ -615,49 +614,14 @@ export default (): ReactElement => {
   };
 
   const renderAutomations = () => {
-    Auth.currentAuthenticatedUser()
-      .then((cognitoUser) => setUser(cognitoUser))
-      .catch((error) => {
-        console.log('XXXXXXXXXXXXXXXXXXXXXX');
-
-        console.log(error);
-
-        setUser(undefined);
-        setJwt('');
-        setAccountId('');
-
-        Auth.federatedSignIn();
-      })
-      .then(() => console.log('authenticated'));
+    setUser('todo');
   };
 
   useEffect(renderAutomations, []);
 
   useEffect(() => {
-    if (!user) return;
-
-    Auth.currentSession()
-      .then((session) => {
-        const accessToken = session.getAccessToken();
-
-        const token = accessToken.getJwtToken();
-        setJwt(token);
-
-        // return AccountApiRepository.getBy(new URLSearchParams({}), token);
-        return [{ id: 'todo' }];
-      })
-      .then((accounts) => {
-        // if (!accounts.length) throw new Error(`No accounts found for user`);
-
-        // if (accounts.length > 1)
-        //   throw new Error(`Multiple accounts found for user`);
-
-        // setAccountId(accounts[0].id);
-        setAccountId(accounts[0].id);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    setAccountId('todo');
+    setJwt('todo');
   }, [user]);
 
   useEffect(() => {
@@ -1078,7 +1042,7 @@ export default (): ReactElement => {
           </div>
           <div id="sign-out-container">
             <Button
-              onClick={() => Auth.signOut()}
+              onClick={() => console.log('todo')}
               color="secondary"
               size="large"
             >
@@ -1160,10 +1124,12 @@ export default (): ReactElement => {
             {tabIndex === 0 ? (
               <>
                 <div className="card">
-                  {selectedNodeId === '627160717e3d8066494d41ff'
-                    ? BasicCard(20.6, 448, 3.4, 5.6)
+                  {selectedNodeId === '627160717e3d8066494d41ff' ? (
+                    BasicCard(20.6, 448, 3.4, 5.6)
+                  ) : (
                     // : BasicCard(47011, 448, 4129, 17521)}
-                    :<></>}
+                    <></>
+                  )}
                 </div>
                 <h4>Distribution</h4>
                 <MetricsGraph

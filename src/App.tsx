@@ -1,5 +1,4 @@
-import { ReactElement, useEffect, useState } from 'react';
-import { Auth } from 'aws-amplify';
+import { ReactElement } from 'react';
 import {
   Routes,
   Route,
@@ -8,67 +7,18 @@ import {
 } from 'react-router-dom';
 import './App.scss';
 import Lineage from './pages/lineage/lineage';
-import { authEnvConfig, oAuthEnvConfig } from './config';
 
-export default (): ReactElement => {
-  Auth.configure({
-    Auth: {
-      region: 'eu-central-1',
-      mandatorySignIn: true,
-      // cookieStorage: {
-      //   domain: 'app.hivedive.io',
-      //   path: '/',
-      //   expires: 365,
-      //   secure: true,
-      // },
-      ...authEnvConfig,
-    },
-    oauth: {
-      scope: ['email', 'openid'],
-      responseType: 'code',
-      ...oAuthEnvConfig,
-    },
-  });
-
-  const [user, setUser] = useState();
-
-  const [app, setApp] = useState<ReactElement>(<div />);
-
-  useEffect(() => {
-    Auth.currentAuthenticatedUser()
-      .then((cognitoUser) => {
-        if (!user) setUser(cognitoUser);
-      })
-      .catch((error) => {
-        console.log('YYYYYYYYYYYYYYYYYYYYYY');
-
-        console.log(error);
-
-        setUser(undefined);
-
-        return Auth.federatedSignIn();
-      })
-      .then(() => console.log('authenticated'));
-  }, []);
-
-  useEffect(() => {
-    if (!user) return;
-
-    setApp(
-      <div className="App">
-        <div id="app">
-          <Router>
-            <div id="ContentContainer">
-              <Routes>
-                <Route path="/lineage" element={<Lineage />} />
-                <Route path="/" element={<Navigate to="/lineage" />} />
-              </Routes>
-            </div>
-          </Router>
+export default (): ReactElement => (
+  <div className="App">
+    <div id="app">
+      <Router>
+        <div id="ContentContainer">
+          <Routes>
+            <Route path="/lineage" element={<Lineage />} />
+            <Route path="/" element={<Navigate to="/lineage" />} />
+          </Routes>
         </div>
-      </div>
-    );
-  }, [user]);
-
-  return app;
-};
+      </Router>
+    </div>
+  </div>
+);

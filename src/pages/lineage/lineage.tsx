@@ -56,6 +56,7 @@ import BasicTable from '../../components/table';
 import { Auth } from 'aws-amplify';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import Integrations from '../../components/integrations';
 
 const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
@@ -1068,6 +1069,7 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
+        {Integrations}
         <div className="navbar">
           <div id="menu-container">
             <button id="menu-button" onClick={toggleShowSideNav}>

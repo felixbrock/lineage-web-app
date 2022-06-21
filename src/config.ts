@@ -1,9 +1,5 @@
 export const serviceDiscoveryNamespace = 'cito';
 
-const cookiePath = '/';
-const cookieExpiration = 365;
-const cookieSecure = true;
-
 const getAuthEnvConfig = (): any => {
   const authEnvConfig: any = {};
 
@@ -13,22 +9,10 @@ const getAuthEnvConfig = (): any => {
       authEnvConfig.userPoolWebClientId = '56q0bao2fjhkcq6dldvcf039sj';
       break;
     case 'test':
-      authEnvConfig.cookieStorage = {
-        domain: 'app-staging.citodata.com',
-        path: cookiePath,
-        expires: cookieExpiration,
-        secure: cookieSecure,
-      };
       authEnvConfig.userPoolId = 'eu-central-1_X27xCNSof';
       authEnvConfig.userPoolWebClientId = 'lh7qnvrevedkem43b7qvpjhl';
       break;
     case 'production':
-      authEnvConfig.cookieStorage = {
-        domain: 'app.citodata.com',
-        path: cookiePath,
-        expires: cookieExpiration,
-        secure: cookieSecure,
-      };
       authEnvConfig.userPoolId = 'todo';
       authEnvConfig.userPoolWebClientId = 'todo';
       break;

@@ -8,19 +8,21 @@ import {
 } from 'react-router-dom';
 import './App.scss';
 import Lineage from './pages/lineage/lineage';
-import { authEnvConfig, oAuthEnvConfig } from './config';
 
 export default (): ReactElement => {
   Auth.configure({
     Auth: {
       region: 'eu-central-1', 
       mandatorySignIn: true,
-      ...authEnvConfig,
+      userPoolId: 'eu-central-1_X27xCNSof',
+      userPoolWebClientId: 'lh7qnvrevedkem43b7qvpjhl',
     },
     oauth: {
       scope: ['email', 'openid'],
       responseType: 'code',
-      ...oAuthEnvConfig,
+      domain : 'auth-staging.citodata.com',
+      redirectSignIn : 'https://app-staging.citodata.com',
+      redirectSignOut : 'https://app-staging.citodata.com',
     },
     
   });

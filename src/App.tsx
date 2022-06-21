@@ -9,11 +9,12 @@ import {
 import './App.scss';
 import Lineage from './pages/lineage/lineage';
 import { authEnvConfig, oAuthEnvConfig } from './config';
+import Github from './pages/installation/github';
 
 export default (): ReactElement => {
   Auth.configure({
     Auth: {
-      region: 'eu-central-1', 
+      region: 'eu-central-1',
       mandatorySignIn: true,
       ...authEnvConfig,
     },
@@ -22,7 +23,6 @@ export default (): ReactElement => {
       responseType: 'code',
       ...oAuthEnvConfig,
     },
-    
   });
 
   const [user, setUser] = useState();
@@ -55,7 +55,11 @@ export default (): ReactElement => {
           <Router>
             <div id="ContentContainer">
               <Routes>
-                <Route path="/lineage" element={<Lineage />} />
+                <Route path="/lineage" element={<Lineage/>} />
+                <Route
+                  path="a"
+                  element={<Github />}
+                />
                 <Route path="/" element={<Navigate to="/lineage" />} />
               </Routes>
             </div>

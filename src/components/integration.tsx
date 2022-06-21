@@ -20,5 +20,6 @@ export default (index: number) => {
     },
   };
 
-  return <Button href='#' onClick={() => window.open(links[index].href, '_blank')}>{links[index].label}</Button>;
+  return <Button href={links[index].href}>{links[index].label}</Button>;
+  // return <Button href='#' onClick={() => window.open(links[index].href, '_blank')}>{links[index].label}</Button>;
 };

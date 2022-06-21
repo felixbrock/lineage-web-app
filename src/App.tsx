@@ -11,21 +11,16 @@ import Lineage from './pages/lineage/lineage';
 import { authEnvConfig, oAuthEnvConfig } from './config';
 
 export default (): ReactElement => {
-  console.log(authEnvConfig, oAuthEnvConfig);
-
   Auth.configure({
     Auth: {
       region: 'eu-central-1', 
       mandatorySignIn: true,
-      userPoolId: 'eu-central-1_X27xCNSof',
-      userPoolWebClientId: 'lh7qnvrevedkem43b7qvpjhl',
+      ...authEnvConfig,
     },
     oauth: {
       scope: ['email', 'openid'],
       responseType: 'code',
-      domain : 'auth-staging.citodata.com',
-      redirectSignIn : 'https://app-staging.citodata.com',
-      redirectSignOut : 'https://app-staging.citodata.com',
+      ...oAuthEnvConfig,
     },
     
   });

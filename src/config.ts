@@ -1,5 +1,9 @@
 export const serviceDiscoveryNamespace = 'cito';
 
+const cookiePath = '/';
+const cookieExpiration = 365;
+const cookieSecure = true;
+
 const getAuthEnvConfig = (): any => {
   const authEnvConfig: any = {};
 
@@ -9,10 +13,22 @@ const getAuthEnvConfig = (): any => {
       authEnvConfig.userPoolWebClientId = '56q0bao2fjhkcq6dldvcf039sj';
       break;
     case 'test':
+      authEnvConfig.cookieStorage = {
+        domain: 'app-staging.citodata.com',
+        path: cookiePath,
+        expires: cookieExpiration,
+        secure: cookieSecure,
+      };
       authEnvConfig.userPoolId = 'eu-central-1_X27xCNSof';
       authEnvConfig.userPoolWebClientId = 'lh7qnvrevedkem43b7qvpjhl';
       break;
     case 'production':
+      authEnvConfig.cookieStorage = {
+        domain: 'app.citodata.com',
+        path: cookiePath,
+        expires: cookieExpiration,
+        secure: cookieSecure,
+      };
       authEnvConfig.userPoolId = 'todo';
       authEnvConfig.userPoolWebClientId = 'todo';
       break;
@@ -30,13 +46,14 @@ const getOAuthEnvConfig = (): any => {
 
   switch (process.env.REACT_APP_STAGE) {
     case 'development':
-      oAuthEnvConfig.domain = 'auth-dev-citodata.auth.eu-central-1.amazoncognito.com';
+      oAuthEnvConfig.domain =
+        'auth-dev-citodata.auth.eu-central-1.amazoncognito.com';
       oAuthEnvConfig.redirectSignIn = 'http://localhost:3006';
       oAuthEnvConfig.redirectSignOut = 'http://localhost:3006';
       break;
     case 'test':
       oAuthEnvConfig.domain = 'auth-staging.citodata.com';
-      oAuthEnvConfig.redirectSignIn = 'https://google.com';
+      oAuthEnvConfig.redirectSignIn = 'https://app-staging.citodata.com';
       oAuthEnvConfig.redirectSignOut = 'https://app-staging.citodata.com';
       break;
     case 'production':

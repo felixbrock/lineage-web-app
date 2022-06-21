@@ -13,14 +13,8 @@ import { authEnvConfig, oAuthEnvConfig } from './config';
 export default (): ReactElement => {
   Auth.configure({
     Auth: {
-      region: 'eu-central-1',
+      region: 'eu-central-1', 
       mandatorySignIn: true,
-      // cookieStorage: {
-      //   domain: 'app.hivedive.io',
-      //   path: '/',
-      //   expires: 365,
-      //   secure: true,
-      // },
       ...authEnvConfig,
     },
     oauth: {
@@ -28,6 +22,7 @@ export default (): ReactElement => {
       responseType: 'code',
       ...oAuthEnvConfig,
     },
+    
   });
 
   const [user, setUser] = useState();

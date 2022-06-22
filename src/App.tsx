@@ -8,22 +8,22 @@ import {
 } from 'react-router-dom';
 import './App.scss';
 import Lineage from './pages/lineage/lineage';
-import { authEnvConfig, oAuthEnvConfig } from './config';
+// import { authEnvConfig, oAuthEnvConfig } from './config';
 
 export default (): ReactElement => {
-  console.log(authEnvConfig, oAuthEnvConfig);
+  // console.log(authEnvConfig, oAuthEnvConfig);
 
   Auth.configure({
     Auth: {
       region: 'eu-central-1', 
       mandatorySignIn: true,
-      userPoolId: 'eu-central-1_X27xCNSof',
-      userPoolWebClientId: 'lh7qnvrevedkem43b7qvpjhl',
+      userPoolId: 'eu-central-1_Yr1WxcGZc',
+      userPoolWebClientId: '1riotb1410u3t3d3l6jaos056j',
     },
     oauth: {
       scope: ['email', 'openid'],
       responseType: 'code',
-      domain : 'auth-staging.citodata.com',
+      domain : 'citodata-test.auth.eu-central-1.amazoncognito.com',
       redirectSignIn : 'https://app-staging.citodata.com',
       redirectSignOut : 'https://app-staging.citodata.com',
     },

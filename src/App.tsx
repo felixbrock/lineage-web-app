@@ -24,8 +24,8 @@ export default (): ReactElement => {
       scope: ['email', 'openid'],
       responseType: 'code',
       domain : 'citodata-test.auth.eu-central-1.amazoncognito.com',
-      redirectSignIn : 'https://app-staging.citodata.com',
-      redirectSignOut : 'https://app-staging.citodata.com',
+      redirectSignIn : 'https://www.app-staging.citodata.com',
+      redirectSignOut : 'https://www.app-staging.citodata.com',
     },
     
   });

@@ -13,8 +13,8 @@ const getAuthEnvConfig = (): any => {
       authEnvConfig.userPoolWebClientId = 'lh7qnvrevedkem43b7qvpjhl';
       break;
     case 'production':
-      authEnvConfig.userPoolId = 'eu-central-1_GXjN6QSZE';
-      authEnvConfig.userPoolWebClientId = '1fug2bn05fgjkc15ouvigi52k6';
+      authEnvConfig.userPoolId = 'eu-central-1_j5L4RE5u2';
+      authEnvConfig.userPoolWebClientId = 'k4ndbs3fqmv3ms04vns4slc9a';
       break;
     default:
       break;

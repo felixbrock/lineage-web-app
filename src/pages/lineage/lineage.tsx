@@ -329,9 +329,9 @@ const determineType = (id: string, data: GraphData): TreeViewElementType => {
 };
 
 export default (): ReactElement => {
-  const [accountId, setAccountId] = useState('');
-  const [user, setUser] = useState<any>();
-  const [jwt, setJwt] = useState('');
+  const [accountId, setAccountId] = useState('todo-replace');
+  const [user, setUser] = useState<any>('todo-replace');
+  const [jwt, setJwt] = useState('todo-replace');
 
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');

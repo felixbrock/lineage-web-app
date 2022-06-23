@@ -55,6 +55,7 @@ import BasicCard from '../../components/card';
 import BasicTable from '../../components/table';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Auth } from 'aws-amplify';
 
 const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
@@ -329,9 +330,9 @@ const determineType = (id: string, data: GraphData): TreeViewElementType => {
 };
 
 export default (): ReactElement => {
-  const [accountId, setAccountId] = useState('todo-replace');
-  const [user, setUser] = useState<any>('todo-replace');
-  const [jwt, setJwt] = useState('todo-replace');
+  const [accountId, setAccountId] = useState('');
+  const [user, setUser] = useState<any>();
+  const [jwt, setJwt] = useState('');
 
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');
@@ -1042,7 +1043,7 @@ export default (): ReactElement => {
           </div>
           <div id="sign-out-container">
             <Button
-              onClick={() => console.log('todo')}
+              onClick={() => Auth.signOut()}
               color="secondary"
               size="large"
             >

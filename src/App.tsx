@@ -17,6 +17,15 @@ export default (): ReactElement => {
     Auth: {
       region: 'eu-central-1',
       mandatorySignIn: true,
+
+
+      // cookieStorage: {
+      //   domain: 'app.hivedive.io',
+      //   path: '/',
+      //   expires: 365,
+      //   secure: true,
+      // },
+
       ...authEnvConfig,
     },
     oauth: {
@@ -36,8 +45,6 @@ export default (): ReactElement => {
         if (!user) setUser(cognitoUser);
       })
       .catch((error) => {
-        console.log('YYYYYYYYYYYYYYYYYYYYYY');
-
         console.log(error);
 
         setUser(undefined);

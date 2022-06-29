@@ -8,11 +8,11 @@ export default (index: number) => {
     },
     1: {
       href: 'https://google.com',
-      label: 'Test1',
+      label: 'Google',
     },
     2: {
-      href: 'https://google.com',
-      label: 'Test2',
+      href: 'https://slack.com/oauth/v2/authorize?client_id=3743097674080.3733004026065&scope=app_mentions:read,channels:history,channels:join,channels:manage,channels:read,chat:write,chat:write.public,conversations.connect:write,files:read,files:write,groups:read,groups:write,im:read,im:write,links:read,mpim:read,mpim:write,users:read,users:write',
+      label: 'Install Cito Slack App',
     },
     3: {
       href: 'https://google.com',

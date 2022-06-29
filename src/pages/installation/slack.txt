@@ -1,0 +1,169 @@
+// /* eslint-disable no-var */
+// /* eslint-disable @typescript-eslint/dot-notation */
+// /* eslint-disable semi */
+// /* eslint-disable @typescript-eslint/no-unused-vars */
+// /* eslint-disable prefer-const */
+// // import { App } from "@slack/bolt";
+// // eslint-disable-next-line import/no-extraneous-dependencies
+// import dotenv from 'dotenv';
+// import { conversations } from "slack";
+// import * as fs from "fs";
+// // eslint-disable-next-line import/first
+// import { WebClient } from '@slack/web-api';
+// // eslint-disable-next-line import/first
+// import { ReactElement, ReactText } from 'react';
+
+// dotenv.config();
+
+
+
+// // An access token (from your Slack app or custom integration - xoxp, xoxb)
+// const token = process.env.TOKEN;
+
+// const web = new WebClient(token);
+
+// const channelToSend = process.env.CHANNEL; 
+// const messageToSend = fs.readFileSync('D:\\CitoData\\dinesh-test-app\\dinesh-test-app\\message.txt',"utf-8");
+
+// async function sendalerttogeneral() {
+
+//     (async () => {
+//             const allChannels = await web.conversations.list({ exclude_archived: true, types: 'public_channel' });
+          
+//             for (let index = 0; index < allChannels.channels.length; index++) {
+//               let channel = allChannels.channels[index];
+//               if(channel.name == 'general')
+//               {
+//                 const cid = channel.id;
+//                 (async () => {
+//                                         const res = await web.chat.postMessage({ channel: cid, text: messageToSend});
+//                                         // `res` contains information about the posted message
+//                                         console.log('Message sent: ', res.ts);
+//                                     })();
+//               }
+//             }
+//         })();
+    
+// }
+
+// async function getusers() {
+//     const allusers = await web.users.list();
+//     let userids = new Array(allusers.members.length);
+//     for (let index = 0; index < allusers.members.length; index++) {
+//         // eslint-disable-next-line prefer-const
+//         let user = allusers.members[index];
+//         console.log(user.name,user.real_name);
+//         userids[index] = user.id;
+//     }
+//     return userids;
+// }
+// let n = 0;
+
+// function delay(milliseconds : number) {
+//     return new Promise(resolve => setTimeout( resolve, milliseconds));
+// }
+
+// async function inviteusers(channelid:string) {
+    
+//         const userids = await getusers();
+//         for (let index = 0; index < userids.length; index++) {
+//             const user = userids[index];
+//             try {
+//                 const invite = await web.conversations.invite({channel:channelid,users: user})
+//                 console.log(invite);
+//             } catch (error) {
+//                 n += 1;
+//                 console.log(error);
+//                 if(n < 10)
+//                 {
+//                     console.log('\n In Error',n);
+//                     ( async() => { 
+//                         console.log('Starting, will sleep for 1 secs now');
+//                         await delay(1000);
+//                         inviteusers(channelid);
+//                     })();
+//                 }
+                
+//             }
+//         }
+// }
+
+// // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// async function sendalert(channelname:string) {
+//     const allChannels = await web.conversations.list({ exclude_archived: true, types: 'public_channel' });
+//     for (let index = 0; index < allChannels.channels.length; index++) {
+//         let channel = allChannels.channels[index];
+//         if(channel.name == channelname)
+//         {
+//             const cid = channel.id;
+//             // eslint-disable-next-line @typescript-eslint/no-use-before-define
+//             postmessage(cid);
+//         }
+//     }
+// }
+
+// async function postmessage(cid:string) {
+//     const res = await web.chat.postMessage({ channel: cid, text: messageToSend});
+//     // `res` contains information about the posted message
+//     console.log('Message sent: ', res.ts);
+// }
+
+// // With strictNullcheck
+// async function createchannelandsendalert(channelname:string) {
+
+//     (async () => {
+//             const allChannels = await web.conversations.list({ exclude_archived: true, types: 'public_channel' });
+//             let flag = 0;
+//             for (let index = 0; index < allChannels['channels'].length; index++) {
+//               var channel = allChannels['channels'][index];
+//               if(channel['name'] == channelname)
+//               {
+//                 flag = 1;
+//                 inviteusers(channel['id']);
+//                 postmessage(channel['id']);
+//               }
+//             }
+//             if(flag == 0)
+//             {
+//                 const newchannel = await web.conversations.create({name: channelname, is_private: 'false'});
+//                 console.log(newchannel);
+//                 const cid = channel['id'];
+//                 createchannelandsendalert(channelname);
+//                 // inviteusers(cid);
+//                 // postmessage(cid);
+//             }
+//         })();
+    
+// }
+
+// // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// // async function getchannelid(channelname:string) {
+// //     const allChannels = await web.conversations.list({ exclude_archived: true, types: 'public_channel' });
+// //     for (let index = 0; index < allChannels.channels.length; index++) {
+// //         let channel = allChannels.channels[index];
+// //         if(channel.name == channelname)
+// //         {
+// //             return channel.id;
+// //         }
+// //     }
+// // }
+
+
+// // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// // async function closechannel(id:string) {
+// //     try {
+// //         const close = await web.conversations.close({channel:id});
+// //         console.log(close);
+// //     } catch (error) {
+        
+// //     }
+    
+// // }
+
+// function slack()
+// {
+//     createchannelandsendalert('cito-bot');
+// }
+// slack();
+
+// export default {slack}();

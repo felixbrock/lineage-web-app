@@ -4,12 +4,13 @@ import {
   Routes,
   Route,
   BrowserRouter as Router,
-  Navigate,
+  Navigate
 } from 'react-router-dom';
 import './App.scss';
 import Lineage from './pages/lineage/lineage';
 import { authEnvConfig, oAuthEnvConfig } from './config';
 import Github from './pages/installation/github';
+import Slack from './pages/installation/slack';
 
 export default (): ReactElement => {
   Auth.configure({
@@ -44,7 +45,7 @@ export default (): ReactElement => {
         return Auth.federatedSignIn();
       })
       .then(() => console.log('authenticated'));
-  }, []);
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -57,10 +58,11 @@ export default (): ReactElement => {
               <Routes>
                 <Route path="/lineage" element={<Lineage/>} />
                 <Route
-                  path="a"
+                  path="/lineage/a"
                   element={<Github />}
                 />
-                <Route path="/" element={<Navigate to="/lineage" />} />
+                <Route path="https://smee.io/7OjxmYcn5oO6YH" element = {<Slack/>}/>
+                <Route path="/" element={<Navigate to="/lineage"></Navigate>} />
               </Routes>
             </div>
           </Router>

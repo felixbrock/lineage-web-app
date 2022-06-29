@@ -14,6 +14,8 @@ import './lineage.scss';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { MdMenu, MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
+import { FaGithub, FaSlack } from 'react-icons/fa';
+import { SiLooker, SiSnowflake } from 'react-icons/si';
 import MetricsGraph, {
   defaultDistributionData,
   defaultFreshnessData,
@@ -56,7 +58,7 @@ import BasicTable from '../../components/table';
 import { Auth } from 'aws-amplify';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import Integrations from '../../components/integrations';
+import Integration from '../../components/integration';
 
 const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
@@ -338,6 +340,7 @@ export default (): ReactElement => {
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');
   const [columnTest, setColumnTest] = useState('');
+  const [showIntegrationSidePanel, setShowIntegrationSidePanel] = useState<boolean>();
   // const [info, setInfo] = useState('');
   const [lineage, setLineage] = useState<LineageDto>();
   const [materializations, setMaterializations] = useState<
@@ -541,6 +544,15 @@ export default (): ReactElement => {
 
     const panel = document.getElementById('columnSidePanel');
     if (!panel) throw new ReferenceError('Column Panel does not exist');
+    panel.style.visibility = 'hidden';
+    panel.style.opacity = '0';
+  };
+
+  const closeIntegrationSidePanel = () => {
+    setShowIntegrationSidePanel(false);
+
+    const panel = document.getElementById('integrationsSidePanel');
+    if (!panel) throw new ReferenceError('Integrations panel does not exist');
     panel.style.visibility = 'hidden';
     panel.style.opacity = '0';
   };
@@ -763,6 +775,18 @@ export default (): ReactElement => {
   }, [columnTest]);
 
   useEffect(() => {
+    if (!showIntegrationSidePanel) return;
+
+    closeColSidePanel();
+    closeMatSidePanel();
+
+    const panel = document.getElementById('integrationsSidePanel');
+    if (!panel) throw new ReferenceError('Integrations Panel does not exist');
+    panel.style.visibility = 'visible';
+    panel.style.opacity = '1';
+  }, [showIntegrationSidePanel]);
+
+  useEffect(() => {
     if (!data) return;
 
     const elements = buildTreeViewElements();
@@ -947,6 +971,7 @@ export default (): ReactElement => {
       const clearStates = () => {
         closeMatSidePanel();
         closeColSidePanel();
+        closeIntegrationSidePanel();
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         const selectedAnomalyEdges = graphObj.findAllByState(
           'edge',
@@ -960,6 +985,7 @@ export default (): ReactElement => {
       else if (!event.select) clearStates();
       else if (event.target.get('type') === 'node') {
         closeMatSidePanel();
+        closeIntegrationSidePanel();
         const isNode = (object: any): object is INode => 'getEdges' in object;
 
         if (!isNode(event.target))
@@ -1069,7 +1095,6 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        {Integrations}
         <div className="navbar">
           <div id="menu-container">
             <button id="menu-button" onClick={toggleShowSideNav}>
@@ -1078,7 +1103,14 @@ export default (): ReactElement => {
 
             <img height="40" width="150" src={Logo} alt="logo" />
           </div>
-          <div id="sign-out-container">
+          <div id="options-container">
+            <Button
+              onClick={() => setShowIntegrationSidePanel(true)}
+              color="secondary"
+              size="large"
+            >
+              Integrations
+            </Button>
             <Button
               onClick={() => Auth.signOut()}
               color="secondary"
@@ -1162,10 +1194,12 @@ export default (): ReactElement => {
             {tabIndex === 0 ? (
               <>
                 <div className="card">
-                  {selectedNodeId === '627160717e3d8066494d41ff'
-                    ? BasicCard(20.6, 448, 3.4, 5.6)
+                  {selectedNodeId === '627160717e3d8066494d41ff' ? (
+                    BasicCard(20.6, 448, 3.4, 5.6)
+                  ) : (
                     // : BasicCard(47011, 448, 4129, 17521)}
-                    :<></>}
+                    <></>
+                  )}
                 </div>
                 <h4>Distribution</h4>
                 <MetricsGraph
@@ -1220,6 +1254,23 @@ export default (): ReactElement => {
             ) : (
               <>{BasicTable()}</>
             )}
+          </div>
+        </div>
+        <div id="integrationsSidePanel" className="sidepanel">
+          <div className="header">
+            <p className="title">Integrations</p>
+            <button className="closebtn" onClick={closeIntegrationSidePanel}>
+              &times;
+            </button>
+          </div>
+          <div className="content">
+            <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
+              <Tab icon={<FaGithub />} label="GitHub" />
+              <Tab icon={<SiSnowflake />} label="Snowflake" />
+              <Tab icon={<FaSlack />} label="Slack" />
+              <Tab icon={<SiLooker />} label="Looker" />
+            </Tabs>
+            {Integration(tabIndex)}
           </div>
         </div>
         {/* <div id="snackbar">{info}</div> */}

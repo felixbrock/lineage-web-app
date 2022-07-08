@@ -1,13 +1,14 @@
 import { ReactElement } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams,useParams } from 'react-router-dom';
 
 
 export default (): ReactElement => {
   const [searchParams] = useSearchParams();
-  const code = searchParams.get('code');
+  const {code} = useParams();
   console.log(searchParams.get('code'));
-
+  console.log(code);
   return <>
   <p>something</p>
   {code }</>;
 };
+

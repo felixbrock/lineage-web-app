@@ -13,7 +13,8 @@ export default (): ReactElement => {
   const response = fetch(url, {
     method: 'POST',
     headers: {
-        'Accept': 'application/json'}
+        'Accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded'}
   });
   
   console.log("Response",response);

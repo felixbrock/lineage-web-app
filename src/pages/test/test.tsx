@@ -50,6 +50,11 @@ import TextField from '@mui/material/TextField';
 
 import Button from '@mui/material/Button';
 
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
 
@@ -59,7 +64,7 @@ const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
 
 export const testSelectionTypes = [
-  'distributionTestActivated',
+  'distributionActivated',
   'freshnessActivated',
   'cardinalityActivated',
   'nullnessActivated',
@@ -77,12 +82,17 @@ export const parseSelectionType = (selectionType: unknown): SelectionType => {
 };
 
 interface ColumnTestSelection {
-  distributionTestActivated: boolean;
+  distributionActivated: boolean;
   freshnessActivated: boolean;
   cardinalityActivated: boolean;
   nullnessActivated: boolean;
   uniquenessActivated: boolean;
   sortednessActivated: boolean;
+}
+
+interface MaterializationTestSelection {
+  columnTestSelection: { [key: string]: ColumnTestSelection };
+  navExpanded: boolean;
 }
 
 enum DataLoadNodeType {
@@ -98,6 +108,12 @@ const theme = createTheme({
     },
     secondary: {
       main: '#000000',
+    },
+    success: {
+      main: '#a487ff',
+    },
+    info: {
+      main: '#c8c8c8',
     },
   },
 });
@@ -379,20 +395,20 @@ export default (): ReactElement => {
   const [allTreeViewElements, setAllTreeViewElements] = useState<
     ReactElement[]
   >([]);
-  const [filteredTreeViewElements, setFilteredTreeViewElements] = useState<
-    ReactElement[]
-  >([]);
+  const [filteredTreeViewElements] = useState<ReactElement[]>([]);
   const [searchedTreeViewElements, setSearchedTreeViewElements] = useState<
     ReactElement[]
   >([]);
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
-  const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
+  const [anomalyFilterOn] = useState(false);
   const [testSelection, setTestSelection] = useState<{
-    [key: string]: { [key: string]: ColumnTestSelection };
+    [key: string]: MaterializationTestSelection;
   }>({});
-  const [openedTestNavElementIds] = useState<
-    string[]
-  >([]);
+  const [frequency, setFrequency] = React.useState('');
+
+  const handleFrequencyChange = (event: any) => {
+    setFrequency(event.target.value);
+  };
 
   const handleSelect = (event: React.SyntheticEvent, nodeIds: string) => {
     if (!data) return;
@@ -429,61 +445,6 @@ export default (): ReactElement => {
     event: React.SyntheticEvent,
     nodeIds: string[]
   ) => setExpandedTreeViewElementIds(nodeIds);
-
-  const handleShowAll = () => {
-    if (!data) return;
-    if (!graph) return;
-
-    graph.data(data);
-
-    graph.render();
-  };
-
-  const handleFilterAnomalies = () => {
-    if (!allTreeViewElements) return;
-
-    if (anomalyFilterOn) {
-      setFilteredTreeViewElements([]);
-      setTreeViewElements(
-        searchedTreeViewElements.length
-          ? searchedTreeViewElements
-          : allTreeViewElements
-      );
-      setAnomalyFilterOn(!anomalyFilterOn);
-      return;
-    }
-
-    const isReactElement = (element: any): element is ReactElement => !!element;
-
-    const newTreeViewElements = treeViewElements
-      .map((element: ReactElement) => {
-        if (element.props.sx.color !== 'black') return element;
-
-        const relevantChildren = element.props.children
-          .map((child: ReactElement) => {
-            if (child.props.sx.color !== 'black') return child;
-            return null;
-          })
-          .filter(isReactElement);
-
-        if (!relevantChildren.length) return null;
-
-        return (
-          <TreeItem
-            nodeId={element.props.nodeId}
-            label={element.props.label}
-            sx={element.props.sx}
-          >
-            {relevantChildren}
-          </TreeItem>
-        );
-      })
-      .filter(isReactElement);
-
-    setFilteredTreeViewElements(newTreeViewElements);
-
-    setAnomalyFilterOn(!anomalyFilterOn);
-  };
 
   const handleSearchChange = (event: any) => {
     if (!allTreeViewElements) return;
@@ -527,17 +488,6 @@ export default (): ReactElement => {
       .filter(isReactElement);
 
     setSearchedTreeViewElements(newTreeViewElements);
-  };
-
-  const handleTreeViewExpandClick = () => {
-    if (!data) return;
-    if (!data.combos) return;
-
-    const comboIds = data.combos.map((combo) => combo.id);
-
-    setExpandedTreeViewElementIds((oldExpanded) =>
-      oldExpanded.length === 0 ? comboIds : []
-    );
   };
 
   const closeMatSidePanel = () => {
@@ -600,31 +550,10 @@ export default (): ReactElement => {
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]][props[2]][type] =
-      !testSelectionLocal[props[1]][props[2]][type];
+    testSelectionLocal[props[1]].columnTestSelection[props[2]][type] =
+      !testSelectionLocal[props[1]].columnTestSelection[props[2]][type];
 
     setTestSelection({ ...testSelectionLocal });
-  };
-
-  const handleExpandCollapseClick = (event: any) => {
-    
-
-    const id = event.target.id as string;
-    const props = id.split('-');
-
-    const materializationId = props[props.length-1];
-
-    console.log(props);
-
-    const findResult = openedTestNavElementIds.find(
-      (element) => element === materializationId
-    );
-
-    if (!findResult) openedTestNavElementIds.push(materializationId);
-    else {
-      const index = openedTestNavElementIds.indexOf(materializationId);
-      if (index !== -1) openedTestNavElementIds.splice(index, 1);
-    }
   };
 
   const buildColumnTests = (
@@ -635,7 +564,20 @@ export default (): ReactElement => {
       <TableRow>
         <TableCell>{columnId}</TableCell>
         <TableCell>
-          <>A</>
+          <FormControl fullWidth>
+            <InputLabel id="demo-simple-select-label">Frequency</InputLabel>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              value={frequency}
+              label="Frequency"
+              onChange={handleFrequencyChange}
+            >
+              <MenuItem value={10}>Ten</MenuItem>
+              <MenuItem value={20}>Twenty</MenuItem>
+              <MenuItem value={30}>Thirty</MenuItem>
+            </Select>
+          </FormControl>
         </TableCell>
         <TableCell>
           <>B</>
@@ -643,30 +585,86 @@ export default (): ReactElement => {
         <TableCell>
           <Button
             id={`freshnessActivated-${materializationId}-${columnId}`}
+            size="large"
+            variant="contained"
             color={
-              testSelection[materializationId][columnId].freshnessActivated
+              testSelection[materializationId].columnTestSelection[columnId]
+                .freshnessActivated
                 ? 'success'
-                : 'error'
+                : 'info'
             }
             onClick={handleTestSelectButtonClick}
-          >
-            Test1
-          </Button>
+          />
         </TableCell>
         <TableCell>
-          <Button>Test2</Button>
+          <Button
+            id={`cardinalityActivated-${materializationId}-${columnId}`}
+            size="large"
+            variant="contained"
+            color={
+              testSelection[materializationId].columnTestSelection[columnId]
+                .cardinalityActivated
+                ? 'success'
+                : 'info'
+            }
+            onClick={handleTestSelectButtonClick}
+          />
         </TableCell>
         <TableCell>
-          <Button>Test3</Button>
+          <Button
+            id={`nullnessActivated-${materializationId}-${columnId}`}
+            size="large"
+            variant="contained"
+            color={
+              testSelection[materializationId].columnTestSelection[columnId]
+                .nullnessActivated
+                ? 'success'
+                : 'info'
+            }
+            onClick={handleTestSelectButtonClick}
+          />
         </TableCell>
         <TableCell>
-          <Button>Test4</Button>
+          <Button
+            id={`uniquenessActivated-${materializationId}-${columnId}`}
+            size="large"
+            variant="contained"
+            color={
+              testSelection[materializationId].columnTestSelection[columnId]
+                .uniquenessActivated
+                ? 'success'
+                : 'info'
+            }
+            onClick={handleTestSelectButtonClick}
+          />
         </TableCell>
         <TableCell>
-          <Button>Test5</Button>
+          <Button
+            id={`sortednessActivated-${materializationId}-${columnId}`}
+            size="large"
+            variant="contained"
+            color={
+              testSelection[materializationId].columnTestSelection[columnId]
+                .sortednessActivated
+                ? 'success'
+                : 'info'
+            }
+            onClick={handleTestSelectButtonClick}
+          />
         </TableCell>
         <TableCell>
-          <Button>Test6</Button>
+          <Button
+            id={`distributionActivated-${materializationId}-${columnId}`}
+            size="large"
+            variant="contained"
+            color={
+              testSelection[materializationId].columnTestSelection[columnId]
+                .distributionActivated
+                ? 'success'
+                : 'info'
+            }
+            onClick={handleTestSelectButtonClick}
+          />
         </TableCell>
       </TableRow>
     );
@@ -684,9 +682,7 @@ export default (): ReactElement => {
   };
 
   const buildTestSelectionStructure = (): {
-    [key: string]: {
-      [key: string]: ColumnTestSelection;
-    };
+    [key: string]: MaterializationTestSelection;
   } => {
     if (!data) return {};
     if (!data.combos) return {};
@@ -695,20 +691,21 @@ export default (): ReactElement => {
     if (!nodes) return {};
 
     const testSelectionStructure: {
-      [key: string]: { [key: string]: ColumnTestSelection };
+      [key: string]: MaterializationTestSelection;
     } = {};
 
     data.combos.forEach((combo) => {
-      const tableTestSelectionStructure: {
-        [key: string]: ColumnTestSelection;
-      } = {};
+      const tableTestSelectionStructure: MaterializationTestSelection = {
+        navExpanded: false,
+        columnTestSelection: {},
+      };
 
       const relevantColumns = nodes.filter((node) => node.comboId === combo.id);
 
       relevantColumns.forEach(
         (column) =>
-          (tableTestSelectionStructure[column.id] = {
-            distributionTestActivated: false,
+          (tableTestSelectionStructure.columnTestSelection[column.id] = {
+            distributionActivated: false,
             freshnessActivated: false,
             cardinalityActivated: false,
             nullnessActivated: false,
@@ -723,13 +720,16 @@ export default (): ReactElement => {
     return testSelectionStructure;
   };
 
-  const Test = (props: { materializationId: string }): ReactElement => {   
+  const Test = (props: { materializationId: string }): ReactElement => {
     const materializationTestSelection = testSelection[props.materializationId];
 
-    const columnElements = Object.keys(materializationTestSelection).map(
-      (key) => buildColumnTests(props.materializationId, key)
+    const [open, setOpen] = React.useState(
+      materializationTestSelection.navExpanded
     );
-   
+
+    const columnElements = Object.keys(
+      materializationTestSelection.columnTestSelection
+    ).map((key) => buildColumnTests(props.materializationId, key));
 
     return (
       <React.Fragment>
@@ -739,35 +739,59 @@ export default (): ReactElement => {
           </TableCell>
           <TableCell>
             <IconButton
-              id={`expand-collapse-button-${props.materializationId}`}
               aria-label="expand row"
               size="small"
-              onClick={handleExpandCollapseClick}
+              onClick={() => {
+                setOpen(!open);
+                setTestSelection({
+                  ...testSelection,
+                  [props.materializationId]: {
+                    navExpanded: !open,
+                    columnTestSelection:
+                      testSelection[props.materializationId]
+                        .columnTestSelection,
+                  },
+                });
+              }}
             >
-              {openedTestNavElementIds.find(
-      (element) => element === props.materializationId
-    ) ? <MdExpandMore /> : <MdChevronRight />}
+              {open ? <MdExpandMore /> : <MdChevronRight />}
             </IconButton>
           </TableCell>
         </TableRow>
         <TableRow>
           <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-            <Collapse in={!!openedTestNavElementIds.find(
-      (element) => element === props.materializationId
-    )} timeout="auto" unmountOnExit>
+            <Collapse in={open} timeout="auto" unmountOnExit>
               <Box sx={{ margin: 1 }}>
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Column Name</TableCell>
-                      <TableCell>Frequency</TableCell>
-                      <TableCell>Threshold</TableCell>
-                      <TableCell>Freshness</TableCell>
-                      <TableCell>Cardinality</TableCell>
-                      <TableCell>Nullness</TableCell>
-                      <TableCell>Uniqueness</TableCell>
-                      <TableCell>Sortedness</TableCell>
-                      <TableCell>Distribution</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Column Name
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Frequency
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Threshold
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Freshness
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Cardinality
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Nullness
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Uniqueness
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Sortedness
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Distribution
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>{columnElements}</TableBody>
@@ -1389,31 +1413,14 @@ export default (): ReactElement => {
           </div>
         </div>
         <div id="lineage" hidden={true} />
-        <div id="search">
-          <TextField
-            label="Search"
-            onChange={handleSearchChange}
-            fullWidth={true}
-          />
-        </div>
-        <div id="control">
-          <button
-            className="control-button"
-            onClick={handleTreeViewExpandClick}
-          >
-            {expandedTreeViewElementIds.length === 0
-              ? 'Expand all'
-              : 'Collapse all'}
-          </button>
-          <button className="control-button" onClick={handleShowAll}>
-            Show all
-          </button>
-          <button
-            className={anomalyFilterOn ? 'filter-button' : 'control-button'}
-            onClick={handleFilterAnomalies}
-          >
-            Filter Anomalies
-          </button>
+        <div id="search-nav-container">
+          <div id="search">
+            <TextField
+              label="Search"
+              onChange={handleSearchChange}
+              fullWidth={true}
+            />
+          </div>
         </div>
         <div hidden={true}>
           <TreeView
@@ -1428,16 +1435,17 @@ export default (): ReactElement => {
           </TreeView>
         </div>
 
-        <TableContainer component={Paper}>
-          <Table aria-label="collapsible table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Table Name</TableCell>
-                <TableCell />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {Object.keys(testSelection).length ? (
+        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+          <TableContainer sx={{ maxHeight: window.innerHeight - 40 - 50 }}>
+            <Table stickyHeader={false} aria-label="collapsible table">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Table Name</TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {Object.keys(testSelection).length ? (
                   Object.keys(testSelection).map(
                     (materializationId): ReactElement => (
                       <Test materializationId={materializationId}></Test>
@@ -1445,11 +1453,11 @@ export default (): ReactElement => {
                   )
                 ) : (
                   <></>
-                )
-              }
-            </TableBody>
-          </Table>
-        </TableContainer>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
       </div>
     </ThemeProvider>
   );

@@ -58,7 +58,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
 
 const showRealData = false;
-const lineageId = '627929bf08bead50ede9b472';
+const lineageId = '62cd8a01b20588cdb41b2956';
 
 enum DataLoadNodeType {
   Self = 'SELF',
@@ -161,7 +161,7 @@ const loadData = (
       (element) => element.id === selfNode.comboId
     );
     if (!selfCombo) return data;
-
+    
     if (!graphData.combos) throw new ReferenceError('Combos not available');
     graphData.combos.push(selfCombo);
 
@@ -259,6 +259,9 @@ const loadData = (
   graphData.nodes.sort(compare);
   if (graphData.combos) graphData.combos.sort(compare);
 
+  /* For rendering column level lineage only */
+  graphData.nodes = graphData.nodes.filter((node) => coveredNodeIds.includes(node.id));
+ 
   return graphData;
 };
 
@@ -388,7 +391,7 @@ export default (): ReactElement => {
     if (type === 'combo') graph.data(loadCombo(id, data));
     else if (type === 'node')
       graph.data(loadData(id, DataLoadNodeType.Self, [], [], data));
-
+      
     graph.render();
 
     const target = graph.findById(id);
@@ -936,11 +939,9 @@ export default (): ReactElement => {
         );
         const edges = selectedEdges.concat(selectedAnomalyEdges);
         edges.forEach((edge) => edge.clearStates());
-
         const id = event.target.getID();
 
         setSelectedNodeId(id);
-
         graphObj.data(loadData(id, DataLoadNodeType.Self, [], [], data));
 
         setColumnTest(Date.now().toString());

@@ -23,7 +23,7 @@ import G6, {
   NodeConfig,
 } from '@antv/g6';
 import './test.scss';
-import { MdTag, MdChevronRight, MdExpandMore} from 'react-icons/md';
+import { MdTag, MdChevronRight, MdExpandMore } from 'react-icons/md';
 
 import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
 import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
@@ -57,6 +57,33 @@ import { useNavigate } from 'react-router-dom';
 
 const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
+
+export const testSelectionTypes = [
+  'distributionTestActivated',
+  'freshnessActivated',
+  'cardinalityActivated',
+  'nullnessActivated',
+  'uniquenessActivated',
+  'sortednessActivated',
+] as const;
+export type SelectionType = typeof testSelectionTypes[number];
+
+export const parseSelectionType = (selectionType: unknown): SelectionType => {
+  const identifiedSelectionType = testSelectionTypes.find(
+    (validSelectionType) => validSelectionType === selectionType
+  );
+  if (identifiedSelectionType) return identifiedSelectionType;
+  throw new Error('Provision of invalid selection type');
+};
+
+interface ColumnTestSelection {
+  distributionTestActivated: boolean;
+  freshnessActivated: boolean;
+  cardinalityActivated: boolean;
+  nullnessActivated: boolean;
+  uniquenessActivated: boolean;
+  sortednessActivated: boolean;
+}
 
 enum DataLoadNodeType {
   Self = 'SELF',
@@ -360,6 +387,12 @@ export default (): ReactElement => {
   >([]);
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
   const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
+  const [testSelection, setTestSelection] = useState<{
+    [key: string]: { [key: string]: ColumnTestSelection };
+  }>({});
+  const [openedTestNavElementIds] = useState<
+    string[]
+  >([]);
 
   const handleSelect = (event: React.SyntheticEvent, nodeIds: string) => {
     if (!data) return;
@@ -559,15 +592,48 @@ export default (): ReactElement => {
     );
   };
 
-  const buildColumnTests = (column: any): ReactElement => {
-    const hasNewAnomaly = defaultAnomalyStates.find(
-      (element) => element.id === column.id
-    );
-    if (!hasNewAnomaly) throw new ReferenceError('Anomaly state not found');
+  const handleTestSelectButtonClick = (event: any) => {
+    const id = event.target.id as string;
+    const props = id.split('-');
 
+    const type = parseSelectionType(props[0]);
+
+    const testSelectionLocal = testSelection;
+
+    testSelectionLocal[props[1]][props[2]][type] =
+      !testSelectionLocal[props[1]][props[2]][type];
+
+    setTestSelection({ ...testSelectionLocal });
+  };
+
+  const handleExpandCollapseClick = (event: any) => {
+    
+
+    const id = event.target.id as string;
+    const props = id.split('-');
+
+    const materializationId = props[props.length-1];
+
+    console.log(props);
+
+    const findResult = openedTestNavElementIds.find(
+      (element) => element === materializationId
+    );
+
+    if (!findResult) openedTestNavElementIds.push(materializationId);
+    else {
+      const index = openedTestNavElementIds.indexOf(materializationId);
+      if (index !== -1) openedTestNavElementIds.splice(index, 1);
+    }
+  };
+
+  const buildColumnTests = (
+    materializationId: string,
+    columnId: string
+  ): ReactElement => {
     return (
       <TableRow>
-        <TableCell>{column.id}</TableCell>
+        <TableCell>{columnId}</TableCell>
         <TableCell>
           <>A</>
         </TableCell>
@@ -575,7 +641,17 @@ export default (): ReactElement => {
           <>B</>
         </TableCell>
         <TableCell>
-          <Button>Test1</Button>
+          <Button
+            id={`freshnessActivated-${materializationId}-${columnId}`}
+            color={
+              testSelection[materializationId][columnId].freshnessActivated
+                ? 'success'
+                : 'error'
+            }
+            onClick={handleTestSelectButtonClick}
+          >
+            Test1
+          </Button>
         </TableCell>
         <TableCell>
           <Button>Test2</Button>
@@ -592,9 +668,6 @@ export default (): ReactElement => {
         <TableCell>
           <Button>Test6</Button>
         </TableCell>
-        <TableCell>
-          <Button>Test7</Button>
-        </TableCell>
       </TableRow>
     );
 
@@ -610,86 +683,112 @@ export default (): ReactElement => {
     // );
   };
 
-  const Test = (props: {combo: ComboConfig}): ReactElement => {
-    const [open, setOpen] = React.useState(false);
+  const buildTestSelectionStructure = (): {
+    [key: string]: {
+      [key: string]: ColumnTestSelection;
+    };
+  } => {
+    if (!data) return {};
+    if (!data.combos) return {};
 
-    if (!data) return <></>;
-    if (!data.combos) return <></>;
+    const nodes = data.nodes;
+    if (!nodes) return {};
 
+    const testSelectionStructure: {
+      [key: string]: { [key: string]: ColumnTestSelection };
+    } = {};
 
+    data.combos.forEach((combo) => {
+      const tableTestSelectionStructure: {
+        [key: string]: ColumnTestSelection;
+      } = {};
 
-      if(!data.nodes) return <></>;
+      const relevantColumns = nodes.filter((node) => node.comboId === combo.id);
 
-      const relevantColumns = data.nodes.filter(
-        (node) => node.comboId === props.combo.id
+      relevantColumns.forEach(
+        (column) =>
+          (tableTestSelectionStructure[column.id] = {
+            distributionTestActivated: false,
+            freshnessActivated: false,
+            cardinalityActivated: false,
+            nullnessActivated: false,
+            uniquenessActivated: false,
+            sortednessActivated: false,
+          })
       );
 
-    
+      testSelectionStructure[combo.id] = tableTestSelectionStructure;
+    });
 
-      const columnElements = relevantColumns.map((column) =>
-      buildColumnTests(column)
-      );
-
-      // const hasAnomalyChilds = columnElements.some(
-      //   (element) => element.props.sx.color !== defaultColor
-      // );
-
-      return (<React.Fragment>
-          <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
-            <TableCell component="th" scope="row">
-              {props.combo.id}
-            </TableCell>
-            <TableCell>
-              <IconButton
-                aria-label="expand row"
-                size="small"
-                onClick={() =>  setOpen(!open)                
-                  
-                }
-              >
-                {open ? <MdExpandMore /> : <MdChevronRight />}
-              </IconButton>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-              <Collapse in={open} timeout="auto" unmountOnExit>
-                <Box sx={{ margin: 1 }}>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell />
-                        <TableCell>Frequency</TableCell>
-                        <TableCell>Threshold</TableCell>
-                        <TableCell>Freshness</TableCell>
-                        <TableCell>Cardinality</TableCell>
-                        <TableCell>Nullness</TableCell>
-                        <TableCell>Uniqueness</TableCell>
-                        <TableCell>Nullness</TableCell>
-                        <TableCell>Sortedness</TableCell>
-                        <TableCell>Distribution</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>{columnElements}</TableBody>
-                  </Table>
-                </Box>
-              </Collapse>
-            </TableCell>
-          </TableRow>
-          </React.Fragment>
-      );
-      // return (
-      //   <TreeItem
-      //     nodeId={combo.id}
-      //     label={combo.label}
-      //     sx={{ color: hasAnomalyChilds ? anomalyColor : defaultColor }}
-      //     endIcon={<MdTag />}
-      //   >
-      //     {columnElements}
-      //   </TreeItem>
-      // );
+    return testSelectionStructure;
   };
 
+  const Test = (props: { materializationId: string }): ReactElement => {   
+    const materializationTestSelection = testSelection[props.materializationId];
+
+    const columnElements = Object.keys(materializationTestSelection).map(
+      (key) => buildColumnTests(props.materializationId, key)
+    );
+   
+
+    return (
+      <React.Fragment>
+        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
+          <TableCell component="th" scope="row">
+            {props.materializationId}
+          </TableCell>
+          <TableCell>
+            <IconButton
+              id={`expand-collapse-button-${props.materializationId}`}
+              aria-label="expand row"
+              size="small"
+              onClick={handleExpandCollapseClick}
+            >
+              {openedTestNavElementIds.find(
+      (element) => element === props.materializationId
+    ) ? <MdExpandMore /> : <MdChevronRight />}
+            </IconButton>
+          </TableCell>
+        </TableRow>
+        <TableRow>
+          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+            <Collapse in={!!openedTestNavElementIds.find(
+      (element) => element === props.materializationId
+    )} timeout="auto" unmountOnExit>
+              <Box sx={{ margin: 1 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Column Name</TableCell>
+                      <TableCell>Frequency</TableCell>
+                      <TableCell>Threshold</TableCell>
+                      <TableCell>Freshness</TableCell>
+                      <TableCell>Cardinality</TableCell>
+                      <TableCell>Nullness</TableCell>
+                      <TableCell>Uniqueness</TableCell>
+                      <TableCell>Sortedness</TableCell>
+                      <TableCell>Distribution</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>{columnElements}</TableBody>
+                </Table>
+              </Box>
+            </Collapse>
+          </TableCell>
+        </TableRow>
+      </React.Fragment>
+    );
+    // return (
+    //   <TreeItem
+    //     nodeId={combo.id}
+    //     label={combo.label}
+    //     sx={{ color: hasAnomalyChilds ? anomalyColor : defaultColor }}
+    //     endIcon={<MdTag />}
+    //   >
+    //     {columnElements}
+    //   </TreeItem>
+    // );
+  };
 
   // function createData(
   //   name: string,
@@ -845,8 +944,6 @@ export default (): ReactElement => {
       );
     });
 
-    console.log(materializationElements);
-
     return materializationElements;
   };
 
@@ -964,6 +1061,8 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (!data) return;
+
+    setTestSelection(buildTestSelectionStructure());
 
     const elements = buildTreeViewElements();
     setAllTreeViewElements(elements);
@@ -1337,7 +1436,18 @@ export default (): ReactElement => {
                 <TableCell />
               </TableRow>
             </TableHead>
-            <TableBody>{data && data.combos ? data.combos.map((combo): ReactElement => (<Test combo={combo}></Test>)) : <></>}</TableBody>
+            <TableBody>
+              {Object.keys(testSelection).length ? (
+                  Object.keys(testSelection).map(
+                    (materializationId): ReactElement => (
+                      <Test materializationId={materializationId}></Test>
+                    )
+                  )
+                ) : (
+                  <></>
+                )
+              }
+            </TableBody>
           </Table>
         </TableContainer>
       </div>

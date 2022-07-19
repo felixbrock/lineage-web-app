@@ -58,7 +58,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
 
 const showRealData = false;
-const lineageId = '627929bf08bead50ede9b472';
+const lineageId = '62cd8a01b20588cdb41b2956';
 
 enum DataLoadNodeType {
   Self = 'SELF',
@@ -162,6 +162,14 @@ const loadData = (
     );
     if (!selfCombo) return data;
 
+    selfCombo.children = selfCombo.children?.filter((child) => child.id === selfNode.id);
+    
+    // selfCombo.children = [];
+    // console.log("Combo children is: ");
+    // selfCombo.children?.forEach((child) => {
+    //   console.log(child);
+    // });
+    
     if (!graphData.combos) throw new ReferenceError('Combos not available');
     graphData.combos.push(selfCombo);
 
@@ -259,6 +267,36 @@ const loadData = (
   graphData.nodes.sort(compare);
   if (graphData.combos) graphData.combos.sort(compare);
 
+  const allIDs: string[] = graphData.nodes.map((node) => node.id);
+  // console.log("ALL IDS IS: " + allIDs);
+  graphData.combos?.forEach(
+    (combo) => {
+    // console.log("Start is: " + combo.children?.length);
+    // console.log("COMBO CHILDREN IS: " + combo.children?.length);
+    combo.children?.filter(
+      (child) => 
+        !allIDs.includes(child.id)
+        );
+    // console.log("COMBO CHILDREN NOW IS: " + combo.children?.length);
+    // combo.children?.forEach((child)=> {
+    //   console.log(child.id);
+    //   console.log(!allIDs.includes(child.id));
+    // });
+    // console.log("End is: " + combo.children?.length);
+    // combo.children = [];
+    combo.children = combo.children?.filter((child) => child.id === selfNode.id);
+    });
+    
+
+    graphData.combos?.forEach((combo)=>{
+      if(combo.children && combo.children.length>0) console.log("COMBO " + combo.id + " has children");
+
+      combo.children?.forEach((child)=>{
+        console.log("Child has id " + child.id + " item type " + child.itemType); 
+      });
+    });
+
+    graphData.nodes = graphData.nodes.filter((node) => coveredNodeIds.includes(node.id));
   return graphData;
 };
 
@@ -386,9 +424,12 @@ export default (): ReactElement => {
     const type = determineType(id, data);
 
     if (type === 'combo') graph.data(loadCombo(id, data));
-    else if (type === 'node')
-      graph.data(loadData(id, DataLoadNodeType.Self, [], [], data));
-
+    else if (type === 'node'){ 
+      const gData = loadData(id, DataLoadNodeType.Self, [], [], data);
+      gData.combos?.forEach((combo) => combo.children = []);
+      graph.data(gData);
+    }
+      
     graph.render();
 
     const target = graph.findById(id);
@@ -936,12 +977,12 @@ export default (): ReactElement => {
         );
         const edges = selectedEdges.concat(selectedAnomalyEdges);
         edges.forEach((edge) => edge.clearStates());
-
         const id = event.target.getID();
 
         setSelectedNodeId(id);
-
-        graphObj.data(loadData(id, DataLoadNodeType.Self, [], [], data));
+        const gData = loadData(id, DataLoadNodeType.Self, [], [], data);
+        gData.combos?.forEach((combo) => combo.children = []);
+        graphObj.data(gData);
 
         setColumnTest(Date.now().toString());
 

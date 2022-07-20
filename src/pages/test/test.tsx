@@ -50,7 +50,6 @@ import TextField from '@mui/material/TextField';
 
 import Button from '@mui/material/Button';
 
-import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
@@ -59,6 +58,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
 
 import { useNavigate } from 'react-router-dom';
+import Slider from '@mui/material/Slider';
 
 const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
@@ -82,17 +82,22 @@ export const parseSelectionType = (selectionType: unknown): SelectionType => {
 };
 
 interface ColumnTestSelection {
+  label: string;
+  frequency: string;
+  sensitivity: number;
   distributionActivated: boolean;
   freshnessActivated: boolean;
   cardinalityActivated: boolean;
   nullnessActivated: boolean;
   uniquenessActivated: boolean;
   sortednessActivated: boolean;
+  testsActivated: boolean;
 }
 
 interface MaterializationTestSelection {
   columnTestSelection: { [key: string]: ColumnTestSelection };
   navExpanded: boolean;
+  label: string;
 }
 
 enum DataLoadNodeType {
@@ -104,13 +109,13 @@ enum DataLoadNodeType {
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#6f47ef',
+      main: '#a487ff',
     },
     secondary: {
       main: '#000000',
     },
     success: {
-      main: '#a487ff',
+      main: '#6f47ef',
     },
     info: {
       main: '#c8c8c8',
@@ -404,10 +409,32 @@ export default (): ReactElement => {
   const [testSelection, setTestSelection] = useState<{
     [key: string]: MaterializationTestSelection;
   }>({});
-  const [frequency, setFrequency] = React.useState('');
 
   const handleFrequencyChange = (event: any) => {
-    setFrequency(event.target.value);
+    const name = event.target.name as string;
+    const props = name.split('-');
+
+    const testSelectionLocal = testSelection;
+
+
+    testSelectionLocal[props[1]].columnTestSelection[props[2]].frequency =
+      event.target.value;
+
+
+
+    setTestSelection({ ...testSelectionLocal });
+  };
+
+  const handleSensitivityChange = (event: any) => {
+    const id = event.target.id as string;
+    const props = id.split('-');
+
+    const testSelectionLocal = testSelection;
+
+    testSelectionLocal[props[1]].columnTestSelection[props[2]].sensitivity =
+      event.target.value;
+      
+    setTestSelection({ ...testSelectionLocal });
   };
 
   const handleSelect = (event: React.SyntheticEvent, nodeIds: string) => {
@@ -553,6 +580,23 @@ export default (): ReactElement => {
     testSelectionLocal[props[1]].columnTestSelection[props[2]][type] =
       !testSelectionLocal[props[1]].columnTestSelection[props[2]][type];
 
+    const activated =
+      testSelectionLocal[props[1]].columnTestSelection[props[2]]
+        .cardinalityActivated ||
+      testSelectionLocal[props[1]].columnTestSelection[props[2]]
+        .distributionActivated ||
+      testSelectionLocal[props[1]].columnTestSelection[props[2]]
+        .freshnessActivated ||
+      testSelectionLocal[props[1]].columnTestSelection[props[2]]
+        .nullnessActivated ||
+      testSelectionLocal[props[1]].columnTestSelection[props[2]]
+        .sortednessActivated ||
+      testSelectionLocal[props[1]].columnTestSelection[props[2]]
+        .uniquenessActivated;
+
+    testSelectionLocal[props[1]].columnTestSelection[props[2]].testsActivated =
+      activated;
+
     setTestSelection({ ...testSelectionLocal });
   };
 
@@ -562,27 +606,70 @@ export default (): ReactElement => {
   ): ReactElement => {
     return (
       <TableRow>
-        <TableCell>{columnId}</TableCell>
-        <TableCell>
-          <FormControl fullWidth>
-            <InputLabel id="demo-simple-select-label">Frequency</InputLabel>
+        <TableCell align="center">
+          {testSelection[materializationId].columnTestSelection[columnId].label}
+        </TableCell>
+        <TableCell align="center">
+          <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
             <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              value={frequency}
-              label="Frequency"
+              name = {`frequency-${materializationId}-${columnId}`}
+              disabled={
+                !testSelection[materializationId].columnTestSelection[columnId]
+                  .testsActivated
+              }
+              displayEmpty={true}
+          renderValue={(value) => value || testSelection[materializationId].columnTestSelection[columnId]
+            .frequency}
+              value={
+                testSelection[materializationId].columnTestSelection[columnId]
+                  .frequency
+              }
               onChange={handleFrequencyChange}
             >
-              <MenuItem value={10}>Ten</MenuItem>
-              <MenuItem value={20}>Twenty</MenuItem>
-              <MenuItem value={30}>Thirty</MenuItem>
+              <MenuItem value={'1h'}>1h</MenuItem>
+              <MenuItem value={'3h'}>3h</MenuItem>
+              <MenuItem value={'6h'}>6h</MenuItem>
+              <MenuItem value={'12h'}>12h</MenuItem>
+              <MenuItem value={'1d'}>1d</MenuItem>
             </Select>
           </FormControl>
         </TableCell>
-        <TableCell>
-          <>B</>
+        <TableCell align="center">
+          <Slider
+            id={`sensitivity-${materializationId}-${columnId}`}
+            disabled={
+              !testSelection[materializationId].columnTestSelection[columnId]
+                .testsActivated
+            }
+            aria-label="Sensitivity"
+            // defaultValue={
+            //   testSelection[materializationId].columnTestSelection[columnId]
+            //     .sensitivity
+            // }
+            defaultValue={
+              testSelection[materializationId].columnTestSelection[columnId]
+                .sensitivity
+            }
+            getAriaValueText={(value: number) => `${value}`}
+            valueLabelDisplay="auto"
+            color="primary"
+            step={1}
+            marks={[
+              {
+                value: -5,
+                label: 'l',
+              },
+              {
+                value: 5,
+                label: 'h',
+              },
+            ]}
+            min={-5}
+            max={5}
+            onChange={handleSensitivityChange}
+          />
         </TableCell>
-        <TableCell>
+        <TableCell align="center">
           <Button
             id={`freshnessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -590,13 +677,13 @@ export default (): ReactElement => {
             color={
               testSelection[materializationId].columnTestSelection[columnId]
                 .freshnessActivated
-                ? 'success'
+                ? 'primary'
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
           />
         </TableCell>
-        <TableCell>
+        <TableCell align="center">
           <Button
             id={`cardinalityActivated-${materializationId}-${columnId}`}
             size="large"
@@ -604,13 +691,13 @@ export default (): ReactElement => {
             color={
               testSelection[materializationId].columnTestSelection[columnId]
                 .cardinalityActivated
-                ? 'success'
+                ? 'primary'
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
           />
         </TableCell>
-        <TableCell>
+        <TableCell align="center">
           <Button
             id={`nullnessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -618,13 +705,13 @@ export default (): ReactElement => {
             color={
               testSelection[materializationId].columnTestSelection[columnId]
                 .nullnessActivated
-                ? 'success'
+                ? 'primary'
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
           />
         </TableCell>
-        <TableCell>
+        <TableCell align="center">
           <Button
             id={`uniquenessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -632,13 +719,13 @@ export default (): ReactElement => {
             color={
               testSelection[materializationId].columnTestSelection[columnId]
                 .uniquenessActivated
-                ? 'success'
+                ? 'primary'
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
           />
         </TableCell>
-        <TableCell>
+        <TableCell align="center">
           <Button
             id={`sortednessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -646,13 +733,13 @@ export default (): ReactElement => {
             color={
               testSelection[materializationId].columnTestSelection[columnId]
                 .sortednessActivated
-                ? 'success'
+                ? 'primary'
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
           />
         </TableCell>
-        <TableCell>
+        <TableCell align="center">
           <Button
             id={`distributionActivated-${materializationId}-${columnId}`}
             size="large"
@@ -660,7 +747,7 @@ export default (): ReactElement => {
             color={
               testSelection[materializationId].columnTestSelection[columnId]
                 .distributionActivated
-                ? 'success'
+                ? 'primary'
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
@@ -695,24 +782,36 @@ export default (): ReactElement => {
     } = {};
 
     data.combos.forEach((combo) => {
+      const materializationLabel = combo.label;
+      if (typeof materializationLabel !== 'string')
+        throw new Error('Combo label not of type string');
+
       const tableTestSelectionStructure: MaterializationTestSelection = {
+        label: materializationLabel,
         navExpanded: false,
         columnTestSelection: {},
       };
 
       const relevantColumns = nodes.filter((node) => node.comboId === combo.id);
 
-      relevantColumns.forEach(
-        (column) =>
-          (tableTestSelectionStructure.columnTestSelection[column.id] = {
-            distributionActivated: false,
-            freshnessActivated: false,
-            cardinalityActivated: false,
-            nullnessActivated: false,
-            uniquenessActivated: false,
-            sortednessActivated: false,
-          })
-      );
+      relevantColumns.forEach((column) => {
+        const columnLabel = column.label;
+        if (typeof columnLabel !== 'string')
+          throw new Error('Column label not of type string');
+
+        return (tableTestSelectionStructure.columnTestSelection[column.id] = {
+          label: columnLabel,
+          frequency: '1h',
+          sensitivity: 0,
+          distributionActivated: false,
+          freshnessActivated: false,
+          cardinalityActivated: false,
+          nullnessActivated: false,
+          uniquenessActivated: false,
+          sortednessActivated: false,
+          testsActivated: false,
+        });
+      });
 
       testSelectionStructure[combo.id] = tableTestSelectionStructure;
     });
@@ -735,9 +834,9 @@ export default (): ReactElement => {
       <React.Fragment>
         <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
           <TableCell component="th" scope="row">
-            {props.materializationId}
+            {testSelection[props.materializationId].label}
           </TableCell>
-          <TableCell>
+          <TableCell align="center">
             <IconButton
               aria-label="expand row"
               size="small"
@@ -747,6 +846,7 @@ export default (): ReactElement => {
                   ...testSelection,
                   [props.materializationId]: {
                     navExpanded: !open,
+                    label: testSelection[props.materializationId].label,
                     columnTestSelection:
                       testSelection[props.materializationId]
                         .columnTestSelection,
@@ -759,37 +859,41 @@ export default (): ReactElement => {
           </TableCell>
         </TableRow>
         <TableRow>
-          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+          <TableCell
+            align="center"
+            style={{ paddingBottom: 0, paddingTop: 0 }}
+            colSpan={6}
+          >
             <Collapse in={open} timeout="auto" unmountOnExit>
               <Box sx={{ margin: 1 }}>
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                         Column Name
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                         Frequency
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
-                        Threshold
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>
+                        Sensitivity
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                         Freshness
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                         Cardinality
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                         Nullness
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                         Uniqueness
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                         Sortedness
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                         Distribution
                       </TableCell>
                     </TableRow>
@@ -851,10 +955,10 @@ export default (): ReactElement => {
   //   return (
   //     <React.Fragment>
   //       <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
-  //         <TableCell component="th" scope="row">
+  //         <TableCell align='center' component="th" scope="row">
   //           {row.name}
   //         </TableCell>
-  //         <TableCell>
+  //         <TableCell align='center'>
   //           <IconButton
   //             aria-label="expand row"
   //             size="small"
@@ -865,54 +969,54 @@ export default (): ReactElement => {
   //         </TableCell>
   //       </TableRow>
   //       <TableRow>
-  //         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+  //         <TableCell align='center' style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
   //           <Collapse in={open} timeout="auto" unmountOnExit>
   //             <Box sx={{ margin: 1 }}>
   //               <Table>
   //                 <TableHead>
   //                   <TableRow>
-  //                     <TableCell />
-  //                     <TableCell>Frequency</TableCell>
-  //                     <TableCell>Threshold</TableCell>
-  //                     <TableCell>Freshness</TableCell>
-  //                     <TableCell>Cardinality</TableCell>
-  //                     <TableCell>Nullness</TableCell>
-  //                     <TableCell>Uniqueness</TableCell>
-  //                     <TableCell>Nullness</TableCell>
-  //                     <TableCell>Sortedness</TableCell>
-  //                     <TableCell>Distribution</TableCell>
+  //                     <TableCell align='center' />
+  //                     <TableCell align='center'>Frequency</TableCell>
+  //                     <TableCell align='center'>Threshold</TableCell>
+  //                     <TableCell align='center'>Freshness</TableCell>
+  //                     <TableCell align='center'>Cardinality</TableCell>
+  //                     <TableCell align='center'>Nullness</TableCell>
+  //                     <TableCell align='center'>Uniqueness</TableCell>
+  //                     <TableCell align='center'>Nullness</TableCell>
+  //                     <TableCell align='center'>Sortedness</TableCell>
+  //                     <TableCell align='center'>Distribution</TableCell>
   //                   </TableRow>
   //                 </TableHead>
   //                 <TableBody>
   //                   <TableRow>
-  //                     <TableCell>
+  //                     <TableCell align='center'>
   //                       <>Column Name 1</>
   //                     </TableCell>
-  //                     <TableCell>
+  //                     <TableCell align='center'>
   //                       <>A</>
   //                     </TableCell>
-  //                     <TableCell>
+  //                     <TableCell align='center'>
   //                       <>B</>
   //                     </TableCell>
-  //                     <TableCell>
+  //                     <TableCell align='center'>
   //                       <Button>Test1</Button>
   //                     </TableCell>
-  //                     <TableCell>
+  //                     <TableCell align='center'>
   //                       <Button>Test2</Button>
   //                     </TableCell>
-  //                     <TableCell>
+  //                     <TableCell align='center'>
   //                       <Button>Test3</Button>
   //                     </TableCell>
-  //                     <TableCell>
+  //                     <TableCell align='center'>
   //                       <Button>Test4</Button>
   //                     </TableCell>
-  //                     <TableCell>
+  //                     <TableCell align='center'>
   //                       <Button>Test5</Button>
   //                     </TableCell>
-  //                     <TableCell>
+  //                     <TableCell align='center'>
   //                       <Button>Test6</Button>
   //                     </TableCell>
-  //                     <TableCell>
+  //                     <TableCell align='center'>
   //                       <Button>Test7</Button>
   //                     </TableCell>
   //                   </TableRow>
@@ -1441,7 +1545,7 @@ export default (): ReactElement => {
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 'bold' }}>Table Name</TableCell>
-                  <TableCell />
+                  <TableCell align="center" />
                 </TableRow>
               </TableHead>
               <TableBody>

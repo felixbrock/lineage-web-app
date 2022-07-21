@@ -1002,6 +1002,7 @@ export default (): ReactElement => {
           setSQL(logic.sql);
         }
 
+        graphObj.data(loadCombo(comboId, data));
         graphObj.set('latestZoom', graphObj.getZoom());
         graphObj.set('selectedElementId', combo.id);
 

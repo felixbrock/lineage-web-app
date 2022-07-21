@@ -56,6 +56,7 @@ import BasicTable from '../../components/table';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
+import { useNavigate } from 'react-router-dom';
 
 const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
@@ -330,6 +331,8 @@ const determineType = (id: string, data: GraphData): TreeViewElementType => {
 };
 
 export default (): ReactElement => {
+  const navigate = useNavigate();
+
   const [accountId, setAccountId] = useState('');
   const [user, setUser] = useState<any>();
   const [jwt, setJwt] = useState('');
@@ -1039,9 +1042,35 @@ export default (): ReactElement => {
               <MdMenu />
             </button>
 
-            <img height="40" width="150" src={Logo} alt="logo" />
+            <img height="40" width="150" src={Logo} alt="logo"              onClick={() =>
+                navigate(`/lineage`, {
+                  state: {
+                  },
+                })
+              } />
           </div>
           <div id="sign-out-container">
+          <Button
+              onClick={() =>
+                navigate(`/test`, {
+                  state: {
+                    foo: 'bar',
+                    data,
+                  },
+                })
+              }
+              color="secondary"
+              size="large"
+            >
+              Tests
+            </Button>
+            <Button
+              onClick={() => console.log('todo-integration screen')}
+              color="secondary"
+              size="large"
+            >
+              Integrations
+            </Button>
             <Button
               onClick={() => Auth.signOut()}
               color="secondary"

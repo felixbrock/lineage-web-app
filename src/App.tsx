@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 import './App.scss';
 import Lineage from './pages/lineage/lineage';
+import Test from './pages/test/test';
 import { authEnvConfig, oAuthEnvConfig } from './config';
 
 export default (): ReactElement => {
@@ -59,6 +60,7 @@ export default (): ReactElement => {
             <div id="ContentContainer">
               <Routes>
                 <Route path="/lineage" element={<Lineage />} />
+                <Route path="/test" element={<Test />} />
                 <Route path="/" element={<Navigate to="/lineage" />} />
               </Routes>
             </div>

@@ -418,16 +418,19 @@ export default (): ReactElement => {
   const [expandedTreeViewElementIds, setExpandedTreeViewElementIds] = useState<
     string[]
   >([]);
-  const [allTreeViewElements, setAllTreeViewElements] = useState<
-    ReactElement[]
-  >([]);
+  // const [allTreeViewElements, setAllTreeViewElements] = useState<
+  //   ReactElement[]
+  // >([]);
   const [filteredTreeViewElements] = useState<ReactElement[]>([]);
-  const [searchedTreeViewElements, setSearchedTreeViewElements] = useState<
+  const [searchedTreeViewElements] = useState<
     ReactElement[]
   >([]);
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
-  const [anomalyFilterOn] = useState(false);
+  // const [anomalyFilterOn] = useState(false);
   const [testSelection, setTestSelection] = useState<{
+    [key: string]: MaterializationTestSelection;
+  }>({});
+  const [searchedTestSelection, setSearchedTestSelection] = useState<{
     [key: string]: MaterializationTestSelection;
   }>({});
   const [page, setPage] = React.useState(0);
@@ -545,47 +548,23 @@ export default (): ReactElement => {
   ) => setExpandedTreeViewElementIds(nodeIds);
 
   const handleSearchChange = (event: any) => {
-    if (!allTreeViewElements) return;
+    const testSelectionKeys = Object.keys(testSelection);
+    if (!testSelectionKeys.length) return;
 
     const value = event.target.value;
     if (!value) {
-      setSearchedTreeViewElements([]);
-      setTreeViewElements(allTreeViewElements);
+      setSearchedTestSelection(testSelection);
       return;
     }
 
-    const isReactElement = (element: any): element is ReactElement => !!element;
+    const newTestSelectionElements: {[key:string]: MaterializationTestSelection} = {};
 
-    const populationToSearch = anomalyFilterOn
-      ? filteredTreeViewElements
-      : allTreeViewElements;
+    testSelectionKeys
+      .forEach((key) => {
+        if (testSelection[key].label.includes(value)) newTestSelectionElements[key] = testSelection[key];
+      });
 
-    const newTreeViewElements = populationToSearch
-      .map((element: ReactElement) => {
-        if (element.props.label.includes(value)) return element;
-
-        const relevantChildren = element.props.children
-          .map((child: ReactElement) => {
-            if (child.props.label.includes(value)) return child;
-            return null;
-          })
-          .filter(isReactElement);
-
-        if (!relevantChildren.length) return null;
-
-        return (
-          <TreeItem
-            nodeId={element.props.nodeId}
-            label={element.props.label}
-            sx={element.props.sx}
-          >
-            {relevantChildren}
-          </TreeItem>
-        );
-      })
-      .filter(isReactElement);
-
-    setSearchedTreeViewElements(newTreeViewElements);
+    setSearchedTestSelection(newTestSelectionElements);
   };
 
   const closeMatSidePanel = () => {
@@ -1551,7 +1530,6 @@ export default (): ReactElement => {
     setTestSelection(buildTestSelectionStructure());
 
     const elements = buildTreeViewElements();
-    setAllTreeViewElements(elements);
     setTreeViewElements(elements);
 
     const hivediveBlue = '#6f47ef';
@@ -1843,6 +1821,13 @@ export default (): ReactElement => {
     setGraph(graphObj);
   }, [data]);
 
+  useEffect(()=>{
+    if(!Object.keys(testSelection).length || Object.keys(searchedTestSelection).length) return;
+
+    setSearchedTestSelection(testSelection);
+
+  }, [testSelection]);
+
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
@@ -1931,8 +1916,8 @@ export default (): ReactElement => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {Object.keys(testSelection).length ? (
-                  Object.keys(testSelection).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                {Object.keys(searchedTestSelection).length ? (
+                  Object.keys(searchedTestSelection).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((materializationId) => {
     
                       return <Test materializationId={materializationId}></Test>;
@@ -1955,7 +1940,7 @@ export default (): ReactElement => {
           <TablePagination
           rowsPerPageOptions={[5,10, 25]}
           component="div"
-          count={Object.keys(testSelection).length}
+          count={Object.keys(searchedTestSelection).length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

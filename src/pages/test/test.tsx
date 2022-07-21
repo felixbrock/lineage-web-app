@@ -1833,10 +1833,15 @@ export default (): ReactElement => {
       <div id="lineageContainer">
         <div className="navbar">
           <div id="menu-container">
-            <img height="40" width="150" src={Logo} alt="logo" />
+            <img height="40" width="150" src={Logo} alt="logo" onClick={() =>
+                navigate(`/lineage`, {
+                  state: {
+                  },
+                })
+              } />
           </div>
           <div id="sign-out-container">
-            <Button
+          <Button
               onClick={() =>
                 navigate(`/test`, {
                   state: {
@@ -1848,7 +1853,14 @@ export default (): ReactElement => {
               color="secondary"
               size="large"
             >
-              Test Definition
+              Tests
+            </Button>
+            <Button
+              onClick={() => console.log('todo-integration screen')}
+              color="secondary"
+              size="large"
+            >
+              Integrations
             </Button>
             <Button
               onClick={() => Auth.signOut()}

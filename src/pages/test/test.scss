@@ -84,7 +84,7 @@ $searchNavHeight: 40px;
 
 #search-nav-container {
   position: relative;
-  height: 67px;
+  height: 60px;
 }
 
 $headerMargin: 10px;
@@ -103,8 +103,6 @@ $controlHeight: 40px;
   display: flex;
   margin: 0 10px 10px 10px;
 }
-
-
 
 #sidenav {
   height: calc(100% - $navbarHeight);

@@ -1871,6 +1871,7 @@ export default (): ReactElement => {
               label="Search"
               onChange={handleSearchChange}
               fullWidth={true}
+              size='small'
             />
           </div>
         </div>

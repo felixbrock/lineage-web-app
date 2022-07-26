@@ -141,7 +141,7 @@ const theme = createTheme({
 });
 
 const tableCellSx = {p:'1px', mt:'0px', mb: '0px', mr: '2px', ml: '2px'};
-const tableHeaderCellSx = {p:'1px', mt:'0px', mb: '0px', mr: '2px', ml: '2px', fontWeight: 'bold'};
+const tableHeaderCellSx = {p:'2px', mt:'0px', mb: '0px', mr: '2px', ml: '2px', fontWeight: 'bold'};
 const tableNameSx = {mt:'0px', mb: '0px', mr: '2px', ml: '2px'};
 
 const getNodeIdsToExplore = (
@@ -1198,7 +1198,7 @@ export default (): ReactElement => {
         <TableRow>
           <TableCell sx={tableCellSx}
             align="center"
-            style={{ paddingBottom: 0, paddingTop: 0 }}
+            style={{ paddingBottom: 0, paddingTop: 0, paddingLeft: 30}}
             colSpan={10}
           >
             <Collapse in={open} timeout="auto" unmountOnExit>
@@ -1206,7 +1206,7 @@ export default (): ReactElement => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={tableHeaderCellSx} width={340} align="left" >
+                      <TableCell sx={tableHeaderCellSx} width={312} align="left">
                         Column Name
                       </TableCell>
                       <TableCell sx={tableHeaderCellSx} width={130} align="center" >

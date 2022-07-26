@@ -140,8 +140,8 @@ const theme = createTheme({
   },
 });
 
-const tableCellSx = {p:'0px'};
-const tableHeaderCellSx = {mt:'0px', mb: '0px', mr: '2px', ml: '2px', fontWeight: 'bold'};
+const tableCellSx = {p:'1px', mt:'0px', mb: '0px', mr: '2px', ml: '2px'};
+const tableHeaderCellSx = {p:'2px', mt:'0px', mb: '0px', mr: '2px', ml: '2px', fontWeight: 'bold'};
 const tableNameSx = {mt:'0px', mb: '0px', mr: '2px', ml: '2px'};
 
 const getNodeIdsToExplore = (
@@ -744,11 +744,11 @@ export default (): ReactElement => {
   ): ReactElement => {
     return (
       <TableRow >
-        <TableCell sx={tableCellSx} align="center">
+        <TableCell sx={tableCellSx} align="left">
           {testSelection[materializationId].columnTestSelection[columnId].label}
         </TableCell>
         <TableCell sx={tableCellSx} align="center">
-          <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
+          <FormControl sx={{ m: 1, maxwidth: 100 }} size="small">
             <Select
               name={`frequency-${materializationId}-${columnId}`}
               disabled={
@@ -805,7 +805,7 @@ export default (): ReactElement => {
             </Select>
           </FormControl>
         </TableCell>
-        <TableCell sx={tableCellSx} align="center">
+        <TableCell sx={tableCellSx} align="left">
           <Button
             id={`freshnessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -819,7 +819,7 @@ export default (): ReactElement => {
             onClick={handleTestSelectButtonClick}
           />
         </TableCell>
-        <TableCell sx={tableCellSx} align="center">
+        <TableCell sx={tableCellSx} align="left">
           <Button
             id={`cardinalityActivated-${materializationId}-${columnId}`}
             size="large"
@@ -833,7 +833,7 @@ export default (): ReactElement => {
             onClick={handleTestSelectButtonClick}
           />
         </TableCell>
-        <TableCell sx={tableCellSx} align="center">
+        <TableCell sx={tableCellSx} align="left">
           <Button
             id={`nullnessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -847,7 +847,7 @@ export default (): ReactElement => {
             onClick={handleTestSelectButtonClick}
           />
         </TableCell>
-        <TableCell sx={tableCellSx} align="center">
+        <TableCell sx={tableCellSx} align="left">
           <Button
             id={`uniquenessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -861,7 +861,7 @@ export default (): ReactElement => {
             onClick={handleTestSelectButtonClick}
           />
         </TableCell>
-        <TableCell sx={tableCellSx} align="center">
+        <TableCell sx={tableCellSx} align="left">
           <Button
             id={`sortednessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -875,7 +875,7 @@ export default (): ReactElement => {
             onClick={handleTestSelectButtonClick}
           />
         </TableCell>
-        <TableCell sx={tableCellSx} align="center">
+        <TableCell sx={tableCellSx} align="left">
           <Button
             id={`distributionActivated-${materializationId}-${columnId}`}
             size="large"
@@ -985,9 +985,9 @@ export default (): ReactElement => {
 
     return (
       <React.Fragment>
-        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
+        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} >
           <TableCell sx={tableNameSx} component="th" scope="row">
-            {testSelection[props.materializationId].label}
+            {testSelection[props.materializationId].label }
           </TableCell>
           <TableCell sx={tableCellSx} align="center">
             <FormControl sx={{ m: 1 }} size="small">
@@ -1035,7 +1035,7 @@ export default (): ReactElement => {
               </Select>
             </FormControl>
           </TableCell>
-          <TableCell sx={tableCellSx} align="center">
+          <TableCell sx={tableCellSx} align="left">
             <Button
               id={`freshnessActivated-${props.materializationId}`}
               size="large"
@@ -1059,7 +1059,7 @@ export default (): ReactElement => {
               sx={{m: 1}}
             />
           </TableCell>
-          <TableCell sx={tableCellSx} align="center">
+          <TableCell sx={tableCellSx} align="left">
             <Button
               id={`cardinalityActivated-${props.materializationId}`}
               size="large"
@@ -1082,7 +1082,7 @@ export default (): ReactElement => {
               sx={{m: 1}}
             />
           </TableCell>
-          <TableCell sx={tableCellSx} align="center">
+          <TableCell sx={tableCellSx} align="left">
             <Button
               id={`nullnessActivated-${props.materializationId}`}
               size="large"
@@ -1106,7 +1106,7 @@ export default (): ReactElement => {
               sx={{m: 1}}
             />
           </TableCell>
-          <TableCell sx={tableCellSx} align="center">
+          <TableCell sx={tableCellSx} align="left">
             <Button
               id={`uniquenessActivated-${props.materializationId}`}
               size="large"
@@ -1129,7 +1129,7 @@ export default (): ReactElement => {
               sx={{m: 1}}
             />
           </TableCell>
-          <TableCell sx={tableCellSx} align="center">
+          <TableCell sx={tableCellSx} align="left">
             <Button
               id={`sortednessActivated-${props.materializationId}`}
               size="large"
@@ -1153,7 +1153,7 @@ export default (): ReactElement => {
               sx={{m: 1}}
             />
           </TableCell>
-          <TableCell sx={tableCellSx} align="center">
+          <TableCell sx={tableCellSx} align="left">
             <Button
               id={`distributionActivated-${props.materializationId}`}
               size="large"
@@ -1177,7 +1177,7 @@ export default (): ReactElement => {
               sx={{m: 1}}
             />
           </TableCell>
-          <TableCell sx={tableCellSx} align="center">
+          <TableCell sx={tableCellSx} align="left">
             <IconButton
               aria-label="expand row"
               size="small"
@@ -1198,41 +1198,34 @@ export default (): ReactElement => {
         <TableRow>
           <TableCell sx={tableCellSx}
             align="center"
-            style={{ paddingBottom: 0, paddingTop: 0 }}
-            colSpan={6}
+            style={{ paddingBottom: 0, paddingTop: 0, paddingLeft: 30}}
+            colSpan={10}
           >
             <Collapse in={open} timeout="auto" unmountOnExit>
               <Box sx={{ margin: 1 }}>
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={tableHeaderCellSx} align="center" >
+                      <TableCell sx={tableHeaderCellSx} width={312} align="left">
                         Column Name
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} align="center" >
-                        Frequency
+                      <TableCell sx={tableHeaderCellSx} width={130} align="center" >
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} align="center" >
-                        Sensitivity
+                      <TableCell sx={tableHeaderCellSx} width={130} align="center" >         
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} align="center" >
-                        Freshness
+                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >                        
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} align="center" >
-                        Cardinality
+                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >                       
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} align="center" >
-                        Nullness
+                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >                      
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} align="center" >
-                        Uniqueness
+                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >                 
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} align="center" >
-                        Sortedness
+                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >               
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} align="center" >
-                        Distribution
+                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >
                       </TableCell>
+                      <TableCell></TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>{columnElements}</TableBody>
@@ -1896,35 +1889,34 @@ export default (): ReactElement => {
 
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
           <TableContainer sx={{ height: window.innerHeight - 50 - 67 - 52 }}>
-            <Table stickyHeader={false} aria-label="collapsible table">
+            <Table stickyHeader={true} aria-label="collapsible table">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={tableHeaderCellSx} >Table Name</TableCell>
-                  <TableCell sx={tableHeaderCellSx} align="center">
+                  <TableCell sx={tableNameSx} width={350} > Table Name</TableCell>
+                  <TableCell sx={tableHeaderCellSx} width={130} align="center">
                     Frequency
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} align="center">
+                  <TableCell sx={tableHeaderCellSx} width={130} align="center">
                     Sensitivity
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} align="center">
+                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
                     Freshness
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} align="center">
+                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
                     Cardinality
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} align="center">
+                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
                     Nullness
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} align="center">
+                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
                     Uniqueness
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} align="center">
+                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
                     Sortedness
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} align="center">
+                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
                     Distribution
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} align="center" />
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -1942,12 +1934,11 @@ export default (): ReactElement => {
                         height: 53 * emptyRows,
                       }}
                     >
-                      <TableCell colSpan={6} />
+                      <TableCell colSpan={10} />
                     </TableRow>
                   )}
               </TableBody>
             </Table>
-        
           </TableContainer>
           <TablePagination
           rowsPerPageOptions={[5,10, 25]}

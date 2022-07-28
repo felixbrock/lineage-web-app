@@ -57,9 +57,12 @@ import BasicTable from '../../components/table';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
 import { useNavigate } from 'react-router-dom';
+import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
+import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
 
-const showRealData = false;
-const lineageId = '62cd8a01b20588cdb41b2956';
+const showRealData = true;
+const lineageId = '62e2a8e9aef38b28f49d9c8f';
+// '62e25e01b611c320fffbecc2';
 
 enum DataLoadNodeType {
   Self = 'SELF',
@@ -293,16 +296,24 @@ const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
 const buildData = (
   materializations: MaterializationDto[],
   columns: ColumnDto[],
-  dependencies: DependencyDto[]
+  dependencies: DependencyDto[],
+  dashboards: DashboardDto[]
 ): GraphData => {
-  const combos = materializations
+  const matCombo = materializations
     .map(
       (materialization): ComboConfig => ({
         id: materialization.id,
         label: materialization.name.toLowerCase(),
       })
-    )
-    .sort(compare);
+    );
+  const dashCombo = dashboards
+    .map(
+      (dashboard): ComboConfig => ({
+        id: dashboard.id,
+        label: dashboard.name ? dashboard.name : dashboard.url,
+      })
+    );
+  const combos = (matCombo.concat(dashCombo)).sort(compare);
   const nodes = columns
     .map(
       (column): NodeConfig => ({
@@ -350,6 +361,7 @@ export default (): ReactElement => {
   >([]);
   const [columns, setColumns] = useState<ColumnDto[]>([]);
   const [dependencies, setDependencies] = useState<DependencyDto[]>([]);
+  const [dashboards, setDashboards] = useState<DashboardDto[]>([]);
   const [data, setData] = useState<GraphData>();
   const [readyToBuild, setReadyToBuild] = useState(false);
   const [expandedTreeViewElementIds, setExpandedTreeViewElementIds] = useState<
@@ -566,10 +578,15 @@ export default (): ReactElement => {
     defaultColor: string,
     anomalyColor: string
   ): ReactElement => {
-    const hasNewAnomaly = defaultAnomalyStates.find(
-      (element) => element.id === column.id
-    );
-    if (!hasNewAnomaly) throw new ReferenceError('Anomaly state not found');
+
+    let hasNewAnomaly: {id: string, hasNewAnomaly: boolean} | undefined;
+    if(!showRealData){
+
+      hasNewAnomaly = defaultAnomalyStates.find(
+        (element) => element.id === column.id
+        );
+        if (!hasNewAnomaly) throw new ReferenceError('Anomaly state not found');
+    }
 
     return (
       <TreeItem
@@ -577,7 +594,7 @@ export default (): ReactElement => {
         label={column.label}
         icon={<MdTag />}
         sx={{
-          color: hasNewAnomaly.hasNewAnomaly ? anomalyColor : defaultColor,
+          color: hasNewAnomaly?.hasNewAnomaly ? anomalyColor : defaultColor,
         }}
       />
     );
@@ -664,6 +681,14 @@ export default (): ReactElement => {
         .then((dependencyDtos) => {
           setDependencies(dependencyDtos);
           setReadyToBuild(true);
+          return DashboardsApiRepository.getBy(
+            new URLSearchParams({ lineageId: lineageId}),
+            'todo-replace'
+          );
+        })
+        .then((dashboardDtos) => {
+          setDashboards(dashboardDtos);
+
         })
         .catch((error) => {
           console.log(error);
@@ -696,7 +721,7 @@ export default (): ReactElement => {
     if (!readyToBuild) return;
 
     if (showRealData)
-      setData(buildData(materializations, columns, dependencies));
+      setData(buildData(materializations, columns, dependencies, dashboards));
     else {
       defaultData.nodes.sort(compare);
       defaultData.nodes.forEach(
@@ -868,27 +893,39 @@ export default (): ReactElement => {
         object && 'getType' in object && object.getType() === 'combo';
 
       if (isNode(element)) {
-        const anomalyState = defaultAnomalyStates.find(
-          (state) => state.id === selectedElementId
-        );
-        if (!anomalyState) throw new ReferenceError('Anomaly state not found');
+        let anomalyState: {
+          id: string;
+          hasNewAnomaly: boolean;
+      } | undefined;
+        if(!showRealData){
+          anomalyState = defaultAnomalyStates.find(
+            (state) => state.id === selectedElementId
+            );
+            if (!anomalyState) throw new ReferenceError('Anomaly state not found');
+        }
         graphObj.setItemState(
           selectedElementId,
-          anomalyState.hasNewAnomaly ? 'anomalyNodeSelected' : 'selected',
+          anomalyState?.hasNewAnomaly ? 'anomalyNodeSelected' : 'selected',
           true
         );
 
         getDependentEdges(element, true).forEach((edge) => {
           const sourceId = edge.getSource().getID();
-          const sourceAnomalyState = defaultAnomalyStates.find(
-            (state) => state.id === sourceId
-          );
-          if (!sourceAnomalyState)
-            throw new ReferenceError('Anomaly state not found');
+          let sourceAnomalyState: {
+            id: string;
+            hasNewAnomaly: boolean;
+        } | undefined;
+          if(!showRealData){
+            sourceAnomalyState = defaultAnomalyStates.find(
+              (state) => state.id === sourceId
+              );
+              if (!sourceAnomalyState)
+              throw new ReferenceError('Anomaly state not found');
+          }
 
           graphObj.setItemState(
             edge.getID(),
-            sourceAnomalyState.hasNewAnomaly
+            sourceAnomalyState?.hasNewAnomaly
               ? 'anomalyNodeSelected'
               : 'nodeSelected',
             true
@@ -898,7 +935,7 @@ export default (): ReactElement => {
         getDependentEdges(element, false).forEach((edge) => {
           graphObj.setItemState(
             edge.getID(),
-            anomalyState.hasNewAnomaly ? 'anomalyNodeSelected' : 'nodeSelected',
+            anomalyState?.hasNewAnomaly ? 'anomalyNodeSelected' : 'nodeSelected',
             true
           );
         });

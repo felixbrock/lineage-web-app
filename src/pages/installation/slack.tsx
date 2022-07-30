@@ -25,7 +25,7 @@ export default (): ReactElement => {
 
   const config = {
     method: 'post',
-    url: 'https://slack.com/api/oauth.v2.access?client_id=3743837702852.3728367364791&client_secret=1fec399e9b4df09534572c709ad86fec&code='+code,
+    url: 'https://slack.com/api/oauth.v2.access?client_id=3334524827045.3705229963495&client_secret=7837a3d402c4f82061fdb1991a98be84&code='+code,
     headers: { 
       'Content-Type': 'application/x-www-form-urlencoded'
       // 'Cookie': 'b=2a41a35826c0f18b93ff25842351fc71; x=2a41a35826c0f18b93ff25842351fc71.1657713965'
@@ -42,6 +42,8 @@ export default (): ReactElement => {
   .catch(function (error: any) {
     console.log(error);
   });
+
+
 
   
   return <>

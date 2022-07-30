@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/dot-notation */
 import { ReactElement } from 'react';
 import { useSearchParams,useParams } from 'react-router-dom';
 
@@ -19,9 +20,10 @@ export default (): ReactElement => {
   
 //   console.log("Response",response);
   
-  var axios = require('axios');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const axios = require('axios');
 
-  var config = {
+  const config = {
     method: 'post',
     url: 'https://slack.com/api/oauth.v2.access?client_id=3743837702852.3728367364791&client_secret=1fec399e9b4df09534572c709ad86fec&code='+code,
     headers: { 
@@ -33,8 +35,8 @@ export default (): ReactElement => {
   axios(config)
   .then(function (response: { data: any }) {
     // console.log(JSON.stringify(response.data));
-    var res_data = response.data;
-    console.log("\n\nAccess Token: ",res_data["access_token"]);
+    const resdata = response.data;
+    console.log("\n\nAccess Token: ",resdata["access_token"]);
     // get_token(res_data);
   })
   .catch(function (error: any) {

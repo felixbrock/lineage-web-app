@@ -65,7 +65,7 @@ export default (): ReactElement => {
               <Routes>
                 <Route path="/lineage" element={<Lineage/>} />
                 <Route
-                  path="/lineage/a"
+                  path="/oauth/github/:code"
                   element={<Github />}
                 />
                 <Route path="/oauth/slack/:code" element={<Slack/>}/>

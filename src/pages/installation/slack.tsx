@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/dot-notation */
 import { ReactElement } from 'react';
-import { useSearchParams,useParams } from 'react-router-dom';
+import {useParams } from 'react-router-dom';
 
 
 export default (): ReactElement => {
   console.log("code");
-  const [searchParams] = useSearchParams();
+  // const [searchParams] = useSearchParams();
   const {code} = useParams();
-  console.log(searchParams.get('code'));
   console.log(code);
+  // console.log(searchParams.get('code'));
+  
   
 //   const url = "https://slack.com/api/oauth.v2.access?client_id=3743837702852.3728367364791&client_secret=bd2a44af39cb4eb6bed61f3aa4b50162&code="+code;
 //   const response = fetch(url, {
@@ -38,6 +39,12 @@ export default (): ReactElement => {
     const resdata = response.data;
     console.log("\n\nAccess Token: ",resdata["access_token"]);
     // get_token(res_data);
+
+    // Get all the channel and display to the User and get the sleected channel from the user
+
+    // Store Access Token, Channel ID, Workspace ID, Workspace Name to MongoDB
+
+    // 
   })
   .catch(function (error: any) {
     console.log(error);

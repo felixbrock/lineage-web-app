@@ -4,7 +4,7 @@ import {
   Routes,
   Route,
   BrowserRouter as Router,
-  Navigate
+  // Navigate
 } from 'react-router-dom';
 import './App.scss';
 import Lineage from './pages/lineage/lineage';
@@ -69,7 +69,8 @@ export default (): ReactElement => {
                   element={<Github />}
                 />
                 <Route path="/oauth/slack/:code" element={<Slack/>}/>
-                <Route path="/" element={<Navigate to="/lineage"></Navigate>} />
+                <Route path="/" element={<Slack/>} />
+                {/* <Route path="/" element={<Navigate to="/lineage"></Navigate>} /> */}
               </Routes>
             </div>
           </Router>

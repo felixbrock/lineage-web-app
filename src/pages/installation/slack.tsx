@@ -9,6 +9,7 @@ export default (): ReactElement => {
 
   console.log("code");
   // const [searchParams] = useSearchParams();
+
   const {code} = useParams();
   console.log(code);
 
@@ -21,13 +22,15 @@ export default (): ReactElement => {
     const allChannels = web.conversations.list({ exclude_archived: true, types: 'public_channel' });
     for (let index = 0; index < allChannels['channels'].length; index++) {
       channels.push(allChannels['channels'][index]);
-      
     }
+    return channels;
     // const {c} = channels;
   }
 
   const token = "xoxb-3334524827045-3719775261619-KcrEgKlq3xWHAwimVSOeEcr3";
-  selectchannel(token);
+  const channels = selectchannel(token);
+
+  
 
 //   // console.log(searchParams.get('code'));
   
@@ -76,9 +79,8 @@ export default (): ReactElement => {
   
   
   return <>
-  channels
   <p>something</p>
-  <p></p>
+  <p>{channels}</p>
   </>;
 };
 

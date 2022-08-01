@@ -4,7 +4,7 @@ export default (index: number) => {
   const links: { [key: number]: any } = {
     0: {
       href: 'https://github.com/apps/cito-data/installations/new',
-      label: 'Install Cito GitHub App',
+      label: 'Install Github OAuth',
     },
     1: {
       href: 'https://google.com',

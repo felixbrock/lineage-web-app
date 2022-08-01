@@ -61,7 +61,9 @@ import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
 
 const showRealData = true;
-const lineageId = '62e2a8e9aef38b28f49d9c8f';
+const lineageId = '62e79c2cd6fc4eb07b664eb5';
+
+// 62e2a8e9aef38b28f49d9c8f
 // '62e25e01b611c320fffbecc2';
 
 enum DataLoadNodeType {
@@ -306,14 +308,6 @@ const buildData = (
         label: materialization.name.toLowerCase(),
       })
     );
-  const dashCombo = dashboards
-    .map(
-      (dashboard): ComboConfig => ({
-        id: dashboard.id,
-        label: dashboard.name ? dashboard.name : dashboard.url,
-      })
-    );
-  const combos = (matCombo.concat(dashCombo)).sort(compare);
   const nodes = columns
     .map(
       (column): NodeConfig => ({
@@ -329,6 +323,14 @@ const buildData = (
       target: dependency.headId,
     })
   );
+  const dashCombo = dashboards
+    .map(
+      (dashboard): ComboConfig => ({
+        id: dashboard.id,
+        label: dashboard.name ? dashboard.name : dashboard.url,
+      })
+    );
+  const combos = (matCombo.concat(dashCombo)).sort(compare);
 
   return { combos, nodes, edges };
 };
@@ -666,6 +668,13 @@ export default (): ReactElement => {
         })
         .then((materializationDtos) => {
           setMaterializations(materializationDtos);
+          return DashboardsApiRepository.getBy(
+            new URLSearchParams({ lineageId: lineageId }),
+            'todo-replace'
+          );
+        })
+        .then((dashboardDtos) => {
+          setDashboards(dashboardDtos);
           return ColumnsApiRepository.getBy(
             new URLSearchParams({ lineageId: lineageId }),
             'todo-replace'
@@ -681,14 +690,7 @@ export default (): ReactElement => {
         .then((dependencyDtos) => {
           setDependencies(dependencyDtos);
           setReadyToBuild(true);
-          return DashboardsApiRepository.getBy(
-            new URLSearchParams({ lineageId: lineageId}),
-            'todo-replace'
-          );
-        })
-        .then((dashboardDtos) => {
-          setDashboards(dashboardDtos);
-
+        
         })
         .catch((error) => {
           console.log(error);

@@ -61,7 +61,9 @@ import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
 
 const showRealData = true;
-const lineageId = '62e79c2cd6fc4eb07b664eb5';
+const lineageId = '62e7b2bcaa9205236c323795';
+
+// 62e79c2cd6fc4eb07b664eb5';
 
 // 62e2a8e9aef38b28f49d9c8f
 // '62e25e01b611c320fffbecc2';
@@ -308,15 +310,14 @@ const buildData = (
         label: materialization.name.toLowerCase(),
       })
     );
-  const nodes = columns
+  const colNodes = columns
     .map(
       (column): NodeConfig => ({
         id: column.id,
         label: column.name.toLowerCase(),
         comboId: column.materializationId,
       })
-    )
-    .sort(compare);
+    );
   const edges = dependencies.map(
     (dependency): EdgeConfig => ({
       source: dependency.tailId,
@@ -326,11 +327,20 @@ const buildData = (
   const dashCombo = dashboards
     .map(
       (dashboard): ComboConfig => ({
-        id: dashboard.id,
+        id: dashboard.url ? dashboard.url : "",
         label: dashboard.name ? dashboard.name : dashboard.url,
       })
     );
+  const dashNodes = dashboards
+    .map(
+      (dashboard): NodeConfig => ({
+        id: dashboard.id,
+        label: dashboard.column.toLowerCase(),
+        comboId: dashboard.url,
+      })
+    );
   const combos = (matCombo.concat(dashCombo)).sort(compare);
+  const nodes = (colNodes.concat(dashNodes)).sort(compare);
 
   return { combos, nodes, edges };
 };

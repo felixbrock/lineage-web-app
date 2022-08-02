@@ -62,7 +62,7 @@ export default function BasicTable() {
           <TableRow>
             <TableCell>Date</TableCell>
             <TableCell align="right">Type</TableCell>
-            <TableCell align="right">Severeness</TableCell>
+            <TableCell align="right">Severity</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

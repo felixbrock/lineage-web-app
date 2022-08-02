@@ -701,6 +701,61 @@ export const defaultMaterializations = [
     lineageId: '62715f897e3d8066494d3f9e',
     resourceType: 'model',
   },
+  {
+    id: 'dashboard1',
+    dbtModelId: '',
+    materializationType: 'VIEW',
+    name: 'looker dashboard 10395svtgrs',    
+    schemaName: '',
+    databaseName: '',
+    logicId: '',
+    lineageId: '62715f897e3d8066494d3f9e',
+    resourceType: '',
+  },
+  {
+    id: 'dashboard2',
+    dbtModelId: '',
+    materializationType: 'VIEW',
+    name: 'looker dashboard 2064290vryuija',    
+    schemaName: '',
+    databaseName: '',
+    logicId: '',
+    lineageId: '62715f897e3d8066494d3f9e',
+    resourceType: '',
+  },  
+  {
+    id: 'dashboard3',
+    dbtModelId: '',
+    materializationType: 'VIEW',
+    name: 'mode dashboard 19745oqwrzkl',    
+    schemaName: '',
+    databaseName: '',
+    logicId: '',
+    lineageId: '62715f897e3d8066494d3f9e',
+    resourceType: '',
+  },  
+  {
+    id: 'dashboard4',
+    dbtModelId: '',
+    materializationType: 'VIEW',
+    name: 'mode dashboard 258012fdhjnap',    
+    schemaName: '',
+    databaseName: '',
+    logicId: '',
+    lineageId: '62715f897e3d8066494d3f9e',
+    resourceType: '',
+  },
+  {
+    id: 'dashboard5',
+    dbtModelId: '',
+    materializationType: 'VIEW',
+    name: 'mode dashboard 347162xcqukb',    
+    schemaName: '',
+    databaseName: '',
+    logicId: '',
+    lineageId: '62715f897e3d8066494d3f9e',
+    resourceType: '',
+  }
 ];
 
 export const defaultColumns = [
@@ -8736,6 +8791,89 @@ export const defaultColumns = [
     materializationId: '627160807e3d8066494d431f',
     lineageId: '62715f897e3d8066494d3f9e',
   },
+  {
+    id: 'bill',
+    dbtModelId: '',
+    name: 'bill',
+    index: 15,
+    type: '',
+    materializationId: 'dashboard1',
+    lineageId: '62715f897e3d8066494d3f9e',
+  },
+  {
+    id: 'failsafe',
+    dbtModelId: '',
+    name: 'failsafe',
+    index: 15,
+    type: '',
+    materializationId: 'dashboard1',
+    lineageId: '62715f897e3d8066494d3f9e',
+  },
+  {
+    id: 'full_name',
+    dbtModelId: '',
+    name: 'full_name',
+    index: 15,
+    type: '',
+    materializationId: 'dashboard2',
+    lineageId: '62715f897e3d8066494d3f9e',
+  },
+  {
+    id: 'unique_dlhk',
+    dbtModelId: '',
+    name: 'unique_dlhk',
+    index: 15,
+    type: '',
+    materializationId: 'dashboard2',
+    lineageId: '62715f897e3d8066494d3f9e',
+  },
+  
+  {
+    id: 'rate',
+    dbtModelId: '',
+    name: 'rate',
+    index: 15,
+    type: '',
+    materializationId: 'dashboard3',
+    lineageId: '62715f897e3d8066494d3f9e',
+  },
+  {
+    id: 'amount_spent',
+    dbtModelId: '',
+    name: 'amount_spent',
+    index: 15,
+    type: '',
+    materializationId: 'dashboard3',
+    lineageId: '62715f897e3d8066494d3f9e',
+  },
+  {
+    id: 'deleted',
+    dbtModelId: '',
+    name: 'deleted',
+    index: 15,
+    type: '',
+    materializationId: 'dashboard4',
+    lineageId: '62715f897e3d8066494d3f9e',
+  },
+  {
+    id: 'valid_till',
+    dbtModelId: '',
+    name: 'valid_till',
+    index: 15,
+    type: '',
+    materializationId: 'dashboard4',
+    lineageId: '62715f897e3d8066494d3f9e',
+  },
+  {
+    id: 'query_bk',
+    dbtModelId: '',
+    name: 'query_bk',
+    index: 15,
+    type: '',
+    materializationId: 'dashboard5',
+    lineageId: '62715f897e3d8066494d3f9e',
+  },
+
 ];
 
 export const defaultDependencies = [
@@ -9530,6 +9668,20 @@ export const defaultDependencies = [
     tailId: '6271607a7e3d8066494d42c3',
     lineageId: '62715f897e3d8066494d3f9e',
   },
+  {
+    id: 'dependency1',
+    type: 'EXTERNAL',
+    headId: '627160767e3d8066494d42b2',
+    tailId: 'bill',
+    lineageId: '62715f897e3d8066494d3f9e',
+  },
+  {
+    id: 'dependency2',
+    type: 'EXTERNAL',
+    headId: '627160757e3d8066494d429a',
+    tailId: 'failsafe',
+    lineageId: '62715f897e3d8066494d3f9e',
+  }
 ];
 
 export const defaultLineage = {
@@ -17772,6 +17924,27 @@ export const defaultData = {
       id: '627160807e3d8066494d431f',
       label: 'V_COLUMNS_STG',
     },
+    {
+      id: 'dashboard1',
+      label: 'looker dashboard 10395svtgrs'
+    },
+    {
+      id: 'dashboard2',
+      label: 'looker dashboard 2064290vryuija'
+    },
+    {
+      id: 'dashboard3',
+      label: 'mode dashboard 19745oqwrzkl'
+    },
+    {
+      id: 'dashboard4',
+      label: 'mode dashboard 258012fdhjnap'
+    },
+    {
+      id: 'dashboard5',
+      label: 'mode dashboard 347162xcqukb'
+    }
+
   ],
   nodes: [
     {
@@ -22229,6 +22402,51 @@ export const defaultData = {
       label: 'WAREHOUSE_TYPE',
       comboId: '62715f8e7e3d8066494d3fa5',
     },
+    {
+      id: 'bill',
+      label: 'bill',
+      comboId: 'dashboard1'
+    },
+    {
+      id: 'failsafe',
+      label: 'failsafe',
+      comboId: 'dashboard1'
+    },
+    {
+      id: 'full_name',
+      label: 'full_name',
+      comboId: 'dashboard2'
+    },
+    {
+      id: 'unique_dlhk',
+      label: 'unique_dlhk',
+      comboId: 'dashboard2'
+    },
+    {
+      id: 'rate',
+      label: 'rate',
+      comboId: 'dashboard3'
+    },
+    {
+      id: 'amount_spent',
+      label: 'amount_spent',
+      comboId: 'dashboard3'
+    },
+    {
+      id: 'deleted',
+      label: 'deleted',
+      comboId: 'dashboard4'
+    },
+    {
+      id: 'valid_till',
+      label: 'valid_till',
+      comboId: 'dashboard4'
+    },
+    {
+      id: 'query_bk',
+      label: 'query_bk',
+      comboId: 'dashboard5'
+    },
   ],
   edges: [
     {
@@ -24410,6 +24628,42 @@ export const defaultData = {
       source: '627160717e3d8066494d41ff',
       target: '627160717e3d8066494d4244',
     },
+    {
+      source: '627160757e3d8066494d42a1',
+      target: 'bill'
+    },
+    {
+      source: '627160757e3d8066494d429a',
+      target: 'failsafe'
+    },
+    {
+      source: '627160657e3d8066494d41b2',
+      target: 'full_name'
+    },
+    {
+      source: '6271607a7e3d8066494d42c5',
+      target: 'unique_dlhk'
+    },
+    {
+      source: '627160717e3d8066494d41ff',
+      target: 'rate'
+    },
+    {
+      source: '6271607e7e3d8066494d42d8',
+      target: 'amount_spent'
+    },
+    {
+      source: '627160657e3d8066494d4180',
+      target: 'deleted'
+    },
+    {
+      source: '627160837e3d8066494d4353',
+      target: 'valid_till'
+    },
+    {
+      source: '627160717e3d8066494d4207',
+      target: 'query_bk'
+    }
   ],
 };
 
@@ -25305,4 +25559,14 @@ export const defaultAnomalyStates = [
   { id: '62715f907e3d8066494d404a', hasNewAnomaly: false },
   { id: '62715f8f7e3d8066494d3fe6', hasNewAnomaly: false },
   { id: '62715f8f7e3d8066494d3fe7', hasNewAnomaly: false },
+  { id: 'bill', hasNewAnomaly: false },
+  { id: 'failsafe', hasNewAnomaly: false },
+  { id: 'full_name', hasNewAnomaly: false },
+  { id: 'unique_dlhk', hasNewAnomaly: false },
+  { id: 'rate', hasNewAnomaly: false },
+  { id: 'amount_spent', hasNewAnomaly: false },
+  { id: 'deleted', hasNewAnomaly: false },
+  { id: 'valid_till', hasNewAnomaly: false },
+  { id: 'query_bk', hasNewAnomaly: false },
+
 ];

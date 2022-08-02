@@ -60,7 +60,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
 
-const showRealData = true;
+const showRealData = false;
 const lineageId = '62e7b2bcaa9205236c323795';
 
 // 62e79c2cd6fc4eb07b664eb5';
@@ -297,6 +297,35 @@ const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
   return dependentEdges;
 };
 
+/**
+ * format the string
+ * @param {string} string The origin string
+ * @param {number} maxWidth max width
+ * @param {number} fontSize font size
+ * @return {string} the processed result
+ */
+const fittingString = (
+  string: string|undefined,
+  maxWidth: number,
+  fontSize: number
+): string => {
+
+  if(!string) return "";
+  let currentWidth = 0;
+  let result = string;
+  string.split('').forEach((letter, i) => {
+    if (currentWidth > maxWidth) return "";
+   
+    currentWidth += G6.Util.getLetterWidth(letter, fontSize);
+   
+    if (currentWidth > maxWidth) {
+      result = `${string.substring(0, i)}\n${fittingString(string.substring(i),maxWidth,fontSize)}`;
+    }
+  });
+  return result;
+};
+
+
 const buildData = (
   materializations: MaterializationDto[],
   columns: ColumnDto[],
@@ -328,7 +357,7 @@ const buildData = (
     .map(
       (dashboard): ComboConfig => ({
         id: dashboard.url ? dashboard.url : "",
-        label: dashboard.name ? dashboard.name : dashboard.url,
+        label: dashboard.name ? dashboard.name : fittingString(dashboard.url, 385, 18),
       })
     );
   const dashNodes = dashboards

@@ -917,6 +917,36 @@ export default (): ReactElement => {
       graphObj.emit('layout:finish');
     });
 
+    const edgeHasAnomalousAncestor = (
+      source: INode|ICombo,
+      hasAnomalousAncestor: boolean
+      ): boolean => {
+
+        const parentEdges = source.getInEdges();
+
+        parentEdges.forEach((parent) => {
+
+          const parentSource = parent.getSource();
+
+          const parentAnomalyState = defaultAnomalyStates.find(
+            (state) => state.id === parentSource.getID()
+            );
+            if (!parentAnomalyState)
+            throw new ReferenceError('Anomaly state not found');
+
+            if(parentAnomalyState.hasNewAnomaly){
+
+              hasAnomalousAncestor = true;
+              return hasAnomalousAncestor;
+            } 
+            return edgeHasAnomalousAncestor(parentSource, hasAnomalousAncestor);
+        
+        });
+
+        return hasAnomalousAncestor;
+
+    };
+
     graphObj.on('layout:finish', () => {
       const selectedElementId = graphObj.get('selectedElementId');
 
@@ -951,22 +981,28 @@ export default (): ReactElement => {
         );
 
         getDependentEdges(element, true).forEach((edge) => {
-          const sourceId = edge.getSource().getID();
+
+          
+          let isAnomalous = false;
+          const source = edge.getSource();
+          const sourceId = source.getID();
           let sourceAnomalyState: {
             id: string;
             hasNewAnomaly: boolean;
-        } | undefined;
+          } | undefined;
           if(!showRealData){
             sourceAnomalyState = defaultAnomalyStates.find(
               (state) => state.id === sourceId
               );
               if (!sourceAnomalyState)
               throw new ReferenceError('Anomaly state not found');
-          }
+              
+              isAnomalous = edgeHasAnomalousAncestor(source, false);
+            }
 
           graphObj.setItemState(
             edge.getID(),
-            sourceAnomalyState?.hasNewAnomaly
+            sourceAnomalyState?.hasNewAnomaly || isAnomalous
               ? 'anomalyNodeSelected'
               : 'nodeSelected',
             true
@@ -974,6 +1010,7 @@ export default (): ReactElement => {
         });
 
         getDependentEdges(element, false).forEach((edge) => {
+          
           graphObj.setItemState(
             edge.getID(),
             anomalyState?.hasNewAnomaly ? 'anomalyNodeSelected' : 'nodeSelected',

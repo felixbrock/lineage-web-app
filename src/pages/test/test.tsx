@@ -1206,24 +1206,24 @@ export default (): ReactElement => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={tableHeaderCellSx} width={312} align="left">
+                      <TableCell sx={tableHeaderCellSx} width={311} align="left">
                         Column Name
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="center" >
+                      <TableCell sx={tableHeaderCellSx} width={90} align="center" >
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="center" >         
+                      <TableCell sx={tableHeaderCellSx} width={135} align="center" >         
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >                        
+                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >                        
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >                       
+                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >                       
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >                      
+                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >                      
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >                 
+                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >                 
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >               
+                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >               
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >
+                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >
                       </TableCell>
                       <TableCell></TableCell>
                     </TableRow>
@@ -1894,28 +1894,28 @@ export default (): ReactElement => {
               <TableHead>
                 <TableRow>
                   <TableCell sx={tableNameSx} width={350} > Table Name</TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="center">
+                  <TableCell sx={tableHeaderCellSx} width={90} align="center">
                     Frequency
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="center">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="center">
                     Sensitivity
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
                     Freshness
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
                     Cardinality
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
                     Nullness
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
                     Uniqueness
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
                     Sortedness
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
                     Distribution
                   </TableCell>
                 </TableRow>

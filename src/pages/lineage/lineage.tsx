@@ -1048,44 +1048,55 @@ export default (): ReactElement => {
           ? materializations
           : defaultMaterializations;
 
-        const combo = materializationsToSearch.find(
+        const matCombo = materializationsToSearch.find(
           (materialization) => materialization.id === comboId
         );
 
-        if (!combo)
+        const dashCombo = dashboards.find(
+          (dashboard) => dashboard.url === comboId
+          );
+          
+        const combo = matCombo ? matCombo : dashCombo;
+        
+        if (!combo) 
           throw new ReferenceError(
             'Materialization object for selected combo not found'
           );
 
         if (showRealData) {
-          LogicApiRepository.getOne(combo.logicId, 'todo-replace').then(
-            (logicDto) => {
-              console.log(logicDto?.sql);
+          if('logicId' in combo){
 
-              if (!logicDto)
+            LogicApiRepository.getOne(combo.logicId, 'todo-replace').then(
+              (logicDto) => {
+                console.log(logicDto?.sql);
+                
+                if (!logicDto)
                 throw new ReferenceError('Not able to retrieve logic object');
-
-              setSQL(logicDto.sql);
-            }
-          );
+                
+                setSQL(logicDto.sql);
+              }
+              );
+          }
         } else {
           const checkedCombo = combo;
 
-          const logic = defaultLogics.find(
-            (element) => element.id === checkedCombo.logicId
-          );
-
-          if (!logic)
+          if('logicId' in checkedCombo){
+            const logic = defaultLogics.find(
+              (element) => element.id === checkedCombo.logicId
+            );
+            
+            if (!logic)
             throw new ReferenceError(
               'Logic object for selected combo not found'
-            );
-
-          setSQL(logic.sql);
+              );
+              
+            setSQL(logic.sql);
+          }
         }
 
         graphObj.data(loadCombo(comboId, data));
         graphObj.set('latestZoom', graphObj.getZoom());
-        graphObj.set('selectedElementId', combo.id);
+        graphObj.set('selectedElementId', comboId);
 
         graphObj.render();
       }

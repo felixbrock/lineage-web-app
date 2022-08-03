@@ -946,7 +946,7 @@ export default (): ReactElement => {
         return hasAnomalousAncestor;
 
     };
-
+    
     graphObj.on('layout:finish', () => {
       const selectedElementId = graphObj.get('selectedElementId');
 
@@ -1011,9 +1011,12 @@ export default (): ReactElement => {
 
         getDependentEdges(element, false).forEach((edge) => {
           
+          const isAnomalous = edgeHasAnomalousAncestor(edge.getSource(), false);
           graphObj.setItemState(
             edge.getID(),
-            anomalyState?.hasNewAnomaly ? 'anomalyNodeSelected' : 'nodeSelected',
+            anomalyState?.hasNewAnomaly || isAnomalous
+              ? 'anomalyNodeSelected'
+              : 'nodeSelected',
             true
           );
         });

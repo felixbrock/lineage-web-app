@@ -1258,8 +1258,10 @@ export default (): ReactElement => {
           <div className="content">
             <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
               <Tab label="Overview" />
+              <Tab/>
               <Tab label="Alert History" />
             </Tabs>
+            <br></br>
             {tabIndex === 0 ? (
               <>
                 <div className="card">
@@ -1270,6 +1272,7 @@ export default (): ReactElement => {
                     <></>
                   )}
                 </div>
+                <div className="Distribution">
                 <h4>Distribution</h4>
                 <MetricsGraph
                   option={
@@ -1288,6 +1291,8 @@ export default (): ReactElement => {
                         )
                   }
                 ></MetricsGraph>
+                </div>
+                <div className="Freshness">
                 <h4>Freshness</h4>
                 <MetricsGraph
                   option={
@@ -1306,6 +1311,8 @@ export default (): ReactElement => {
                         )
                   }
                 ></MetricsGraph>
+                </div>
+                <div className = "Nullness">
                 <h4>Nullness</h4>
                 <MetricsGraph
                   option={
@@ -1319,6 +1326,8 @@ export default (): ReactElement => {
                       : defaultOption(defaultYAxis, defaultNullnessData, 4, 6)
                   }
                 ></MetricsGraph>
+                </div>
+                <br></br>
               </>
             ) : (
               <>{BasicTable()}</>

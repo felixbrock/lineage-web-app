@@ -56,12 +56,15 @@ const rows = [{
 
 export default function BasicTable() {
   return (
-    <TableContainer component={Paper}>
+    <TableContainer component={Paper} sx={{
+      backgroundColor: "#f3eefe"}
+    }>
       <Table aria-label="simple table">
         <TableHead>
-          <TableRow>
+          <TableRow sx={{
+            backgroundColor: "#ddd7f5"}}>
             <TableCell>Date</TableCell>
-            <TableCell align="right">Type</TableCell>
+            <TableCell align="left">Type</TableCell>
             <TableCell align="right">Severity</TableCell>
           </TableRow>
         </TableHead>
@@ -74,7 +77,7 @@ export default function BasicTable() {
               <TableCell component="th" scope="row">
                 {row.date}
               </TableCell>
-              <TableCell align="right">{row.type}</TableCell>
+              <TableCell align="left">{row.type}</TableCell>
               <TableCell align="right">{row.deviation}</TableCell>
             </TableRow>
           ))}

@@ -44,6 +44,27 @@ $navbarHeight: 50px;
   margin-top: -1.25em;
 }
 
+.Distribution {
+  background-color: #fee9ff;
+  padding: 4px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.Freshness {
+  background-color: #f3eefe;
+  padding: 4px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.Nullness {
+  background-color: #ddd7f5;
+  padding: 4px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
 #border-glow {
   border: 1px solid;
   border-radius: 7px;

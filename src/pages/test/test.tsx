@@ -1,5 +1,7 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-
+import AppsIcon from '@mui/icons-material/Apps';
+import IntegrationInstructionsIcon from '@mui/icons-material/IntegrationInstructions';
+import LogoutIcon from '@mui/icons-material/Logout';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
@@ -1826,15 +1828,22 @@ export default (): ReactElement => {
       <div id="lineageContainer">
         <div className="navbar">
           <div id="menu-container">
+            <Button variant="outlined"
+            size="small"
+            style={{
+              borderRadius: 10,
+           }}>
             <img height="40" width="150" src={Logo} alt="logo" onClick={() =>
                 navigate(`/lineage`, {
                   state: {
                   },
                 })
               } />
+            </Button>
           </div>
           <div id="sign-out-container">
-          <Button
+          <Box m={0.5}>
+          <Button startIcon = {<AppsIcon/>}
               onClick={() =>
                 navigate(`/test`, {
                   state: {
@@ -1845,23 +1854,46 @@ export default (): ReactElement => {
               }
               color="secondary"
               size="large"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#674BCE",
+                fontSize: "12px"
+            }}
             >
               Tests
             </Button>
-            <Button
+            </Box>
+            <Box m={0.5}>
+            <Button startIcon = {<IntegrationInstructionsIcon />}
               onClick={() => console.log('todo-integration screen')}
               color="secondary"
               size="large"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#674BCE",
+                fontSize: "12px"
+            }}
             >
               Integrations
             </Button>
-            <Button
+            </Box>
+            <Box m={0.5}>
+            <Button startIcon = {< LogoutIcon />}
               onClick={() => Auth.signOut()}
               color="secondary"
               size="large"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#674BCE",
+                fontSize: "12px"
+            }}
             >
               Sign Out
             </Button>
+            </Box>
           </div>
         </div>
         <div id="lineage" hidden={true} />

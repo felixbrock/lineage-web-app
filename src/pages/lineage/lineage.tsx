@@ -1,4 +1,8 @@
 import React, { ReactElement, useEffect, useState } from 'react';
+import AppsIcon from '@mui/icons-material/Apps';
+import IntegrationInstructionsIcon from '@mui/icons-material/IntegrationInstructions';
+import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
+import LogoutIcon from '@mui/icons-material/Logout';
 import Logo from '../../components/top-nav/cito-header.png';
 import G6, {
   ComboConfig,
@@ -59,6 +63,7 @@ import { Auth } from 'aws-amplify';
 import { useNavigate } from 'react-router-dom';
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
+import Box from '@mui/material/Box';
 
 const showRealData = false;
 const lineageId = '62e7b2bcaa9205236c323795';
@@ -633,7 +638,7 @@ export default (): ReactElement => {
       <TreeItem
         nodeId={column.id}
         label={column.label}
-        icon={<MdTag />}
+        icon={<CircleTwoToneIcon fontSize="small" sx={{ color: "#674BCE" }}/>}
         sx={{
           color: hasNewAnomaly?.hasNewAnomaly ? anomalyColor : defaultColor,
         }}
@@ -1130,7 +1135,8 @@ export default (): ReactElement => {
               } />
           </div>
           <div id="sign-out-container">
-          <Button
+          <Box m={0.5}>
+          <Button startIcon = {<AppsIcon/>}
               onClick={() =>
                 navigate(`/test`, {
                   state: {
@@ -1141,23 +1147,46 @@ export default (): ReactElement => {
               }
               color="secondary"
               size="large"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#674BCE",
+                fontSize: "12px"
+            }}
             >
               Tests
             </Button>
-            <Button
+            </Box>
+            <Box m={0.5}>
+            <Button startIcon = {<IntegrationInstructionsIcon />}
               onClick={() => console.log('todo-integration screen')}
               color="secondary"
               size="large"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#674BCE",
+                fontSize: "12px"
+            }}
             >
               Integrations
             </Button>
-            <Button
+            </Box>
+            <Box m={0.5}>
+            <Button startIcon = {< LogoutIcon />}
               onClick={() => Auth.signOut()}
               color="secondary"
               size="large"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#674BCE",
+                fontSize: "12px"
+            }}
             >
               Sign Out
             </Button>
+            </Box>
           </div>
         </div>
         <div id="lineage" />

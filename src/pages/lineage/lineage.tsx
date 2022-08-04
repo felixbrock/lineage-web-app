@@ -917,6 +917,36 @@ export default (): ReactElement => {
       graphObj.emit('layout:finish');
     });
 
+    const edgeHasAnomalousAncestor = (
+      source: INode|ICombo,
+      hasAnomalousAncestor: boolean
+      ): boolean => {
+
+        const parentEdges = source.getInEdges();
+
+        parentEdges.forEach((parent) => {
+
+          const parentSource = parent.getSource();
+
+          const parentAnomalyState = defaultAnomalyStates.find(
+            (state) => state.id === parentSource.getID()
+            );
+            if (!parentAnomalyState)
+            throw new ReferenceError('Anomaly state not found');
+
+            if(parentAnomalyState.hasNewAnomaly){
+
+              hasAnomalousAncestor = true;
+              return hasAnomalousAncestor;
+            } 
+            return edgeHasAnomalousAncestor(parentSource, hasAnomalousAncestor);
+        
+        });
+
+        return hasAnomalousAncestor;
+
+    };
+    
     graphObj.on('layout:finish', () => {
       const selectedElementId = graphObj.get('selectedElementId');
 
@@ -951,22 +981,28 @@ export default (): ReactElement => {
         );
 
         getDependentEdges(element, true).forEach((edge) => {
-          const sourceId = edge.getSource().getID();
+
+          
+          let isAnomalous = false;
+          const source = edge.getSource();
+          const sourceId = source.getID();
           let sourceAnomalyState: {
             id: string;
             hasNewAnomaly: boolean;
-        } | undefined;
+          } | undefined;
           if(!showRealData){
             sourceAnomalyState = defaultAnomalyStates.find(
               (state) => state.id === sourceId
               );
               if (!sourceAnomalyState)
               throw new ReferenceError('Anomaly state not found');
-          }
+              
+              isAnomalous = edgeHasAnomalousAncestor(source, false);
+            }
 
           graphObj.setItemState(
             edge.getID(),
-            sourceAnomalyState?.hasNewAnomaly
+            sourceAnomalyState?.hasNewAnomaly || isAnomalous
               ? 'anomalyNodeSelected'
               : 'nodeSelected',
             true
@@ -974,9 +1010,13 @@ export default (): ReactElement => {
         });
 
         getDependentEdges(element, false).forEach((edge) => {
+          
+          const isAnomalous = edgeHasAnomalousAncestor(edge.getSource(), false);
           graphObj.setItemState(
             edge.getID(),
-            anomalyState?.hasNewAnomaly ? 'anomalyNodeSelected' : 'nodeSelected',
+            anomalyState?.hasNewAnomaly || isAnomalous
+              ? 'anomalyNodeSelected'
+              : 'nodeSelected',
             true
           );
         });
@@ -1048,44 +1088,55 @@ export default (): ReactElement => {
           ? materializations
           : defaultMaterializations;
 
-        const combo = materializationsToSearch.find(
+        const matCombo = materializationsToSearch.find(
           (materialization) => materialization.id === comboId
         );
 
-        if (!combo)
+        const dashCombo = dashboards.find(
+          (dashboard) => dashboard.url === comboId
+          );
+          
+        const combo = matCombo ? matCombo : dashCombo;
+        
+        if (!combo) 
           throw new ReferenceError(
             'Materialization object for selected combo not found'
           );
 
         if (showRealData) {
-          LogicApiRepository.getOne(combo.logicId, 'todo-replace').then(
-            (logicDto) => {
-              console.log(logicDto?.sql);
+          if('logicId' in combo){
 
-              if (!logicDto)
+            LogicApiRepository.getOne(combo.logicId, 'todo-replace').then(
+              (logicDto) => {
+                console.log(logicDto?.sql);
+                
+                if (!logicDto)
                 throw new ReferenceError('Not able to retrieve logic object');
-
-              setSQL(logicDto.sql);
-            }
-          );
+                
+                setSQL(logicDto.sql);
+              }
+              );
+          }
         } else {
           const checkedCombo = combo;
 
-          const logic = defaultLogics.find(
-            (element) => element.id === checkedCombo.logicId
-          );
-
-          if (!logic)
+          if('logicId' in checkedCombo){
+            const logic = defaultLogics.find(
+              (element) => element.id === checkedCombo.logicId
+            );
+            
+            if (!logic)
             throw new ReferenceError(
               'Logic object for selected combo not found'
-            );
-
-          setSQL(logic.sql);
+              );
+              
+            setSQL(logic.sql);
+          }
         }
 
         graphObj.data(loadCombo(comboId, data));
         graphObj.set('latestZoom', graphObj.getZoom());
-        graphObj.set('selectedElementId', combo.id);
+        graphObj.set('selectedElementId', comboId);
 
         graphObj.render();
       }

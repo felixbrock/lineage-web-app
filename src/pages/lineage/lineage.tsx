@@ -352,10 +352,12 @@ const buildData = (
       source: dependency.tailId,
       target: dependency.headId,
     })
-  );
+    );
+    
   const dashCombo = dashboards
-    .map(
-      (dashboard): ComboConfig => ({
+  .map(
+    (dashboard): ComboConfig => (
+        {
         id: dashboard.url ? dashboard.url : "",
         label: dashboard.name ? dashboard.name : fittingString(dashboard.url, 385, 18),
       })
@@ -1120,7 +1122,7 @@ export default (): ReactElement => {
         } else {
           const checkedCombo = combo;
 
-          if('logicId' in checkedCombo){
+          if('logicId' in checkedCombo  && checkedCombo.logicId.length !== 0){
             const logic = defaultLogics.find(
               (element) => element.id === checkedCombo.logicId
             );

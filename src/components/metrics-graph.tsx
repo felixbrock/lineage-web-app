@@ -35,7 +35,7 @@ export const defaultOption = (yAxis: YAXisComponentOption, data: number[], gt: n
       {
         gt,
         lt,
-        color: '#db1d33',
+        color: '#4EC4C4',
         colorAlpha: 0.2,
       },
     ],

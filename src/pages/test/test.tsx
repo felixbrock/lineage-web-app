@@ -1,5 +1,8 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-
+import IntegrationInstructionsIcon from '@mui/icons-material/IntegrationInstructions';
+import LogoutIcon from '@mui/icons-material/Logout';
+import AppsIcon from '@mui/icons-material/Apps';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
@@ -1206,24 +1209,24 @@ export default (): ReactElement => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={tableHeaderCellSx} width={312} align="left">
+                      <TableCell sx={tableHeaderCellSx} width={311} align="left">
                         Column Name
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="center" >
+                      <TableCell sx={tableHeaderCellSx} width={90} align="center" >
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="center" >         
+                      <TableCell sx={tableHeaderCellSx} width={135} align="center" >         
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >                        
+                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >                        
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >                       
+                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >                       
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >                      
+                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >                      
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >                 
+                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >                 
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >               
+                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >               
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={130} align="left" >
+                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >
                       </TableCell>
                       <TableCell></TableCell>
                     </TableRow>
@@ -1834,7 +1837,28 @@ export default (): ReactElement => {
               } />
           </div>
           <div id="sign-out-container">
-          <Button
+          <Box m={0.5}>
+          <Button startIcon = {<TableChartIcon/>}
+              onClick={() =>
+                navigate(`/lineage`, {
+                  state: {
+                  },
+                })
+              }
+              color="secondary"
+              size="medium"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#674BCE",
+                fontSize: "12px"
+            }}
+            >
+              Lineage
+            </Button>
+            </Box>
+            <Box m={0.5}>
+            <Button startIcon = {<AppsIcon/>}
               onClick={() =>
                 navigate(`/test`, {
                   state: {
@@ -1844,24 +1868,47 @@ export default (): ReactElement => {
                 })
               }
               color="secondary"
-              size="large"
+              size="medium"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#4EC4C4",
+                fontSize: "12px"
+            }}
             >
               Tests
             </Button>
-            <Button
+            </Box>
+            <Box m={0.5}>
+            <Button startIcon = {<IntegrationInstructionsIcon />}
               onClick={() => console.log('todo-integration screen')}
               color="secondary"
-              size="large"
+              size="medium"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#674BCE",
+                fontSize: "12px"
+            }}
             >
               Integrations
             </Button>
-            <Button
+            </Box>
+            <Box m={0.5}>
+            <Button startIcon = {< LogoutIcon />}
               onClick={() => Auth.signOut()}
               color="secondary"
-              size="large"
+              size="medium"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#A5A0A0",
+                fontSize: "12px"
+            }}
             >
               Sign Out
             </Button>
+            </Box>
           </div>
         </div>
         <div id="lineage" hidden={true} />
@@ -1894,28 +1941,28 @@ export default (): ReactElement => {
               <TableHead>
                 <TableRow>
                   <TableCell sx={tableNameSx} width={350} > Table Name</TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="center">
+                  <TableCell sx={tableHeaderCellSx} width={90} align="center">
                     Frequency
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="center">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="center">
                     Sensitivity
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
                     Freshness
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
                     Cardinality
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
                     Nullness
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
                     Uniqueness
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
                     Sortedness
                   </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={130} align="left">
+                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
                     Distribution
                   </TableCell>
                 </TableRow>

@@ -1,4 +1,9 @@
 import React, { ReactElement, useEffect, useState } from 'react';
+import AppsIcon from '@mui/icons-material/Apps';
+import IntegrationInstructionsIcon from '@mui/icons-material/IntegrationInstructions';
+import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
+import TableChartIcon from '@mui/icons-material/TableChart';
+import LogoutIcon from '@mui/icons-material/Logout';
 import Logo from '../../components/top-nav/cito-header.png';
 import G6, {
   ComboConfig,
@@ -59,6 +64,7 @@ import { Auth } from 'aws-amplify';
 import { useNavigate } from 'react-router-dom';
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
+import Box from '@mui/material/Box';
 
 const showRealData = false;
 const lineageId = '62e7b2bcaa9205236c323795';
@@ -635,7 +641,7 @@ export default (): ReactElement => {
       <TreeItem
         nodeId={column.id}
         label={column.label}
-        icon={<MdTag />}
+        icon={<CircleTwoToneIcon fontSize="small" sx={{ color: "#674BCE" }}/>}
         sx={{
           color: hasNewAnomaly?.hasNewAnomaly ? anomalyColor : defaultColor,
         }}
@@ -1183,7 +1189,28 @@ export default (): ReactElement => {
               } />
           </div>
           <div id="sign-out-container">
-          <Button
+          <Box m={0.5}>
+          <Button startIcon = {<TableChartIcon/>}
+              onClick={() =>
+                navigate(`/lineage`, {
+                  state: {
+                  },
+                })
+              }
+              color="secondary"
+              size="medium"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#4EC4C4",
+                fontSize: "12px"
+            }}
+            >
+              Lineage
+            </Button>
+            </Box>
+          <Box m={0.5}>
+          <Button startIcon = {<AppsIcon/>}
               onClick={() =>
                 navigate(`/test`, {
                   state: {
@@ -1193,24 +1220,47 @@ export default (): ReactElement => {
                 })
               }
               color="secondary"
-              size="large"
+              size="medium"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#674BCE",
+                fontSize: "12px"
+            }}
             >
               Tests
             </Button>
-            <Button
+            </Box>
+            <Box m={0.5}>
+            <Button startIcon = {<IntegrationInstructionsIcon />}
               onClick={() => console.log('todo-integration screen')}
               color="secondary"
-              size="large"
+              size="medium"
+              variant="contained"
+              style ={{
+                borderRadius: 30,
+                backgroundColor: "#674BCE",
+                fontSize: "12px"
+            }}
             >
               Integrations
             </Button>
-            <Button
+            </Box>
+            <Box m={0.5}>
+            <Button startIcon = {< LogoutIcon />}
               onClick={() => Auth.signOut()}
               color="secondary"
-              size="large"
+              size="medium"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#A5A0A0",
+                fontSize: "12px"
+            }}
             >
               Sign Out
             </Button>
+            </Box>
           </div>
         </div>
         <div id="lineage" />
@@ -1219,6 +1269,7 @@ export default (): ReactElement => {
             <TextField
               label="Search"
               onChange={handleSearchChange}
+              size='small'
               fullWidth={true}
             />
           </div>
@@ -1282,8 +1333,10 @@ export default (): ReactElement => {
           <div className="content">
             <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
               <Tab label="Overview" />
+              <Tab/>
               <Tab label="Alert History" />
             </Tabs>
+            <br></br>
             {tabIndex === 0 ? (
               <>
                 <div className="card">
@@ -1294,6 +1347,7 @@ export default (): ReactElement => {
                     <></>
                   )}
                 </div>
+                <div className="Distribution">
                 <h4>Distribution</h4>
                 <MetricsGraph
                   option={
@@ -1312,6 +1366,8 @@ export default (): ReactElement => {
                         )
                   }
                 ></MetricsGraph>
+                </div>
+                <div className="Freshness">
                 <h4>Freshness</h4>
                 <MetricsGraph
                   option={
@@ -1330,6 +1386,8 @@ export default (): ReactElement => {
                         )
                   }
                 ></MetricsGraph>
+                </div>
+                <div className = "Nullness">
                 <h4>Nullness</h4>
                 <MetricsGraph
                   option={
@@ -1343,6 +1401,8 @@ export default (): ReactElement => {
                       : defaultOption(defaultYAxis, defaultNullnessData, 4, 6)
                   }
                 ></MetricsGraph>
+                </div>
+                <br></br>
               </>
             ) : (
               <>{BasicTable()}</>

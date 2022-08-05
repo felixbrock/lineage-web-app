@@ -2,6 +2,7 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import AppsIcon from '@mui/icons-material/Apps';
 import IntegrationInstructionsIcon from '@mui/icons-material/IntegrationInstructions';
 import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Logo from '../../components/top-nav/cito-header.png';
 import G6, {
@@ -1136,6 +1137,26 @@ export default (): ReactElement => {
           </div>
           <div id="sign-out-container">
           <Box m={0.5}>
+          <Button startIcon = {<TableChartIcon/>}
+              onClick={() =>
+                navigate(`/lineage`, {
+                  state: {
+                  },
+                })
+              }
+              color="secondary"
+              size="medium"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#4EC4C4",
+                fontSize: "12px"
+            }}
+            >
+              Lineage
+            </Button>
+            </Box>
+          <Box m={0.5}>
           <Button startIcon = {<AppsIcon/>}
               onClick={() =>
                 navigate(`/test`, {
@@ -1146,7 +1167,7 @@ export default (): ReactElement => {
                 })
               }
               color="secondary"
-              size="large"
+              size="medium"
               variant="contained"
               style={{
                 borderRadius: 30,
@@ -1161,9 +1182,9 @@ export default (): ReactElement => {
             <Button startIcon = {<IntegrationInstructionsIcon />}
               onClick={() => console.log('todo-integration screen')}
               color="secondary"
-              size="large"
+              size="medium"
               variant="contained"
-              style={{
+              style ={{
                 borderRadius: 30,
                 backgroundColor: "#674BCE",
                 fontSize: "12px"
@@ -1176,11 +1197,11 @@ export default (): ReactElement => {
             <Button startIcon = {< LogoutIcon />}
               onClick={() => Auth.signOut()}
               color="secondary"
-              size="large"
+              size="medium"
               variant="contained"
               style={{
                 borderRadius: 30,
-                backgroundColor: "#674BCE",
+                backgroundColor: "#A5A0A0",
                 fontSize: "12px"
             }}
             >
@@ -1195,6 +1216,7 @@ export default (): ReactElement => {
             <TextField
               label="Search"
               onChange={handleSearchChange}
+              size='small'
               fullWidth={true}
             />
           </div>

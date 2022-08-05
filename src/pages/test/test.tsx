@@ -1,7 +1,8 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-import AppsIcon from '@mui/icons-material/Apps';
 import IntegrationInstructionsIcon from '@mui/icons-material/IntegrationInstructions';
 import LogoutIcon from '@mui/icons-material/Logout';
+import AppsIcon from '@mui/icons-material/Apps';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
@@ -1828,22 +1829,36 @@ export default (): ReactElement => {
       <div id="lineageContainer">
         <div className="navbar">
           <div id="menu-container">
-            <Button variant="outlined"
-            size="small"
-            style={{
-              borderRadius: 10,
-           }}>
             <img height="40" width="150" src={Logo} alt="logo" onClick={() =>
                 navigate(`/lineage`, {
                   state: {
                   },
                 })
               } />
-            </Button>
           </div>
           <div id="sign-out-container">
           <Box m={0.5}>
-          <Button startIcon = {<AppsIcon/>}
+          <Button startIcon = {<TableChartIcon/>}
+              onClick={() =>
+                navigate(`/lineage`, {
+                  state: {
+                  },
+                })
+              }
+              color="secondary"
+              size="medium"
+              variant="contained"
+              style={{
+                borderRadius: 30,
+                backgroundColor: "#674BCE",
+                fontSize: "12px"
+            }}
+            >
+              Lineage
+            </Button>
+            </Box>
+            <Box m={0.5}>
+            <Button startIcon = {<AppsIcon/>}
               onClick={() =>
                 navigate(`/test`, {
                   state: {
@@ -1853,11 +1868,11 @@ export default (): ReactElement => {
                 })
               }
               color="secondary"
-              size="large"
+              size="medium"
               variant="contained"
               style={{
                 borderRadius: 30,
-                backgroundColor: "#674BCE",
+                backgroundColor: "#4EC4C4",
                 fontSize: "12px"
             }}
             >
@@ -1868,7 +1883,7 @@ export default (): ReactElement => {
             <Button startIcon = {<IntegrationInstructionsIcon />}
               onClick={() => console.log('todo-integration screen')}
               color="secondary"
-              size="large"
+              size="medium"
               variant="contained"
               style={{
                 borderRadius: 30,
@@ -1883,11 +1898,11 @@ export default (): ReactElement => {
             <Button startIcon = {< LogoutIcon />}
               onClick={() => Auth.signOut()}
               color="secondary"
-              size="large"
+              size="medium"
               variant="contained"
               style={{
                 borderRadius: 30,
-                backgroundColor: "#674BCE",
+                backgroundColor: "#A5A0A0",
                 fontSize: "12px"
             }}
             >

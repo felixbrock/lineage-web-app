@@ -44,27 +44,6 @@ $navbarHeight: 50px;
   margin-top: -1.25em;
 }
 
-.Distribution {
-  background-color: #fee9ff;
-  padding: 4px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-}
-
-.Freshness {
-  background-color: #f3eefe;
-  padding: 4px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-}
-
-.Nullness {
-  background-color: #ddd7f5;
-  padding: 4px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-}
-
 #border-glow {
   border: 1px solid;
   border-radius: 7px;
@@ -163,6 +142,36 @@ $controlHeight: 40px;
 }
 
 $sidePanelMargin: 5px;
+
+.Distribution {
+  background-color: #f3eefe;
+  padding-left: 8px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border-style: solid;
+  border-color: #6f47ef;
+  border-width: 2px;
+}
+
+.Freshness {
+  background-color: #f3eefe;
+  padding-left: 8px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border-style: solid;
+  border-color: #6f47ef;
+  border-width: 2px;
+}
+
+.Nullness {
+  background-color: #f3eefe;
+  padding-left: 8px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border-style: solid;
+  border-color: #6f47ef;
+  border-width: 2px;
+}
 
 .sidepanel {
   height: calc(100% - $navbarHeight - $sidePanelMargin - $sidePanelMargin);

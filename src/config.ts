@@ -52,4 +52,7 @@ const getOAuthEnvConfig = (): any => {
   return oAuthEnvConfig;
 };
 
+export const slackClientId = process.env.SLACK_CLIENT_ID || '';
+export const slackClientSecret = process.env.SLACK_CLIENT_SECRET || '';
+
 export const oAuthEnvConfig = getOAuthEnvConfig();

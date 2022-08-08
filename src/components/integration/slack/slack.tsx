@@ -3,6 +3,7 @@ import { ReactElement, useEffect, useState } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Button } from '@mui/material';
 import axios from 'axios';
+import { slackClientId } from '../../../config';
 
 interface ChannelInfo {
   id: string;
@@ -13,7 +14,7 @@ export default (): ReactElement => {
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
 
   const buildOAuthUrl = (accountId: string) => {
-    const clientId = encodeURIComponent('3334524827045.3900369988422');
+    const clientId = encodeURIComponent(slackClientId);
     const scopes = encodeURIComponent('channels:read,channels:join,chat:write,groups:read,im:read,mpim:read');   
 
     return `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&state=${accountId}`;

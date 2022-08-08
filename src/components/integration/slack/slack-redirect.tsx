@@ -1,11 +1,23 @@
 import { useNavigate, useParams} from "react-router-dom";
+import IntegrationApiRepo from "../../../infrastructure/integration-api/integration-api-repo";
+import SlackAccessTokenRepo from "../../../infrastructure/slack-api/access-token/slack-access-token-repo";
 
-export default () => {
+export default async () => {
   const navigate = useNavigate();
  
   const { code, state } = useParams();
-  console.log(code);
-  console.log(state);
+
+  if (!code)
+    throw new Error('Did not receive a temp auth code from Slack');
+  if(state !== 'todo')
+    throw new Error(`Detected potential forgery attack with received state ${state}`);
+
+  const accessToken = await SlackAccessTokenRepo.getAccessToken(code);
+
+  const slackProfile = await IntegrationApiRepo.getSlackProfile('todo');
+
+  if(slackProfile)
+    const updateSlack 
 
   navigate(`/lineage`, {
     state: {},

@@ -4,7 +4,8 @@ export default () => {
   const navigate = useNavigate();
 
   const [searchParams] = useSearchParams();
-  console.log(searchParams);
+  searchParams.forEach(el => console.log(el));
+  
 
   const { code, state } = useParams();
   console.log(code);

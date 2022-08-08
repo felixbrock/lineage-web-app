@@ -741,9 +741,12 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
+  type ColumnType = 'string' | 'integer' | 'date'
+
   const buildColumnTests = (
     materializationId: string,
-    columnId: string
+    columnId: string,
+    columnType: ColumnType
   ): ReactElement => {
     return (
       <TableRow >
@@ -809,6 +812,7 @@ export default (): ReactElement => {
           </FormControl>
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
+          {columnType !== 'date' ?
           <Button
             id={`freshnessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -820,9 +824,13 @@ export default (): ReactElement => {
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
-          />
+          />: <Button
+            size="large"
+            variant="contained"
+            color={'secondary'}/>}
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
+        {columnType == 'integer' || columnType == 'string' ?
           <Button
             id={`cardinalityActivated-${materializationId}-${columnId}`}
             size="large"
@@ -834,7 +842,10 @@ export default (): ReactElement => {
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
-          />
+          />: <Button
+          size="large"
+          variant="contained"
+          color={'secondary'}/>}
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
           <Button
@@ -851,6 +862,7 @@ export default (): ReactElement => {
           />
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
+          {columnType == 'integer' || columnType == 'string' ?
           <Button
             id={`uniquenessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -862,7 +874,10 @@ export default (): ReactElement => {
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
-          />
+          />: <Button
+          size="large"
+          variant="contained"
+          color={'secondary'}/>}
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
           <Button
@@ -879,6 +894,7 @@ export default (): ReactElement => {
           />
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
+          {columnType !== 'integer' ?
           <Button
             id={`distributionActivated-${materializationId}-${columnId}`}
             size="large"
@@ -890,7 +906,10 @@ export default (): ReactElement => {
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
-          />
+          />: <Button
+          size="large"
+          variant="contained"
+          color={'secondary'}/>}
         </TableCell>
       </TableRow>
     );
@@ -984,7 +1003,7 @@ export default (): ReactElement => {
 
     const columnElements = Object.keys(
       materializationTestSelection.columnTestSelection
-    ).map((key) => buildColumnTests(props.materializationId, key));
+    ).map((key) => buildColumnTests(props.materializationId, key, 'string'));
 
     return (
       <React.Fragment>

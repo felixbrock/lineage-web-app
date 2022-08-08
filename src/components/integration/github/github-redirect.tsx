@@ -1,7 +1,10 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 export default () => {
   const navigate = useNavigate();
+
+  const [searchParams] = useSearchParams();
+  console.log(searchParams);
 
 
   const { code, state } = useParams();

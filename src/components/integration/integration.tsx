@@ -1,5 +1,5 @@
-import Github from './github';
-import Slack from './slack';
+import Github from './github/github';
+import Slack from './slack/slack';
 
 export default (index: number) => {
   const links: { [key: number]: any } = {

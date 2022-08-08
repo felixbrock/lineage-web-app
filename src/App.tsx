@@ -10,6 +10,8 @@ import './App.scss';
 import Lineage from './pages/lineage/lineage';
 import Test from './pages/test/test';
 import { authEnvConfig, oAuthEnvConfig } from './config';
+import GithubRedirect from './components/integration/github/github-redirect';
+import SlackRedirect from './components/integration/slack/slack-redirect';
 
 export default (): ReactElement => {
   Auth.configure({
@@ -61,6 +63,11 @@ export default (): ReactElement => {
               <Routes>
                 <Route path="/lineage" element={<Lineage />} />
                 <Route path="/test" element={<Test />} />
+                <Route
+                  path="/oauth/github/:code"
+                  element={<GithubRedirect />}
+                />
+                <Route path="/oauth/slack/:code" element={<SlackRedirect/>}/>
                 <Route path="/" element={<Navigate to="/lineage" />} />
               </Routes>
             </div>

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/dot-notation */
 import { ReactElement, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Button } from '@mui/material';
 import axios from 'axios';
@@ -12,12 +11,6 @@ interface ChannelInfo {
 
 export default (): ReactElement => {
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
-
-  console.log('code');
-  // const [searchParams] = useSearchParams();
-
-  const { code } = useParams();
-  console.log(code);
 
   const buildOAuthUrl = (accountId: string) => {
     const clientId = encodeURIComponent('3334524827045.3900369988422');

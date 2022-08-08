@@ -824,10 +824,7 @@ export default (): ReactElement => {
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
-          />: <Button
-            size="large"
-            variant="contained"
-            color={'secondary'}/>}
+          />: <></>}
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
         {columnType == 'integer' || columnType == 'string' ?
@@ -842,10 +839,7 @@ export default (): ReactElement => {
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
-          />: <Button
-          size="large"
-          variant="contained"
-          color={'secondary'}/>}
+          />: <></>}
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
           <Button
@@ -906,10 +900,7 @@ export default (): ReactElement => {
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
-          />: <Button
-          size="large"
-          variant="contained"
-          color={'secondary'}/>}
+          />: <></>}
         </TableCell>
       </TableRow>
     );

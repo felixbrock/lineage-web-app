@@ -64,10 +64,10 @@ export default (): ReactElement => {
                 <Route path="/lineage" element={<Lineage />} />
                 <Route path="/test" element={<Test />} />
                 <Route
-                  path="/oauth/github/:code"
+                  path="/oauth/github/:code/:state"
                   element={<GithubRedirect />}
                 />
-                <Route path="/oauth/slack/:code" element={<SlackRedirect/>}/>
+                <Route path="/oauth/slack/:code/:state" element={<SlackRedirect/>}/>
                 <Route path="/" element={<Navigate to="/lineage" />} />
               </Routes>
             </div>

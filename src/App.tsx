@@ -10,8 +10,8 @@ import './App.scss';
 import Lineage from './pages/lineage/lineage';
 import Test from './pages/test/test';
 import { authEnvConfig, oAuthEnvConfig } from './config';
-import GithubRedirect from './components/integration/github/github-redirect';
-import SlackRedirect from './components/integration/slack/slack-redirect';
+import GithubRedirect from './pages/github-redirect';
+import SlackRedirect from './pages/slack-redirect';
 
 export default (): ReactElement => {
   Auth.configure({

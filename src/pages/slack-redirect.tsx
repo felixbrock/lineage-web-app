@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
-import SlackAccessTokenRepo from '../../../infrastructure/slack-api/access-token/slack-access-token-repo';
+import IntegrationApiRepo from '../infrastructure/integration-api/integration-api-repo';
+import SlackAccessTokenRepo from '../infrastructure/slack-api/access-token/slack-access-token-repo';
 
 export default async () => {
   const navigate = useNavigate();

@@ -64,11 +64,12 @@ import BasicTable from '../../components/table';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
 import Box from '@mui/material/Box';
 import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
+import IntegrationApiRepo from '../../infrastructure/integration-api/integration-api-repo';
 
 const showRealData = false;
 const lineageId = '62e7b2bcaa9205236c323795';
@@ -399,6 +400,8 @@ const determineType = (id: string, data: GraphData): TreeViewElementType => {
 };
 
 export default (): ReactElement => {
+  const location = useLocation();
+
   const navigate = useNavigate();
 
   const [accountId, setAccountId] = useState('');
@@ -436,6 +439,8 @@ export default (): ReactElement => {
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
     useState<boolean>();
+
+  const [slackToken, setSlackToken] = useState<string>();
 
   const handleTabIndexChange = (
     event: React.SyntheticEvent,
@@ -714,7 +719,10 @@ export default (): ReactElement => {
       });
   };
 
-  useEffect(renderLineage, []);
+  useEffect(() => {
+    if (!location) return;
+    renderLineage();
+  }, [location]);
 
   useEffect(() => {
     if (!user) return;
@@ -741,6 +749,26 @@ export default (): ReactElement => {
       });
   }, [user]);
 
+  const handleSlackRedirect = () => {
+    const state = location.state;
+
+    if (!state) return;
+    if (typeof state !== 'object')
+      throw new Error('Unexpected navigation state type');
+
+    const { slackAccessToken, showIntegrationPanel, sidePanelTabIndex } =
+      state as any;
+
+    if (slackAccessToken) setSlackToken(slackAccessToken);
+    else {
+      IntegrationApiRepo.getSlackProfile(jwt)
+        .then((res) => setSlackToken(res? res.accessToken : ''))
+        .catch(() => console.trace('Slack profile retrieval failed'));
+    }
+
+    if(showIntegrationPanel) setShowIntegrationSidePanel(true);
+    if(sidePanelTabIndex) setTabIndex(sidePanelTabIndex);
+  };
 
   useEffect(() => {
     if (!accountId || lineage) return;
@@ -782,7 +810,6 @@ export default (): ReactElement => {
         .then((dependencyDtos) => {
           setDependencies(dependencyDtos);
           setReadyToBuild(true);
-        
         })
         .catch((error) => {
           console.log(error);
@@ -791,11 +818,14 @@ export default (): ReactElement => {
       setLineage({ id: 'todo', createdAt: 1 });
       setReadyToBuild(true);
     }
+
+    handleSlackRedirect();
+
   }, [accountId]);
 
   useEffect(() => {
     if (!showIntegrationSidePanel) return;
-    
+
     closeColSidePanel();
     closeMatSidePanel();
 
@@ -1295,9 +1325,7 @@ export default (): ReactElement => {
             <Box m={0.5}>
               <Button
                 startIcon={<IntegrationInstructionsIcon />}
-                onClick={() =>
-                  setShowIntegrationSidePanel(true)
-                }
+                onClick={() => setShowIntegrationSidePanel(true)}
                 color="secondary"
                 size="medium"
                 variant="contained"
@@ -1489,7 +1517,7 @@ export default (): ReactElement => {
               <Tab icon={<FaSlack />} label="Slack" />
               <Tab icon={<SiLooker />} label="Looker" />
             </Tabs>
-            {Integration(tabIndex)}
+            {Integration(tabIndex, slackToken)}
           </div>
         </div>
         {/* <div id="snackbar">{info}</div> */}

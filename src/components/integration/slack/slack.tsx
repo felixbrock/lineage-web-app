@@ -2,20 +2,15 @@
 import { ReactElement, useEffect, useState } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Button } from '@mui/material';
-import axios from 'axios';
 import { slackClientId } from '../../../config';
 import SlackConversationsRepo from '../../../infrastructure/slack-api/channels/slack-conversations-repo';
-import { useLocation } from 'react-router-dom';
 
 interface ChannelInfo {
   id: string;
   name: string;
 }
 
-export default (): ReactElement => {
-  const location: any = useLocation();
-
-  const [accessToken, setAccessToken] = useState<string>();
+export default (accessToken: string): ReactElement => {
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
 
   const buildOAuthUrl = (accountId: string) => {
@@ -26,21 +21,14 @@ export default (): ReactElement => {
   };
 
   useEffect(() => {
-    setAccessToken(location.state.accessToken);
+    SlackConversationsRepo.getConversations(accessToken)
+    .then((res) => {
+      setChannels(res);
+    })
+    .catch((error: any) => {
+      console.trace(error);
+    });
   }, []);
-
-  useEffect(() => {
-    if(!accessToken) return;
-
-    const accessToken
-    SlackConversationsRepo.getConversations(location.state.accessToken)
-      .then((res) => {
-        setChannels(res);
-      })
-      .catch((error: any) => {
-        console.trace(error);
-      });
-  }, [accessToken]);
 
   //   // console.log(searchParams.get('code'));
 

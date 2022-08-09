@@ -10,7 +10,7 @@ interface ChannelInfo {
   name: string;
 }
 
-export default (accessToken: string): ReactElement => {
+export default (accessToken?: string): ReactElement => {
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
 
   const buildOAuthUrl = (accountId: string) => {
@@ -21,6 +21,8 @@ export default (accessToken: string): ReactElement => {
   };
 
   useEffect(() => {
+    if(!accessToken) return;
+    
     SlackConversationsRepo.getConversations(accessToken)
     .then((res) => {
       setChannels(res);

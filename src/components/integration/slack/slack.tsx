@@ -4,6 +4,8 @@ import { ReactElement, useEffect, useState } from 'react';
 import { Button } from '@mui/material';
 import axios from 'axios';
 import { slackClientId } from '../../../config';
+import SlackConversationsRepo from '../../../infrastructure/slack-api/channels/slack-conversations-repo';
+import { useLocation } from 'react-router-dom';
 
 interface ChannelInfo {
   id: string;
@@ -11,6 +13,9 @@ interface ChannelInfo {
 }
 
 export default (): ReactElement => {
+  const location: any = useLocation();
+
+  const [accessToken, setAccessToken] = useState<string>();
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
 
   const buildOAuthUrl = (accountId: string) => {
@@ -21,18 +26,21 @@ export default (): ReactElement => {
   };
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:3031/test2`)
+    setAccessToken(location.state.accessToken);
+  }, []);
+
+  useEffect(() => {
+    if(!accessToken) return;
+
+    const accessToken
+    SlackConversationsRepo.getConversations(location.state.accessToken)
       .then((res) => {
-        const jsonResponse = res.data;
-        console.log('jsonResponse');
-        if (res.status !== 200) Promise.reject(jsonResponse);
-        setChannels(res.data);
+        setChannels(res);
       })
       .catch((error: any) => {
         console.trace(error);
       });
-  }, []);
+  }, [accessToken]);
 
   //   // console.log(searchParams.get('code'));
 

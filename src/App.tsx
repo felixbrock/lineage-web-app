@@ -4,7 +4,7 @@ import {
   Routes,
   Route,
   BrowserRouter as Router,
-  Navigate,
+  Navigate
 } from 'react-router-dom';
 import './App.scss';
 import Lineage from './pages/lineage/lineage';
@@ -16,12 +16,15 @@ export default (): ReactElement => {
     Auth: {
       region: 'eu-central-1',
       mandatorySignIn: true,
+
+
       // cookieStorage: {
       //   domain: 'app.hivedive.io',
       //   path: '/',
       //   expires: 365,
       //   secure: true,
       // },
+
       ...authEnvConfig,
     },
     oauth: {
@@ -48,7 +51,7 @@ export default (): ReactElement => {
         return Auth.federatedSignIn();
       })
       .then(() => console.log('authenticated'));
-  }, []);
+  });
 
   useEffect(() => {
     if (!user) return;

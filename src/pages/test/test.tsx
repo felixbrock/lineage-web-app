@@ -741,7 +741,7 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
-  type ColumnType = 'string' | 'integer' | 'date'
+  type ColumnType = 'string' | 'integer' | 'date' | 'time'
 
   const buildColumnTests = (
     materializationId: string,
@@ -812,7 +812,7 @@ export default (): ReactElement => {
           </FormControl>
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
-          {columnType !== 'date' ?
+          {columnType == 'date' || columnType == 'time' ?
           <Button
             id={`freshnessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -885,7 +885,7 @@ export default (): ReactElement => {
           />
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
-          {columnType !== 'integer' ?
+          {columnType == 'integer' ?
           <Button
             id={`distributionActivated-${materializationId}-${columnId}`}
             size="large"

@@ -68,6 +68,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
 import Box from '@mui/material/Box';
+import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
 
 const showRealData = false;
 const lineageId = '62e7b2bcaa9205236c323795';
@@ -699,16 +700,47 @@ export default (): ReactElement => {
     return materializationElements;
   };
 
-  const renderAutomations = () => {
-    setUser('todo');
+  const renderLineage = () => {
+    setUser(undefined);
+    setJwt('');
+    setAccountId('');
+
+    Auth.currentAuthenticatedUser()
+      .then((cognitoUser) => setUser(cognitoUser))
+      .catch((error) => {
+        console.trace(typeof error === 'string' ? error : error.message);
+
+        Auth.federatedSignIn();
+      });
   };
 
-  useEffect(renderAutomations, []);
+  useEffect(renderLineage, []);
 
   useEffect(() => {
-    setAccountId('todo');
-    setJwt('todo');
+    if (!user) return;
+
+    Auth.currentSession()
+      .then((session) => {
+        const accessToken = session.getAccessToken();
+
+        const token = accessToken.getJwtToken();
+        setJwt(token);
+
+        return AccountApiRepository.getBy(new URLSearchParams({}), token);
+      })
+      .then((accounts) => {
+        if (!accounts.length) throw new Error(`No accounts found for user`);
+
+        if (accounts.length > 1)
+          throw new Error(`Multiple accounts found for user`);
+
+        setAccountId(accounts[0].id);
+      })
+      .catch((error) => {
+        console.trace(typeof error === 'string' ? error : error.message);
+      });
   }, [user]);
+
 
   useEffect(() => {
     if (!accountId || lineage) return;
@@ -750,6 +782,7 @@ export default (): ReactElement => {
         .then((dependencyDtos) => {
           setDependencies(dependencyDtos);
           setReadyToBuild(true);
+        
         })
         .catch((error) => {
           console.log(error);

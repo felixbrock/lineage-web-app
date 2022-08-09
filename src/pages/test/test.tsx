@@ -43,6 +43,7 @@ import {
   defaultMaterializations,
   defaultAnomalyStates,
 } from '../lineage/test-data';
+import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
 
 import TreeView from '@mui/lab/TreeView';
 // import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -1408,15 +1409,45 @@ export default (): ReactElement => {
     return materializationElements;
   };
 
-  const renderAutomations = () => {
-    setUser('todo');
+  const renderTests = () => {
+    setUser(undefined);
+    setJwt('');
+    setAccountId('');
+
+    Auth.currentAuthenticatedUser()
+      .then((cognitoUser) => setUser(cognitoUser))
+      .catch((error) => {
+        console.trace(typeof error === 'string' ? error : error.message);
+
+        Auth.federatedSignIn();
+      });
   };
 
-  useEffect(renderAutomations, []);
+  useEffect(renderTests, []);
 
   useEffect(() => {
-    setAccountId('todo');
-    setJwt('todo');
+    if (!user) return;
+
+    Auth.currentSession()
+      .then((session) => {
+        const accessToken = session.getAccessToken();
+
+        const token = accessToken.getJwtToken();
+        setJwt(token);
+
+        return AccountApiRepository.getBy(new URLSearchParams({}), token);
+      })
+      .then((accounts) => {
+        if (!accounts.length) throw new Error(`No accounts found for user`);
+
+        if (accounts.length > 1)
+          throw new Error(`Multiple accounts found for user`);
+
+        setAccountId(accounts[0].id);
+      })
+      .catch((error) => {
+        console.trace(typeof error === 'string' ? error : error.message);
+      });
   }, [user]);
 
   useEffect(() => {

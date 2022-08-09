@@ -38,13 +38,13 @@ export default class IntegrationApiRepo {
   };
 
   public static postSlackProfile = async (
-    slackProfile: PostSlackProfileDto,
+    postSlackProfileDto: PostSlackProfileDto,
     jwt: string
   ): Promise<unknown> => {
     try {
       const apiRoot = await IntegrationApiRepo.root;
 
-      const data = slackProfile;
+      const data = postSlackProfileDto;
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
@@ -60,22 +60,21 @@ export default class IntegrationApiRepo {
   };
 
   public static updateSlackProfile = async (
-    slackProfile: UpdateSlackProfileDto,
+    updateSlackProfileDto: UpdateSlackProfileDto,
     jwt: string
   ): Promise<unknown> => {
     try {
       const apiRoot = await IntegrationApiRepo.root;
 
-      const data = slackProfile;
+      const data = updateSlackProfileDto;
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
-      // PATCHXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      const response = await axios.post(`${apiRoot}/slack/profile`, data, config);
+      const response = await axios.patch(`${apiRoot}/slack/profile`, data, config);
       const jsonResponse = response.data;
-      if (response.status === 201) return jsonResponse;
+      if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);
     } catch (error: any) {
       return Promise.reject(new Error(error.response.data.message));

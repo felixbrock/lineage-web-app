@@ -1517,7 +1517,7 @@ export default (): ReactElement => {
               <Tab icon={<FaSlack />} label="Slack" />
               <Tab icon={<SiLooker />} label="Looker" />
             </Tabs>
-            {Integration(tabIndex, slackToken)}
+            {Integration(tabIndex, accountId, slackToken)}
           </div>
         </div>
         {/* <div id="snackbar">{info}</div> */}

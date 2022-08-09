@@ -10,15 +10,16 @@ interface ChannelInfo {
   name: string;
 }
 
-export default (accessToken?: string): ReactElement => {
+const buildOAuthUrl = (accountId: string) => {
+  
+  const clientId = encodeURIComponent(slackClientId);
+  const scopes = encodeURIComponent('channels:read,channels:join,chat:write,groups:read,im:read,mpim:read');   
+
+  return `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&state=${accountId}`;
+};
+
+export default (accountId: string, accessToken?: string): ReactElement => {
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
-
-  const buildOAuthUrl = (accountId: string) => {
-    const clientId = encodeURIComponent(slackClientId);
-    const scopes = encodeURIComponent('channels:read,channels:join,chat:write,groups:read,im:read,mpim:read');   
-
-    return `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&state=${accountId}`;
-  };
 
   useEffect(() => {
     if(!accessToken) return;
@@ -75,7 +76,7 @@ export default (accessToken?: string): ReactElement => {
 
   return (
     <>
-      <Button href={buildOAuthUrl('todo')}>{'Install'}</Button>
+      <Button href={buildOAuthUrl(accountId)}>{'Install'}</Button>
       <p>something</p>
       <p>{JSON.stringify(channels)}</p>
     </>

@@ -5,6 +5,7 @@ import {
   Route,
   BrowserRouter as Router,
   Navigate,
+  useResolvedPath,
 } from 'react-router-dom';
 import './App.scss';
 import Lineage from './pages/lineage/lineage';

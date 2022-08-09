@@ -868,10 +868,7 @@ export default (): ReactElement => {
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
-          />: <Button
-          size="large"
-          variant="contained"
-          color={'secondary'}/>}
+          />: <> </>}
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
           <Button

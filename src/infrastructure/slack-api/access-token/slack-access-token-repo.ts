@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { slackClientId, slackClientSecret } from '../../../config';
+import { slackConfig } from '../../../config';
 
 // TODO - Implement Interface regarding clean architecture
 export default class SlackAccessTokenRepo {
@@ -13,8 +13,8 @@ export default class SlackAccessTokenRepo {
         },
         params: new URLSearchParams({
           code: tempAuthCode,
-          client_id: slackClientId,
-          client_secret: slackClientSecret
+          client_id: slackConfig.slackClientId,
+          client_secret: slackConfig.slackClientSecret
         }),
       };
 

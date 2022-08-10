@@ -33,7 +33,6 @@ import MetricsGraph, {
   effectiveRateSampleNullnessData,
 } from '../../components/metrics-graph';
 
-import Integration from '../../components/integration/integration';
 import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
 import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
 import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
@@ -70,6 +69,8 @@ import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards
 import Box from '@mui/material/Box';
 import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
 import IntegrationApiRepo from '../../infrastructure/integration-api/integration-api-repo';
+import Github from '../../components/integration/github/github';
+import Slack from '../../components/integration/slack/slack';
 
 const showRealData = false;
 const lineageId = '62e7b2bcaa9205236c323795';
@@ -440,7 +441,9 @@ export default (): ReactElement => {
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
     useState<boolean>();
 
-  const [slackToken, setSlackToken] = useState<string>();
+  const [slackToken, setSlackToken] = useState<string>('');
+  const [integrationComponent, setIntegrationComponent] =
+    useState<ReactElement>();
 
   const handleTabIndexChange = (
     event: React.SyntheticEvent,
@@ -721,6 +724,7 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (!location) return;
+
     renderLineage();
   }, [location]);
 
@@ -759,15 +763,20 @@ export default (): ReactElement => {
     const { slackAccessToken, showIntegrationPanel, sidePanelTabIndex } =
       state as any;
 
+    if (!slackAccessToken || !showIntegrationPanel || !sidePanelTabIndex)
+      return;
+
     if (slackAccessToken) setSlackToken(slackAccessToken);
     else {
       IntegrationApiRepo.getSlackProfile(jwt)
-        .then((res) => setSlackToken(res? res.accessToken : ''))
+        .then((res) => setSlackToken(res ? res.accessToken : ''))
         .catch(() => console.trace('Slack profile retrieval failed'));
     }
 
-    if(showIntegrationPanel) setShowIntegrationSidePanel(true);
-    if(sidePanelTabIndex) setTabIndex(sidePanelTabIndex);
+    if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
+    if (sidePanelTabIndex) setTabIndex(sidePanelTabIndex);
+
+    window.history.replaceState({}, document.title);
   };
 
   useEffect(() => {
@@ -820,8 +829,17 @@ export default (): ReactElement => {
     }
 
     handleSlackRedirect();
-
   }, [accountId]);
+
+  useEffect(() => {
+    console.log(slackToken);
+
+    if (tabIndex === 0) setIntegrationComponent(<Github></Github>);
+    else if (tabIndex === 1) setIntegrationComponent(<Github></Github>);
+    else if (tabIndex === 2)
+      setIntegrationComponent(<Slack accountId={accountId} jwt={jwt}></Slack>);
+    else if (tabIndex === 3) setIntegrationComponent(<Github></Github>);
+  }, [tabIndex]);
 
   useEffect(() => {
     if (!showIntegrationSidePanel) return;
@@ -1517,7 +1535,7 @@ export default (): ReactElement => {
               <Tab icon={<FaSlack />} label="Slack" />
               <Tab icon={<SiLooker />} label="Looker" />
             </Tabs>
-            {Integration(tabIndex, accountId, slackToken)}
+            {integrationComponent}
           </div>
         </div>
         {/* <div id="snackbar">{info}</div> */}

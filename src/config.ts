@@ -52,7 +52,31 @@ const getOAuthEnvConfig = (): any => {
   return oAuthEnvConfig;
 };
 
-export const slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID || '';
-export const slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET || '';
-
 export const oAuthEnvConfig = getOAuthEnvConfig();
+
+interface SlackConfig {slackClientId: string, slackClientSecret:string}; 
+
+const getSlackConfig = (): SlackConfig  => {
+  const slackConfig : any = {};
+
+  switch (process.env.REACT_APP_STAGE) {
+    case 'development':
+      slackConfig.slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID_DEV || '';
+      slackConfig.slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET_DEV || '';
+      break;
+    case 'test':
+      slackConfig.slackClientId = '';
+      slackConfig.slackClientSecret = '';
+      break;
+    case 'production':
+      slackConfig.slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID || '';
+      slackConfig.slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET || '';
+      break;
+    default:
+      throw new Error('app stage not found');
+  }
+
+  return slackConfig;
+};
+
+export const slackConfig = getSlackConfig();

@@ -63,13 +63,13 @@ export default () => {
     if (!jwt) throw new Error('No user authorization found');
 
     if (!code) throw new Error('Did not receive a temp auth code from Slack');
-    if (state !== 'todo')
+    if (state !== accountId)
       throw new Error(
         `Detected potential forgery attack with received state ${state}`
       );
 
     let accessToken: string;
-
+   
     SlackAccessTokenRepo.getAccessToken(code)
       .then((res) => {
         accessToken = res;
@@ -77,19 +77,20 @@ export default () => {
       })
       .then((slackProfile) => {
         if (slackProfile)
-          return IntegrationApiRepo.updateSlackProfile({ accessToken }, 'todo');
+          return IntegrationApiRepo.updateSlackProfile({ accessToken }, jwt);
         return Promise.resolve();
       })
       .then(() =>
         navigate(`/lineage`, {
           state: {
             slackAccessToken: accessToken,
-            showIntegrationSidePanel: true,
+            showIntegrationPanel: true,
             sidePanelTabIndex: 2,
           },
+          replace: true
         })
       )
-      .catch(() => console.trace('Error when handling slack redirect'));
+      .catch((error) => console.trace(error));
   }, [accountId]);
 
   return <></>;

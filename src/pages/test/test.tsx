@@ -871,6 +871,7 @@ export default (): ReactElement => {
           />: <> </>}
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
+        { defaultColumns.find(x => x.id === columnId)?.type !== 'ARRAY' ?
           <Button
             id={`sortednessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -882,7 +883,7 @@ export default (): ReactElement => {
                 : 'info'
             }
             onClick={handleTestSelectButtonClick}
-          />
+          />: <> </>}
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
           {defaultColumns.find(x => x.id === columnId)?.type == 'NUMBER' || defaultColumns.find(x => x.id === columnId)?.type == 'FLOAT' ?
@@ -993,6 +994,12 @@ export default (): ReactElement => {
       materializationTestSelection.columnTestSelection
     ).map((key) => buildColumnTests(props.materializationId, key));
 
+    // const chipCount = (defaultColumns.find(x => x.id === props.materializationId)?.type === 'TEXT');
+    // if (chipCount) {
+    //   const countx = defaultColumns.find(x => x.id === props.materializationId)?.materializationId;
+    // }
+
+
     return (
       <React.Fragment>
         <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} >
@@ -1057,10 +1064,10 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestSelectButtonClick}
             />
+            
             <Chip
               color = {testSelection[props.materializationId].freshnessActivatedCount? 'primary': 'secondary'}
               variant = {testSelection[props.materializationId].freshnessActivatedCount? 'filled': 'outlined'}
-
 
               label={`${
                 testSelection[props.materializationId].freshnessActivatedCount
@@ -1081,7 +1088,7 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestSelectButtonClick}
             />
-                        <Chip
+            <Chip
               color = {testSelection[props.materializationId].cardinalityActivatedCount? 'primary': 'secondary'}
               variant = {testSelection[props.materializationId].cardinalityActivatedCount? 'filled': 'outlined'}
 
@@ -1104,7 +1111,7 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestSelectButtonClick}
             />
-                        <Chip
+            <Chip
               color = {testSelection[props.materializationId].nullnessActivatedCount? 'primary': 'secondary'}
               variant = {testSelection[props.materializationId].nullnessActivatedCount? 'filled': 'outlined'}
 
@@ -1128,7 +1135,7 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestSelectButtonClick}
             />
-                        <Chip
+            <Chip
               color = {testSelection[props.materializationId].uniquenessActivatedCount? 'primary': 'secondary'}
               label={`${
                 testSelection[props.materializationId].uniquenessActivatedCount
@@ -1151,7 +1158,7 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestSelectButtonClick}
             />
-                        <Chip
+            <Chip
               color = {testSelection[props.materializationId].sortednessActivatedCount? 'primary': 'secondary'}
 
               label={`${
@@ -1175,7 +1182,7 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestSelectButtonClick}
             />
-                        <Chip
+            <Chip
               color = {testSelection[props.materializationId].distributionActivatedCount? 'primary': 'secondary'}
 
               label={`${

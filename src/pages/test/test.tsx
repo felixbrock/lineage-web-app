@@ -42,6 +42,7 @@ import {
   defaultLogics,
   defaultMaterializations,
   defaultAnomalyStates,
+  defaultColumns
 } from '../lineage/test-data';
 
 import TreeView from '@mui/lab/TreeView';
@@ -741,13 +742,12 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
-  type ColumnType = 'string' | 'integer' | 'date' | 'time'
-
   const buildColumnTests = (
     materializationId: string,
     columnId: string,
-    columnType: ColumnType
+    // columnType: ColumnType
   ): ReactElement => {
+
     return (
       <TableRow >
         <TableCell sx={tableCellSx} align="left">
@@ -812,7 +812,7 @@ export default (): ReactElement => {
           </FormControl>
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
-          {columnType == 'date' || columnType == 'time' ?
+          {defaultColumns.find(x => x.id === columnId)?.type == 'TIMESTAMP_LTZ' ?
           <Button
             id={`freshnessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -827,7 +827,7 @@ export default (): ReactElement => {
           />: <></>}
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
-        {columnType == 'integer' || columnType == 'string' ?
+        {defaultColumns.find(x => x.id === columnId)?.type == 'NUMBER' || defaultColumns.find(x => x.id === columnId)?.type == 'TEXT' || defaultColumns.find(x => x.id === columnId)?.type == 'FLOAT' ?
           <Button
             id={`cardinalityActivated-${materializationId}-${columnId}`}
             size="large"
@@ -856,7 +856,7 @@ export default (): ReactElement => {
           />
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
-          {columnType == 'integer' || columnType == 'string' ?
+          {defaultColumns.find(x => x.id === columnId)?.type == 'NUMBER' || defaultColumns.find(x => x.id === columnId)?.type == 'TEXT' || defaultColumns.find(x => x.id === columnId)?.type == 'FLOAT' ?
           <Button
             id={`uniquenessActivated-${materializationId}-${columnId}`}
             size="large"
@@ -885,7 +885,7 @@ export default (): ReactElement => {
           />
         </TableCell>
         <TableCell sx={tableCellSx} align="left">
-          {columnType == 'integer' ?
+          {defaultColumns.find(x => x.id === columnId)?.type == 'NUMBER' || defaultColumns.find(x => x.id === columnId)?.type == 'FLOAT' ?
           <Button
             id={`distributionActivated-${materializationId}-${columnId}`}
             size="large"
@@ -991,7 +991,7 @@ export default (): ReactElement => {
 
     const columnElements = Object.keys(
       materializationTestSelection.columnTestSelection
-    ).map((key) => buildColumnTests(props.materializationId, key, 'string'));
+    ).map((key) => buildColumnTests(props.materializationId, key));
 
     return (
       <React.Fragment>

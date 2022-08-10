@@ -396,7 +396,7 @@ export default (): ReactElement => {
 
   const [accountId, setAccountId] = useState('');
   const [user, setUser] = useState<any>();
-  const [jwt, setJwt] = useState('');
+  const [jwt, setJwt] = useState('eyJraWQiOiJxelNcL2MrVWd5R0dPMXZrYjNqaTlmS1ZJMmVqaEZURjFpT3BGN0ZKWERCaz0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIwNTQ0YmI2ZS0wNTVmLTQ5NGYtOGY4Zi01MmExYmM2Y2E0YjciLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAuZXUtY2VudHJhbC0xLmFtYXpvbmF3cy5jb21cL2V1LWNlbnRyYWwtMV9PT1F6alZXa0siLCJ2ZXJzaW9uIjoyLCJjbGllbnRfaWQiOiJqZWo3MWdtMDFtc3I4N3JwYmJ0OW44cWNwIiwiZXZlbnRfaWQiOiJiNDBmMjhkZi01YzkyLTQ2MzQtODk4OC05NzAxNDZiMGI5MjUiLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6InBob25lIG9wZW5pZCBlbWFpbCIsImF1dGhfdGltZSI6MTY2MDA0NjUxMiwiZXhwIjoxNjYwMDUwMTEyLCJpYXQiOjE2NjAwNDY1MTIsImp0aSI6IjI0N2QxZDVjLWY3NDMtNGI0MS1iYTMwLWMxOTQ2MTg3Nzk2NiIsInVzZXJuYW1lIjoiMDU0NGJiNmUtMDU1Zi00OTRmLThmOGYtNTJhMWJjNmNhNGI3In0.U6U-V2hVMNXK0vd4WLW-Fp1gk7VsxVrCz7a9On74e3237m25Yoyn3YRWtX5KSOckYZdeKTW12ploB2AVvo2ildbQNVg5jB399ftzbz0_83HFVykResYcYII1kus79mvlibI9vvqtYeNf17BesNJfDf0T6QeG_RAdt2sCfbhvN89rv7cbwBgSNmrXC2U8om3gpxdECPuPEApXvqm3ohC0Ws60JhRUm0r51y_sOdPqKPsYXwsB8BQ6KSU_rfagtcB-JVTnGrP0yGlwc9Ik61oYfZnKlWJ0k5-RTMzAAS1p9-KOP0yAJ4X_7EujBXratxGCBSbM2DefcWGmHcskh_7Aag');
 
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');

@@ -61,9 +61,10 @@ import Select from '@mui/material/Select';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Chip from '@mui/material/Chip';
 import TablePagination from '@mui/material/TablePagination';
+import ObservabilityApiRepo from '../../infrastructure/observability-api/observability-api-repo';
 
 const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
@@ -144,9 +145,16 @@ const theme = createTheme({
   },
 });
 
-const tableCellSx = {p:'1px', mt:'0px', mb: '0px', mr: '2px', ml: '2px'};
-const tableHeaderCellSx = {p:'2px', mt:'0px', mb: '0px', mr: '2px', ml: '2px', fontWeight: 'bold'};
-const tableNameSx = {mt:'0px', mb: '0px', mr: '2px', ml: '2px'};
+const tableCellSx = { p: '1px', mt: '0px', mb: '0px', mr: '2px', ml: '2px' };
+const tableHeaderCellSx = {
+  p: '2px',
+  mt: '0px',
+  mb: '0px',
+  mr: '2px',
+  ml: '2px',
+  fontWeight: 'bold',
+};
+const tableNameSx = { mt: '0px', mb: '0px', mr: '2px', ml: '2px' };
 
 const getNodeIdsToExplore = (
   edgesToExplore: EdgeConfig[],
@@ -426,9 +434,7 @@ export default (): ReactElement => {
   //   ReactElement[]
   // >([]);
   const [filteredTreeViewElements] = useState<ReactElement[]>([]);
-  const [searchedTreeViewElements] = useState<
-    ReactElement[]
-  >([]);
+  const [searchedTreeViewElements] = useState<ReactElement[]>([]);
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
   // const [anomalyFilterOn] = useState(false);
   const [testSelection, setTestSelection] = useState<{
@@ -439,19 +445,27 @@ export default (): ReactElement => {
   }>({});
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [searchParams] = useSearchParams();
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-    // Avoid a layout jump when reaching the last page with empty rows.
-    const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - Object.keys(testSelection).length) : 0;
+  // Avoid a layout jump when reaching the last page with empty rows.
+  const emptyRows =
+    page > 0
+      ? Math.max(
+          0,
+          (1 + page) * rowsPerPage - Object.keys(testSelection).length
+        )
+      : 0;
 
   const handleColumnFrequencyChange = (event: any) => {
     const name = event.target.name as string;
@@ -561,12 +575,14 @@ export default (): ReactElement => {
       return;
     }
 
-    const newTestSelectionElements: {[key:string]: MaterializationTestSelection} = {};
+    const newTestSelectionElements: {
+      [key: string]: MaterializationTestSelection;
+    } = {};
 
-    testSelectionKeys
-      .forEach((key) => {
-        if (testSelection[key].label.includes(value)) newTestSelectionElements[key] = testSelection[key];
-      });
+    testSelectionKeys.forEach((key) => {
+      if (testSelection[key].label.includes(value))
+        newTestSelectionElements[key] = testSelection[key];
+    });
 
     setSearchedTestSelection(newTestSelectionElements);
   };
@@ -747,7 +763,7 @@ export default (): ReactElement => {
     columnId: string
   ): ReactElement => {
     return (
-      <TableRow >
+      <TableRow>
         <TableCell sx={tableCellSx} align="left">
           {testSelection[materializationId].columnTestSelection[columnId].label}
         </TableCell>
@@ -950,7 +966,6 @@ export default (): ReactElement => {
         testsActivated: false,
       };
 
-
       relevantColumns.forEach((column) => {
         const columnLabel = column.label;
         if (typeof columnLabel !== 'string')
@@ -989,9 +1004,9 @@ export default (): ReactElement => {
 
     return (
       <React.Fragment>
-        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} >
+        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
           <TableCell sx={tableNameSx} component="th" scope="row">
-            {testSelection[props.materializationId].label }
+            {testSelection[props.materializationId].label}
           </TableCell>
           <TableCell sx={tableCellSx} align="center">
             <FormControl sx={{ m: 1 }} size="small">
@@ -1052,15 +1067,21 @@ export default (): ReactElement => {
               onClick={handleMatTestSelectButtonClick}
             />
             <Chip
-              color = {testSelection[props.materializationId].freshnessActivatedCount? 'primary': 'secondary'}
-              variant = {testSelection[props.materializationId].freshnessActivatedCount? 'filled': 'outlined'}
-
-
+              color={
+                testSelection[props.materializationId].freshnessActivatedCount
+                  ? 'primary'
+                  : 'secondary'
+              }
+              variant={
+                testSelection[props.materializationId].freshnessActivatedCount
+                  ? 'filled'
+                  : 'outlined'
+              }
               label={`${
                 testSelection[props.materializationId].freshnessActivatedCount
               }/${testSelection[props.materializationId].columnCount}`}
-              size='small'
-              sx={{m: 1}}
+              size="small"
+              sx={{ m: 1 }}
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
@@ -1075,15 +1096,22 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestSelectButtonClick}
             />
-                        <Chip
-              color = {testSelection[props.materializationId].cardinalityActivatedCount? 'primary': 'secondary'}
-              variant = {testSelection[props.materializationId].cardinalityActivatedCount? 'filled': 'outlined'}
-
+            <Chip
+              color={
+                testSelection[props.materializationId].cardinalityActivatedCount
+                  ? 'primary'
+                  : 'secondary'
+              }
+              variant={
+                testSelection[props.materializationId].cardinalityActivatedCount
+                  ? 'filled'
+                  : 'outlined'
+              }
               label={`${
                 testSelection[props.materializationId].cardinalityActivatedCount
               }/${testSelection[props.materializationId].columnCount}`}
-              size='small'
-              sx={{m: 1}}
+              size="small"
+              sx={{ m: 1 }}
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
@@ -1098,16 +1126,22 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestSelectButtonClick}
             />
-                        <Chip
-              color = {testSelection[props.materializationId].nullnessActivatedCount? 'primary': 'secondary'}
-              variant = {testSelection[props.materializationId].nullnessActivatedCount? 'filled': 'outlined'}
-
-
+            <Chip
+              color={
+                testSelection[props.materializationId].nullnessActivatedCount
+                  ? 'primary'
+                  : 'secondary'
+              }
+              variant={
+                testSelection[props.materializationId].nullnessActivatedCount
+                  ? 'filled'
+                  : 'outlined'
+              }
               label={`${
                 testSelection[props.materializationId].nullnessActivatedCount
               }/${testSelection[props.materializationId].columnCount}`}
-              size='small'
-              sx={{m: 1}}
+              size="small"
+              sx={{ m: 1 }}
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
@@ -1122,15 +1156,22 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestSelectButtonClick}
             />
-                        <Chip
-              color = {testSelection[props.materializationId].uniquenessActivatedCount? 'primary': 'secondary'}
+            <Chip
+              color={
+                testSelection[props.materializationId].uniquenessActivatedCount
+                  ? 'primary'
+                  : 'secondary'
+              }
               label={`${
                 testSelection[props.materializationId].uniquenessActivatedCount
               }/${testSelection[props.materializationId].columnCount}`}
-              variant = {testSelection[props.materializationId].uniquenessActivatedCount? 'filled': 'outlined'}
-
-              size='small'
-              sx={{m: 1}}
+              variant={
+                testSelection[props.materializationId].uniquenessActivatedCount
+                  ? 'filled'
+                  : 'outlined'
+              }
+              size="small"
+              sx={{ m: 1 }}
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
@@ -1145,16 +1186,22 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestSelectButtonClick}
             />
-                        <Chip
-              color = {testSelection[props.materializationId].sortednessActivatedCount? 'primary': 'secondary'}
-
+            <Chip
+              color={
+                testSelection[props.materializationId].sortednessActivatedCount
+                  ? 'primary'
+                  : 'secondary'
+              }
               label={`${
                 testSelection[props.materializationId].sortednessActivatedCount
               }/${testSelection[props.materializationId].columnCount}`}
-              variant = {testSelection[props.materializationId].sortednessActivatedCount? 'filled': 'outlined'}
-
-              size='small'
-              sx={{m: 1}}
+              variant={
+                testSelection[props.materializationId].sortednessActivatedCount
+                  ? 'filled'
+                  : 'outlined'
+              }
+              size="small"
+              sx={{ m: 1 }}
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
@@ -1169,16 +1216,25 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestSelectButtonClick}
             />
-                        <Chip
-              color = {testSelection[props.materializationId].distributionActivatedCount? 'primary': 'secondary'}
-
+            <Chip
+              color={
+                testSelection[props.materializationId]
+                  .distributionActivatedCount
+                  ? 'primary'
+                  : 'secondary'
+              }
               label={`${
-                testSelection[props.materializationId].distributionActivatedCount
+                testSelection[props.materializationId]
+                  .distributionActivatedCount
               }/${testSelection[props.materializationId].columnCount}`}
-              variant = {testSelection[props.materializationId].distributionActivatedCount? 'filled': 'outlined'}
-
-              size='small'
-              sx={{m: 1}}
+              variant={
+                testSelection[props.materializationId]
+                  .distributionActivatedCount
+                  ? 'filled'
+                  : 'outlined'
+              }
+              size="small"
+              sx={{ m: 1 }}
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
@@ -1200,9 +1256,10 @@ export default (): ReactElement => {
           </TableCell>
         </TableRow>
         <TableRow>
-          <TableCell sx={tableCellSx}
+          <TableCell
+            sx={tableCellSx}
             align="center"
-            style={{ paddingBottom: 0, paddingTop: 0, paddingLeft: 30}}
+            style={{ paddingBottom: 0, paddingTop: 0, paddingLeft: 30 }}
             colSpan={10}
           >
             <Collapse in={open} timeout="auto" unmountOnExit>
@@ -1210,25 +1267,53 @@ export default (): ReactElement => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={tableHeaderCellSx} width={311} align="left">
+                      <TableCell
+                        sx={tableHeaderCellSx}
+                        width={311}
+                        align="left"
+                      >
                         Column Name
                       </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={90} align="center" >
-                      </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={135} align="center" >         
-                      </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >                        
-                      </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >                       
-                      </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >                      
-                      </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >                 
-                      </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >               
-                      </TableCell>
-                      <TableCell sx={tableHeaderCellSx} width={135} align="left" >
-                      </TableCell>
+                      <TableCell
+                        sx={tableHeaderCellSx}
+                        width={90}
+                        align="center"
+                      ></TableCell>
+                      <TableCell
+                        sx={tableHeaderCellSx}
+                        width={135}
+                        align="center"
+                      ></TableCell>
+                      <TableCell
+                        sx={tableHeaderCellSx}
+                        width={135}
+                        align="left"
+                      ></TableCell>
+                      <TableCell
+                        sx={tableHeaderCellSx}
+                        width={135}
+                        align="left"
+                      ></TableCell>
+                      <TableCell
+                        sx={tableHeaderCellSx}
+                        width={135}
+                        align="left"
+                      ></TableCell>
+                      <TableCell
+                        sx={tableHeaderCellSx}
+                        width={135}
+                        align="left"
+                      ></TableCell>
+                      <TableCell
+                        sx={tableHeaderCellSx}
+                        width={135}
+                        align="left"
+                      ></TableCell>
+                      <TableCell
+                        sx={tableHeaderCellSx}
+                        width={135}
+                        align="left"
+                      ></TableCell>
                       <TableCell></TableCell>
                     </TableRow>
                   </TableHead>
@@ -1492,6 +1577,26 @@ export default (): ReactElement => {
       setReadyToBuild(true);
     }
   }, [accountId]);
+
+  useEffect(() => {
+    if (!searchParams) return;
+
+    const alertId = searchParams.get('alertId');
+    if (!alertId) return;
+
+    const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
+    if (!userFeedbackIsAnomaly) return;
+    ObservabilityApiRepo.updateTestHistoryEntry(
+      { alertId, userFeedbackIsAnomaly },
+      jwt
+    )
+      .then(() => alert('Thanks we took your feedack into account'))
+      .catch(() => {
+        console.trace(
+          'Something went wrong saving user feedback to persistence'
+        );
+      });
+  }, [searchParams]);
 
   useEffect(() => {
     if (!filteredTreeViewElements.length) return;
@@ -1848,11 +1953,14 @@ export default (): ReactElement => {
     setGraph(graphObj);
   }, [data]);
 
-  useEffect(()=>{
-    if(!Object.keys(testSelection).length || Object.keys(searchedTestSelection).length) return;
+  useEffect(() => {
+    if (
+      !Object.keys(testSelection).length ||
+      Object.keys(searchedTestSelection).length
+    )
+      return;
 
     setSearchedTestSelection(testSelection);
-
   }, [testSelection]);
 
   return (
@@ -1860,85 +1968,93 @@ export default (): ReactElement => {
       <div id="lineageContainer">
         <div className="navbar">
           <div id="menu-container">
-            <img height="40" width="150" src={Logo} alt="logo" onClick={() =>
+            <img
+              height="40"
+              width="150"
+              src={Logo}
+              alt="logo"
+              onClick={() =>
                 navigate(`/lineage`, {
-                  state: {
-                  },
+                  state: {},
                 })
-              } />
+              }
+            />
           </div>
           <div id="sign-out-container">
-          <Box m={0.5}>
-          <Button startIcon = {<TableChartIcon/>}
-              onClick={() =>
-                navigate(`/lineage`, {
-                  state: {
-                  },
-                })
-              }
-              color="secondary"
-              size="medium"
-              variant="contained"
-              style={{
-                borderRadius: 30,
-                backgroundColor: "#674BCE",
-                fontSize: "12px"
-            }}
-            >
-              Lineage
-            </Button>
+            <Box m={0.5}>
+              <Button
+                startIcon={<TableChartIcon />}
+                onClick={() =>
+                  navigate(`/lineage`, {
+                    state: {},
+                  })
+                }
+                color="secondary"
+                size="medium"
+                variant="contained"
+                style={{
+                  borderRadius: 30,
+                  backgroundColor: '#674BCE',
+                  fontSize: '12px',
+                }}
+              >
+                Lineage
+              </Button>
             </Box>
             <Box m={0.5}>
-            <Button startIcon = {<AppsIcon/>}
-              onClick={() =>
-                navigate(`/test`, {
-                  state: {
-                    foo: 'bar',
-                    data,
-                  },
-                })
-              }
-              color="secondary"
-              size="medium"
-              variant="contained"
-              style={{
-                borderRadius: 30,
-                backgroundColor: "#4EC4C4",
-                fontSize: "12px"
-            }}
-            >
-              Tests
-            </Button>
+              <Button
+                startIcon={<AppsIcon />}
+                onClick={() =>
+                  navigate(`/test`, {
+                    state: {
+                      foo: 'bar',
+                      data,
+                    },
+                  })
+                }
+                color="secondary"
+                size="medium"
+                variant="contained"
+                style={{
+                  borderRadius: 30,
+                  backgroundColor: '#4EC4C4',
+                  fontSize: '12px',
+                }}
+              >
+                Tests
+              </Button>
             </Box>
             <Box m={0.5}>
-            <Button startIcon = {<IntegrationInstructionsIcon />}
-              onClick={() => console.log('todo-integration screen')}
-              color="secondary"
-              size="medium"
-              variant="contained"
-              style={{
-                borderRadius: 30,
-                backgroundColor: "#674BCE",
-                fontSize: "12px"
-            }}
-            >
-              Integrations
-            </Button>
+              <Button
+                startIcon={<IntegrationInstructionsIcon />}
+                onClick={() => console.log('todo-integration screen')}
+                color="secondary"
+                size="medium"
+                variant="contained"
+                style={{
+                  borderRadius: 30,
+                  backgroundColor: '#674BCE',
+                  fontSize: '12px',
+                }}
+              >
+                Integrations
+              </Button>
             </Box>
             <Box m={0.5}>
-            <Button startIcon = {< LogoutIcon />}
-              onClick={() => Auth.signOut()}
-              color="secondary"
-              size="medium"
-              variant="contained"
-              style={{
-                borderRadius: 30,
-                backgroundColor: "#A5A0A0",
-                fontSize: "12px"
-            }}
-            >
-              Sign Out
-            </Button>
+              <Button
+                startIcon={<LogoutIcon />}
+                onClick={() => Auth.signOut()}
+                color="secondary"
+                size="medium"
+                variant="contained"
+                style={{
+                  borderRadius: 30,
+                  backgroundColor: '#A5A0A0',
+                  fontSize: '12px',
+                }}
+              >
+                Sign Out
+              </Button>
             </Box>
           </div>
         </div>
@@ -1949,7 +2065,7 @@ export default (): ReactElement => {
               label="Search"
               onChange={handleSearchChange}
               fullWidth={true}
-              size='small'
+              size="small"
             />
           </div>
         </div>
@@ -1971,7 +2087,10 @@ export default (): ReactElement => {
             <Table stickyHeader={true} aria-label="collapsible table">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={tableNameSx} width={350} > Table Name</TableCell>
+                  <TableCell sx={tableNameSx} width={350}>
+                    {' '}
+                    Table Name
+                  </TableCell>
                   <TableCell sx={tableHeaderCellSx} width={90} align="center">
                     Frequency
                   </TableCell>
@@ -2000,34 +2119,37 @@ export default (): ReactElement => {
               </TableHead>
               <TableBody>
                 {Object.keys(searchedTestSelection).length ? (
-                  Object.keys(searchedTestSelection).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  Object.keys(searchedTestSelection)
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((materializationId) => {
-    
-                      return <Test materializationId={materializationId}></Test>;
-                    })) : (
-                      <></>
-                    )}
-                  {emptyRows > 0 && (
-                    <TableRow
-                      style={{
-                        height: 53 * emptyRows,
-                      }}
-                    >
-                      <TableCell colSpan={10} />
-                    </TableRow>
-                  )}
+                      return (
+                        <Test materializationId={materializationId}></Test>
+                      );
+                    })
+                ) : (
+                  <></>
+                )}
+                {emptyRows > 0 && (
+                  <TableRow
+                    style={{
+                      height: 53 * emptyRows,
+                    }}
+                  >
+                    <TableCell colSpan={10} />
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
           <TablePagination
-          rowsPerPageOptions={[5,10, 25]}
-          component="div"
-          count={Object.keys(searchedTestSelection).length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={Object.keys(searchedTestSelection).length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
         </Paper>
       </div>
     </ThemeProvider>

@@ -36,12 +36,12 @@ const getOAuthEnvConfig = (): any => {
       oAuthEnvConfig.redirectSignOut = 'http://localhost:3006';
       break;
     case 'test':
-      oAuthEnvConfig.domain = 'https://auth-citodata-staging.auth.eu-central-1.amazoncognito.com';
+      oAuthEnvConfig.domain = 'auth-citodata-staging.auth.eu-central-1.amazoncognito.com';
       oAuthEnvConfig.redirectSignIn = 'https://www.app-staging.citodata.com';
       oAuthEnvConfig.redirectSignOut = 'https://www.app-staging.citodata.com';
       break;
     case 'production':
-      oAuthEnvConfig.domain = 'www.auth.citodata.com';
+      oAuthEnvConfig.domain = 'auth.citodata.com';
       oAuthEnvConfig.redirectSignIn = 'https://www.app.citodata.com';
       oAuthEnvConfig.redirectSignOut = 'https://www.app.citodata.com';
       break;

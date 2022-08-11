@@ -63,7 +63,7 @@ import BasicTable from '../../components/table';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
 import Box from '@mui/material/Box';
@@ -403,6 +403,8 @@ const determineType = (id: string, data: GraphData): TreeViewElementType => {
 export default (): ReactElement => {
   const location = useLocation();
 
+  const [searchParams] = useSearchParams();
+
   const navigate = useNavigate();
 
   const [accountId, setAccountId] = useState('');
@@ -452,12 +454,12 @@ export default (): ReactElement => {
     setTabIndex(newValue);
   };
 
-  const handleSelect = (event: React.SyntheticEvent, nodeIds: string) => {
+  const handleSelect = (nodeId: string) => {
     if (!data) return;
     if (!graph) return;
-    if (!nodeIds) return;
+    if (!nodeId) return;
 
-    const id = nodeIds;
+    const id = nodeId;
 
     const selectedNodes = graph.findAllByState('node', 'selected');
     selectedNodes.forEach((node) => node.clearStates());
@@ -482,6 +484,9 @@ export default (): ReactElement => {
       target,
     });
   };
+
+  const handleSelectEvent = (event: React.SyntheticEvent, nodeId: string) =>
+    handleSelect(nodeId);
 
   const toggleSideNavTreeView = (
     event: React.SyntheticEvent,
@@ -723,10 +728,10 @@ export default (): ReactElement => {
   };
 
   useEffect(() => {
-    if (!location) return;
+    if (!location || !searchParams) return;
 
     renderLineage();
-  }, [location]);
+  }, [location, searchParams]);
 
   useEffect(() => {
     if (!user) return;
@@ -1272,6 +1277,9 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!graph) return;
 
+    const targetResourceId = searchParams.get('targetResourceId');
+    if (targetResourceId) handleSelect(targetResourceId);
+
     toggleShowSideNav();
   }, [graph]);
 
@@ -1410,7 +1418,7 @@ export default (): ReactElement => {
               defaultExpandIcon={<MdChevronRight />}
               expanded={expandedTreeViewElementIds}
               onNodeToggle={toggleSideNavTreeView}
-              onNodeSelect={handleSelect}
+              onNodeSelect={handleSelectEvent}
             >
               {data ? treeViewElements : <></>}
             </TreeView>

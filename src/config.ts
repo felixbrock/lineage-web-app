@@ -5,16 +5,16 @@ const getAuthEnvConfig = (): any => {
 
   switch (process.env.REACT_APP_STAGE) {
     case 'development':
-      authEnvConfig.userPoolId = 'eu-central-1_OOQzjVWkK';
-      authEnvConfig.userPoolWebClientId = '56q0bao2fjhkcq6dldvcf039sj';
+      authEnvConfig.userPoolId = 'eu-central-1_HYLD4MoTL';
+      authEnvConfig.userPoolWebClientId = '496tv5tk13ofnb7brg7t6r90kn';
       break;
     case 'test':
-      authEnvConfig.userPoolId = 'eu-central-1_X27xCNSof';
-      authEnvConfig.userPoolWebClientId = 'lh7qnvrevedkem43b7qvpjhl';
+      authEnvConfig.userPoolId = 'eu-central-1_htA4V0E1g';
+      authEnvConfig.userPoolWebClientId = '2ccv0hpd4mq0rir7fs4qi7ah5l';
       break;
     case 'production':
-      authEnvConfig.userPoolId = 'eu-central-1_j5L4RE5u2';
-      authEnvConfig.userPoolWebClientId = 'k4ndbs3fqmv3ms04vns4slc9a';
+      authEnvConfig.userPoolId = 'eu-central-1_fttc090sQ';
+      authEnvConfig.userPoolWebClientId = '4v72uodmi74apj2dobpd8jsr8k';
       break;
     default:
       break;

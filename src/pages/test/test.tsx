@@ -65,6 +65,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import Chip from '@mui/material/Chip';
 import TablePagination from '@mui/material/TablePagination';
 import ObservabilityApiRepo from '../../infrastructure/observability-api/observability-api-repo';
+import { Alert, Snackbar } from '@mui/material';
 
 const showRealData = false;
 const lineageId = '627929bf08bead50ede9b472';
@@ -446,6 +447,19 @@ export default (): ReactElement => {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [searchParams] = useSearchParams();
+
+  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+
+  const handleSnackbarClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -1535,10 +1549,34 @@ export default (): ReactElement => {
       });
   }, [user]);
 
+  const handleUserFeedback = () => {
+    if (!searchParams) return;
+
+    const alertId = searchParams.get('alertId');
+    if (!alertId) return;
+
+    const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
+    if (!userFeedbackIsAnomaly) return;
+    ObservabilityApiRepo.updateTestHistoryEntry(
+      { alertId, userFeedbackIsAnomaly },
+      jwt
+    )
+      .then(() => {
+        setSnackbarOpen(true);
+      })
+      .catch(() => {
+        console.trace(
+          'Something went wrong saving user feedback to persistence'
+        );
+      });
+  };
+
   useEffect(() => {
     if (!accountId || lineage) return;
 
     if (!jwt) throw new Error('No user authorization found');
+
+    handleUserFeedback();
 
     if (showRealData) {
       LineageApiRepository.getOne(lineageId, 'todo-replace')
@@ -1577,26 +1615,6 @@ export default (): ReactElement => {
       setReadyToBuild(true);
     }
   }, [accountId]);
-
-  useEffect(() => {
-    if (!searchParams) return;
-
-    const alertId = searchParams.get('alertId');
-    if (!alertId) return;
-
-    const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
-    if (!userFeedbackIsAnomaly) return;
-    ObservabilityApiRepo.updateTestHistoryEntry(
-      { alertId, userFeedbackIsAnomaly },
-      jwt
-    )
-      .then(() => alert('Thanks we took your feedack into account'))
-      .catch(() => {
-        console.trace(
-          'Something went wrong saving user feedback to persistence'
-        );
-      });
-  }, [searchParams]);
 
   useEffect(() => {
     if (!filteredTreeViewElements.length) return;
@@ -2151,6 +2169,19 @@ export default (): ReactElement => {
             onRowsPerPageChange={handleChangeRowsPerPage}
           />
         </Paper>
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={handleSnackbarClose}
+        >
+          <Alert
+            onClose={handleSnackbarClose}
+            severity="success"
+            sx={{ width: '100%' }}
+          >
+            {'We took your feedback into account :)'}
+          </Alert>
+        </Snackbar>
       </div>
     </ThemeProvider>
   );

@@ -6,7 +6,7 @@ import TableChartIcon from '@mui/icons-material/TableChart';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Logo from '../../components/top-nav/cito-header.png';
 import { FaGithub, FaSlack } from 'react-icons/fa';
-import { SiLooker, SiSnowflake } from 'react-icons/si';
+import {SiSnowflake } from 'react-icons/si';
 import G6, {
   ComboConfig,
   EdgeConfig,
@@ -843,7 +843,6 @@ export default (): ReactElement => {
     else if (tabIndex === 1) setIntegrationComponent(<Github></Github>);
     else if (tabIndex === 2)
       setIntegrationComponent(<Slack accountId={accountId} jwt={jwt}></Slack>);
-    else if (tabIndex === 3) setIntegrationComponent(<Github></Github>);
   }, [tabIndex]);
 
   useEffect(() => {
@@ -1541,7 +1540,6 @@ export default (): ReactElement => {
               <Tab icon={<FaGithub />} label="GitHub" />
               <Tab icon={<SiSnowflake />} label="Snowflake" />
               <Tab icon={<FaSlack />} label="Slack" />
-              <Tab icon={<SiLooker />} label="Looker" />
             </Tabs>
             {integrationComponent}
           </div>

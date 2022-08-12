@@ -5,16 +5,16 @@ const getAuthEnvConfig = (): any => {
 
   switch (process.env.REACT_APP_STAGE) {
     case 'development':
-      authEnvConfig.userPoolId = 'eu-central-1_OOQzjVWkK';
-      authEnvConfig.userPoolWebClientId = '56q0bao2fjhkcq6dldvcf039sj';
+      authEnvConfig.userPoolId = 'eu-central-1_HYLD4MoTL';
+      authEnvConfig.userPoolWebClientId = '496tv5tk13ofnb7brg7t6r90kn';
       break;
     case 'test':
-      authEnvConfig.userPoolId = 'eu-central-1_X27xCNSof';
-      authEnvConfig.userPoolWebClientId = 'lh7qnvrevedkem43b7qvpjhl';
+      authEnvConfig.userPoolId = 'eu-central-1_htA4V0E1g';
+      authEnvConfig.userPoolWebClientId = '2ccv0hpd4mq0rir7fs4qi7ah5l';
       break;
     case 'production':
-      authEnvConfig.userPoolId = 'eu-central-1_j5L4RE5u2';
-      authEnvConfig.userPoolWebClientId = 'k4ndbs3fqmv3ms04vns4slc9a';
+      authEnvConfig.userPoolId = 'eu-central-1_fttc090sQ';
+      authEnvConfig.userPoolWebClientId = '4v72uodmi74apj2dobpd8jsr8k';
       break;
     default:
       break;
@@ -31,12 +31,12 @@ const getOAuthEnvConfig = (): any => {
   switch (process.env.REACT_APP_STAGE) {
     case 'development':
       oAuthEnvConfig.domain =
-        'auth-dev-citodata.auth.eu-central-1.amazoncognito.com';
+        'auth-citodata-dev.auth.eu-central-1.amazoncognito.com';
       oAuthEnvConfig.redirectSignIn = 'http://localhost:3006';
       oAuthEnvConfig.redirectSignOut = 'http://localhost:3006';
       break;
     case 'test':
-      oAuthEnvConfig.domain = 'auth-staging.citodata.com';
+      oAuthEnvConfig.domain = 'auth-citodata-staging.auth.eu-central-1.amazoncognito.com';
       oAuthEnvConfig.redirectSignIn = 'https://www.app-staging.citodata.com';
       oAuthEnvConfig.redirectSignOut = 'https://www.app-staging.citodata.com';
       break;
@@ -53,3 +53,30 @@ const getOAuthEnvConfig = (): any => {
 };
 
 export const oAuthEnvConfig = getOAuthEnvConfig();
+
+interface SlackConfig {slackClientId: string, slackClientSecret:string}; 
+
+const getSlackConfig = (): SlackConfig  => {
+  const slackConfig : any = {};
+
+  switch (process.env.REACT_APP_STAGE) {
+    case 'development':
+      slackConfig.slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID_DEV || '';
+      slackConfig.slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET_DEV || '';
+      break;
+    case 'test':
+      slackConfig.slackClientId = '';
+      slackConfig.slackClientSecret = '';
+      break;
+    case 'production':
+      slackConfig.slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID || '';
+      slackConfig.slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET || '';
+      break;
+    default:
+      throw new Error('app stage not found');
+  }
+
+  return slackConfig;
+};
+
+export const slackConfig = getSlackConfig();

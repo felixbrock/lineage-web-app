@@ -741,6 +741,7 @@ export default (): ReactElement => {
         const accessToken = session.getAccessToken();
 
         const token = accessToken.getJwtToken();
+        
         setJwt(token);
 
         return AccountApiRepository.getBy(new URLSearchParams({}), token);

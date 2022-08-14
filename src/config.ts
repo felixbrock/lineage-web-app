@@ -31,12 +31,12 @@ const getOAuthEnvConfig = (): any => {
   switch (process.env.REACT_APP_STAGE) {
     case 'development':
       oAuthEnvConfig.domain =
-        'auth-citodata-dev.auth.eu-central-1.amazoncognito.com';
+        'auth-cito-dev.auth.eu-central-1.amazoncognito.com';
       oAuthEnvConfig.redirectSignIn = 'http://localhost:3006';
       oAuthEnvConfig.redirectSignOut = 'http://localhost:3006';
       break;
     case 'test':
-      oAuthEnvConfig.domain = 'auth-citodata-staging.auth.eu-central-1.amazoncognito.com';
+      oAuthEnvConfig.domain = 'auth-cito-staging.auth.eu-central-1.amazoncognito.com';
       oAuthEnvConfig.redirectSignIn = 'https://www.app-staging.citodata.com';
       oAuthEnvConfig.redirectSignOut = 'https://www.app-staging.citodata.com';
       break;

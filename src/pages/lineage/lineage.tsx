@@ -793,35 +793,35 @@ export default (): ReactElement => {
     if (!jwt) throw new Error('No user authorization found');
 
     if (showRealData) {
-      LineageApiRepository.getOne(lineageId, 'todo-replace')
+      LineageApiRepository.getOne(lineageId, jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
           setLineage(lineageDto);
           return MaterializationsApiRepository.getBy(
             new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
+            jwt
           );
         })
         .then((materializationDtos) => {
           setMaterializations(materializationDtos);
           return DashboardsApiRepository.getBy(
             new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
+            jwt
           );
         })
         .then((dashboardDtos) => {
           setDashboards(dashboardDtos);
           return ColumnsApiRepository.getBy(
             new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
+            jwt
           );
         })
         .then((columnDtos) => {
           setColumns(columnDtos);
           return DependenciesApiRepository.getBy(
             new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
+            jwt
           );
         })
         .then((dependencyDtos) => {

@@ -1581,28 +1581,28 @@ export default (): ReactElement => {
     handleUserFeedback();
 
     if (showRealData) {
-      LineageApiRepository.getOne(lineageId, 'todo-replace')
+      LineageApiRepository.getOne(lineageId, jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
           setLineage(lineageDto);
           return MaterializationsApiRepository.getBy(
             new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
+            jwt
           );
         })
         .then((materializationDtos) => {
           setMaterializations(materializationDtos);
           return ColumnsApiRepository.getBy(
             new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
+            jwt
           );
         })
         .then((columnDtos) => {
           setColumns(columnDtos);
           return DependenciesApiRepository.getBy(
             new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
+            jwt
           );
         })
         .then((dependencyDtos) => {
@@ -1925,7 +1925,7 @@ export default (): ReactElement => {
           );
 
         if (showRealData) {
-          LogicApiRepository.getOne(combo.logicId, 'todo-replace').then(
+          LogicApiRepository.getOne(combo.logicId, jwt).then(
             (logicDto) => {
               console.log(logicDto?.sql);
 

@@ -449,14 +449,18 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
+  const getAllowedTestTypes = (columnType: string): TestType[] => {
+    if (!Object.keys(snowflakeTypes).includes(columnType.toLowerCase()))
+      throw new Error(`Invalid column type (${columnType}) provided`);
+    return snowflakeTypes[columnType.toLowerCase()];
+  };
+
   const buildColumnTests = (
     materializationId: string,
     columnId: string,
     columnType: string
   ): ReactElement => {
-    if (!Object.keys(snowflakeTypes).includes(columnType.toLowerCase()))
-      throw new Error(`Invalid column type (${columnType}) provided`);
-    const allowedTestTypes = snowflakeTypes[columnType];
+    const allowedTestTypes = getAllowedTestTypes(columnType);
 
     return (
       <TableRow>
@@ -518,8 +522,9 @@ export default (): ReactElement => {
             </Select>
           </FormControl>
         </TableCell>
-        {allowedTestTypes.includes('ColumnFreshness') ? (
-          <TableCell sx={tableCellSx} align="left">
+
+        <TableCell sx={tableCellSx} align="left">
+          {allowedTestTypes.includes('ColumnFreshness') ? (
             <Button
               id={`freshnessActivated-${materializationId}-${columnId}`}
               size="large"
@@ -532,12 +537,13 @@ export default (): ReactElement => {
               }
               onClick={handleTestSelectButtonClick}
             />
-          </TableCell>
-        ) : (
-          <></>
-        )}
-        {allowedTestTypes.includes('ColumnCardinality') ? (
-          <TableCell sx={tableCellSx} align="left">
+          ) : (
+            <></>
+          )}
+        </TableCell>
+
+        <TableCell sx={tableCellSx} align="left">
+          {allowedTestTypes.includes('ColumnCardinality') ? (
             <Button
               id={`cardinalityActivated-${materializationId}-${columnId}`}
               size="large"
@@ -550,12 +556,13 @@ export default (): ReactElement => {
               }
               onClick={handleTestSelectButtonClick}
             />
-          </TableCell>
-        ) : (
-          <></>
-        )}
-        {allowedTestTypes.includes('ColumnNullness') ? (
-          <TableCell sx={tableCellSx} align="left">
+          ) : (
+            <></>
+          )}
+        </TableCell>
+
+        <TableCell sx={tableCellSx} align="left">
+          {allowedTestTypes.includes('ColumnNullness') ? (
             <Button
               id={`nullnessActivated-${materializationId}-${columnId}`}
               size="large"
@@ -568,12 +575,13 @@ export default (): ReactElement => {
               }
               onClick={handleTestSelectButtonClick}
             />
-          </TableCell>
-        ) : (
-          <></>
-        )}
-        {allowedTestTypes.includes('ColumnUniqueness') ? (
-          <TableCell sx={tableCellSx} align="left">
+          ) : (
+            <></>
+          )}
+        </TableCell>
+
+        <TableCell sx={tableCellSx} align="left">
+          {allowedTestTypes.includes('ColumnUniqueness') ? (
             <Button
               id={`uniquenessActivated-${materializationId}-${columnId}`}
               size="large"
@@ -586,12 +594,13 @@ export default (): ReactElement => {
               }
               onClick={handleTestSelectButtonClick}
             />
-          </TableCell>
-        ) : (
-          <></>
-        )}
-        {allowedTestTypes.includes('ColumnDistribution') ? (
-          <TableCell sx={tableCellSx} align="left">
+          ) : (
+            <></>
+          )}
+        </TableCell>
+
+        <TableCell sx={tableCellSx} align="left">
+          {allowedTestTypes.includes('ColumnDistribution') ? (
             <Button
               id={`distributionActivated-${materializationId}-${columnId}`}
               size="large"
@@ -604,10 +613,10 @@ export default (): ReactElement => {
               }
               onClick={handleTestSelectButtonClick}
             />
-          </TableCell>
-        ) : (
-          <></>
-        )}
+          ) : (
+            <></>
+          )}
+        </TableCell>
       </TableRow>
     );
   };
@@ -678,6 +687,23 @@ export default (): ReactElement => {
     return testSelectionStructure;
   };
 
+  const getMaterializationTestTypeCount = (
+    materializationId: string,
+    testType: TestType
+  ): number => {
+
+    const columnTestSelection = testSelection[materializationId].columnTestSelection;
+
+    let counter = 0;
+    Object.keys(columnTestSelection).forEach(
+      (element) => { const allowedTestTypes = getAllowedTestTypes(columnTestSelection[element].type);
+      if(allowedTestTypes.includes(testType)) counter += 1;
+      }
+    );
+
+    return counter;
+  };
+
   const Test = (props: { materializationId: string }): ReactElement => {
     const materializationTestSelection = testSelection[props.materializationId];
 
@@ -694,6 +720,12 @@ export default (): ReactElement => {
         materializationTestSelection.columnTestSelection[key].type
       )
     );
+
+    const matColumnFreshnessCount = getMaterializationTestTypeCount(props.materializationId, 'ColumnFreshness');
+    const matColumnCardinalityCount = getMaterializationTestTypeCount(props.materializationId, 'ColumnCardinality');
+    const matColumnNullnessCount = getMaterializationTestTypeCount(props.materializationId, 'ColumnNullness');
+    const matColumnDistributionCount = getMaterializationTestTypeCount(props.materializationId, 'ColumnDistribution');
+    const matColumnUniquenessCount = getMaterializationTestTypeCount(props.materializationId, 'ColumnUniqueness');
 
     return (
       <React.Fragment>
@@ -745,7 +777,7 @@ export default (): ReactElement => {
             </FormControl>
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-            <Button
+            {matColumnFreshnessCount ? <Button
               id={`freshnessActivated-${props.materializationId}`}
               size="large"
               variant="contained"
@@ -755,7 +787,7 @@ export default (): ReactElement => {
                   : 'info'
               }
               onClick={handleMatTestSelectButtonClick}
-            />
+            />: <></>}
             <Chip
               color={
                 testSelection[props.materializationId].freshnessActivatedCount
@@ -769,13 +801,13 @@ export default (): ReactElement => {
               }
               label={`${
                 testSelection[props.materializationId].freshnessActivatedCount
-              }/${testSelection[props.materializationId].columnCount}`}
+              }/${matColumnFreshnessCount}`}
               size="small"
               sx={{ m: 1 }}
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-            <Button
+          {matColumnCardinalityCount ? <Button
               id={`cardinalityActivated-${props.materializationId}`}
               size="large"
               variant="contained"
@@ -785,7 +817,7 @@ export default (): ReactElement => {
                   : 'info'
               }
               onClick={handleMatTestSelectButtonClick}
-            />
+            />: <></>}
             <Chip
               color={
                 testSelection[props.materializationId].cardinalityActivatedCount
@@ -799,13 +831,13 @@ export default (): ReactElement => {
               }
               label={`${
                 testSelection[props.materializationId].cardinalityActivatedCount
-              }/${testSelection[props.materializationId].columnCount}`}
+              }/${matColumnCardinalityCount}`}
               size="small"
               sx={{ m: 1 }}
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-            <Button
+          {matColumnNullnessCount ? <Button
               id={`nullnessActivated-${props.materializationId}`}
               size="large"
               variant="contained"
@@ -815,7 +847,7 @@ export default (): ReactElement => {
                   : 'info'
               }
               onClick={handleMatTestSelectButtonClick}
-            />
+            />: <></>}
             <Chip
               color={
                 testSelection[props.materializationId].nullnessActivatedCount
@@ -829,13 +861,13 @@ export default (): ReactElement => {
               }
               label={`${
                 testSelection[props.materializationId].nullnessActivatedCount
-              }/${testSelection[props.materializationId].columnCount}`}
+              }/${matColumnNullnessCount}`}
               size="small"
               sx={{ m: 1 }}
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-            <Button
+          {matColumnUniquenessCount ? <Button
               id={`uniquenessActivated-${props.materializationId}`}
               size="large"
               variant="contained"
@@ -845,7 +877,7 @@ export default (): ReactElement => {
                   : 'info'
               }
               onClick={handleMatTestSelectButtonClick}
-            />
+            />: <></>}
             <Chip
               color={
                 testSelection[props.materializationId].uniquenessActivatedCount
@@ -854,7 +886,7 @@ export default (): ReactElement => {
               }
               label={`${
                 testSelection[props.materializationId].uniquenessActivatedCount
-              }/${testSelection[props.materializationId].columnCount}`}
+              }/${matColumnUniquenessCount}`}
               variant={
                 testSelection[props.materializationId].uniquenessActivatedCount
                   ? 'filled'
@@ -865,7 +897,7 @@ export default (): ReactElement => {
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-            <Button
+          {matColumnDistributionCount ?<Button
               id={`distributionActivated-${props.materializationId}`}
               size="large"
               variant="contained"
@@ -875,7 +907,7 @@ export default (): ReactElement => {
                   : 'info'
               }
               onClick={handleMatTestSelectButtonClick}
-            />
+            />: <></>}
             <Chip
               color={
                 testSelection[props.materializationId]
@@ -886,7 +918,7 @@ export default (): ReactElement => {
               label={`${
                 testSelection[props.materializationId]
                   .distributionActivatedCount
-              }/${testSelection[props.materializationId].columnCount}`}
+              }/${matColumnDistributionCount}`}
               variant={
                 testSelection[props.materializationId]
                   .distributionActivatedCount

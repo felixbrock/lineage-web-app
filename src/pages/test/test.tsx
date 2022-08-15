@@ -543,116 +543,6 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
-  const handleSelect = (event: React.SyntheticEvent, nodeIds: string) => {
-    if (!data) return;
-    if (!graph) return;
-    if (!nodeIds) return;
-
-    const id = nodeIds;
-
-    const selectedNodes = graph.findAllByState('node', 'selected');
-    selectedNodes.forEach((node) => node.clearStates());
-
-    const selectedCombos = graph.findAllByState('combo', 'selected');
-    selectedCombos.forEach((combo) => combo.clearStates());
-
-    const type = determineType(id, data);
-
-    if (type === 'combo') graph.data(loadCombo(id, data));
-    else if (type === 'node')
-      graph.data(loadData(id, DataLoadNodeType.Self, [], [], data));
-
-    graph.render();
-
-    const target = graph.findById(id);
-
-    graph.setItemState(target, 'selected', true);
-
-    graph.emit('nodeselectchange', {
-      select: true,
-      target,
-    });
-  };
-
-  const toggleSideNavTreeView = (
-    event: React.SyntheticEvent,
-    nodeIds: string[]
-  ) => setExpandedTreeViewElementIds(nodeIds);
-
-  const handleSearchChange = (event: any) => {
-    const testSelectionKeys = Object.keys(testSelection);
-    if (!testSelectionKeys.length) return;
-
-    const value = event.target.value;
-    if (!value) {
-      setSearchedTestSelection(testSelection);
-      return;
-    }
-
-    const newTestSelectionElements: {
-      [key: string]: MaterializationTestSelection;
-    } = {};
-
-    testSelectionKeys.forEach((key) => {
-      if (testSelection[key].label.includes(value))
-        newTestSelectionElements[key] = testSelection[key];
-    });
-
-    setSearchedTestSelection(newTestSelectionElements);
-  };
-
-  const closeMatSidePanel = () => {
-    setSQL('');
-
-    const panel = document.getElementById('materializationSidePanel');
-    if (!panel)
-      throw new ReferenceError('Materialization Panel does not exist');
-    panel.style.visibility = 'hidden';
-    panel.style.opacity = '0';
-  };
-
-  const closeColSidePanel = () => {
-    setColumnTest('');
-
-    const panel = document.getElementById('columnSidePanel');
-    if (!panel) throw new ReferenceError('Column Panel does not exist');
-    panel.style.visibility = 'hidden';
-    panel.style.opacity = '0';
-  };
-
-  // const handleInfo = () => {
-  //   const snackbar = document.getElementById('snackbar');
-  //   if (!snackbar) throw new ReferenceError('Snackbar element not found');
-  //   snackbar.className = 'show';
-
-  //   setTimeout(() => {
-  //     snackbar.className = snackbar.className.replace('show', '');
-  //     setInfo('');
-  //   }, 3000);
-  // };
-
-  const buildTreeViewColumn = (
-    column: any,
-    defaultColor: string,
-    anomalyColor: string
-  ): ReactElement => {
-    const hasNewAnomaly = defaultAnomalyStates.find(
-      (element) => element.id === column.id
-    );
-    if (!hasNewAnomaly) throw new ReferenceError('Anomaly state not found');
-
-    return (
-      <TreeItem
-        nodeId={column.id}
-        label={column.label}
-        icon={<MdTag />}
-        sx={{
-          color: hasNewAnomaly.hasNewAnomaly ? anomalyColor : defaultColor,
-        }}
-      />
-    );
-  };
-
   const handleTestSelectButtonClick = (event: any) => {
     const id = event.target.id as string;
     const props = id.split('-');
@@ -925,17 +815,6 @@ export default (): ReactElement => {
         </TableCell>
       </TableRow>
     );
-
-    // return (
-    //   <TreeItem
-    //     nodeId={column.id}
-    //     label={column.label}
-    //     icon={<MdTag />}
-    //     sx={{
-    //       color: hasNewAnomaly.hasNewAnomaly ? anomalyColor : defaultColor,
-    //     }}
-    //   />
-    // );
   };
 
   const buildTestSelectionStructure = (): {
@@ -1339,173 +1218,6 @@ export default (): ReactElement => {
         </TableRow>
       </React.Fragment>
     );
-    // return (
-    //   <TreeItem
-    //     nodeId={combo.id}
-    //     label={combo.label}
-    //     sx={{ color: hasAnomalyChilds ? anomalyColor : defaultColor }}
-    //     endIcon={<MdTag />}
-    //   >
-    //     {columnElements}
-    //   </TreeItem>
-    // );
-  };
-
-  // function createData(
-  //   name: string,
-  //   calories: number,
-  //   fat: number,
-  //   carbs: number,
-  //   protein: number,
-  //   price: number
-  // ) {
-  //   return {
-  //     name,
-  //     calories,
-  //     fat,
-  //     carbs,
-  //     protein,
-  //     price,
-  //     history: [
-  //       {
-  //         date: '2020-01-05',
-  //         customerId: '11091700',
-  //         amount: 3,
-  //       },
-  //       {
-  //         date: '2020-01-02',
-  //         customerId: 'Anonymous',
-  //         amount: 1,
-  //       },
-  //     ],
-  //   };
-  // }
-
-  // function Row(props: { row: ReturnType<typeof createData> }) {
-  //   const { row } = props;
-  //   const [open, setOpen] = React.useState(false);
-
-  //   return (
-  //     <React.Fragment>
-  //       <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
-  //         <TableCell sx={tableCellSx} align='center' component="th" scope="row">
-  //           {row.name}
-  //         </TableCell>
-  //         <TableCell sx={tableCellSx} align='center'>
-  //           <IconButton
-  //             aria-label="expand row"
-  //             size="small"
-  //             onClick={() => setOpen(!open)}
-  //           >
-  //             {open ? <MdExpandMore /> : <MdChevronRight />}
-  //           </IconButton>
-  //         </TableCell>
-  //       </TableRow>
-  //       <TableRow>
-  //         <TableCell sx={tableCellSx} align='center' style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-  //           <Collapse in={open} timeout="auto" unmountOnExit>
-  //             <Box sx={{ margin: 1 }}>
-  //               <Table>
-  //                 <TableHead>
-  //                   <TableRow>
-  //                     <TableCell sx={tableCellSx} align='center' />
-  //                     <TableCell sx={tableCellSx} align='center'>Frequency</TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>Threshold</TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>Freshness</TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>Cardinality</TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>Nullness</TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>Uniqueness</TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>Nullness</TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>Sortedness</TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>Distribution</TableCell>
-  //                   </TableRow>
-  //                 </TableHead>
-  //                 <TableBody>
-  //                   <TableRow>
-  //                     <TableCell sx={tableCellSx} align='center'>
-  //                       <>Column Name 1</>
-  //                     </TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>
-  //                       <>A</>
-  //                     </TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>
-  //                       <>B</>
-  //                     </TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>
-  //                       <Button>Test1</Button>
-  //                     </TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>
-  //                       <Button>Test2</Button>
-  //                     </TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>
-  //                       <Button>Test3</Button>
-  //                     </TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>
-  //                       <Button>Test4</Button>
-  //                     </TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>
-  //                       <Button>Test5</Button>
-  //                     </TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>
-  //                       <Button>Test6</Button>
-  //                     </TableCell>
-  //                     <TableCell sx={tableCellSx} align='center'>
-  //                       <Button>Test7</Button>
-  //                     </TableCell>
-  //                   </TableRow>
-  //                 </TableBody>
-  //               </Table>
-  //             </Box>
-  //           </Collapse>
-  //         </TableCell>
-  //       </TableRow>
-  //     </React.Fragment>
-  //   );
-  // }
-
-  // const rows = [
-  //   createData('Frozen yoghurt', 159, 6.0, 24, 4.0, 3.99),
-  //   createData('Ice cream sandwich', 237, 9.0, 37, 4.3, 4.99),
-  //   createData('Eclair', 262, 16.0, 24, 6.0, 3.79),
-  //   createData('Cupcake', 305, 3.7, 67, 4.3, 2.5),
-  //   createData('Gingerbread', 356, 16.0, 49, 3.9, 1.5),
-  // ];
-
-  const buildTreeViewElements = (): ReactElement[] => {
-    if (!data) return [<></>];
-    if (!data.combos) return [<></>];
-
-    const defaultColor = 'black';
-    const anomalyColor = '#db1d33';
-
-    const materializationElements = data.combos.map((combo): ReactElement => {
-      if (!data.nodes) return <></>;
-
-      const relevantColumns = data.nodes.filter(
-        (node) => node.comboId === combo.id
-      );
-
-      const columnElements = relevantColumns.map((column) =>
-        buildTreeViewColumn(column, defaultColor, anomalyColor)
-      );
-
-      const hasAnomalyChilds = columnElements.some(
-        (element) => element.props.sx.color !== defaultColor
-      );
-
-      return (
-        <TreeItem
-          nodeId={combo.id}
-          label={combo.label}
-          sx={{ color: hasAnomalyChilds ? anomalyColor : defaultColor }}
-          endIcon={<MdTag />}
-        >
-          {columnElements}
-        </TreeItem>
-      );
-    });
-
-    return materializationElements;
   };
 
   const renderTests = () => {
@@ -2078,7 +1790,6 @@ export default (): ReactElement => {
             </Box>
           </div>
         </div>
-        <div id="lineage" hidden={true} />
         <div id="search-nav-container">
           <div id="search">
             <TextField
@@ -2089,19 +1800,6 @@ export default (): ReactElement => {
             />
           </div>
         </div>
-        <div hidden={true}>
-          <TreeView
-            aria-label="controlled"
-            defaultCollapseIcon={<MdExpandMore />}
-            defaultExpandIcon={<MdChevronRight />}
-            expanded={expandedTreeViewElementIds}
-            onNodeToggle={toggleSideNavTreeView}
-            onNodeSelect={handleSelect}
-          >
-            {data ? treeViewElements : <></>}
-          </TreeView>
-        </div>
-
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
           <TableContainer sx={{ height: window.innerHeight - 50 - 67 - 52 }}>
             <Table stickyHeader={true} aria-label="collapsible table">

@@ -4,20 +4,24 @@ const getAuthEnvConfig = (): any => {
   const authEnvConfig: any = {};
 
   switch (process.env.REACT_APP_STAGE) {
-    case 'development':
-      authEnvConfig.userPoolId = 'eu-central-1_0Z8JhFj8z';
-      authEnvConfig.userPoolWebClientId = '2kt5cdpsbfc53sokgii4l5lecc';
-      break;
-    case 'test':
-      authEnvConfig.userPoolId = '';
-      authEnvConfig.userPoolWebClientId = '';
-      break;
-    case 'production':
-      authEnvConfig.userPoolId = 'eu-central-1_0muGtKMk3';
-      authEnvConfig.userPoolWebClientId = '90hkfejkd81bp3ta5gd80hanp';
-      break;
-    default:
-      break;
+      case 'development':
+        authEnvConfig.userPoolId = 'eu-central-1_0Z8JhFj8z';
+        authEnvConfig.userPoolWebClientId = '2kt5cdpsbfc53sokgii4l5lecc';
+        authEnvConfig.tokenUrl =
+          '';
+        break;
+      case 'test':
+        authEnvConfig.userPoolId = '';
+        authEnvConfig.userPoolWebClientId = '';
+        authEnvConfig.tokenUrl = '';
+        break;
+      case 'production':
+        authEnvConfig.userPoolId = 'eu-central-1_0muGtKMk3';
+        authEnvConfig.userPoolWebClientId = '90hkfejkd81bp3ta5gd80hanp';
+        authEnvConfig.tokenUrl = '';
+        break;
+      default:
+        break;
   }
 
   return authEnvConfig;

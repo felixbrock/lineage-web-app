@@ -52,7 +52,6 @@ export const testSelectionTypes = [
   'cardinalityActivated',
   'nullnessActivated',
   'uniquenessActivated',
-  'sortednessActivated',
 ] as const;
 export type SelectionType = typeof testSelectionTypes[number];
 
@@ -64,8 +63,81 @@ export const parseSelectionType = (selectionType: unknown): SelectionType => {
   throw new Error('Provision of invalid selection type');
 };
 
+export const testTypes = [
+  'ColumnFreshness',
+  'ColumnCardinality',
+  'ColumnUniqueness',
+  'ColumnNullness',
+  'ColumnDistribution',
+  'MaterializationRowCount',
+  'MaterializationColumnCount',
+  'MaterializationFreshness',
+] as const;
+export type TestType = typeof testTypes[number];
+
+export const parseTestType = (testType: unknown): TestType => {
+  const identifiedElement = testTypes.find((element) => element === testType);
+  if (identifiedElement) return identifiedElement;
+  throw new Error('Provision of invalid type');
+};
+
+const numericDataTests: TestType[] = [
+  'ColumnNullness',
+  'ColumnCardinality',
+  'ColumnUniqueness',
+  'ColumnDistribution',
+];
+const stringAndBinaryDataTests: TestType[] = [
+  'ColumnNullness',
+  'ColumnCardinality',
+  'ColumnUniqueness',
+];
+const logicalDataTests: TestType[] = ['ColumnNullness'];
+const dateAndTimeDataTests: TestType[] = ['ColumnNullness', 'ColumnFreshness'];
+const semiStructuredDataTests: TestType[] = ['ColumnNullness'];
+const geospatialDataTests: TestType[] = ['ColumnNullness'];
+
+const snowflakeTypes: { [key: string]: TestType[] } = {
+  number: numericDataTests,
+  decimal: numericDataTests,
+  numeric: numericDataTests,
+  int: numericDataTests,
+  integer: numericDataTests,
+  bigint: numericDataTests,
+  smallint: numericDataTests,
+  tinyint: numericDataTests,
+  byteint: numericDataTests,
+  float: numericDataTests,
+  float4: numericDataTests,
+  float8: numericDataTests,
+  double: numericDataTests,
+  'double precision': numericDataTests,
+  real: numericDataTests,
+  varchar: stringAndBinaryDataTests,
+  character: stringAndBinaryDataTests,
+  char: stringAndBinaryDataTests,
+  string: stringAndBinaryDataTests,
+  text: stringAndBinaryDataTests,
+  binary: stringAndBinaryDataTests,
+  varbinary: stringAndBinaryDataTests,
+  boolean: logicalDataTests,
+  date: dateAndTimeDataTests,
+  datetime: dateAndTimeDataTests,
+  time: dateAndTimeDataTests,
+  timestamp: dateAndTimeDataTests,
+  timestamp_ltz: dateAndTimeDataTests,
+  timestamp_ntz: dateAndTimeDataTests,
+  timestamp_tz: dateAndTimeDataTests,
+  variant: semiStructuredDataTests,
+  object: semiStructuredDataTests,
+  array: semiStructuredDataTests,
+  geography: geospatialDataTests,
+};
+
 interface ColumnTestSelection {
   label: string;
+  id: string;
+  type: string;
   frequency: string;
   sensitivity: string;
   distributionActivated: boolean;
@@ -73,7 +145,6 @@ interface ColumnTestSelection {
   cardinalityActivated: boolean;
   nullnessActivated: boolean;
   uniquenessActivated: boolean;
-  sortednessActivated: boolean;
   testsActivated: boolean;
 }
 
@@ -93,8 +164,6 @@ interface MaterializationTestSelection {
   nullnessActivatedCount: number;
   uniquenessActivated: boolean;
   uniquenessActivatedCount: number;
-  sortednessActivated: boolean;
-  sortednessActivatedCount: number;
   columnCount: number;
   testsActivated: boolean;
 }
@@ -288,8 +357,6 @@ export default (): ReactElement => {
       testSelectionLocal[props[1]].columnTestSelection[props[2]]
         .nullnessActivated ||
       testSelectionLocal[props[1]].columnTestSelection[props[2]]
-        .sortednessActivated ||
-      testSelectionLocal[props[1]].columnTestSelection[props[2]]
         .uniquenessActivated;
 
     testSelectionLocal[props[1]].columnTestSelection[props[2]].testsActivated =
@@ -302,7 +369,6 @@ export default (): ReactElement => {
       testSelectionLocal[props[1]].distributionActivated ||
       testSelectionLocal[props[1]].freshnessActivated ||
       testSelectionLocal[props[1]].nullnessActivated ||
-      testSelectionLocal[props[1]].sortednessActivated ||
       testSelectionLocal[props[1]].uniquenessActivated;
 
     testSelectionLocal[props[1]].testsActivated = matActivated;
@@ -362,8 +428,6 @@ export default (): ReactElement => {
           testSelectionLocal[props[1]].columnTestSelection[key]
             .nullnessActivated ||
           testSelectionLocal[props[1]].columnTestSelection[key]
-            .sortednessActivated ||
-          testSelectionLocal[props[1]].columnTestSelection[key]
             .uniquenessActivated;
 
         testSelectionLocal[props[1]].columnTestSelection[key].testsActivated =
@@ -378,7 +442,6 @@ export default (): ReactElement => {
       testSelectionLocal[props[1]].distributionActivated ||
       testSelectionLocal[props[1]].freshnessActivated ||
       testSelectionLocal[props[1]].nullnessActivated ||
-      testSelectionLocal[props[1]].sortednessActivated ||
       testSelectionLocal[props[1]].uniquenessActivated;
 
     testSelectionLocal[props[1]].testsActivated = activated;
@@ -388,8 +451,13 @@ export default (): ReactElement => {
 
   const buildColumnTests = (
     materializationId: string,
-    columnId: string
+    columnId: string,
+    columnType: string
   ): ReactElement => {
+    if (!Object.keys(snowflakeTypes).includes(columnType.toLowerCase()))
+      throw new Error(`Invalid column type (${columnType}) provided`);
+    const allowedTestTypes = snowflakeTypes[columnType];
+
     return (
       <TableRow>
         <TableCell sx={tableCellSx} align="left">
@@ -443,9 +511,6 @@ export default (): ReactElement => {
               }
               onChange={handleColumnSensitivityChange}
             >
-              <MenuItem value={-3}>-3</MenuItem>
-              <MenuItem value={-2}>-2</MenuItem>
-              <MenuItem value={-1}>-1</MenuItem>
               <MenuItem value={0}>0</MenuItem>
               <MenuItem value={1}>1</MenuItem>
               <MenuItem value={2}>2</MenuItem>
@@ -453,90 +518,96 @@ export default (): ReactElement => {
             </Select>
           </FormControl>
         </TableCell>
-        <TableCell sx={tableCellSx} align="left">
-          <Button
-            id={`freshnessActivated-${materializationId}-${columnId}`}
-            size="large"
-            variant="contained"
-            color={
-              testSelection[materializationId].columnTestSelection[columnId]
-                .freshnessActivated
-                ? 'primary'
-                : 'info'
-            }
-            onClick={handleTestSelectButtonClick}
-          />
-        </TableCell>
-        <TableCell sx={tableCellSx} align="left">
-          <Button
-            id={`cardinalityActivated-${materializationId}-${columnId}`}
-            size="large"
-            variant="contained"
-            color={
-              testSelection[materializationId].columnTestSelection[columnId]
-                .cardinalityActivated
-                ? 'primary'
-                : 'info'
-            }
-            onClick={handleTestSelectButtonClick}
-          />
-        </TableCell>
-        <TableCell sx={tableCellSx} align="left">
-          <Button
-            id={`nullnessActivated-${materializationId}-${columnId}`}
-            size="large"
-            variant="contained"
-            color={
-              testSelection[materializationId].columnTestSelection[columnId]
-                .nullnessActivated
-                ? 'primary'
-                : 'info'
-            }
-            onClick={handleTestSelectButtonClick}
-          />
-        </TableCell>
-        <TableCell sx={tableCellSx} align="left">
-          <Button
-            id={`uniquenessActivated-${materializationId}-${columnId}`}
-            size="large"
-            variant="contained"
-            color={
-              testSelection[materializationId].columnTestSelection[columnId]
-                .uniquenessActivated
-                ? 'primary'
-                : 'info'
-            }
-            onClick={handleTestSelectButtonClick}
-          />
-        </TableCell>
-        <TableCell sx={tableCellSx} align="left">
-          <Button
-            id={`sortednessActivated-${materializationId}-${columnId}`}
-            size="large"
-            variant="contained"
-            color={
-              testSelection[materializationId].columnTestSelection[columnId]
-                .sortednessActivated
-                ? 'primary'
-                : 'info'
-            }
-            onClick={handleTestSelectButtonClick}
-          />
-        </TableCell>
-        <TableCell sx={tableCellSx} align="left">
-          <Button
-            id={`distributionActivated-${materializationId}-${columnId}`}
-            size="large"
-            variant="contained"
-            color={
-              testSelection[materializationId].columnTestSelection[columnId]
-                .distributionActivated
-                ? 'primary'
-                : 'info'
-            }
-            onClick={handleTestSelectButtonClick}
-          />
-        </TableCell>
+        {allowedTestTypes.includes('ColumnFreshness') ? (
+          <TableCell sx={tableCellSx} align="left">
+            <Button
+              id={`freshnessActivated-${materializationId}-${columnId}`}
+              size="large"
+              variant="contained"
+              color={
+                testSelection[materializationId].columnTestSelection[columnId]
+                  .freshnessActivated
+                  ? 'primary'
+                  : 'info'
+              }
+              onClick={handleTestSelectButtonClick}
+            />
+          </TableCell>
+        ) : (
+          <></>
+        )}
+        {allowedTestTypes.includes('ColumnCardinality') ? (
+          <TableCell sx={tableCellSx} align="left">
+            <Button
+              id={`cardinalityActivated-${materializationId}-${columnId}`}
+              size="large"
+              variant="contained"
+              color={
+                testSelection[materializationId].columnTestSelection[columnId]
+                  .cardinalityActivated
+                  ? 'primary'
+                  : 'info'
+              }
+              onClick={handleTestSelectButtonClick}
+            />
+          </TableCell>
+        ) : (
+          <></>
+        )}
+        {allowedTestTypes.includes('ColumnNullness') ? (
+          <TableCell sx={tableCellSx} align="left">
+            <Button
+              id={`nullnessActivated-${materializationId}-${columnId}`}
+              size="large"
+              variant="contained"
+              color={
+                testSelection[materializationId].columnTestSelection[columnId]
+                  .nullnessActivated
+                  ? 'primary'
+                  : 'info'
+              }
+              onClick={handleTestSelectButtonClick}
+            />
+          </TableCell>
+        ) : (
+          <></>
+        )}
+        {allowedTestTypes.includes('ColumnUniqueness') ? (
+          <TableCell sx={tableCellSx} align="left">
+            <Button
+              id={`uniquenessActivated-${materializationId}-${columnId}`}
+              size="large"
+              variant="contained"
+              color={
+                testSelection[materializationId].columnTestSelection[columnId]
+                  .uniquenessActivated
+                  ? 'primary'
+                  : 'info'
+              }
+              onClick={handleTestSelectButtonClick}
+            />
+          </TableCell>
+        ) : (
+          <></>
+        )}
+        {allowedTestTypes.includes('ColumnDistribution') ? (
+          <TableCell sx={tableCellSx} align="left">
+            <Button
+              id={`distributionActivated-${materializationId}-${columnId}`}
+              size="large"
+              variant="contained"
+              color={
+                testSelection[materializationId].columnTestSelection[columnId]
+                  .distributionActivated
+                  ? 'primary'
+                  : 'info'
+              }
+              onClick={handleTestSelectButtonClick}
+            />
+          </TableCell>
+        ) : (
+          <></>
+        )}
       </TableRow>
     );
   };
@@ -577,8 +648,6 @@ export default (): ReactElement => {
         nullnessActivatedCount: 0,
         uniquenessActivated: false,
         uniquenessActivatedCount: 0,
-        sortednessActivated: false,
-        sortednessActivatedCount: 0,
         columnCount: relevantColumns.length,
         testsActivated: false,
       };
@@ -589,6 +658,8 @@ export default (): ReactElement => {
           throw new Error('Column label not of type string');
 
         return (tableTestSelectionStructure.columnTestSelection[column.id] = {
+          id: column.id,
+          type: column.type,
           label: columnLabel,
           frequency: '1h',
           sensitivity: '0',
@@ -597,7 +668,6 @@ export default (): ReactElement => {
           cardinalityActivated: false,
           nullnessActivated: false,
           uniquenessActivated: false,
-          sortednessActivated: false,
           testsActivated: false,
         });
       });
@@ -617,7 +687,13 @@ export default (): ReactElement => {
 
     const columnElements = Object.keys(
       materializationTestSelection.columnTestSelection
-    ).map((key) => buildColumnTests(props.materializationId, key));
+    ).map((key) =>
+      buildColumnTests(
+        props.materializationId,
+        key,
+        materializationTestSelection.columnTestSelection[key].type
+      )
+    );
 
     return (
       <React.Fragment>
@@ -781,36 +857,6 @@ export default (): ReactElement => {
               }/${testSelection[props.materializationId].columnCount}`}
               variant={
                 testSelection[props.materializationId].uniquenessActivatedCount
-                  ? 'filled'
-                  : 'outlined'
-              }
-              size="small"
-              sx={{ m: 1 }}
-            />
-          </TableCell>
-          <TableCell sx={tableCellSx} align="left">
-            <Button
-              id={`sortednessActivated-${props.materializationId}`}
-              size="large"
-              variant="contained"
-              color={
-                testSelection[props.materializationId].sortednessActivated
-                  ? 'primary'
-                  : 'info'
-              }
-              onClick={handleMatTestSelectButtonClick}
-            />
-            <Chip
-              color={
-                testSelection[props.materializationId].sortednessActivatedCount
-                  ? 'primary'
-                  : 'secondary'
-              }
-              label={`${
-                testSelection[props.materializationId].sortednessActivatedCount
-              }/${testSelection[props.materializationId].columnCount}`}
-              variant={
-                testSelection[props.materializationId].sortednessActivatedCount
                   ? 'filled'
                   : 'outlined'
               }
@@ -1055,7 +1101,7 @@ export default (): ReactElement => {
     setReadyToBuild(false);
   }, [readyToBuild]);
 
-  useEffect(() => {    
+  useEffect(() => {
     if (
       !Object.keys(testSelection).length ||
       Object.keys(searchedTestSelection).length
@@ -1106,9 +1152,7 @@ export default (): ReactElement => {
             <Box m={0.5}>
               <Button
                 startIcon={<AppsIcon />}
-                onClick={() =>
-                  navigate(`/test`)
-                }
+                onClick={() => navigate(`/test`)}
                 color="secondary"
                 size="medium"
                 variant="contained"
@@ -1156,86 +1200,90 @@ export default (): ReactElement => {
           </div>
         </div>
         <>
-        <div id="search-nav-container">
-          <div id="search">
-            <TextField
-              label="Search"
-              onChange={handleSearchChange}
-              fullWidth={true}
-              size="small"
-            />
+          <div id="search-nav-container">
+            <div id="search">
+              <TextField
+                label="Search"
+                onChange={handleSearchChange}
+                fullWidth={true}
+                size="small"
+              />
+            </div>
           </div>
-        </div>
-        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-          <TableContainer sx={{ height: window.innerHeight - 50 - 67 - 52 }}>
-            <Table stickyHeader={true} aria-label="collapsible table">
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={tableNameSx} width={350}>
-                    {' '}
-                    Table Name
-                  </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={90} align="center">
-                    Frequency
-                  </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={135} align="center">
-                    Sensitivity
-                  </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                    Freshness
-                  </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                    Cardinality
-                  </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                    Nullness
-                  </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                    Uniqueness
-                  </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                    Sortedness
-                  </TableCell>
-                  <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                    Distribution
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {Object.keys(searchedTestSelection).length ? (
-                  Object.keys(searchedTestSelection)
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((materializationId) => {
-                      return (
-                        <Test materializationId={materializationId}></Test>
-                      );
-                    })
-                ) : (
-                  <></>
-                )}
-                {emptyRows > 0 && (
-                  <TableRow
-                    style={{
-                      height: 53 * emptyRows,
-                    }}
-                  >
-                    <TableCell colSpan={10} />
+          <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+            <TableContainer sx={{ height: window.innerHeight - 50 - 67 - 52 }}>
+              <Table stickyHeader={true} aria-label="collapsible table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={tableNameSx} width={350}>
+                      {' '}
+                      Table Name
+                    </TableCell>
+                    <TableCell sx={tableHeaderCellSx} width={90} align="center">
+                      Frequency
+                    </TableCell>
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="center"
+                    >
+                      Sensitivity
+                    </TableCell>
+                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
+                      Freshness
+                    </TableCell>
+                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
+                      Cardinality
+                    </TableCell>
+                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
+                      Nullness
+                    </TableCell>
+                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
+                      Uniqueness
+                    </TableCell>
+                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
+                      Distribution
+                    </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={Object.keys(searchedTestSelection).length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Paper>
-      </>
+                </TableHead>
+                <TableBody>
+                  {Object.keys(searchedTestSelection).length ? (
+                    Object.keys(searchedTestSelection)
+                      .slice(
+                        page * rowsPerPage,
+                        page * rowsPerPage + rowsPerPage
+                      )
+                      .map((materializationId) => {
+                        return (
+                          <Test materializationId={materializationId}></Test>
+                        );
+                      })
+                  ) : (
+                    <></>
+                  )}
+                  {emptyRows > 0 && (
+                    <TableRow
+                      style={{
+                        height: 53 * emptyRows,
+                      }}
+                    >
+                      <TableCell colSpan={10} />
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={Object.keys(searchedTestSelection).length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          </Paper>
+        </>
         <Snackbar
           open={snackbarOpen}
           autoHideDuration={6000}

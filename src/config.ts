@@ -4,20 +4,24 @@ const getAuthEnvConfig = (): any => {
   const authEnvConfig: any = {};
 
   switch (process.env.REACT_APP_STAGE) {
-    case 'development':
-      authEnvConfig.userPoolId = 'eu-central-1_HYLD4MoTL';
-      authEnvConfig.userPoolWebClientId = '496tv5tk13ofnb7brg7t6r90kn';
-      break;
-    case 'test':
-      authEnvConfig.userPoolId = 'eu-central-1_htA4V0E1g';
-      authEnvConfig.userPoolWebClientId = '2ccv0hpd4mq0rir7fs4qi7ah5l';
-      break;
-    case 'production':
-      authEnvConfig.userPoolId = 'eu-central-1_fttc090sQ';
-      authEnvConfig.userPoolWebClientId = '4v72uodmi74apj2dobpd8jsr8k';
-      break;
-    default:
-      break;
+      case 'development':
+        authEnvConfig.userPoolId = 'eu-central-1_0Z8JhFj8z';
+        authEnvConfig.userPoolWebClientId = '2kt5cdpsbfc53sokgii4l5lecc';
+        authEnvConfig.tokenUrl =
+          '';
+        break;
+      case 'test':
+        authEnvConfig.userPoolId = '';
+        authEnvConfig.userPoolWebClientId = '';
+        authEnvConfig.tokenUrl = '';
+        break;
+      case 'production':
+        authEnvConfig.userPoolId = 'eu-central-1_0muGtKMk3';
+        authEnvConfig.userPoolWebClientId = '90hkfejkd81bp3ta5gd80hanp';
+        authEnvConfig.tokenUrl = '';
+        break;
+      default:
+        break;
   }
 
   return authEnvConfig;
@@ -31,12 +35,12 @@ const getOAuthEnvConfig = (): any => {
   switch (process.env.REACT_APP_STAGE) {
     case 'development':
       oAuthEnvConfig.domain =
-        'auth-citodata-dev.auth.eu-central-1.amazoncognito.com';
+        'auth-cito-dev.auth.eu-central-1.amazoncognito.com';
       oAuthEnvConfig.redirectSignIn = 'http://localhost:3006';
       oAuthEnvConfig.redirectSignOut = 'http://localhost:3006';
       break;
     case 'test':
-      oAuthEnvConfig.domain = 'auth-citodata-staging.auth.eu-central-1.amazoncognito.com';
+      oAuthEnvConfig.domain = 'auth-cito-staging.auth.eu-central-1.amazoncognito.com';
       oAuthEnvConfig.redirectSignIn = 'https://www.app-staging.citodata.com';
       oAuthEnvConfig.redirectSignOut = 'https://www.app-staging.citodata.com';
       break;

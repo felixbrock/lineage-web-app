@@ -121,6 +121,7 @@ const snowflakeTypes: { [key: string]: TestType[] } = {
 interface TestConfig {
   type: TestType;
   activated: boolean;
+  testSuiteExists: boolean;
 }
 
 interface ColumnTestConfig {
@@ -697,6 +698,7 @@ export default (): ReactElement => {
               activated: typeSpecificSuite
                 ? typeSpecificSuite.activated
                 : false,
+              testSuiteExists: !!typeSpecificSuite
             };
           }),
           testsActivated,

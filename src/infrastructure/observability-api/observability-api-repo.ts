@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import getRoot from '../shared/api-root-builder';
+import { TestSuiteDto } from './test-suite-dto';
 
 interface UpdateTestHistoryEntryDto {
   alertId: string;
@@ -9,6 +10,30 @@ interface UpdateTestHistoryEntryDto {
 // TODO - Implement Interface regarding clean architecture
 export default class ObservabilityApiRepo {
   private static root = getRoot('observability', '3012', 'api/v1');
+
+  public static getTestSuites = async (
+    jwt: string
+  ): Promise<TestSuiteDto[]> => {
+    try {
+      const apiRoot = await ObservabilityApiRepo.root;
+
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.get(
+        `${apiRoot}/test-suites`,
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
 
   public static updateTestHistoryEntry = async (
     updateTestHistoryEntryDto: UpdateTestHistoryEntryDto,

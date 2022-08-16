@@ -42,6 +42,7 @@ import Chip from '@mui/material/Chip';
 import TablePagination from '@mui/material/TablePagination';
 import ObservabilityApiRepo from '../../infrastructure/observability-api/observability-api-repo';
 import { Alert, Snackbar } from '@mui/material';
+import { TestSuiteDto } from '../../infrastructure/observability-api/test-suite-dto';
 
 const showRealData = true;
 const lineageId = '62f90bec34a8584bd1f6534a';
@@ -188,6 +189,7 @@ export default (): ReactElement => {
     MaterializationDto[]
   >([]);
   const [columns, setColumns] = useState<ColumnDto[]>([]);
+  const [testSuites, setTestSuites] = useState<TestSuiteDto[]>([]);
   const [readyToBuild, setReadyToBuild] = useState(false);
   const [testSelection, setTestSelection] = useState<{
     [key: string]: MaterializationTestsConfig;
@@ -668,24 +670,48 @@ export default (): ReactElement => {
 
         const allowedTests = getAllowedTestTypes(column.type);
 
+        const suites = testSuites.filter(
+          (el) => el.targetResourceId === column.id
+        );
+
+        let testsActivated = false;
+
         tableTestSelectionStructure.columnTestConfig.push({
           id: column.id,
           type: column.type,
           label: columnLabel,
-          frequency: '1h',
-          sensitivity: '0',
-          testConfig: allowedTests.map((element) => ({
-            type: element,
-            activated: false,
-          })),
-          testsActivated: false,
+          frequency: `${suites.length ? suites[0].executionFrequency : 1}h`,
+          sensitivity: suites.length ? suites[0].threshold.toString() : '0',
+          testConfig: allowedTests.map((element) => {
+            const typeSpecificSuite = suites.find((el) => el.type === element);
+
+            if (
+              !testsActivated &&
+              typeSpecificSuite &&
+              typeSpecificSuite.activated
+            )
+              testsActivated = true;
+
+            return {
+              type: element,
+              activated: typeSpecificSuite
+                ? typeSpecificSuite.activated
+                : false,
+            };
+          }),
+          testsActivated,
         });
       });
 
       tableTestSelectionStructure.testDefinitionSummary = [
         {
           type: 'ColumnCardinality',
-          activationCount: 0,
+          activationCount: tableTestSelectionStructure.columnTestConfig.filter(
+            (config) =>
+              !!config.testConfig.filter(
+                (el) => el.type === 'ColumnCardinality' && el.activated
+              ).length
+          ).length,
           totalCount: tableTestSelectionStructure.columnTestConfig.filter(
             (config) =>
               !!config.testConfig.filter(
@@ -695,7 +721,12 @@ export default (): ReactElement => {
         },
         {
           type: 'ColumnDistribution',
-          activationCount: 0,
+          activationCount: tableTestSelectionStructure.columnTestConfig.filter(
+            (config) =>
+              !!config.testConfig.filter(
+                (el) => el.type === 'ColumnDistribution' && el.activated
+              ).length
+          ).length,
           totalCount: tableTestSelectionStructure.columnTestConfig.filter(
             (config) =>
               !!config.testConfig.filter(
@@ -705,7 +736,12 @@ export default (): ReactElement => {
         },
         {
           type: 'ColumnFreshness',
-          activationCount: 0,
+          activationCount: tableTestSelectionStructure.columnTestConfig.filter(
+            (config) =>
+              !!config.testConfig.filter(
+                (el) => el.type === 'ColumnFreshness' && el.activated
+              ).length
+          ).length,
           totalCount: tableTestSelectionStructure.columnTestConfig.filter(
             (config) =>
               !!config.testConfig.filter((el) => el.type === 'ColumnFreshness')
@@ -714,7 +750,12 @@ export default (): ReactElement => {
         },
         {
           type: 'ColumnNullness',
-          activationCount: 0,
+          activationCount: tableTestSelectionStructure.columnTestConfig.filter(
+            (config) =>
+              !!config.testConfig.filter(
+                (el) => el.type === 'ColumnNullness' && el.activated
+              ).length
+          ).length,
           totalCount: tableTestSelectionStructure.columnTestConfig.filter(
             (config) =>
               !!config.testConfig.filter((el) => el.type === 'ColumnNullness')
@@ -723,7 +764,12 @@ export default (): ReactElement => {
         },
         {
           type: 'ColumnUniqueness',
-          activationCount: 0,
+          activationCount: tableTestSelectionStructure.columnTestConfig.filter(
+            (config) =>
+              !!config.testConfig.filter(
+                (el) => el.type === 'ColumnUniqueness' && el.activated
+              ).length
+          ).length,
           totalCount: tableTestSelectionStructure.columnTestConfig.filter(
             (config) =>
               !!config.testConfig.filter((el) => el.type === 'ColumnUniqueness')
@@ -802,7 +848,9 @@ export default (): ReactElement => {
               <Select
                 name={`frequency-${props.materializationId}`}
                 disabled={
-                  !testSelection[props.materializationId].columnTestConfig.some(el => el.testsActivated)
+                  !testSelection[props.materializationId].columnTestConfig.some(
+                    (el) => el.testsActivated
+                  )
                 }
                 displayEmpty={true}
                 renderValue={(value) =>
@@ -824,7 +872,9 @@ export default (): ReactElement => {
               <Select
                 name={`sensitivity-${props.materializationId}`}
                 disabled={
-                  !testSelection[props.materializationId].columnTestConfig.some(el => el.testsActivated)
+                  !testSelection[props.materializationId].columnTestConfig.some(
+                    (el) => el.testsActivated
+                  )
                 }
                 displayEmpty={true}
                 renderValue={(value) =>
@@ -1180,6 +1230,11 @@ export default (): ReactElement => {
         })
         .then((columnDtos) => {
           setColumns(columnDtos);
+
+          return ObservabilityApiRepo.getTestSuites(jwt);
+        })
+        .then((testSuiteDtos) => {
+          setTestSuites(testSuiteDtos);
           setReadyToBuild(true);
         })
         .catch((error) => {

@@ -315,7 +315,7 @@ export default (): ReactElement => {
     const testSelectionKeys = Object.keys(testSelection);
     if (!testSelectionKeys.length) return;
 
-    const value = event.target.value;
+    const value: string = event.target.value;
     if (!value) {
       setSearchedTestSelection(testSelection);
       return;
@@ -326,7 +326,7 @@ export default (): ReactElement => {
     } = {};
 
     testSelectionKeys.forEach((key) => {
-      if (testSelection[key].label.includes(value))
+      if (testSelection[key].label.toLocaleLowerCase().includes(value.toLocaleLowerCase()))
         newTestSelectionElements[key] = testSelection[key];
     });
 

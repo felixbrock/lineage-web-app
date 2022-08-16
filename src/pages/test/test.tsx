@@ -46,23 +46,6 @@ import { Alert, Snackbar } from '@mui/material';
 const showRealData = true;
 const lineageId = '62f90bec34a8584bd1f6534a';
 
-export const testSelectionTypes = [
-  'distributionActivated',
-  'freshnessActivated',
-  'cardinalityActivated',
-  'nullnessActivated',
-  'uniquenessActivated',
-] as const;
-export type SelectionType = typeof testSelectionTypes[number];
-
-export const parseSelectionType = (selectionType: unknown): SelectionType => {
-  const identifiedSelectionType = testSelectionTypes.find(
-    (validSelectionType) => validSelectionType === selectionType
-  );
-  if (identifiedSelectionType) return identifiedSelectionType;
-  throw new Error('Provision of invalid selection type');
-};
-
 export const testTypes = [
   'ColumnFreshness',
   'ColumnCardinality',
@@ -134,37 +117,34 @@ const snowflakeTypes: { [key: string]: TestType[] } = {
   geography: geospatialDataTests,
 };
 
-interface ColumnTestSelection {
-  label: string;
+interface TestConfig {
+  type: TestType;
+  activated: boolean;
+}
+
+interface ColumnTestConfig {
   id: string;
+  label: string;
   type: string;
   frequency: string;
   sensitivity: string;
-  distributionActivated: boolean;
-  freshnessActivated: boolean;
-  cardinalityActivated: boolean;
-  nullnessActivated: boolean;
-  uniquenessActivated: boolean;
+  testConfig: TestConfig[];
   testsActivated: boolean;
 }
 
-interface MaterializationTestSelection {
-  columnTestSelection: { [key: string]: ColumnTestSelection };
+interface TestDefinitionSummary {
+  type: TestType;
+  activationCount: number;
+  totalCount: number;
+}
+
+interface MaterializationTestsConfig {
+  columnTestSelection: ColumnTestConfig[];
   navExpanded: boolean;
   label: string;
   frequency: string;
   sensitivity: string;
-  distributionActivated: boolean;
-  distributionActivatedCount: number;
-  freshnessActivated: boolean;
-  freshnessActivatedCount: number;
-  cardinalityActivated: boolean;
-  cardinalityActivatedCount: number;
-  nullnessActivated: boolean;
-  nullnessActivatedCount: number;
-  uniquenessActivated: boolean;
-  uniquenessActivatedCount: number;
-  columnCount: number;
+  testDefinitionSummary: TestDefinitionSummary[];
   testsActivated: boolean;
 }
 
@@ -210,10 +190,10 @@ export default (): ReactElement => {
   const [columns, setColumns] = useState<ColumnDto[]>([]);
   const [readyToBuild, setReadyToBuild] = useState(false);
   const [testSelection, setTestSelection] = useState<{
-    [key: string]: MaterializationTestSelection;
+    [key: string]: MaterializationTestsConfig;
   }>({});
   const [searchedTestSelection, setSearchedTestSelection] = useState<{
-    [key: string]: MaterializationTestSelection;
+    [key: string]: MaterializationTestsConfig;
   }>({});
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
@@ -260,8 +240,16 @@ export default (): ReactElement => {
 
     testSelectionLocal[props[1]].frequency = '';
 
-    testSelectionLocal[props[1]].columnTestSelection[props[2]].frequency =
-      event.target.value;
+    const columnTestConfigIndex = testSelectionLocal[
+      props[1]
+    ].columnTestSelection.findIndex((el) => el.id === props[2]);
+
+    if (columnTestConfigIndex === -1)
+      throw new Error('Column Test Config not found');
+
+    testSelectionLocal[props[1]].columnTestSelection[
+      columnTestConfigIndex
+    ].frequency = event.target.value;
 
     setTestSelection({ ...testSelectionLocal });
   };
@@ -275,8 +263,8 @@ export default (): ReactElement => {
     testSelectionLocal[props[1]].frequency = event.target.value;
 
     Object.keys(testSelectionLocal[props[1]].columnTestSelection).forEach(
-      (key) =>
-        (testSelectionLocal[props[1]].columnTestSelection[key].frequency =
+      (key, index) =>
+        (testSelectionLocal[props[1]].columnTestSelection[index].frequency =
           event.target.value)
     );
 
@@ -291,8 +279,16 @@ export default (): ReactElement => {
 
     testSelectionLocal[props[1]].sensitivity = '';
 
-    testSelectionLocal[props[1]].columnTestSelection[props[2]].sensitivity =
-      event.target.value;
+    const columnTestConfigIndex = testSelectionLocal[
+      props[1]
+    ].columnTestSelection.findIndex((el) => el.id === props[2]);
+
+    if (columnTestConfigIndex === -1)
+      throw new Error('Column Test Config not found');
+
+    testSelectionLocal[props[1]].columnTestSelection[
+      columnTestConfigIndex
+    ].sensitivity = event.target.value;
 
     setTestSelection({ ...testSelectionLocal });
   };
@@ -306,8 +302,8 @@ export default (): ReactElement => {
     testSelectionLocal[props[1]].sensitivity = event.target.value;
 
     Object.keys(testSelectionLocal[props[1]].columnTestSelection).forEach(
-      (key) =>
-        (testSelectionLocal[props[1]].columnTestSelection[key].sensitivity =
+      (key, index) =>
+        (testSelectionLocal[props[1]].columnTestSelection[index].sensitivity =
           event.target.value)
     );
 
@@ -325,7 +321,7 @@ export default (): ReactElement => {
     }
 
     const newTestSelectionElements: {
-      [key: string]: MaterializationTestSelection;
+      [key: string]: MaterializationTestsConfig;
     } = {};
 
     testSelectionKeys.forEach((key) => {
@@ -336,61 +332,80 @@ export default (): ReactElement => {
     setSearchedTestSelection(newTestSelectionElements);
   };
 
+  const getAllowedTestTypes = (columnType: string): TestType[] => {
+    if (!Object.keys(snowflakeTypes).includes(columnType.toLowerCase()))
+      throw new Error(`Invalid column type (${columnType}) provided`);
+    return snowflakeTypes[columnType.toLowerCase()];
+  };
+
   const handleTestSelectButtonClick = (event: any) => {
     const id = event.target.id as string;
     const props = id.split('-');
 
-    const type = parseSelectionType(props[0]);
+    const type = parseTestType(props[0]);
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].columnTestSelection[props[2]][type] =
-      !testSelectionLocal[props[1]].columnTestSelection[props[2]][type];
+    const columnTestConfigIndex = testSelectionLocal[
+      props[1]
+    ].columnTestSelection.findIndex((el) => el.id === props[2]);
 
-    const activated =
-      testSelectionLocal[props[1]].columnTestSelection[props[2]]
-        .cardinalityActivated ||
-      testSelectionLocal[props[1]].columnTestSelection[props[2]]
-        .distributionActivated ||
-      testSelectionLocal[props[1]].columnTestSelection[props[2]]
-        .freshnessActivated ||
-      testSelectionLocal[props[1]].columnTestSelection[props[2]]
-        .nullnessActivated ||
-      testSelectionLocal[props[1]].columnTestSelection[props[2]]
-        .uniquenessActivated;
+    if (columnTestConfigIndex === -1)
+      throw new Error('Column Test Config not found');
 
-    testSelectionLocal[props[1]].columnTestSelection[props[2]].testsActivated =
-      activated;
+    const testConfigIndex = testSelectionLocal[props[1]].columnTestSelection[
+      columnTestConfigIndex
+    ].testConfig.findIndex((el) => el.type === type);
 
-    testSelectionLocal[props[1]][type] = false;
+    if (testConfigIndex === -1) throw new Error('Test Config not found');
 
-    const matActivated =
-      testSelectionLocal[props[1]].cardinalityActivated ||
-      testSelectionLocal[props[1]].distributionActivated ||
-      testSelectionLocal[props[1]].freshnessActivated ||
-      testSelectionLocal[props[1]].nullnessActivated ||
-      testSelectionLocal[props[1]].uniquenessActivated;
+    testSelectionLocal[props[1]].columnTestSelection[
+      columnTestConfigIndex
+    ].testConfig[testConfigIndex].activated =
+      !testSelectionLocal[props[1]].columnTestSelection[columnTestConfigIndex]
+        .testConfig[testConfigIndex].activated;
+
+    const activated = testSelectionLocal[props[1]].columnTestSelection[
+      columnTestConfigIndex
+    ].testConfig.some((el) => el.activated);
+
+    testSelectionLocal[props[1]].columnTestSelection[
+      columnTestConfigIndex
+    ].testsActivated = activated;
+
+    const matActivated: boolean = testSelectionLocal[
+      props[1]
+    ].testDefinitionSummary.some((el) => !!el.activationCount);
 
     testSelectionLocal[props[1]].testsActivated = matActivated;
 
-    const total = Object.keys(
-      testSelection[props[1]].columnTestSelection
+    const totalCounter = testSelectionLocal[
+      props[1]
+    ].columnTestSelection.filter(
+      (element) => !!element.testConfig.filter((el) => el.type === type).length
     ).length;
 
-    testSelectionLocal[props[1]].columnCount = total;
+    const summaryIndex = testSelectionLocal[
+      props[1]
+    ].testDefinitionSummary.findIndex((el) => el.type === type);
 
-    let count = 0;
+    if (summaryIndex === -1) throw new Error('Type summarynot found');
 
-    Object.keys(testSelectionLocal[props[1]].columnTestSelection).forEach(
-      (key) => {
-        if (testSelectionLocal[props[1]].columnTestSelection[key][type])
-          count += 1;
-      }
-    );
+    testSelectionLocal[props[1]].testDefinitionSummary[
+      summaryIndex
+    ].totalCount = totalCounter;
 
-    testSelectionLocal[props[1]][`${type}Count`] = count;
+    const activatedCounter = testSelectionLocal[
+      props[1]
+    ].columnTestSelection.filter(
+      (element) =>
+        !!element.testConfig.filter((el) => el.type === type && el.activated)
+          .length
+    ).length;
 
-    if (count === total) testSelectionLocal[props[1]][type] = true;
+    testSelectionLocal[props[1]].testDefinitionSummary[
+      summaryIndex
+    ].activationCount = activatedCounter;
 
     setTestSelection({ ...testSelectionLocal });
   };
@@ -399,24 +414,50 @@ export default (): ReactElement => {
     const id = event.target.id as string;
     const props = id.split('-');
 
-    const type = parseSelectionType(props[0]);
+    const type = parseTestType(props[0]);
 
     const testSelectionLocal = testSelection;
 
-    const testActivated = !testSelectionLocal[props[1]][type];
+    const summaryIndex = testSelectionLocal[
+      props[1]
+    ].testDefinitionSummary.findIndex((el) => el.type === type);
 
-    testSelectionLocal[props[1]][type] = testActivated;
+    if (summaryIndex === -1) throw new Error('Type summary not found');
 
-    const total = Object.keys(
-      testSelection[props[1]].columnTestSelection
+    testSelectionLocal[props[1]].testDefinitionSummary[
+      summaryIndex
+    ].activationCount = testSelectionLocal[props[1]].testDefinitionSummary[
+      summaryIndex
+    ].activationCount
+      ? 0
+      : testSelectionLocal[props[1]].testDefinitionSummary[summaryIndex]
+          .totalCount;
+
+    const totalCounter = testSelectionLocal[
+      props[1]
+    ].columnTestSelection.filter(
+      (element) => !!element.testConfig.filter((el) => el.type === type).length
     ).length;
 
-    testSelectionLocal[props[1]].columnCount = total;
+    testSelectionLocal[props[1]].testDefinitionSummary[
+      summaryIndex
+    ].totalCount = totalCounter;
 
-    Object.keys(testSelectionLocal[props[1]].columnTestSelection).forEach(
-      (key) => {
-        testSelectionLocal[props[1]].columnTestSelection[key][type] =
-          testSelectionLocal[props[1]][type];
+    testSelectionLocal[props[1]].columnTestSelection.forEach(
+      (config, index) => {
+        const testConfigIndex = testSelectionLocal[
+          props[1]
+        ].columnTestSelection[index].testConfig.findIndex(
+          (el) => el.type === type
+        );
+
+        if (testConfigIndex === -1) throw new Error('Type summary not found');
+
+        testSelectionLocal[props[1]].columnTestSelection[index].testConfig[
+          testConfigIndex
+        ].activated =
+          !!testSelectionLocal[props[1]].testDefinitionSummary[summaryIndex]
+            .activationCount;
 
         const activated =
           testSelectionLocal[props[1]].columnTestSelection[key]
@@ -449,12 +490,6 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
-  const getAllowedTestTypes = (columnType: string): TestType[] => {
-    if (!Object.keys(snowflakeTypes).includes(columnType.toLowerCase()))
-      throw new Error(`Invalid column type (${columnType}) provided`);
-    return snowflakeTypes[columnType.toLowerCase()];
-  };
-
   const buildColumnTests = (
     materializationId: string,
     columnId: string,
@@ -465,7 +500,11 @@ export default (): ReactElement => {
     return (
       <TableRow>
         <TableCell sx={tableCellSx} align="left">
-          {testSelection[materializationId].columnTestSelection[columnId].label}
+          {
+            testSelection[materializationId].columnTestSelection.find(
+              (el) => el.id === columnId
+            ).label
+          }
         </TableCell>
         <TableCell sx={tableCellSx} align="center">
           <FormControl sx={{ m: 1, maxwidth: 100 }} size="small">
@@ -622,10 +661,10 @@ export default (): ReactElement => {
   };
 
   const buildTestSelectionStructure = (): {
-    [key: string]: MaterializationTestSelection;
+    [key: string]: MaterializationTestsConfig;
   } => {
     const testSelectionStructure: {
-      [key: string]: MaterializationTestSelection;
+      [key: string]: MaterializationTestsConfig;
     } = {};
 
     materializations.forEach((materialization) => {
@@ -641,7 +680,7 @@ export default (): ReactElement => {
       if (typeof materializationLabel !== 'string')
         throw new Error('Materialization label not of type string');
 
-      const tableTestSelectionStructure: MaterializationTestSelection = {
+      const tableTestSelectionStructure: MaterializationTestsConfig = {
         label: materializationLabel,
         navExpanded: false,
         columnTestSelection: {},
@@ -666,18 +705,18 @@ export default (): ReactElement => {
         if (typeof columnLabel !== 'string')
           throw new Error('Column label not of type string');
 
+        const allowedTests = getAllowedTestTypes(column.type);
+
         return (tableTestSelectionStructure.columnTestSelection[column.id] = {
           id: column.id,
           type: column.type,
           label: columnLabel,
           frequency: '1h',
           sensitivity: '0',
-          distributionActivated: false,
-          freshnessActivated: false,
-          cardinalityActivated: false,
-          nullnessActivated: false,
-          uniquenessActivated: false,
-          testsActivated: false,
+          testConfig: allowedTests.map((element) => ({
+            type: element,
+            activated: false,
+          })),
         });
       });
 
@@ -685,23 +724,6 @@ export default (): ReactElement => {
     });
 
     return testSelectionStructure;
-  };
-
-  const getMaterializationTestTypeCount = (
-    materializationId: string,
-    testType: TestType
-  ): number => {
-
-    const columnTestSelection = testSelection[materializationId].columnTestSelection;
-
-    let counter = 0;
-    Object.keys(columnTestSelection).forEach(
-      (element) => { const allowedTestTypes = getAllowedTestTypes(columnTestSelection[element].type);
-      if(allowedTestTypes.includes(testType)) counter += 1;
-      }
-    );
-
-    return counter;
   };
 
   const Test = (props: { materializationId: string }): ReactElement => {
@@ -720,12 +742,6 @@ export default (): ReactElement => {
         materializationTestSelection.columnTestSelection[key].type
       )
     );
-
-    const matColumnFreshnessCount = getMaterializationTestTypeCount(props.materializationId, 'ColumnFreshness');
-    const matColumnCardinalityCount = getMaterializationTestTypeCount(props.materializationId, 'ColumnCardinality');
-    const matColumnNullnessCount = getMaterializationTestTypeCount(props.materializationId, 'ColumnNullness');
-    const matColumnDistributionCount = getMaterializationTestTypeCount(props.materializationId, 'ColumnDistribution');
-    const matColumnUniquenessCount = getMaterializationTestTypeCount(props.materializationId, 'ColumnUniqueness');
 
     return (
       <React.Fragment>
@@ -777,17 +793,21 @@ export default (): ReactElement => {
             </FormControl>
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-            {matColumnFreshnessCount ? <Button
-              id={`freshnessActivated-${props.materializationId}`}
-              size="large"
-              variant="contained"
-              color={
-                testSelection[props.materializationId].freshnessActivated
-                  ? 'primary'
-                  : 'info'
-              }
-              onClick={handleMatTestSelectButtonClick}
-            />: <></>}
+            {matColumnFreshnessCount ? (
+              <Button
+                id={`freshnessActivated-${props.materializationId}`}
+                size="large"
+                variant="contained"
+                color={
+                  testSelection[props.materializationId].freshnessActivated
+                    ? 'primary'
+                    : 'info'
+                }
+                onClick={handleMatTestSelectButtonClick}
+              />
+            ) : (
+              <></>
+            )}
             <Chip
               color={
                 testSelection[props.materializationId].freshnessActivatedCount
@@ -807,17 +827,21 @@ export default (): ReactElement => {
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-          {matColumnCardinalityCount ? <Button
-              id={`cardinalityActivated-${props.materializationId}`}
-              size="large"
-              variant="contained"
-              color={
-                testSelection[props.materializationId].cardinalityActivated
-                  ? 'primary'
-                  : 'info'
-              }
-              onClick={handleMatTestSelectButtonClick}
-            />: <></>}
+            {matColumnCardinalityCount ? (
+              <Button
+                id={`cardinalityActivated-${props.materializationId}`}
+                size="large"
+                variant="contained"
+                color={
+                  testSelection[props.materializationId].cardinalityActivated
+                    ? 'primary'
+                    : 'info'
+                }
+                onClick={handleMatTestSelectButtonClick}
+              />
+            ) : (
+              <></>
+            )}
             <Chip
               color={
                 testSelection[props.materializationId].cardinalityActivatedCount
@@ -837,17 +861,21 @@ export default (): ReactElement => {
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-          {matColumnNullnessCount ? <Button
-              id={`nullnessActivated-${props.materializationId}`}
-              size="large"
-              variant="contained"
-              color={
-                testSelection[props.materializationId].nullnessActivated
-                  ? 'primary'
-                  : 'info'
-              }
-              onClick={handleMatTestSelectButtonClick}
-            />: <></>}
+            {matColumnNullnessCount ? (
+              <Button
+                id={`nullnessActivated-${props.materializationId}`}
+                size="large"
+                variant="contained"
+                color={
+                  testSelection[props.materializationId].nullnessActivated
+                    ? 'primary'
+                    : 'info'
+                }
+                onClick={handleMatTestSelectButtonClick}
+              />
+            ) : (
+              <></>
+            )}
             <Chip
               color={
                 testSelection[props.materializationId].nullnessActivatedCount
@@ -867,17 +895,21 @@ export default (): ReactElement => {
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-          {matColumnUniquenessCount ? <Button
-              id={`uniquenessActivated-${props.materializationId}`}
-              size="large"
-              variant="contained"
-              color={
-                testSelection[props.materializationId].uniquenessActivated
-                  ? 'primary'
-                  : 'info'
-              }
-              onClick={handleMatTestSelectButtonClick}
-            />: <></>}
+            {matColumnUniquenessCount ? (
+              <Button
+                id={`uniquenessActivated-${props.materializationId}`}
+                size="large"
+                variant="contained"
+                color={
+                  testSelection[props.materializationId].uniquenessActivated
+                    ? 'primary'
+                    : 'info'
+                }
+                onClick={handleMatTestSelectButtonClick}
+              />
+            ) : (
+              <></>
+            )}
             <Chip
               color={
                 testSelection[props.materializationId].uniquenessActivatedCount
@@ -897,17 +929,21 @@ export default (): ReactElement => {
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-          {matColumnDistributionCount ?<Button
-              id={`distributionActivated-${props.materializationId}`}
-              size="large"
-              variant="contained"
-              color={
-                testSelection[props.materializationId].distributionActivated
-                  ? 'primary'
-                  : 'info'
-              }
-              onClick={handleMatTestSelectButtonClick}
-            />: <></>}
+            {matColumnDistributionCount ? (
+              <Button
+                id={`distributionActivated-${props.materializationId}`}
+                size="large"
+                variant="contained"
+                color={
+                  testSelection[props.materializationId].distributionActivated
+                    ? 'primary'
+                    : 'info'
+                }
+                onClick={handleMatTestSelectButtonClick}
+              />
+            ) : (
+              <></>
+            )}
             <Chip
               color={
                 testSelection[props.materializationId]

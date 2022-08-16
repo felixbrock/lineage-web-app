@@ -379,9 +379,7 @@ export default (): ReactElement => {
 
     testSelectionLocal[props[1]].testsActivated = matActivated;
 
-    const totalCounter = testSelectionLocal[
-      props[1]
-    ].columnTestConfig.filter(
+    const totalCounter = testSelectionLocal[props[1]].columnTestConfig.filter(
       (element) => !!element.testConfig.filter((el) => el.type === type).length
     ).length;
 
@@ -433,40 +431,34 @@ export default (): ReactElement => {
       : testSelectionLocal[props[1]].testDefinitionSummary[summaryIndex]
           .totalCount;
 
-    const totalCounter = testSelectionLocal[
-      props[1]
-    ].columnTestConfig.filter(
-      (element) => !!element.testConfig.filter((el) => el.type === type).length
-    ).length;
+    // const totalCounter = testSelectionLocal[props[1]].columnTestConfig.filter(
+    //   (element) => !!element.testConfig.filter((el) => el.type === type).length
+    // ).length;
 
-    testSelectionLocal[props[1]].testDefinitionSummary[
-      summaryIndex
-    ].totalCount = totalCounter;
+    // testSelectionLocal[props[1]].testDefinitionSummary[
+    //   summaryIndex
+    // ].totalCount = totalCounter;
 
-    testSelectionLocal[props[1]].columnTestConfig.forEach(
-      (config, index) => {
-        const testConfigIndex = testSelectionLocal[
-          props[1]
-        ].columnTestConfig[index].testConfig.findIndex(
-          (el) => el.type === type
-        );
+    testSelectionLocal[props[1]].columnTestConfig.forEach((config, index) => {
+      const testConfigIndex = testSelectionLocal[props[1]].columnTestConfig[
+        index
+      ].testConfig.findIndex((el) => el.type === type);
 
-        if (testConfigIndex === -1) throw new Error('Type summary not found');
+      if (testConfigIndex === -1) return;
 
-        testSelectionLocal[props[1]].columnTestConfig[index].testConfig[
-          testConfigIndex
-        ].activated =
-          !!testSelectionLocal[props[1]].testDefinitionSummary[summaryIndex]
-            .activationCount;
+      testSelectionLocal[props[1]].columnTestConfig[index].testConfig[
+        testConfigIndex
+      ].activated =
+        !!testSelectionLocal[props[1]].testDefinitionSummary[summaryIndex]
+          .activationCount;
 
-        const activated = testSelectionLocal[props[1]].columnTestConfig[
-          index
-        ].testConfig.some((el) => el.activated);
+      const activated = testSelectionLocal[props[1]].columnTestConfig[
+        index
+      ].testConfig.some((el) => el.activated);
 
-        testSelectionLocal[props[1]].columnTestConfig[index].testsActivated =
-          activated;
-      }
-    );
+      testSelectionLocal[props[1]].columnTestConfig[index].testsActivated =
+        activated;
+    });
 
     const activated = testSelectionLocal[props[1]].testDefinitionSummary.some(
       (el) => !!el.activationCount
@@ -674,13 +666,7 @@ export default (): ReactElement => {
         columnTestConfig: [],
         frequency: '1h',
         sensitivity: '0',
-        testDefinitionSummary: [
-          { type: 'ColumnCardinality', activationCount: 0, totalCount: 0 },
-          { type: 'ColumnDistribution', activationCount: 0, totalCount: 0 },
-          { type: 'ColumnFreshness', activationCount: 0, totalCount: 0 },
-          { type: 'ColumnNullness', activationCount: 0, totalCount: 0 },
-          { type: 'ColumnUniqueness', activationCount: 0, totalCount: 0 },
-        ],
+        testDefinitionSummary: [],
         testsActivated: false,
       };
 
@@ -691,12 +677,7 @@ export default (): ReactElement => {
 
         const allowedTests = getAllowedTestTypes(column.type);
 
-        const columnTestConfigIndex = tableTestSelectionStructure.columnTestConfig.findIndex(el => el.id === column.id);
-
-        if(!columnTestConfigIndex) throw new Error ('Column test config not found');
-
-
-        tableTestSelectionStructure.columnTestConfig[columnTestConfigIndex] = {
+        tableTestSelectionStructure.columnTestConfig.push({
           id: column.id,
           type: column.type,
           label: columnLabel,
@@ -706,9 +687,59 @@ export default (): ReactElement => {
             type: element,
             activated: false,
           })),
-          testsActivated: false
-        };
+          testsActivated: false,
+        });
       });
+
+      tableTestSelectionStructure.testDefinitionSummary = [
+        {
+          type: 'ColumnCardinality',
+          activationCount: 0,
+          totalCount: tableTestSelectionStructure.columnTestConfig.filter(
+            (config) =>
+              !!config.testConfig.filter(
+                (el) => el.type === 'ColumnCardinality'
+              ).length
+          ).length,
+        },
+        {
+          type: 'ColumnDistribution',
+          activationCount: 0,
+          totalCount: tableTestSelectionStructure.columnTestConfig.filter(
+            (config) =>
+              !!config.testConfig.filter(
+                (el) => el.type === 'ColumnDistribution'
+              ).length
+          ).length,
+        },
+        {
+          type: 'ColumnFreshness',
+          activationCount: 0,
+          totalCount: tableTestSelectionStructure.columnTestConfig.filter(
+            (config) =>
+              !!config.testConfig.filter((el) => el.type === 'ColumnFreshness')
+                .length
+          ).length,
+        },
+        {
+          type: 'ColumnNullness',
+          activationCount: 0,
+          totalCount: tableTestSelectionStructure.columnTestConfig.filter(
+            (config) =>
+              !!config.testConfig.filter((el) => el.type === 'ColumnNullness')
+                .length
+          ).length,
+        },
+        {
+          type: 'ColumnUniqueness',
+          activationCount: 0,
+          totalCount: tableTestSelectionStructure.columnTestConfig.filter(
+            (config) =>
+              !!config.testConfig.filter((el) => el.type === 'ColumnUniqueness')
+                .length
+          ).length,
+        },
+      ];
 
       testSelectionStructure[materialization.id] = tableTestSelectionStructure;
     });
@@ -733,14 +764,13 @@ export default (): ReactElement => {
       materializationTestSelection.navExpanded
     );
 
-    const columnElements = 
-      materializationTestSelection.columnTestConfig
-    .map((el, index) =>
-      buildColumnTests(
-        props.materializationId,
-        el.id,
-        materializationTestSelection.columnTestConfig[index].type
-      )
+    const columnElements = materializationTestSelection.columnTestConfig.map(
+      (el, index) =>
+        buildColumnTests(
+          props.materializationId,
+          el.id,
+          materializationTestSelection.columnTestConfig[index].type
+        )
     );
 
     const columnFreshnessType: TestType = 'ColumnFreshness';
@@ -749,11 +779,26 @@ export default (): ReactElement => {
     const columnDistributionType: TestType = 'ColumnDistribution';
     const columnNullnessType: TestType = 'ColumnNullness';
 
-    const columnFreshnessSummary: TestDefinitionSummary  = getSummaryConfig(props.materializationId, columnFreshnessType);
-    const columnCardinalitySummary: TestDefinitionSummary  = getSummaryConfig(props.materializationId, columnCardinalityType);
-    const columnUniquenessSummary: TestDefinitionSummary  = getSummaryConfig(props.materializationId, columnUniquenessType);
-    const columnDistributionSummary: TestDefinitionSummary  = getSummaryConfig(props.materializationId, columnDistributionType);
-    const columnNullnessSummary: TestDefinitionSummary  = getSummaryConfig(props.materializationId, columnNullnessType);
+    const columnFreshnessSummary: TestDefinitionSummary = getSummaryConfig(
+      props.materializationId,
+      columnFreshnessType
+    );
+    const columnCardinalitySummary: TestDefinitionSummary = getSummaryConfig(
+      props.materializationId,
+      columnCardinalityType
+    );
+    const columnUniquenessSummary: TestDefinitionSummary = getSummaryConfig(
+      props.materializationId,
+      columnUniquenessType
+    );
+    const columnDistributionSummary: TestDefinitionSummary = getSummaryConfig(
+      props.materializationId,
+      columnDistributionType
+    );
+    const columnNullnessSummary: TestDefinitionSummary = getSummaryConfig(
+      props.materializationId,
+      columnNullnessType
+    );
 
     return (
       <React.Fragment>
@@ -811,9 +856,7 @@ export default (): ReactElement => {
                 size="large"
                 variant="contained"
                 color={
-                  columnFreshnessSummary.activationCount
-                    ? 'primary'
-                    : 'info'
+                  columnFreshnessSummary.activationCount && columnFreshnessSummary.activationCount === columnFreshnessSummary.totalCount ? 'primary' : 'info'
                 }
                 onClick={handleMatTestSelectButtonClick}
               />
@@ -822,18 +865,12 @@ export default (): ReactElement => {
             )}
             <Chip
               color={
-                columnFreshnessSummary.activationCount
-                  ? 'primary'
-                  : 'secondary'
+                columnFreshnessSummary.activationCount ? 'primary' : 'secondary'
               }
               variant={
-                columnFreshnessSummary.activationCount
-                  ? 'filled'
-                  : 'outlined'
+                columnFreshnessSummary.activationCount ? 'filled' : 'outlined'
               }
-              label={`${
-                columnFreshnessSummary.activationCount
-              }/${columnFreshnessSummary.totalCount}`}
+              label={`${columnFreshnessSummary.activationCount}/${columnFreshnessSummary.totalCount}`}
               size="small"
               sx={{ m: 1 }}
             />
@@ -845,9 +882,7 @@ export default (): ReactElement => {
                 size="large"
                 variant="contained"
                 color={
-                  columnCardinalitySummary.activationCount
-                    ? 'primary'
-                    : 'info'
+                  columnCardinalitySummary.activationCount && columnCardinalitySummary.activationCount === columnCardinalitySummary.totalCount ? 'primary' : 'info'
                 }
                 onClick={handleMatTestSelectButtonClick}
               />
@@ -861,27 +896,21 @@ export default (): ReactElement => {
                   : 'secondary'
               }
               variant={
-                columnCardinalitySummary.activationCount
-                  ? 'filled'
-                  : 'outlined'
+                columnCardinalitySummary.activationCount ? 'filled' : 'outlined'
               }
-              label={`${
-                columnCardinalitySummary.activationCount
-              }/${columnCardinalitySummary.totalCount}`}
+              label={`${columnCardinalitySummary.activationCount}/${columnCardinalitySummary.totalCount}`}
               size="small"
               sx={{ m: 1 }}
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-            {columnNullnessSummary.activationCount ? (
+            {columnNullnessSummary.totalCount ? (
               <Button
                 id={`${columnNullnessType}-${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
-                  columnNullnessSummary.activationCount
-                    ? 'primary'
-                    : 'info'
+                  columnNullnessSummary.activationCount && columnNullnessSummary.activationCount === columnNullnessSummary.totalCount ? 'primary' : 'info'
                 }
                 onClick={handleMatTestSelectButtonClick}
               />
@@ -890,32 +919,24 @@ export default (): ReactElement => {
             )}
             <Chip
               color={
-                columnNullnessSummary.activationCount
-                  ? 'primary'
-                  : 'secondary'
+                columnNullnessSummary.activationCount ? 'primary' : 'secondary'
               }
               variant={
-                columnNullnessSummary.activationCount
-                  ? 'filled'
-                  : 'outlined'
+                columnNullnessSummary.activationCount ? 'filled' : 'outlined'
               }
-              label={`${
-                columnNullnessSummary.activationCount
-              }/${columnNullnessSummary.totalCount}`}
+              label={`${columnNullnessSummary.activationCount}/${columnNullnessSummary.totalCount}`}
               size="small"
               sx={{ m: 1 }}
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-            {columnUniquenessSummary.activationCount ? (
+            {columnUniquenessSummary.totalCount ? (
               <Button
                 id={`${columnUniquenessType}-${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
-                  columnUniquenessSummary.activationCount
-                    ? 'primary'
-                    : 'info'
+                  columnUniquenessSummary.activationCount && columnUniquenessSummary.activationCount === columnUniquenessSummary.totalCount ? 'primary' : 'info'
                 }
                 onClick={handleMatTestSelectButtonClick}
               />
@@ -928,28 +949,22 @@ export default (): ReactElement => {
                   ? 'primary'
                   : 'secondary'
               }
-              label={`${
-                columnUniquenessSummary.activationCount
-              }/${columnUniquenessSummary.totalCount}`}
+              label={`${columnUniquenessSummary.activationCount}/${columnUniquenessSummary.totalCount}`}
               variant={
-                columnUniquenessSummary.activationCount
-                  ? 'filled'
-                  : 'outlined'
+                columnUniquenessSummary.activationCount ? 'filled' : 'outlined'
               }
               size="small"
               sx={{ m: 1 }}
             />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
-            {columnDistributionSummary.activationCount ? (
+            {columnDistributionSummary.totalCount ? (
               <Button
-                id={`distributionActivated-${props.materializationId}`}
+                id={`${columnDistributionType}-${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
-                  columnDistributionSummary.activationCount
-                    ? 'primary'
-                    : 'info'
+                  columnDistributionSummary.activationCount && columnDistributionSummary.activationCount === columnDistributionSummary.totalCount  ? 'primary' : 'info'
                 }
                 onClick={handleMatTestSelectButtonClick}
               />
@@ -962,9 +977,7 @@ export default (): ReactElement => {
                   ? 'primary'
                   : 'secondary'
               }
-              label={`${
-                columnDistributionSummary.activationCount
-              }/${columnDistributionSummary.totalCount}`}
+              label={`${columnDistributionSummary.activationCount}/${columnDistributionSummary.totalCount}`}
               variant={
                 columnDistributionSummary.activationCount
                   ? 'filled'

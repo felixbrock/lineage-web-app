@@ -17,13 +17,45 @@ export default class ObservabilityApiRepo {
     try {
       const apiRoot = await ObservabilityApiRepo.root;
 
-
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
       const response = await axios.get(
         `${apiRoot}/test-suites`,
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
+  public static updateTestSuite = async (
+    id: string,
+    jwt: string,
+    activated?: boolean,
+    threshold?: number,
+    frequency?: number,
+  ): Promise<TestSuiteDto[]> => {
+    try {
+      const apiRoot = await ObservabilityApiRepo.root;
+
+      const payload = {
+        activated,
+        threshold,
+        frequency
+      };
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.patch(
+        `${apiRoot}/test-suite/${id}`,
+        payload,
         config
       );
       const jsonResponse = response.data;

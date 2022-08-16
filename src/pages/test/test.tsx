@@ -262,11 +262,10 @@ export default (): ReactElement => {
 
     testSelectionLocal[props[1]].frequency = event.target.value;
 
-    Object.keys(testSelectionLocal[props[1]].columnTestConfig).forEach(
-      (key, index) =>
-        (testSelectionLocal[props[1]].columnTestConfig[index].frequency =
-          event.target.value)
-    );
+    testSelectionLocal[props[1]].columnTestConfig.forEach((el, index) => {
+      testSelectionLocal[props[1]].columnTestConfig[index].frequency =
+        event.target.value;
+    });
 
     setTestSelection({ ...testSelectionLocal });
   };
@@ -301,8 +300,8 @@ export default (): ReactElement => {
 
     testSelectionLocal[props[1]].sensitivity = event.target.value;
 
-    Object.keys(testSelectionLocal[props[1]].columnTestConfig).forEach(
-      (key, index) =>
+    testSelectionLocal[props[1]].columnTestConfig.forEach(
+      (el, index) =>
         (testSelectionLocal[props[1]].columnTestConfig[index].sensitivity =
           event.target.value)
     );
@@ -430,14 +429,6 @@ export default (): ReactElement => {
       ? 0
       : testSelectionLocal[props[1]].testDefinitionSummary[summaryIndex]
           .totalCount;
-
-    // const totalCounter = testSelectionLocal[props[1]].columnTestConfig.filter(
-    //   (element) => !!element.testConfig.filter((el) => el.type === type).length
-    // ).length;
-
-    // testSelectionLocal[props[1]].testDefinitionSummary[
-    //   summaryIndex
-    // ].totalCount = totalCounter;
 
     testSelectionLocal[props[1]].columnTestConfig.forEach((config, index) => {
       const testConfigIndex = testSelectionLocal[props[1]].columnTestConfig[
@@ -811,7 +802,7 @@ export default (): ReactElement => {
               <Select
                 name={`frequency-${props.materializationId}`}
                 disabled={
-                  !testSelection[props.materializationId].testsActivated
+                  !testSelection[props.materializationId].columnTestConfig.some(el => el.testsActivated)
                 }
                 displayEmpty={true}
                 renderValue={(value) =>
@@ -833,7 +824,7 @@ export default (): ReactElement => {
               <Select
                 name={`sensitivity-${props.materializationId}`}
                 disabled={
-                  !testSelection[props.materializationId].testsActivated
+                  !testSelection[props.materializationId].columnTestConfig.some(el => el.testsActivated)
                 }
                 displayEmpty={true}
                 renderValue={(value) =>
@@ -856,7 +847,11 @@ export default (): ReactElement => {
                 size="large"
                 variant="contained"
                 color={
-                  columnFreshnessSummary.activationCount && columnFreshnessSummary.activationCount === columnFreshnessSummary.totalCount ? 'primary' : 'info'
+                  columnFreshnessSummary.activationCount &&
+                  columnFreshnessSummary.activationCount ===
+                    columnFreshnessSummary.totalCount
+                    ? 'primary'
+                    : 'info'
                 }
                 onClick={handleMatTestSelectButtonClick}
               />
@@ -882,7 +877,11 @@ export default (): ReactElement => {
                 size="large"
                 variant="contained"
                 color={
-                  columnCardinalitySummary.activationCount && columnCardinalitySummary.activationCount === columnCardinalitySummary.totalCount ? 'primary' : 'info'
+                  columnCardinalitySummary.activationCount &&
+                  columnCardinalitySummary.activationCount ===
+                    columnCardinalitySummary.totalCount
+                    ? 'primary'
+                    : 'info'
                 }
                 onClick={handleMatTestSelectButtonClick}
               />
@@ -910,7 +909,11 @@ export default (): ReactElement => {
                 size="large"
                 variant="contained"
                 color={
-                  columnNullnessSummary.activationCount && columnNullnessSummary.activationCount === columnNullnessSummary.totalCount ? 'primary' : 'info'
+                  columnNullnessSummary.activationCount &&
+                  columnNullnessSummary.activationCount ===
+                    columnNullnessSummary.totalCount
+                    ? 'primary'
+                    : 'info'
                 }
                 onClick={handleMatTestSelectButtonClick}
               />
@@ -936,7 +939,11 @@ export default (): ReactElement => {
                 size="large"
                 variant="contained"
                 color={
-                  columnUniquenessSummary.activationCount && columnUniquenessSummary.activationCount === columnUniquenessSummary.totalCount ? 'primary' : 'info'
+                  columnUniquenessSummary.activationCount &&
+                  columnUniquenessSummary.activationCount ===
+                    columnUniquenessSummary.totalCount
+                    ? 'primary'
+                    : 'info'
                 }
                 onClick={handleMatTestSelectButtonClick}
               />
@@ -964,7 +971,11 @@ export default (): ReactElement => {
                 size="large"
                 variant="contained"
                 color={
-                  columnDistributionSummary.activationCount && columnDistributionSummary.activationCount === columnDistributionSummary.totalCount  ? 'primary' : 'info'
+                  columnDistributionSummary.activationCount &&
+                  columnDistributionSummary.activationCount ===
+                    columnDistributionSummary.totalCount
+                    ? 'primary'
+                    : 'info'
                 }
                 onClick={handleMatTestSelectButtonClick}
               />

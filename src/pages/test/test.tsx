@@ -122,10 +122,13 @@ export const materializationTypes = ['Table', 'View'] as const;
 export type MaterializationType = typeof materializationTypes[number];
 
 export const parseMaterializationType = (
-  materializationType: unknown
+  materializationType: string
 ): MaterializationType => {
+  const typeLowerCase = materializationType.toLowerCase().includes('table') ? 'table': 'view';
+
   const identifiedElement = materializationTypes.find(
-    (element) => element === materializationType
+    (element) =>
+      element === typeLowerCase.charAt(0).toUpperCase() + typeLowerCase.slice(1)
   );
   if (identifiedElement) return identifiedElement;
   throw new Error('Provision of invalid type');
@@ -264,12 +267,6 @@ export default (): ReactElement => {
     if (columnTestConfigIndex === -1)
       throw new Error('Column Test Config not found');
 
-    testSelectionLocal[props[1]].columnTestConfig[
-      columnTestConfigIndex
-    ].frequency = value;
-
-    setTestSelection({ ...testSelectionLocal });
-
     const testsToUpdate = testSelectionLocal[props[1]].columnTestConfig[
       columnTestConfigIndex
     ].testConfig.filter((el) => el.activated);
@@ -295,6 +292,12 @@ export default (): ReactElement => {
         );
       })
     );
+
+    testSelectionLocal[props[1]].columnTestConfig[
+      columnTestConfigIndex
+    ].frequency = value;
+
+    setTestSelection({ ...testSelectionLocal });
   };
 
   const handleMatFrequencyChange = (event: any) => {
@@ -329,12 +332,6 @@ export default (): ReactElement => {
     if (columnTestConfigIndex === -1)
       throw new Error('Column Test Config not found');
 
-    testSelectionLocal[props[1]].columnTestConfig[
-      columnTestConfigIndex
-    ].sensitivity = value;
-
-    setTestSelection({ ...testSelectionLocal });
-
     const testsToUpdate = testSelectionLocal[props[1]].columnTestConfig[
       columnTestConfigIndex
     ].testConfig.filter((el) => el.activated);
@@ -359,6 +356,12 @@ export default (): ReactElement => {
         );
       })
     );
+
+    testSelectionLocal[props[1]].columnTestConfig[
+      columnTestConfigIndex
+    ].sensitivity = value;
+
+    setTestSelection({ ...testSelectionLocal });
   };
 
   const handleMatSensitivityChange = (event: any) => {
@@ -480,8 +483,6 @@ export default (): ReactElement => {
       summaryIndex
     ].activationCount = activatedCounter;
 
-    setTestSelection({ ...testSelectionLocal });
-
     const columnTestConfig =
       testSelectionLocal[props[1]].columnTestConfig[columnTestConfigIndex];
     const testSuiteId =
@@ -496,30 +497,35 @@ export default (): ReactElement => {
 
       if (!column) throw new Error('Column not found');
 
-      const testSuite = await ObservabilityApiRepo.postTestSuite({
-        activated: newActivatedValue,
-        columnName: column.name,
-        databaseName: materalization.databaseName,
-        schemaName: materalization.schemaName,
-        materializationName: materalization.name,
-        materializationType: parseMaterializationType(materalization.materializationType),
-        targetResourceId: column.id,
-        type,
-        executionFrequency: columnTestConfig.frequency,
-        threshold: columnTestConfig.sensitivity,}
-      , jwt);
+      const testSuite = await ObservabilityApiRepo.postTestSuite(
+        {
+          activated: newActivatedValue,
+          columnName: column.name,
+          databaseName: materalization.databaseName,
+          schemaName: materalization.schemaName,
+          materializationName: materalization.name,
+          materializationType: parseMaterializationType(
+            materalization.materializationType
+          ),
+          targetResourceId: column.id,
+          type,
+          executionFrequency: columnTestConfig.frequency,
+          threshold: columnTestConfig.sensitivity,
+        },
+        jwt
+      );
 
       testSelectionLocal[props[1]].columnTestConfig[
         columnTestConfigIndex
       ].testConfig[testConfigIndex].testSuiteId = testSuite.id;
-
-      setTestSelection({ ...testSelectionLocal });
     } else
       await ObservabilityApiRepo.updateTestSuite(
         testSuiteId,
         jwt,
         newActivatedValue
       );
+
+    setTestSelection({ ...testSelectionLocal });
   };
 
   const handleMatTestSelectButtonClick = (event: any) => {
@@ -622,11 +628,8 @@ export default (): ReactElement => {
               name={`frequency-${materializationId}-${columnId}`}
               disabled={!columnTestConfig.testsActivated}
               displayEmpty={true}
-              renderValue={(value) => value || columnTestConfig.frequency}
               value={
-                columnTestConfig.frequency < 24
-                  ? `${columnTestConfig.frequency}h`
-                  : '1d'
+                columnTestConfig.frequency
               }
               onChange={handleColumnFrequencyChange}
             >
@@ -955,8 +958,6 @@ export default (): ReactElement => {
       columnNullnessType
     );
 
-    const frequency = testSelection[props.materializationId].frequency;
-
     return (
       <React.Fragment>
         <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
@@ -973,13 +974,8 @@ export default (): ReactElement => {
                   )
                 }
                 displayEmpty={true}
-                renderValue={(value) =>
-                  value || testSelection[props.materializationId].frequency
-                }
                 value={
-                  frequency && frequency < 24
-                    ? `${frequency}h`
-                    : '1d' || undefined
+                  testSelection[props.materializationId].frequency
                 }
                 onChange={handleMatFrequencyChange}
               >

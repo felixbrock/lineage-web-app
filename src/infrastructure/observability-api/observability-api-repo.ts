@@ -66,7 +66,7 @@ export default class ObservabilityApiRepo {
       const payload : {[key: string]: any} = {
       };
 
-      if(activated) payload.activated = activated;
+      if(activated !== undefined) payload.activated = activated;
       if(threshold) payload.threshold = threshold;
       if(frequency) payload.frequency = frequency;
 

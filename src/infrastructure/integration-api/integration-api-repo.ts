@@ -142,7 +142,7 @@ export default class IntegrationApiRepo {
     installationId: string,
     organizationId: string,
     jwt: string
-  ): Promise<void> => {
+  ): Promise<string> => {
     try {
       const apiRoot = await IntegrationApiRepo.root;
 

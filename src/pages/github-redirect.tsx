@@ -72,17 +72,21 @@ export default () => {
 
     if (!installationId) throw new Error('Did not recieve installationId from Github');
 
-    IntegrationApiRepo.createGithubProfile(installationId, organizationId, jwt);
-  }, [organizationId]);
+    IntegrationApiRepo.createGithubProfile(installationId, organizationId, jwt)
 
-  navigate(`/lineage`, {
-    state: {
-      installationId,
-      showIntegrationPanel: true,
-      sidePanelTabIndex: 2,
-    },
-    replace: true
-  });
+      .then(() =>
+
+        navigate(`/lineage`, {
+          state: {
+            installationId,
+            showIntegrationPanel: true,
+            sidePanelTabIndex: 2,
+          },
+          replace: true
+        })
+      )
+      .catch((error) => console.trace(error));
+  }, []);
 
   return <></>;
 };

@@ -118,18 +118,31 @@ const snowflakeTypes: { [key: string]: TestType[] } = {
   geography: geospatialDataTests,
 };
 
+export const materializationTypes = ['Table', 'View'] as const;
+export type MaterializationType = typeof materializationTypes[number];
+
+export const parseMaterializationType = (
+  materializationType: unknown
+): MaterializationType => {
+  const identifiedElement = materializationTypes.find(
+    (element) => element === materializationType
+  );
+  if (identifiedElement) return identifiedElement;
+  throw new Error('Provision of invalid type');
+};
+
 interface TestConfig {
   type: TestType;
   activated: boolean;
-  testSuiteExists: boolean;
+  testSuiteId?: string;
 }
 
 interface ColumnTestConfig {
   id: string;
   label: string;
   type: string;
-  frequency: string;
-  sensitivity: string;
+  frequency: number;
+  sensitivity: number;
   testConfig: TestConfig[];
   testsActivated: boolean;
 }
@@ -144,8 +157,8 @@ interface MaterializationTestsConfig {
   columnTestConfig: ColumnTestConfig[];
   navExpanded: boolean;
   label: string;
-  frequency: string;
-  sensitivity: string;
+  frequency?: number;
+  sensitivity?: number;
   testDefinitionSummary: TestDefinitionSummary[];
   testsActivated: boolean;
 }
@@ -235,13 +248,14 @@ export default (): ReactElement => {
         )
       : 0;
 
-  const handleColumnFrequencyChange = (event: any) => {
+  const handleColumnFrequencyChange = async (event: any) => {
     const name = event.target.name as string;
+    const value = event.target.value as number;
     const props = name.split('-');
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].frequency = '';
+    testSelectionLocal[props[1]].frequency = undefined;
 
     const columnTestConfigIndex = testSelectionLocal[
       props[1]
@@ -252,9 +266,35 @@ export default (): ReactElement => {
 
     testSelectionLocal[props[1]].columnTestConfig[
       columnTestConfigIndex
-    ].frequency = event.target.value;
+    ].frequency = value;
 
     setTestSelection({ ...testSelectionLocal });
+
+    const testsToUpdate = testSelectionLocal[props[1]].columnTestConfig[
+      columnTestConfigIndex
+    ].testConfig.filter((el) => el.activated);
+
+    if (!testsToUpdate.length)
+      throw new Error(
+        'No activated tests found. Sensitivity change not allowed'
+      );
+
+    await Promise.all(
+      testsToUpdate.map(async (test) => {
+        if (!test.testSuiteId)
+          throw new Error(
+            'Test with status activated found that does not exist'
+          );
+
+        await ObservabilityApiRepo.updateTestSuite(
+          test.testSuiteId,
+          jwt,
+          undefined,
+          undefined,
+          value
+        );
+      })
+    );
   };
 
   const handleMatFrequencyChange = (event: any) => {
@@ -273,13 +313,14 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
-  const handleColumnSensitivityChange = (event: any) => {
+  const handleColumnSensitivityChange = async (event: any) => {
     const name = event.target.name as string;
+    const value = event.target.value as number;
     const props = name.split('-');
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].sensitivity = '';
+    testSelectionLocal[props[1]].sensitivity = undefined;
 
     const columnTestConfigIndex = testSelectionLocal[
       props[1]
@@ -290,23 +331,49 @@ export default (): ReactElement => {
 
     testSelectionLocal[props[1]].columnTestConfig[
       columnTestConfigIndex
-    ].sensitivity = event.target.value;
+    ].sensitivity = value;
 
     setTestSelection({ ...testSelectionLocal });
+
+    const testsToUpdate = testSelectionLocal[props[1]].columnTestConfig[
+      columnTestConfigIndex
+    ].testConfig.filter((el) => el.activated);
+
+    if (!testsToUpdate.length)
+      throw new Error(
+        'No activated tests found. Sensitivity change not allowed'
+      );
+
+    await Promise.all(
+      testsToUpdate.map(async (test) => {
+        if (!test.testSuiteId)
+          throw new Error(
+            'Test with status activated found that does not exist'
+          );
+
+        await ObservabilityApiRepo.updateTestSuite(
+          test.testSuiteId,
+          jwt,
+          undefined,
+          value
+        );
+      })
+    );
   };
 
   const handleMatSensitivityChange = (event: any) => {
     const name = event.target.name as string;
+    const value = event.target.value as number;
     const props = name.split('-');
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].sensitivity = event.target.value;
+    testSelectionLocal[props[1]].sensitivity = value;
 
     testSelectionLocal[props[1]].columnTestConfig.forEach(
       (el, index) =>
         (testSelectionLocal[props[1]].columnTestConfig[index].sensitivity =
-          event.target.value)
+          value)
     );
 
     setTestSelection({ ...testSelectionLocal });
@@ -327,7 +394,11 @@ export default (): ReactElement => {
     } = {};
 
     testSelectionKeys.forEach((key) => {
-      if (testSelection[key].label.toLocaleLowerCase().includes(value.toLocaleLowerCase()))
+      if (
+        testSelection[key].label
+          .toLocaleLowerCase()
+          .includes(value.toLocaleLowerCase())
+      )
         newTestSelectionElements[key] = testSelection[key];
     });
 
@@ -340,7 +411,7 @@ export default (): ReactElement => {
     return snowflakeTypes[columnType.toLowerCase()];
   };
 
-  const handleTestSelectButtonClick = (event: any) => {
+  const handleTestSelectButtonClick = async (event: any) => {
     const id = event.target.id as string;
     const props = id.split('-');
 
@@ -361,11 +432,13 @@ export default (): ReactElement => {
 
     if (testConfigIndex === -1) throw new Error('Test Config not found');
 
-    testSelectionLocal[props[1]].columnTestConfig[
-      columnTestConfigIndex
-    ].testConfig[testConfigIndex].activated =
+    const newActivatedValue =
       !testSelectionLocal[props[1]].columnTestConfig[columnTestConfigIndex]
         .testConfig[testConfigIndex].activated;
+
+    testSelectionLocal[props[1]].columnTestConfig[
+      columnTestConfigIndex
+    ].testConfig[testConfigIndex].activated = newActivatedValue;
 
     const activated = testSelectionLocal[props[1]].columnTestConfig[
       columnTestConfigIndex
@@ -408,6 +481,45 @@ export default (): ReactElement => {
     ].activationCount = activatedCounter;
 
     setTestSelection({ ...testSelectionLocal });
+
+    const columnTestConfig =
+      testSelectionLocal[props[1]].columnTestConfig[columnTestConfigIndex];
+    const testSuiteId =
+      columnTestConfig.testConfig[testConfigIndex].testSuiteId;
+
+    if (!testSuiteId) {
+      const materalization = materializations.find((el) => el.id === props[1]);
+
+      if (!materalization) throw new Error('Materialization not found');
+
+      const column = columns.find((el) => el.id === props[2]);
+
+      if (!column) throw new Error('Column not found');
+
+      const testSuite = await ObservabilityApiRepo.postTestSuite({
+        activated: newActivatedValue,
+        columnName: column.name,
+        databaseName: materalization.databaseName,
+        schemaName: materalization.schemaName,
+        materializationName: materalization.name,
+        materializationType: parseMaterializationType(materalization.materializationType),
+        targetResourceId: column.id,
+        type,
+        executionFrequency: columnTestConfig.frequency,
+        threshold: columnTestConfig.sensitivity,}
+      , jwt);
+
+      testSelectionLocal[props[1]].columnTestConfig[
+        columnTestConfigIndex
+      ].testConfig[testConfigIndex].testSuiteId = testSuite.id;
+
+      setTestSelection({ ...testSelectionLocal });
+    } else
+      await ObservabilityApiRepo.updateTestSuite(
+        testSuiteId,
+        jwt,
+        newActivatedValue
+      );
   };
 
   const handleMatTestSelectButtonClick = (event: any) => {
@@ -511,14 +623,18 @@ export default (): ReactElement => {
               disabled={!columnTestConfig.testsActivated}
               displayEmpty={true}
               renderValue={(value) => value || columnTestConfig.frequency}
-              value={columnTestConfig.frequency}
+              value={
+                columnTestConfig.frequency < 24
+                  ? `${columnTestConfig.frequency}h`
+                  : '1d'
+              }
               onChange={handleColumnFrequencyChange}
             >
-              <MenuItem value={'1h'}>1h</MenuItem>
-              <MenuItem value={'3h'}>3h</MenuItem>
-              <MenuItem value={'6h'}>6h</MenuItem>
-              <MenuItem value={'12h'}>12h</MenuItem>
-              <MenuItem value={'1d'}>1d</MenuItem>
+              <MenuItem value={1}>1h</MenuItem>
+              <MenuItem value={3}>3h</MenuItem>
+              <MenuItem value={6}>6h</MenuItem>
+              <MenuItem value={12}>12h</MenuItem>
+              <MenuItem value={24}>1d</MenuItem>
             </Select>
           </FormControl>
         </TableCell>
@@ -658,8 +774,8 @@ export default (): ReactElement => {
         label: materializationLabel,
         navExpanded: false,
         columnTestConfig: [],
-        frequency: '1h',
-        sensitivity: '0',
+        frequency: 1,
+        sensitivity: 0,
         testDefinitionSummary: [],
         testsActivated: false,
       };
@@ -681,8 +797,8 @@ export default (): ReactElement => {
           id: column.id,
           type: column.type,
           label: columnLabel,
-          frequency: `${suites.length ? suites[0].executionFrequency : 1}h`,
-          sensitivity: suites.length ? suites[0].threshold.toString() : '0',
+          frequency: suites.length ? suites[0].executionFrequency : 1,
+          sensitivity: suites.length ? suites[0].threshold : 0,
           testConfig: allowedTests.map((element) => {
             const typeSpecificSuite = suites.find((el) => el.type === element);
 
@@ -698,7 +814,7 @@ export default (): ReactElement => {
               activated: typeSpecificSuite
                 ? typeSpecificSuite.activated
                 : false,
-              testSuiteExists: !!typeSpecificSuite
+              testSuiteId: typeSpecificSuite?.id,
             };
           }),
           testsActivated,
@@ -839,6 +955,8 @@ export default (): ReactElement => {
       columnNullnessType
     );
 
+    const frequency = testSelection[props.materializationId].frequency;
+
     return (
       <React.Fragment>
         <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
@@ -858,14 +976,18 @@ export default (): ReactElement => {
                 renderValue={(value) =>
                   value || testSelection[props.materializationId].frequency
                 }
-                value={testSelection[props.materializationId].frequency}
+                value={
+                  frequency && frequency < 24
+                    ? `${frequency}h`
+                    : '1d' || undefined
+                }
                 onChange={handleMatFrequencyChange}
               >
-                <MenuItem value={'1h'}>1h</MenuItem>
-                <MenuItem value={'3h'}>3h</MenuItem>
-                <MenuItem value={'6h'}>6h</MenuItem>
-                <MenuItem value={'12h'}>12h</MenuItem>
-                <MenuItem value={'1d'}>1d</MenuItem>
+                <MenuItem value={1}>1h</MenuItem>
+                <MenuItem value={3}>3h</MenuItem>
+                <MenuItem value={6}>6h</MenuItem>
+                <MenuItem value={12}>12h</MenuItem>
+                <MenuItem value={24}>1d</MenuItem>
               </Select>
             </FormControl>
           </TableCell>

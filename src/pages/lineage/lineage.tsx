@@ -6,7 +6,7 @@ import TableChartIcon from '@mui/icons-material/TableChart';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Logo from '../../components/top-nav/cito-header.png';
 import { FaGithub, FaSlack } from 'react-icons/fa';
-import {SiSnowflake } from 'react-icons/si';
+import { SiSnowflake } from 'react-icons/si';
 import G6, {
   ComboConfig,
   EdgeConfig,
@@ -73,37 +73,7 @@ import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
 
 
-// useEffect(())
-// const getLineageId = (): string => {
-//   let token: string;
-//   let lineage: LineageDto | null;
-
-//   Auth.currentSession()
-//     .then((session) => {
-//       const accessToken = session.getAccessToken();
-//       token = accessToken.getJwtToken();
-
-//       return AccountApiRepository.getBy(new URLSearchParams({}), token);
-//     })
-//     .then((accounts) => {
-//       if (!accounts.length) throw new Error(`No accounts found for user`);
-
-//       if (accounts.length > 1)
-//         throw new Error(`Multiple accounts found for user`);
-
-//       const organizationId = accounts[0].organizationId;
-
-//       return LineageApiRepository.getByOrgId(organizationId, token);
-      
-//     }).then((lineage) => {
-      
-//       return lineage?.id || '';
-    
-//     }).catch((error) => console.log(error));
-// };
-
 const showRealData = false;
-// const lineageId = getLineageId().then((res)=> res);
 
 //'62e7b2bcaa9205236c323795';
 
@@ -527,14 +497,14 @@ export default (): ReactElement => {
     nodeIds: string[]
   ) => setExpandedTreeViewElementIds(nodeIds);
 
-  const handleShowAll = () => {
-    if (!data) return;
-    if (!graph) return;
+  // const handleShowAll = () => {
+  //   if (!data) return;
+  //   if (!graph) return;
 
-    graph.data(data);
+  //   graph.data(data);
 
-    graph.render();
-  };
+  //   graph.render();
+  // };
 
   const handleFilterAnomalies = () => {
     if (!allTreeViewElements) return;
@@ -821,47 +791,47 @@ export default (): ReactElement => {
     window.history.replaceState({}, document.title);
   };
 
-  useEffect (() => {
-    
-    if(showRealData){
-    
-    let token: string;
-  
-    Auth.currentSession()
-      .then((session) => {
-        const accessToken = session.getAccessToken();
-        token = accessToken.getJwtToken();
-  
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
-      })
-      .then((accounts) => {
-        if (!accounts.length) throw new Error(`No accounts found for user`);
-  
-        if (accounts.length > 1)
-          throw new Error(`Multiple accounts found for user`);
-  
-        const organizationId = accounts[0].organizationId;
-  
-        return LineageApiRepository.getByOrgId(organizationId, token);
-        
-      }).then((lineageResponse) => {
-        
-        if(lineageResponse)
-          setLineageId(lineageResponse.id);
-        else 
-          setLineageId('');
-      
-      }).catch((error) => console.log(error));
+  useEffect(() => {
+
+    if (showRealData) {
+
+      let token: string;
+
+      Auth.currentSession()
+        .then((session) => {
+          const accessToken = session.getAccessToken();
+          token = accessToken.getJwtToken();
+
+          return AccountApiRepository.getBy(new URLSearchParams({}), token);
+        })
+        .then((accounts) => {
+          if (!accounts.length) throw new Error(`No accounts found for user`);
+
+          if (accounts.length > 1)
+            throw new Error(`Multiple accounts found for user`);
+
+          const organizationId = accounts[0].organizationId;
+
+          return LineageApiRepository.getByOrgId(organizationId, token);
+
+        }).then((lineageResponse) => {
+
+          if (lineageResponse)
+            setLineageId(lineageResponse.id);
+          else
+            setLineageId('');
+
+        }).catch((error) => console.log(error));
     }
     setReadyToBuild(true);
-  },[accountId]);
+  }, [accountId]);
 
   useEffect(() => {
     if (!accountId || lineage) return;
 
     if (!jwt) throw new Error('No user authorization found');
-    
-    if(!lineageId) return;
+
+    if (!lineageId) return;
 
     if (showRealData) {
       LineageApiRepository.getOne(lineageId, jwt)
@@ -1336,11 +1306,27 @@ export default (): ReactElement => {
         ? data.nodes[0].id
         : '62715f907e3d8066494d409f';
 
-    const initialData = data;
+    // const initialData = data;
 
-    graphObj.data(initialData);
+    // graphObj.data(initialData);
 
     graphObj.set('selectedElementId', defaultNodeId);
+
+    const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
+    const selectedAnomalyEdges = graphObj.findAllByState(
+      'edge',
+      'anomalyNodeSelected'
+    );
+    const edges = selectedEdges.concat(selectedAnomalyEdges);
+    edges.forEach((edge) => edge.clearStates());
+
+    setSelectedNodeId(defaultNodeId);
+    graphObj.data(loadData(defaultNodeId, DataLoadNodeType.Self, [], [], data));
+
+    setColumnTest(Date.now().toString());
+
+    graphObj.set('latestZoom', graphObj.getZoom());
+
 
     graphObj.render();
 
@@ -1474,9 +1460,9 @@ export default (): ReactElement => {
                 ? 'Expand all'
                 : 'Collapse all'}
             </button>
-            <button className="control-button" onClick={handleShowAll}>
+            {/* <button className="control-button" onClick={handleShowAll}>
               Show all
-            </button>
+            </button> */}
             <button
               className={anomalyFilterOn ? 'filter-button' : 'control-button'}
               onClick={handleFilterAnomalies}

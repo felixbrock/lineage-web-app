@@ -6,7 +6,7 @@ import TableChartIcon from '@mui/icons-material/TableChart';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Logo from '../../components/top-nav/cito-header.png';
 import { FaGithub, FaSlack } from 'react-icons/fa';
-import {SiSnowflake } from 'react-icons/si';
+import { SiSnowflake } from 'react-icons/si';
 import G6, {
   ComboConfig,
   EdgeConfig,
@@ -72,8 +72,11 @@ import IntegrationApiRepo from '../../infrastructure/integration-api/integration
 import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
 
+
 const showRealData = false;
-const lineageId = '62e7b2bcaa9205236c323795';
+
+//'62e7b2bcaa9205236c323795';
+
 
 // 62e79c2cd6fc4eb07b664eb5';
 
@@ -415,6 +418,7 @@ export default (): ReactElement => {
   const [sql, setSQL] = useState('');
   const [columnTest, setColumnTest] = useState('');
   // const [info, setInfo] = useState('');
+  const [lineageId, setLineageId] = useState<string>();
   const [lineage, setLineage] = useState<LineageDto>();
   const [materializations, setMaterializations] = useState<
     MaterializationDto[]
@@ -493,14 +497,14 @@ export default (): ReactElement => {
     nodeIds: string[]
   ) => setExpandedTreeViewElementIds(nodeIds);
 
-  const handleShowAll = () => {
-    if (!data) return;
-    if (!graph) return;
+  // const handleShowAll = () => {
+  //   if (!data) return;
+  //   if (!graph) return;
 
-    graph.data(data);
+  //   graph.data(data);
 
-    graph.render();
-  };
+  //   graph.render();
+  // };
 
   const handleFilterAnomalies = () => {
     if (!allTreeViewElements) return;
@@ -735,13 +739,14 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (!user) return;
-
+    let token: string;
+    let organizationId: string;
     Auth.currentSession()
       .then((session) => {
         const accessToken = session.getAccessToken();
 
-        const token = accessToken.getJwtToken();
-        
+        token = accessToken.getJwtToken();
+
         setJwt(token);
 
         return AccountApiRepository.getBy(new URLSearchParams({}), token);
@@ -753,12 +758,29 @@ export default (): ReactElement => {
           throw new Error(`Multiple accounts found for user`);
 
         setAccountId(accounts[0].id);
+
+        organizationId = accounts[0].organizationId;
+        if (showRealData) {
+
+          return LineageApiRepository.getByOrgId(organizationId, token)
+
+            .then((lineageResponse) => {
+
+              if (lineageResponse)
+                setLineageId(lineageResponse.id);
+              else
+                setLineageId('');
+              
+            });
+        }
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
 
         Auth.signOut();
       });
+      setReadyToBuild(true);
+
   }, [user]);
 
   const handleSlackRedirect = () => {
@@ -787,10 +809,31 @@ export default (): ReactElement => {
     window.history.replaceState({}, document.title);
   };
 
+  const handleGithubRedirect = () => {
+    const state = location.state;
+
+    if (!state) return;
+    if (typeof state !== 'object')
+      throw new Error('Unexpected navigation state type');
+
+    const {showIntegrationPanel, sidePanelTabIndex } =
+      state as any;
+
+    if (!showIntegrationPanel || !sidePanelTabIndex)
+      return;
+
+    if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
+    if (sidePanelTabIndex) setTabIndex(sidePanelTabIndex);
+
+    window.history.replaceState({}, document.title);
+  };
+
   useEffect(() => {
     if (!accountId || lineage) return;
 
     if (!jwt) throw new Error('No user authorization found');
+
+    if (!lineageId) return;
 
     if (showRealData) {
       LineageApiRepository.getOne(lineageId, jwt)
@@ -837,6 +880,7 @@ export default (): ReactElement => {
     }
 
     handleSlackRedirect();
+    handleGithubRedirect();
   }, [accountId]);
 
   useEffect(() => {
@@ -1081,9 +1125,9 @@ export default (): ReactElement => {
       if (isNode(element)) {
         let anomalyState:
           | {
-              id: string;
-              hasNewAnomaly: boolean;
-            }
+            id: string;
+            hasNewAnomaly: boolean;
+          }
           | undefined;
         if (!showRealData) {
           anomalyState = defaultAnomalyStates.find(
@@ -1104,9 +1148,9 @@ export default (): ReactElement => {
           const sourceId = source.getID();
           let sourceAnomalyState:
             | {
-                id: string;
-                hasNewAnomaly: boolean;
-              }
+              id: string;
+              hasNewAnomaly: boolean;
+            }
             | undefined;
           if (!showRealData) {
             sourceAnomalyState = defaultAnomalyStates.find(
@@ -1265,11 +1309,27 @@ export default (): ReactElement => {
         ? data.nodes[0].id
         : '62715f907e3d8066494d409f';
 
-    const initialData = data;
+    // const initialData = data;
 
-    graphObj.data(initialData);
+    // graphObj.data(initialData);
 
     graphObj.set('selectedElementId', defaultNodeId);
+
+    const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
+    const selectedAnomalyEdges = graphObj.findAllByState(
+      'edge',
+      'anomalyNodeSelected'
+    );
+    const edges = selectedEdges.concat(selectedAnomalyEdges);
+    edges.forEach((edge) => edge.clearStates());
+
+    setSelectedNodeId(defaultNodeId);
+    graphObj.data(loadData(defaultNodeId, DataLoadNodeType.Self, [], [], data));
+
+    setColumnTest(Date.now().toString());
+
+    graphObj.set('latestZoom', graphObj.getZoom());
+
 
     graphObj.render();
 
@@ -1403,9 +1463,9 @@ export default (): ReactElement => {
                 ? 'Expand all'
                 : 'Collapse all'}
             </button>
-            <button className="control-button" onClick={handleShowAll}>
+            {/* <button className="control-button" onClick={handleShowAll}>
               Show all
-            </button>
+            </button> */}
             <button
               className={anomalyFilterOn ? 'filter-button' : 'control-button'}
               onClick={handleFilterAnomalies}
@@ -1474,17 +1534,17 @@ export default (): ReactElement => {
                     option={
                       selectedNodeId === '627160717e3d8066494d41ff'
                         ? defaultOption(
-                            defaultYAxis,
-                            effectiveRateSampleDistributionData,
-                            7,
-                            8
-                          )
+                          defaultYAxis,
+                          effectiveRateSampleDistributionData,
+                          7,
+                          8
+                        )
                         : defaultOption(
-                            defaultYAxis,
-                            defaultDistributionData,
-                            7,
-                            8
-                          )
+                          defaultYAxis,
+                          defaultDistributionData,
+                          7,
+                          8
+                        )
                     }
                   ></MetricsGraph>
                 </div>
@@ -1494,17 +1554,17 @@ export default (): ReactElement => {
                     option={
                       selectedNodeId === '627160717e3d8066494d41ff'
                         ? defaultOption(
-                            defaultYAxis,
-                            effectiveRateSampleFreshnessData,
-                            5,
-                            7
-                          )
+                          defaultYAxis,
+                          effectiveRateSampleFreshnessData,
+                          5,
+                          7
+                        )
                         : defaultOption(
-                            defaultYAxisTime,
-                            defaultFreshnessData,
-                            3,
-                            5
-                          )
+                          defaultYAxisTime,
+                          defaultFreshnessData,
+                          3,
+                          5
+                        )
                     }
                   ></MetricsGraph>
                 </div>
@@ -1514,11 +1574,11 @@ export default (): ReactElement => {
                     option={
                       selectedNodeId === '627160717e3d8066494d41ff'
                         ? defaultOption(
-                            defaultYAxis,
-                            effectiveRateSampleNullnessData,
-                            1,
-                            3
-                          )
+                          defaultYAxis,
+                          effectiveRateSampleNullnessData,
+                          1,
+                          3
+                        )
                         : defaultOption(defaultYAxis, defaultNullnessData, 4, 6)
                     }
                   ></MetricsGraph>

@@ -28,4 +28,27 @@ export default class LineageApiRepository {
       return Promise.reject(new Error(error.response.data.message));
     }
   };
+
+  public static getByOrgId = async (
+    organizationId: string,
+    jwt: string
+  ): Promise<LineageDto | null> => {
+    try {
+      const apiRoot = await LineageApiRepository.root;
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.get(
+        `${apiRoot}/lineage/org/${organizationId}`,
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
 }

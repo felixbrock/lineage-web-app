@@ -739,12 +739,13 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (!user) return;
-
+    let token: string;
+    let organizationId: string;
     Auth.currentSession()
       .then((session) => {
         const accessToken = session.getAccessToken();
 
-        const token = accessToken.getJwtToken();
+        token = accessToken.getJwtToken();
 
         setJwt(token);
 
@@ -757,12 +758,29 @@ export default (): ReactElement => {
           throw new Error(`Multiple accounts found for user`);
 
         setAccountId(accounts[0].id);
+
+        organizationId = accounts[0].organizationId;
+        if (showRealData) {
+
+          return LineageApiRepository.getByOrgId(organizationId, token)
+
+            .then((lineageResponse) => {
+
+              if (lineageResponse)
+                setLineageId(lineageResponse.id);
+              else
+                setLineageId('');
+              
+            });
+        }
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
 
         Auth.signOut();
       });
+      setReadyToBuild(true);
+
   }, [user]);
 
   const handleSlackRedirect = () => {
@@ -791,40 +809,24 @@ export default (): ReactElement => {
     window.history.replaceState({}, document.title);
   };
 
-  useEffect(() => {
+  const handleGithubRedirect = () => {
+    const state = location.state;
 
-    if (showRealData) {
+    if (!state) return;
+    if (typeof state !== 'object')
+      throw new Error('Unexpected navigation state type');
 
-      let token: string;
+    const {showIntegrationPanel, sidePanelTabIndex } =
+      state as any;
 
-      Auth.currentSession()
-        .then((session) => {
-          const accessToken = session.getAccessToken();
-          token = accessToken.getJwtToken();
+    if (!showIntegrationPanel || !sidePanelTabIndex)
+      return;
 
-          return AccountApiRepository.getBy(new URLSearchParams({}), token);
-        })
-        .then((accounts) => {
-          if (!accounts.length) throw new Error(`No accounts found for user`);
+    if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
+    if (sidePanelTabIndex) setTabIndex(sidePanelTabIndex);
 
-          if (accounts.length > 1)
-            throw new Error(`Multiple accounts found for user`);
-
-          const organizationId = accounts[0].organizationId;
-
-          return LineageApiRepository.getByOrgId(organizationId, token);
-
-        }).then((lineageResponse) => {
-
-          if (lineageResponse)
-            setLineageId(lineageResponse.id);
-          else
-            setLineageId('');
-
-        }).catch((error) => console.log(error));
-    }
-    setReadyToBuild(true);
-  }, [accountId]);
+    window.history.replaceState({}, document.title);
+  };
 
   useEffect(() => {
     if (!accountId || lineage) return;
@@ -878,6 +880,7 @@ export default (): ReactElement => {
     }
 
     handleSlackRedirect();
+    handleGithubRedirect();
   }, [accountId]);
 
   useEffect(() => {

@@ -11,19 +11,16 @@ export default () => {
   const navigate = useNavigate();
 
   const { code, installationId } = useParams();
-  console.log(code);
 
   const [user, setUser] = useState<string>();
   const [jwt, setJwt] = useState<any>();
-  // const [accountId, setAccountId] = useState<string>();
   const [organizationId, setOrganizationId] = useState<string>();
 
   const renderGithubRedirect = () => {
     setUser(undefined);
     setJwt('');
-    // setAccountId('');
     setOrganizationId('');
-
+    
     Auth.currentAuthenticatedUser()
       .then((cognitoUser) => setUser(cognitoUser))
       .catch((error) => {
@@ -39,7 +36,7 @@ export default () => {
 
   useEffect(() => {
     if (!user) return;
-
+    
     Auth.currentSession()
       .then((session) => {
         const accessToken = session.getAccessToken();
@@ -55,7 +52,6 @@ export default () => {
         if (accounts.length > 1)
           throw new Error(`Multiple accounts found for user`);
 
-        // setAccountId(accounts[0].id);
         setOrganizationId(accounts[0].organizationId);
       })
       .catch((error) => {
@@ -65,7 +61,7 @@ export default () => {
 
   useEffect(() => {
     if (!organizationId) return;
-
+    
     if (!jwt) throw new Error('No user authorization found');
 
     if (!code) throw new Error('Did not receive a temp auth code from Github');
@@ -73,9 +69,8 @@ export default () => {
     if (!installationId) throw new Error('Did not recieve installationId from Github');
 
     IntegrationApiRepo.createGithubProfile(installationId, organizationId, jwt)
-
+    
       .then(() =>
-
         navigate(`/lineage`, {
           state: {
             installationId,
@@ -86,7 +81,7 @@ export default () => {
         })
       )
       .catch((error) => console.trace(error));
-  }, []);
+  }, [organizationId]);
 
   return <></>;
 };

@@ -72,8 +72,41 @@ import IntegrationApiRepo from '../../infrastructure/integration-api/integration
 import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
 
+
+// useEffect(())
+// const getLineageId = (): string => {
+//   let token: string;
+//   let lineage: LineageDto | null;
+
+//   Auth.currentSession()
+//     .then((session) => {
+//       const accessToken = session.getAccessToken();
+//       token = accessToken.getJwtToken();
+
+//       return AccountApiRepository.getBy(new URLSearchParams({}), token);
+//     })
+//     .then((accounts) => {
+//       if (!accounts.length) throw new Error(`No accounts found for user`);
+
+//       if (accounts.length > 1)
+//         throw new Error(`Multiple accounts found for user`);
+
+//       const organizationId = accounts[0].organizationId;
+
+//       return LineageApiRepository.getByOrgId(organizationId, token);
+      
+//     }).then((lineage) => {
+      
+//       return lineage?.id || '';
+    
+//     }).catch((error) => console.log(error));
+// };
+
 const showRealData = false;
-const lineageId = '62e7b2bcaa9205236c323795';
+// const lineageId = getLineageId().then((res)=> res);
+
+//'62e7b2bcaa9205236c323795';
+
 
 // 62e79c2cd6fc4eb07b664eb5';
 
@@ -415,6 +448,7 @@ export default (): ReactElement => {
   const [sql, setSQL] = useState('');
   const [columnTest, setColumnTest] = useState('');
   // const [info, setInfo] = useState('');
+  const [lineageId, setLineageId] = useState<string>();
   const [lineage, setLineage] = useState<LineageDto>();
   const [materializations, setMaterializations] = useState<
     MaterializationDto[]
@@ -741,7 +775,7 @@ export default (): ReactElement => {
         const accessToken = session.getAccessToken();
 
         const token = accessToken.getJwtToken();
-        
+
         setJwt(token);
 
         return AccountApiRepository.getBy(new URLSearchParams({}), token);
@@ -787,10 +821,47 @@ export default (): ReactElement => {
     window.history.replaceState({}, document.title);
   };
 
+  useEffect (() => {
+    
+    if(showRealData){
+    
+    let token: string;
+  
+    Auth.currentSession()
+      .then((session) => {
+        const accessToken = session.getAccessToken();
+        token = accessToken.getJwtToken();
+  
+        return AccountApiRepository.getBy(new URLSearchParams({}), token);
+      })
+      .then((accounts) => {
+        if (!accounts.length) throw new Error(`No accounts found for user`);
+  
+        if (accounts.length > 1)
+          throw new Error(`Multiple accounts found for user`);
+  
+        const organizationId = accounts[0].organizationId;
+  
+        return LineageApiRepository.getByOrgId(organizationId, token);
+        
+      }).then((lineageResponse) => {
+        
+        if(lineageResponse)
+          setLineageId(lineageResponse.id);
+        else 
+          setLineageId('');
+      
+      }).catch((error) => console.log(error));
+    }
+    setReadyToBuild(true);
+  },[accountId]);
+
   useEffect(() => {
     if (!accountId || lineage) return;
 
     if (!jwt) throw new Error('No user authorization found');
+    
+    if(!lineageId) return;
 
     if (showRealData) {
       LineageApiRepository.getOne(lineageId, jwt)
@@ -1081,9 +1152,9 @@ export default (): ReactElement => {
       if (isNode(element)) {
         let anomalyState:
           | {
-              id: string;
-              hasNewAnomaly: boolean;
-            }
+            id: string;
+            hasNewAnomaly: boolean;
+          }
           | undefined;
         if (!showRealData) {
           anomalyState = defaultAnomalyStates.find(
@@ -1104,9 +1175,9 @@ export default (): ReactElement => {
           const sourceId = source.getID();
           let sourceAnomalyState:
             | {
-                id: string;
-                hasNewAnomaly: boolean;
-              }
+              id: string;
+              hasNewAnomaly: boolean;
+            }
             | undefined;
           if (!showRealData) {
             sourceAnomalyState = defaultAnomalyStates.find(
@@ -1474,17 +1545,17 @@ export default (): ReactElement => {
                     option={
                       selectedNodeId === '627160717e3d8066494d41ff'
                         ? defaultOption(
-                            defaultYAxis,
-                            effectiveRateSampleDistributionData,
-                            7,
-                            8
-                          )
+                          defaultYAxis,
+                          effectiveRateSampleDistributionData,
+                          7,
+                          8
+                        )
                         : defaultOption(
-                            defaultYAxis,
-                            defaultDistributionData,
-                            7,
-                            8
-                          )
+                          defaultYAxis,
+                          defaultDistributionData,
+                          7,
+                          8
+                        )
                     }
                   ></MetricsGraph>
                 </div>
@@ -1494,17 +1565,17 @@ export default (): ReactElement => {
                     option={
                       selectedNodeId === '627160717e3d8066494d41ff'
                         ? defaultOption(
-                            defaultYAxis,
-                            effectiveRateSampleFreshnessData,
-                            5,
-                            7
-                          )
+                          defaultYAxis,
+                          effectiveRateSampleFreshnessData,
+                          5,
+                          7
+                        )
                         : defaultOption(
-                            defaultYAxisTime,
-                            defaultFreshnessData,
-                            3,
-                            5
-                          )
+                          defaultYAxisTime,
+                          defaultFreshnessData,
+                          3,
+                          5
+                        )
                     }
                   ></MetricsGraph>
                 </div>
@@ -1514,11 +1585,11 @@ export default (): ReactElement => {
                     option={
                       selectedNodeId === '627160717e3d8066494d41ff'
                         ? defaultOption(
-                            defaultYAxis,
-                            effectiveRateSampleNullnessData,
-                            1,
-                            3
-                          )
+                          defaultYAxis,
+                          effectiveRateSampleNullnessData,
+                          1,
+                          3
+                        )
                         : defaultOption(defaultYAxis, defaultNullnessData, 4, 6)
                     }
                   ></MetricsGraph>

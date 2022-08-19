@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import AccountApiRepository from '../infrastructure/account-api/account-api-repo';
 import { useNavigate, useParams } from "react-router-dom";
 import IntegrationApiRepo from '../infrastructure/integration-api/integration-api-repo';
+import axios, { AxiosRequestConfig } from 'axios';
+import { githubConfig } from '../config';
 
 export default () => {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ export default () => {
   const [user, setUser] = useState<string>();
   const [jwt, setJwt] = useState<any>();
   const [organizationId, setOrganizationId] = useState<string>();
+  const [repoNameList, setRepoNameList] = useState<string[]>([]);
 
   const renderGithubRedirect = () => {
     setUser(undefined);
@@ -59,6 +62,96 @@ export default () => {
       });
   }, [user]);
 
+  const getAccessCode = async (
+    githubCode: string,
+    clientId: string,
+    clientSecret: string,
+  ): Promise<string> => {
+    try {
+
+      const config: AxiosRequestConfig = {
+        headers: {
+          Authorization: `Bearer ${jwt}`
+        }
+      };
+
+      const response = await axios.post(
+        'https://github.com/login/oauth/access_token',
+        {
+          code: githubCode,
+          clientId,
+          clientSecret,
+        },
+        config
+      );
+
+      const jsonResponse = response.data;
+      if (response.status !== 200) throw new Error(jsonResponse.message);
+      if (!jsonResponse)
+        throw new Error('Retrieval of github access token failed');
+      return jsonResponse.access_token;
+    } catch (error: unknown) {
+      if (typeof error === 'string') return Promise.reject(error);
+      if (error instanceof Error) return Promise.reject(error.message);
+      return Promise.reject(new Error('Unknown error occured'));
+    }
+  };
+
+  const getRepoName = async (
+    token: string,
+    installation?: string,
+  ): Promise<string[]> => {
+    try {
+
+      const config: AxiosRequestConfig = {
+        headers: {
+          Authorization: `token ${token}`
+        }
+      };
+
+      const response = await axios.get(
+        `https://api.github.com/user/installations/${installation}/repositories`,
+        config
+      );
+
+      const jsonResponse = response.data;
+      if (response.status !== 200) throw new Error(jsonResponse.message);
+      if (!jsonResponse)
+        throw new Error('Retrieval of repos failed');
+
+      const repositories: any[] = jsonResponse.repositories;
+      const repoNames: string[] = repositories.map((repo) => repo.full_name);
+
+      return repoNames;
+    } catch (error: unknown) {
+      if (typeof error === 'string') return Promise.reject(error);
+      if (error instanceof Error) return Promise.reject(error.message);
+      return Promise.reject(new Error('Unknown error occured'));
+    }
+  };
+
+  useEffect(() => {
+
+    if (!jwt) throw new Error('No user authorization found');
+
+    if (!code) throw new Error('Did not receive a temp auth code from Github');
+
+    if (!installationId) throw new Error('Did not recieve installationId from Github');
+
+    getAccessCode(code, githubConfig.githubClientId, githubConfig.githubClientSecret)
+      .then((accessToken) => {
+        return getRepoName(installationId, accessToken);
+      })
+      .then((repoNames) => {
+
+        setRepoNameList(repoNames);
+      })
+      .catch((error: any) => {
+        console.trace(error);
+      });
+
+  }, []);
+  
   useEffect(() => {
     if (!organizationId) return;
     
@@ -68,7 +161,9 @@ export default () => {
 
     if (!installationId) throw new Error('Did not recieve installationId from Github');
 
-    IntegrationApiRepo.createGithubProfile(installationId, organizationId, jwt)
+    if(!repoNameList) throw new Error('Repositories not retrieved')
+
+    IntegrationApiRepo.createGithubProfile(installationId, organizationId, repoNameList, jwt)
     
       .then(() =>
         navigate(`/lineage`, {

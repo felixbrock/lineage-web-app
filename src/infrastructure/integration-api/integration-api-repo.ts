@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import getRoot from '../shared/api-root-builder';
+import GithubProfileDto from './github-profile-dto';
 import SlackConversationInfoDto from './slack-channel-info-dto';
 import SlackProfileDto from './slack-profile-dto';
 
@@ -141,6 +142,7 @@ export default class IntegrationApiRepo {
   public static createGithubProfile = async (
     installationId: string,
     organizationId: string,
+    repositoryNames: string[],
     jwt: string
   ): Promise<string> => {
     try {
@@ -156,7 +158,8 @@ export default class IntegrationApiRepo {
         `${apiRoot}/github/profile`, 
         {
           installationId,
-          organizationId
+          organizationId,
+          repositoryNames
         },
         config
       );
@@ -172,4 +175,39 @@ export default class IntegrationApiRepo {
     }
   };
 
+
+  public static readGithubProfile = async (
+    installationId: string,
+    jwt: string
+  ): Promise<GithubProfileDto> => {
+    try {
+
+      const apiRoot = await IntegrationApiRepo.root;
+
+      const configuration: AxiosRequestConfig = {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+          'Content-Type': 'application/json'
+        },
+        params: {
+          installationId
+        }
+      };
+
+      const response = await axios.get(
+        `${apiRoot}/github/profile`,
+        configuration
+      );
+
+      const jsonResponse = response.data;
+      console.log(jsonResponse);
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse.message);
+
+    } catch (error: unknown) {
+      if (typeof error === 'string') return Promise.reject(error);
+      if (error instanceof Error) return Promise.reject(error.message);
+      return Promise.reject(new Error('Unknown error occured'));
+    }
+  };
 }

@@ -73,7 +73,8 @@ export default () => {
       .then(() =>
         navigate(`/lineage`, {
           state: {
-            installationId,
+            githubCode: code,
+            installation: installationId,
             showIntegrationPanel: true,
             sidePanelTabIndex: 2,
           },

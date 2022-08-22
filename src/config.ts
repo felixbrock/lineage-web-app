@@ -84,3 +84,30 @@ const getSlackConfig = (): SlackConfig  => {
 };
 
 export const slackConfig = getSlackConfig();
+
+interface GithubConfig {githubClientId: string, githubClientSecret:string}; 
+
+const getGithubConfig = (): GithubConfig  => {
+  const githubConfig : any = {};
+
+  switch (process.env.REACT_APP_STAGE) {
+    case 'development':
+      githubConfig.githubClientId = process.env.REACT_APP_GITHUB_CLIENT_ID || '';
+      githubConfig.githubClientSecret = process.env.REACT_APP_GITHUB_CLIENT_SECRET || '';
+      break;
+    case 'test':
+      githubConfig.githubClientId = '';
+      githubConfig.githubClientSecret = '';
+      break;
+    case 'production':
+      githubConfig.githubClientId = process.env.REACT_APP_GITHUB_CLIENT_ID || '';
+      githubConfig.githubClientSecret = process.env.REACT_APP_GITHUB_CLIENT_SECRET || '';
+      break;
+    default:
+      throw new Error('app stage not found');
+  }
+
+  return githubConfig;
+};
+
+export const githubConfig = getGithubConfig();

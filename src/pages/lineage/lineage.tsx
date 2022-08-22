@@ -448,6 +448,8 @@ export default (): ReactElement => {
     useState<boolean>();
 
   const [slackToken, setSlackToken] = useState<string>('');
+  const [githubTempAuth, setGithubTempAuth] = useState<string>('');
+  const [installationId, setInstallationId] = useState<string>('');
   const [integrationComponent, setIntegrationComponent] =
     useState<ReactElement>();
 
@@ -816,12 +818,14 @@ export default (): ReactElement => {
     if (typeof state !== 'object')
       throw new Error('Unexpected navigation state type');
 
-    const {showIntegrationPanel, sidePanelTabIndex } =
+    const {githubCode, installation, showIntegrationPanel, sidePanelTabIndex } =
       state as any;
 
-    if (!showIntegrationPanel || !sidePanelTabIndex)
+    if (!githubCode || !installationId || !showIntegrationPanel || !sidePanelTabIndex)
       return;
 
+    if (githubCode) setGithubTempAuth(githubCode);
+    if (installation) setInstallationId(installation);
     if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
     if (sidePanelTabIndex) setTabIndex(sidePanelTabIndex);
 
@@ -886,8 +890,8 @@ export default (): ReactElement => {
   useEffect(() => {
     console.log(slackToken);
 
-    if (tabIndex === 0) setIntegrationComponent(<Github></Github>);
-    else if (tabIndex === 1) setIntegrationComponent(<Github></Github>);
+    if (tabIndex === 0) setIntegrationComponent(<Github tempAuthCode = {githubTempAuth} installationId = {installationId} jwt={jwt}></Github>);
+    else if (tabIndex === 1) setIntegrationComponent(<Github tempAuthCode={githubTempAuth} installationId = {installationId} jwt={jwt}></Github>);
     else if (tabIndex === 2)
       setIntegrationComponent(<Slack accountId={accountId} jwt={jwt}></Slack>);
   }, [tabIndex]);

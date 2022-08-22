@@ -22,15 +22,15 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { MdMenu, MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
 import MetricsGraph, {
-  defaultDistributionData,
-  defaultFreshnessData,
-  defaultNullnessData,
+  // defaultDistributionData,
+  // defaultFreshnessData,
+  // defaultNullnessData,
   defaultOption,
   defaultYAxis,
-  defaultYAxisTime,
-  effectiveRateSampleDistributionData,
-  effectiveRateSampleFreshnessData,
-  effectiveRateSampleNullnessData,
+  // defaultYAxisTime,
+  // effectiveRateSampleDistributionData,
+  // effectiveRateSampleFreshnessData,
+  // effectiveRateSampleNullnessData,
 } from '../../components/metrics-graph';
 
 import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
@@ -411,12 +411,14 @@ export default (): ReactElement => {
   const navigate = useNavigate();
 
   const [accountId, setAccountId] = useState('');
+  const [organizationId, setOrganizationId] = useState('');
   const [user, setUser] = useState<any>();
   const [jwt, setJwt] = useState('');
 
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');
   const [columnTest, setColumnTest] = useState('');
+  const [availableTests, setAvailableTests] = useState<any[]>([]);
   // const [info, setInfo] = useState('');
   const [lineageId, setLineageId] = useState<string>();
   const [lineage, setLineage] = useState<LineageDto>();
@@ -741,7 +743,6 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!user) return;
     let token: string;
-    let organizationId: string;
     Auth.currentSession()
       .then((session) => {
         const accessToken = session.getAccessToken();
@@ -760,7 +761,7 @@ export default (): ReactElement => {
 
         setAccountId(accounts[0].id);
 
-        organizationId = accounts[0].organizationId;
+        setOrganizationId(accounts[0].organizationId);
         if (showRealData) {
 
           return LineageApiRepository.getByOrgId(organizationId, token)
@@ -771,7 +772,7 @@ export default (): ReactElement => {
                 setLineageId(lineageResponse.id);
               else
                 setLineageId('');
-              
+
             });
         }
       })
@@ -780,7 +781,7 @@ export default (): ReactElement => {
 
         Auth.signOut();
       });
-      setReadyToBuild(true);
+    setReadyToBuild(true);
 
   }, [user]);
 
@@ -817,7 +818,7 @@ export default (): ReactElement => {
     if (typeof state !== 'object')
       throw new Error('Unexpected navigation state type');
 
-    const {installation, showIntegrationPanel, sidePanelTabIndex } =
+    const { installation, showIntegrationPanel, sidePanelTabIndex } =
       state as any;
 
     if (!installationId || !showIntegrationPanel || !sidePanelTabIndex)
@@ -888,8 +889,8 @@ export default (): ReactElement => {
   useEffect(() => {
     console.log(slackToken);
 
-    if (tabIndex === 0) setIntegrationComponent(<Github installationId = {installationId} jwt={jwt}></Github>);
-    else if (tabIndex === 1) setIntegrationComponent(<Github installationId = {installationId} jwt={jwt}></Github>);
+    if (tabIndex === 0) setIntegrationComponent(<Github installationId={installationId} jwt={jwt}></Github>);
+    else if (tabIndex === 1) setIntegrationComponent(<Github installationId={installationId} jwt={jwt}></Github>);
     else if (tabIndex === 2)
       setIntegrationComponent(<Slack accountId={accountId} jwt={jwt}></Slack>);
   }, [tabIndex]);
@@ -905,6 +906,39 @@ export default (): ReactElement => {
     panel.style.visibility = 'visible';
     panel.style.opacity = '1';
   }, [showIntegrationSidePanel]);
+
+  useEffect(() => {
+
+    const definedTests: any[] = [];
+
+    const sqlQuery = `select distinct TEST_TYPE, ID from cito.public.test_suites
+     where TARGET_RESOURCE_ID = ${selectedNodeId} AND ACTIVATED = TRUE`;
+
+    IntegrationApiRepo.querySnowflake(sqlQuery, organizationId, jwt)
+      .then((results) => {
+
+        results.forEach((entry: { TEST_TYPE: string, ID: string }) => {
+
+          const query = `select VALUE from cito.public.test_history
+        where TEST_SUIT_ID = ${entry.ID} AND TEST_TYPE = ${entry.TEST_TYPE}`;
+
+          IntegrationApiRepo.querySnowflake(query, organizationId, jwt)
+            .then((history) => {
+              const valueList: string[] = Object.values(history);
+              const numList = valueList.map((val: string) => parseFloat(val));
+
+              const newTest = { TEST_TYPE: entry.TEST_TYPE, ID: entry.ID, HISTORY: numList };
+              definedTests.push(newTest);
+            });
+        });
+
+       setAvailableTests(definedTests);
+      })
+      .catch((error) => {
+        console.trace(typeof error === 'string' ? error : error.message);
+      });
+
+  }, [selectedNodeId]);
 
   useEffect(() => {
     if (!filteredTreeViewElements.length) return;
@@ -1530,7 +1564,29 @@ export default (): ReactElement => {
                     <></>
                   )}
                 </div>
-                <div className="Distribution">
+                {availableTests.map((entry) => {
+                  const history:number[] = entry.HISTORY;
+
+                  return (
+
+                    <div className={entry.TEST_TYPE}>
+                      <h4>{entry.TEST_TYPE}</h4>
+                      <MetricsGraph
+                        option={
+                          defaultOption(
+                            defaultYAxis,
+                            history,
+                            7,
+                            8
+                          )
+                        }
+                      ></MetricsGraph>
+                    </div>
+
+                  );
+                })
+                }
+                {/* <div className="Distribution">
                   <h4>Distribution</h4>
                   <MetricsGraph
                     option={
@@ -1584,7 +1640,7 @@ export default (): ReactElement => {
                         : defaultOption(defaultYAxis, defaultNullnessData, 4, 6)
                     }
                   ></MetricsGraph>
-                </div>
+                </div> */}
                 <br></br>
               </>
             ) : (

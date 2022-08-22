@@ -890,8 +890,8 @@ export default (): ReactElement => {
   useEffect(() => {
     console.log(slackToken);
 
-    if (tabIndex === 0) setIntegrationComponent(<Github tempAuthCode = {githubTempAuth} installationId = {installationId} jwt={jwt}></Github>);
-    else if (tabIndex === 1) setIntegrationComponent(<Github tempAuthCode={githubTempAuth} installationId = {installationId} jwt={jwt}></Github>);
+    if (tabIndex === 0) setIntegrationComponent(<Github installationId = {installationId} jwt={jwt}></Github>);
+    else if (tabIndex === 1) setIntegrationComponent(<Github installationId = {installationId} jwt={jwt}></Github>);
     else if (tabIndex === 2)
       setIntegrationComponent(<Slack accountId={accountId} jwt={jwt}></Slack>);
   }, [tabIndex]);

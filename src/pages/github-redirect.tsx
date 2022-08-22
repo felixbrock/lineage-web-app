@@ -161,7 +161,7 @@ export default () => {
 
     if (!installationId) throw new Error('Did not recieve installationId from Github');
 
-    if(!repoNameList) throw new Error('Repositories not retrieved')
+    if(!repoNameList) throw new Error('Repositories not retrieved');
 
     IntegrationApiRepo.createGithubProfile(installationId, organizationId, repoNameList, jwt)
     

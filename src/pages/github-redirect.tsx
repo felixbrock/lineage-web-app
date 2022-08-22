@@ -168,7 +168,6 @@ export default () => {
       .then(() =>
         navigate(`/lineage`, {
           state: {
-            githubCode: code,
             installation: installationId,
             showIntegrationPanel: true,
             sidePanelTabIndex: 2,

@@ -448,7 +448,6 @@ export default (): ReactElement => {
     useState<boolean>();
 
   const [slackToken, setSlackToken] = useState<string>('');
-  const [githubTempAuth, setGithubTempAuth] = useState<string>('');
   const [installationId, setInstallationId] = useState<string>('');
   const [integrationComponent, setIntegrationComponent] =
     useState<ReactElement>();
@@ -818,13 +817,12 @@ export default (): ReactElement => {
     if (typeof state !== 'object')
       throw new Error('Unexpected navigation state type');
 
-    const {githubCode, installation, showIntegrationPanel, sidePanelTabIndex } =
+    const {installation, showIntegrationPanel, sidePanelTabIndex } =
       state as any;
 
-    if (!githubCode || !installationId || !showIntegrationPanel || !sidePanelTabIndex)
+    if (!installationId || !showIntegrationPanel || !sidePanelTabIndex)
       return;
 
-    if (githubCode) setGithubTempAuth(githubCode);
     if (installation) setInstallationId(installation);
     if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
     if (sidePanelTabIndex) setTabIndex(sidePanelTabIndex);

@@ -115,4 +115,4 @@ const getGithubConfig = (): GithubConfig  => {
 
 export const githubConfig = getGithubConfig();
 
-export const showRealData = process.env.SHOW_REAL_DATA === 'true';
+export const showRealData = !process.env.SHOW_REAL_DATA? true : process.env.SHOW_REAL_DATA === 'true';

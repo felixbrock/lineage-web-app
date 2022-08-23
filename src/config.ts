@@ -47,7 +47,7 @@ const getOAuthEnvConfig = (): any => {
       oAuthEnvConfig.redirectSignOut = 'https://www.app-staging.citodata.com';
       break;
     case 'production':
-      oAuthEnvConfig.domain = 'auth.citodata.com';
+      oAuthEnvConfig.domain = 'www.auth.citodata.com';
       oAuthEnvConfig.redirectSignIn = 'https://www.app.citodata.com';
       oAuthEnvConfig.redirectSignOut = 'https://www.app.citodata.com';
       break;

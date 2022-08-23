@@ -114,3 +114,5 @@ const getGithubConfig = (): GithubConfig  => {
 };
 
 export const githubConfig = getGithubConfig();
+
+export const showRealData = process.env.SHOW_REAL_DATA;

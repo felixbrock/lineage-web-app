@@ -72,9 +72,7 @@ import IntegrationApiRepo from '../../infrastructure/integration-api/integration
 import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
 import Snowflake from '../../components/integration/snowflake/snowflake';
-
-
-const showRealData = true;
+import { showRealData } from '../../config';
 
 //'62e7b2bcaa9205236c323795';
 

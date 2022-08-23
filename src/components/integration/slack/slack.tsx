@@ -9,7 +9,7 @@ import {
   SelectChangeEvent,
   FormControl,
 } from '@mui/material';
-import { slackConfig } from '../../../config';
+import { mode, slackConfig } from '../../../config';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 import SlackConversationInfoDto from '../../../infrastructure/integration-api/slack-channel-info-dto';
 
@@ -45,9 +45,7 @@ export default ({ accountId, jwt }: SlackProps): ReactElement => {
       jwt
     );
 
-    await IntegrationApiRepo.joinSlackConversation(
-      jwt
-    );
+    await IntegrationApiRepo.joinSlackConversation(jwt);
 
     setSelectedChannel(channelId);
   };
@@ -79,7 +77,19 @@ export default ({ accountId, jwt }: SlackProps): ReactElement => {
 
   return (
     <>
-      <Button href={buildOAuthUrl(accountId)}>{'Install'}</Button>
+      {mode === 'production' ? (
+        <a href={buildOAuthUrl(accountId)}>
+          <img
+            alt="Add to Slack"
+            height="40"
+            width="139"
+            src="https://platform.slack-edge.com/img/add_to_slack.png"
+            srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+          />
+        </a>
+      ) : (
+        <Button href={buildOAuthUrl(accountId)}>{'Install'}</Button>
+      )}
       <FormControl fullWidth>
         <InputLabel id="select-channel-label">Select Channel</InputLabel>
         <Select

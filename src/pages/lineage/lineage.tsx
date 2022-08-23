@@ -71,9 +71,10 @@ import AccountApiRepository from '../../infrastructure/account-api/account-api-r
 import IntegrationApiRepo from '../../infrastructure/integration-api/integration-api-repo';
 import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
+import Snowflake from '../../components/integration/snowflake/snowflake';
 
 
-const showRealData = false;
+const showRealData = true;
 
 //'62e7b2bcaa9205236c323795';
 
@@ -890,8 +891,9 @@ export default (): ReactElement => {
   useEffect(() => {
     console.log(slackToken);
 
+
     if (tabIndex === 0) setIntegrationComponent(<Github installationId={installationId} jwt={jwt}></Github>);
-    else if (tabIndex === 1) setIntegrationComponent(<Github installationId={installationId} jwt={jwt}></Github>);
+    else if (tabIndex === 1) setIntegrationComponent(<Snowflake jwt={jwt}></Snowflake>);
     else if (tabIndex === 2)
       setIntegrationComponent(<Slack accountId={accountId} jwt={jwt}></Slack>);
   }, [tabIndex]);

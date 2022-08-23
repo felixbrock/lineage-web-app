@@ -1,8 +1,10 @@
 import axios, { AxiosRequestConfig } from 'axios';
+import { mode } from '../../config';
 import getRoot from '../shared/api-root-builder';
 import GithubProfileDto from './github-profile-dto';
 import SlackConversationInfoDto from './slack-channel-info-dto';
 import SlackProfileDto from './slack-profile-dto';
+import SnowflakeProfileDto from './snowflake-profile-dto';
 
 interface PostSlackProfileDto {
   accessToken: string;
@@ -16,9 +18,19 @@ interface UpdateSlackProfileDto {
   channelName?: string;
 }
 
+interface UpdateSnowflakeProfileDto {
+  accountId?: string;
+  username?: string;
+  password?: string;
+}
+
 // TODO - Implement Interface regarding clean architecture
 export default class IntegrationApiRepo {
-  private static root = getRoot('integration', '3002', 'api/v1');
+  private static gateway =  mode === 'production' ? 'wej7xjkvug.execute-api.eu-central-1.amazonaws.com/production' : 'localhost:3002';
+
+  private static path = 'api/v1';
+
+  private static root = getRoot(IntegrationApiRepo.gateway, IntegrationApiRepo.path);
 
   public static getSlackProfile = async (
     jwt: string
@@ -216,6 +228,7 @@ export default class IntegrationApiRepo {
     targetOrganizationId: string,  
     jwt: string
   ): Promise<any> => {
+
     try {
       const apiRoot = await IntegrationApiRepo.root;
 
@@ -245,4 +258,45 @@ export default class IntegrationApiRepo {
     }
   };
 
+
+public static getSnowflakeProfile = async (
+    jwt: string
+  ): Promise<SnowflakeProfileDto | null> => {
+try {
+      const apiRoot = await IntegrationApiRepo.root;
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.get(`${apiRoot}/snowflake/profile`, config);
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
+  public static updateSnowflakeProfile = async (
+    updateSnowflakeProfileDto: UpdateSnowflakeProfileDto,
+    jwt: string
+  ): Promise<unknown> => {
+    try {
+      const apiRoot = await IntegrationApiRepo.root;
+
+      const data = updateSnowflakeProfileDto;
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.patch(`${apiRoot}/snowflake/profile`, data, config);
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
 }

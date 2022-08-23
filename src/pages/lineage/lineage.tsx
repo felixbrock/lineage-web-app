@@ -419,6 +419,7 @@ export default (): ReactElement => {
   const [sql, setSQL] = useState('');
   const [columnTest, setColumnTest] = useState('');
   const [availableTests, setAvailableTests] = useState<any[]>([]);
+  const [alertHistory, setAlertHistory] = useState<any[]>([]);
   // const [info, setInfo] = useState('');
   const [lineageId, setLineageId] = useState<string>();
   const [lineage, setLineage] = useState<LineageDto>();
@@ -910,6 +911,7 @@ export default (): ReactElement => {
   useEffect(() => {
 
     const definedTests: any[] = [];
+    let alertList: any[] = [];
 
     const sqlQuery = `select distinct TEST_TYPE, ID from cito.public.test_suites
      where TARGET_RESOURCE_ID = ${selectedNodeId} AND ACTIVATED = TRUE`;
@@ -920,19 +922,38 @@ export default (): ReactElement => {
         results.forEach((entry: { TEST_TYPE: string, ID: string }) => {
 
           const query = `select VALUE from cito.public.test_history
-        where TEST_SUIT_ID = ${entry.ID} AND TEST_TYPE = ${entry.TEST_TYPE}`;
+          where TEST_SUIT_ID = ${entry.ID} AND TEST_TYPE = ${entry.TEST_TYPE}`;
 
           IntegrationApiRepo.querySnowflake(query, organizationId, jwt)
             .then((history) => {
               const valueList: string[] = Object.values(history);
               const numList = valueList.map((val: string) => parseFloat(val));
 
-              const newTest = { TEST_TYPE: entry.TEST_TYPE, ID: entry.ID, HISTORY: numList };
+              const newTest = { TEST_TYPE: entry.TEST_TYPE, TEST_SUITE_ID: entry.ID, HISTORY: numList };
               definedTests.push(newTest);
+            });
+
+          const alertQuery = `select DEVIATION, EXECUTED_ON from 
+          (cito.public.alerts join cito.public.test_results 
+            on cito.public.alerts.TEST_SUIT_ID = cito.public.test_results.TEST_SUIT_ID) 
+            join cito.public.exectuions on cito.public.alerts.TEST_SUIT_ID = cito.public.executions.TEST_SUIT_ID
+          where TEST_SUIT_ID = ${entry.ID}`;
+
+          IntegrationApiRepo.querySnowflake(alertQuery, organizationId, jwt)
+            .then((alerts) => {
+              const valueList: any[] = Object.values(alerts);
+              alertList = valueList.map((value: { DEVIATION: string, EXECUTED_ON: string}) =>  {
+                  return {
+                    date: value.EXECUTED_ON,
+                    type: entry.TEST_TYPE,
+                    deviation: value.DEVIATION
+                  };
+              });
             });
         });
 
        setAvailableTests(definedTests);
+       setAlertHistory(alertList);
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
@@ -1644,7 +1665,7 @@ export default (): ReactElement => {
                 <br></br>
               </>
             ) : (
-              <>{BasicTable()}</>
+              <>{BasicTable(alertHistory)}</>
             )}
           </div>
         </div>

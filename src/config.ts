@@ -65,6 +65,7 @@ interface SlackConfig {slackClientId: string, slackClientSecret:string};
 const getSlackConfig = (): SlackConfig  => {
   const slackConfig : any = {};
 
+
   switch (mode) {
     case 'development':
       slackConfig.slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID_DEV || '';

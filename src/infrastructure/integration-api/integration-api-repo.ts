@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
+import { mode } from '../../config';
 import getRoot from '../shared/api-root-builder';
 import GithubProfileDto from './github-profile-dto';
 import SlackConversationInfoDto from './slack-channel-info-dto';
@@ -18,7 +19,11 @@ interface UpdateSlackProfileDto {
 
 // TODO - Implement Interface regarding clean architecture
 export default class IntegrationApiRepo {
-  private static root = getRoot('integration', '3002', 'api/v1');
+  private static gateway =  mode === 'production' ? 'wej7xjkvug.execute-api.eu-central-1.amazonaws.com/production' : 'localhost:3002';
+
+  private static path = 'api/v1';
+
+  private static root = getRoot(IntegrationApiRepo.gateway, IntegrationApiRepo.path);
 
   public static getSlackProfile = async (
     jwt: string

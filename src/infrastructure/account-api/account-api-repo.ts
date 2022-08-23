@@ -1,10 +1,15 @@
 import axios, { AxiosRequestConfig } from 'axios';
+import { mode } from '../../config';
 import getRoot from '../shared/api-root-builder';
 import AccountDto from './account-dto';
 
 // TODO - Implement Interface regarding clean architecture
 export default class AccountApiRepo {
-  private static root = getRoot('account', '8081', 'api/v1');
+  private static gateway =  mode === 'production' ? 'p2krek4fsj.execute-api.eu-central-1.amazonaws.com/production' : 'localhost:8081';
+
+  private static path = 'api/v1';
+
+  private static root = getRoot(AccountApiRepo.gateway, AccountApiRepo.path);
 
   public static getBy = async (
     params: URLSearchParams,

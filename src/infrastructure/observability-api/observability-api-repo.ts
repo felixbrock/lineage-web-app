@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
+import { mode } from '../../config';
 import { MaterializationType, TestType } from '../../pages/test/test';
 import getRoot from '../shared/api-root-builder';
 import { TestSuiteDto } from './test-suite-dto';
@@ -24,7 +25,11 @@ export interface TestSuiteProps {
 
 // TODO - Implement Interface regarding clean architecture
 export default class ObservabilityApiRepo {
-  private static root = getRoot('observability', '3012', 'api/v1');
+  private static gateway =  mode === 'production' ? 'ax4h0t5r59.execute-api.eu-central-1.amazonaws.com/production' : 'localhost:3012';
+
+  private static path = 'api/v1';
+
+  private static root = getRoot(ObservabilityApiRepo.gateway, ObservabilityApiRepo.path);
 
 
   public static postTestSuite = async (

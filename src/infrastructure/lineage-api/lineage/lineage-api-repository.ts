@@ -1,10 +1,15 @@
 import axios, { AxiosRequestConfig } from 'axios';
+import { mode } from '../../../config';
 import getRoot from '../../shared/api-root-builder';
 import LineageDto from './lineage-dto';
 
 // TODO - Implement Interface regarding clean architecture
 export default class LineageApiRepository {
-  private static root = getRoot('lineage', '3000', 'api/v1');
+  private static gateway =  mode === 'production' ? 'kga7x5r9la.execute-api.eu-central-1.amazonaws.com/production' : 'localhost:3000';
+
+  private static path = 'api/v1';
+
+  private static root = getRoot(LineageApiRepository.gateway, LineageApiRepository.path);
 
   public static getOne = async (
     id: string,

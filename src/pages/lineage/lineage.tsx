@@ -5,6 +5,8 @@ import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Logo from '../../components/top-nav/cito-header.png';
+import { FaGithub, FaSlack } from 'react-icons/fa';
+import { SiSnowflake } from 'react-icons/si';
 import G6, {
   ComboConfig,
   EdgeConfig,
@@ -61,13 +63,20 @@ import BasicTable from '../../components/table';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
 import Box from '@mui/material/Box';
+import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
+import IntegrationApiRepo from '../../infrastructure/integration-api/integration-api-repo';
+import Github from '../../components/integration/github/github';
+import Slack from '../../components/integration/slack/slack';
 
-const showRealData = false;
-const lineageId = '62e7b2bcaa9205236c323795';
+
+const showRealData = true;
+
+//'62e7b2bcaa9205236c323795';
+
 
 // 62e79c2cd6fc4eb07b664eb5';
 
@@ -175,7 +184,7 @@ const loadData = (
       (element) => element.id === selfNode.comboId
     );
     if (!selfCombo) return data;
-    
+
     if (!graphData.combos) throw new ReferenceError('Combos not available');
     graphData.combos.push(selfCombo);
 
@@ -274,8 +283,10 @@ const loadData = (
   if (graphData.combos) graphData.combos.sort(compare);
 
   /* For rendering column level lineage only */
-  graphData.nodes = graphData.nodes.filter((node) => coveredNodeIds.includes(node.id));
- 
+  graphData.nodes = graphData.nodes.filter((node) =>
+    coveredNodeIds.includes(node.id)
+  );
+
   return graphData;
 };
 
@@ -311,26 +322,28 @@ const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
  * @return {string} the processed result
  */
 const fittingString = (
-  string: string|undefined,
+  string: string | undefined,
   maxWidth: number,
   fontSize: number
 ): string => {
-
-  if(!string) return "";
+  if (!string) return '';
   let currentWidth = 0;
   let result = string;
   string.split('').forEach((letter, i) => {
-    if (currentWidth > maxWidth) return "";
-   
+    if (currentWidth > maxWidth) return '';
+
     currentWidth += G6.Util.getLetterWidth(letter, fontSize);
-   
+
     if (currentWidth > maxWidth) {
-      result = `${string.substring(0, i)}\n${fittingString(string.substring(i),maxWidth,fontSize)}`;
+      result = `${string.substring(0, i)}\n${fittingString(
+        string.substring(i),
+        maxWidth,
+        fontSize
+      )}`;
     }
   });
   return result;
 };
-
 
 const buildData = (
   materializations: MaterializationDto[],
@@ -338,46 +351,43 @@ const buildData = (
   dependencies: DependencyDto[],
   dashboards: DashboardDto[]
 ): GraphData => {
-  const matCombo = materializations
-    .map(
-      (materialization): ComboConfig => ({
-        id: materialization.id,
-        label: materialization.name.toLowerCase(),
-      })
-    );
-  const colNodes = columns
-    .map(
-      (column): NodeConfig => ({
-        id: column.id,
-        label: column.name.toLowerCase(),
-        comboId: column.materializationId,
-      })
-    );
+  const matCombo = materializations.map(
+    (materialization): ComboConfig => ({
+      id: materialization.id,
+      label: materialization.name.toLowerCase(),
+    })
+  );
+  const colNodes = columns.map(
+    (column): NodeConfig => ({
+      id: column.id,
+      label: column.name.toLowerCase(),
+      comboId: column.materializationId,
+    })
+  );
   const edges = dependencies.map(
     (dependency): EdgeConfig => ({
       source: dependency.tailId,
       target: dependency.headId,
     })
-    );
-    
-  const dashCombo = dashboards
-  .map(
-    (dashboard): ComboConfig => (
-        {
-        id: dashboard.url ? dashboard.url : "",
-        label: dashboard.name ? dashboard.name : fittingString(dashboard.url, 385, 18),
-      })
-    );
-  const dashNodes = dashboards
-    .map(
-      (dashboard): NodeConfig => ({
-        id: dashboard.id,
-        label: dashboard.column.toLowerCase(),
-        comboId: dashboard.url,
-      })
-    );
-  const combos = (matCombo.concat(dashCombo)).sort(compare);
-  const nodes = (colNodes.concat(dashNodes)).sort(compare);
+  );
+
+  const dashCombo = dashboards.map(
+    (dashboard): ComboConfig => ({
+      id: dashboard.url ? dashboard.url : '',
+      label: dashboard.name
+        ? dashboard.name
+        : fittingString(dashboard.url, 385, 18),
+    })
+  );
+  const dashNodes = dashboards.map(
+    (dashboard): NodeConfig => ({
+      id: dashboard.id,
+      label: dashboard.column.toLowerCase(),
+      comboId: dashboard.url,
+    })
+  );
+  const combos = matCombo.concat(dashCombo).sort(compare);
+  const nodes = colNodes.concat(dashNodes).sort(compare);
 
   return { combos, nodes, edges };
 };
@@ -394,6 +404,10 @@ const determineType = (id: string, data: GraphData): TreeViewElementType => {
 };
 
 export default (): ReactElement => {
+  const location = useLocation();
+
+  const [searchParams] = useSearchParams();
+
   const navigate = useNavigate();
 
   const [accountId, setAccountId] = useState('');
@@ -404,6 +418,7 @@ export default (): ReactElement => {
   const [sql, setSQL] = useState('');
   const [columnTest, setColumnTest] = useState('');
   // const [info, setInfo] = useState('');
+  const [lineageId, setLineageId] = useState<string>();
   const [lineage, setLineage] = useState<LineageDto>();
   const [materializations, setMaterializations] = useState<
     MaterializationDto[]
@@ -429,6 +444,13 @@ export default (): ReactElement => {
   const [tabIndex, setTabIndex] = React.useState(0);
   const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState('');
+  const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
+    useState<boolean>();
+
+  const [slackToken, setSlackToken] = useState<string>('');
+  const [installationId, setInstallationId] = useState<string>('');
+  const [integrationComponent, setIntegrationComponent] =
+    useState<ReactElement>();
 
   const handleTabIndexChange = (
     event: React.SyntheticEvent,
@@ -437,12 +459,12 @@ export default (): ReactElement => {
     setTabIndex(newValue);
   };
 
-  const handleSelect = (event: React.SyntheticEvent, nodeIds: string) => {
+  const handleSelect = (nodeId: string) => {
     if (!data) return;
     if (!graph) return;
-    if (!nodeIds) return;
+    if (!nodeId) return;
 
-    const id = nodeIds;
+    const id = nodeId;
 
     const selectedNodes = graph.findAllByState('node', 'selected');
     selectedNodes.forEach((node) => node.clearStates());
@@ -455,7 +477,7 @@ export default (): ReactElement => {
     if (type === 'combo') graph.data(loadCombo(id, data));
     else if (type === 'node')
       graph.data(loadData(id, DataLoadNodeType.Self, [], [], data));
-      
+
     graph.render();
 
     const target = graph.findById(id);
@@ -468,19 +490,22 @@ export default (): ReactElement => {
     });
   };
 
+  const handleSelectEvent = (event: React.SyntheticEvent, nodeId: string) =>
+    handleSelect(nodeId);
+
   const toggleSideNavTreeView = (
     event: React.SyntheticEvent,
     nodeIds: string[]
   ) => setExpandedTreeViewElementIds(nodeIds);
 
-  const handleShowAll = () => {
-    if (!data) return;
-    if (!graph) return;
+  // const handleShowAll = () => {
+  //   if (!data) return;
+  //   if (!graph) return;
 
-    graph.data(data);
+  //   graph.data(data);
 
-    graph.render();
-  };
+  //   graph.render();
+  // };
 
   const handleFilterAnomalies = () => {
     if (!allTreeViewElements) return;
@@ -611,6 +636,15 @@ export default (): ReactElement => {
     panel.style.opacity = '0';
   };
 
+  const closeIntegrationSidePanel = () => {
+    setShowIntegrationSidePanel(false);
+
+    const panel = document.getElementById('integrationsSidePanel');
+    if (!panel) throw new ReferenceError('Integrations panel does not exist');
+    panel.style.visibility = 'hidden';
+    panel.style.opacity = '0';
+  };
+
   // const handleInfo = () => {
   //   const snackbar = document.getElementById('snackbar');
   //   if (!snackbar) throw new ReferenceError('Snackbar element not found');
@@ -627,21 +661,19 @@ export default (): ReactElement => {
     defaultColor: string,
     anomalyColor: string
   ): ReactElement => {
-
-    let hasNewAnomaly: {id: string, hasNewAnomaly: boolean} | undefined;
-    if(!showRealData){
-
+    let hasNewAnomaly: { id: string; hasNewAnomaly: boolean } | undefined;
+    if (!showRealData) {
       hasNewAnomaly = defaultAnomalyStates.find(
         (element) => element.id === column.id
-        );
-        if (!hasNewAnomaly) throw new ReferenceError('Anomaly state not found');
+      );
+      if (!hasNewAnomaly) throw new ReferenceError('Anomaly state not found');
     }
 
     return (
       <TreeItem
         nodeId={column.id}
         label={column.label}
-        icon={<CircleTwoToneIcon fontSize="small" sx={{ color: "#674BCE" }}/>}
+        icon={<CircleTwoToneIcon fontSize="small" sx={{ color: '#674BCE' }} />}
         sx={{
           color: hasNewAnomaly?.hasNewAnomaly ? anomalyColor : defaultColor,
         }}
@@ -686,58 +718,160 @@ export default (): ReactElement => {
     return materializationElements;
   };
 
-  const renderAutomations = () => {
-    setUser('todo');
+  const renderLineage = () => {
+    setUser(undefined);
+    setJwt('');
+    setAccountId('');
+
+    Auth.currentAuthenticatedUser()
+      .then((cognitoUser) => setUser(cognitoUser))
+      .catch((error) => {
+        console.trace(typeof error === 'string' ? error : error.message);
+
+        Auth.federatedSignIn();
+      });
   };
 
-  useEffect(renderAutomations, []);
+  useEffect(() => {
+    if (!location || !searchParams) return;
+
+    renderLineage();
+  }, [location, searchParams]);
 
   useEffect(() => {
-    setAccountId('todo');
-    setJwt('todo');
+    if (!user) return;
+    let token: string;
+    let organizationId: string;
+    Auth.currentSession()
+      .then((session) => {
+        const accessToken = session.getAccessToken();
+
+        token = accessToken.getJwtToken();
+
+        setJwt(token);
+
+        return AccountApiRepository.getBy(new URLSearchParams({}), token);
+      })
+      .then((accounts) => {
+        if (!accounts.length) throw new Error(`No accounts found for user`);
+
+        if (accounts.length > 1)
+          throw new Error(`Multiple accounts found for user`);
+
+        setAccountId(accounts[0].id);
+
+        organizationId = accounts[0].organizationId;
+        if (showRealData) {
+
+          return LineageApiRepository.getByOrgId(organizationId, token)
+
+            .then((lineageResponse) => {
+
+              if (lineageResponse)
+                setLineageId(lineageResponse.id);
+              else
+                setLineageId('');
+              
+            });
+        }
+      })
+      .catch((error) => {
+        console.trace(typeof error === 'string' ? error : error.message);
+
+        Auth.signOut();
+      });
+      setReadyToBuild(true);
+
   }, [user]);
+
+  const handleSlackRedirect = () => {
+    const state = location.state;
+
+    if (!state) return;
+    if (typeof state !== 'object')
+      throw new Error('Unexpected navigation state type');
+
+    const { slackAccessToken, showIntegrationPanel, sidePanelTabIndex } =
+      state as any;
+
+    if (!slackAccessToken || !showIntegrationPanel || !sidePanelTabIndex)
+      return;
+
+    if (slackAccessToken) setSlackToken(slackAccessToken);
+    else {
+      IntegrationApiRepo.getSlackProfile(jwt)
+        .then((res) => setSlackToken(res ? res.accessToken : ''))
+        .catch(() => console.trace('Slack profile retrieval failed'));
+    }
+
+    if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
+    if (sidePanelTabIndex) setTabIndex(sidePanelTabIndex);
+
+    window.history.replaceState({}, document.title);
+  };
+
+  const handleGithubRedirect = () => {
+    const state = location.state;
+
+    if (!state) return;
+    if (typeof state !== 'object')
+      throw new Error('Unexpected navigation state type');
+
+    const {installation, showIntegrationPanel, sidePanelTabIndex } =
+      state as any;
+
+    if (!installationId || !showIntegrationPanel || !sidePanelTabIndex)
+      return;
+
+    if (installation) setInstallationId(installation);
+    if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
+    if (sidePanelTabIndex) setTabIndex(sidePanelTabIndex);
+
+    window.history.replaceState({}, document.title);
+  };
 
   useEffect(() => {
     if (!accountId || lineage) return;
 
     if (!jwt) throw new Error('No user authorization found');
 
+    if (!lineageId) return;
+
     if (showRealData) {
-      LineageApiRepository.getOne(lineageId, 'todo-replace')
+      LineageApiRepository.getOne(lineageId, jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
           setLineage(lineageDto);
           return MaterializationsApiRepository.getBy(
             new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
+            jwt
           );
         })
         .then((materializationDtos) => {
           setMaterializations(materializationDtos);
           return DashboardsApiRepository.getBy(
             new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
+            jwt
           );
         })
         .then((dashboardDtos) => {
           setDashboards(dashboardDtos);
           return ColumnsApiRepository.getBy(
             new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
+            jwt
           );
         })
         .then((columnDtos) => {
           setColumns(columnDtos);
           return DependenciesApiRepository.getBy(
             new URLSearchParams({ lineageId: lineageId }),
-            'todo-replace'
+            jwt
           );
         })
         .then((dependencyDtos) => {
           setDependencies(dependencyDtos);
           setReadyToBuild(true);
-        
         })
         .catch((error) => {
           console.log(error);
@@ -746,7 +880,31 @@ export default (): ReactElement => {
       setLineage({ id: 'todo', createdAt: 1 });
       setReadyToBuild(true);
     }
+
+    handleSlackRedirect();
+    handleGithubRedirect();
   }, [accountId]);
+
+  useEffect(() => {
+    console.log(slackToken);
+
+    if (tabIndex === 0) setIntegrationComponent(<Github installationId = {installationId} jwt={jwt}></Github>);
+    else if (tabIndex === 1) setIntegrationComponent(<Github installationId = {installationId} jwt={jwt}></Github>);
+    else if (tabIndex === 2)
+      setIntegrationComponent(<Slack accountId={accountId} jwt={jwt}></Slack>);
+  }, [tabIndex]);
+
+  useEffect(() => {
+    if (!showIntegrationSidePanel) return;
+
+    closeColSidePanel();
+    closeMatSidePanel();
+
+    const panel = document.getElementById('integrationsSidePanel');
+    if (!panel) throw new ReferenceError('Integrations Panel does not exist');
+    panel.style.visibility = 'visible';
+    panel.style.opacity = '1';
+  }, [showIntegrationSidePanel]);
 
   useEffect(() => {
     if (!filteredTreeViewElements.length) return;
@@ -926,35 +1084,30 @@ export default (): ReactElement => {
     });
 
     const edgeHasAnomalousAncestor = (
-      source: INode|ICombo,
+      source: INode | ICombo,
       hasAnomalousAncestor: boolean
-      ): boolean => {
+    ): boolean => {
+      const parentEdges = source.getInEdges();
 
-        const parentEdges = source.getInEdges();
+      parentEdges.forEach((parent) => {
+        const parentSource = parent.getSource();
 
-        parentEdges.forEach((parent) => {
+        const parentAnomalyState = defaultAnomalyStates.find(
+          (state) => state.id === parentSource.getID()
+        );
+        if (!parentAnomalyState)
+          throw new ReferenceError('Anomaly state not found');
 
-          const parentSource = parent.getSource();
+        if (parentAnomalyState.hasNewAnomaly) {
+          hasAnomalousAncestor = true;
+          return hasAnomalousAncestor;
+        }
+        return edgeHasAnomalousAncestor(parentSource, hasAnomalousAncestor);
+      });
 
-          const parentAnomalyState = defaultAnomalyStates.find(
-            (state) => state.id === parentSource.getID()
-            );
-            if (!parentAnomalyState)
-            throw new ReferenceError('Anomaly state not found');
-
-            if(parentAnomalyState.hasNewAnomaly){
-
-              hasAnomalousAncestor = true;
-              return hasAnomalousAncestor;
-            } 
-            return edgeHasAnomalousAncestor(parentSource, hasAnomalousAncestor);
-        
-        });
-
-        return hasAnomalousAncestor;
-
+      return hasAnomalousAncestor;
     };
-    
+
     graphObj.on('layout:finish', () => {
       const selectedElementId = graphObj.get('selectedElementId');
 
@@ -972,15 +1125,18 @@ export default (): ReactElement => {
         object && 'getType' in object && object.getType() === 'combo';
 
       if (isNode(element)) {
-        let anomalyState: {
-          id: string;
-          hasNewAnomaly: boolean;
-      } | undefined;
-        if(!showRealData){
+        let anomalyState:
+          | {
+            id: string;
+            hasNewAnomaly: boolean;
+          }
+          | undefined;
+        if (!showRealData) {
           anomalyState = defaultAnomalyStates.find(
             (state) => state.id === selectedElementId
-            );
-            if (!anomalyState) throw new ReferenceError('Anomaly state not found');
+          );
+          if (!anomalyState)
+            throw new ReferenceError('Anomaly state not found');
         }
         graphObj.setItemState(
           selectedElementId,
@@ -989,24 +1145,24 @@ export default (): ReactElement => {
         );
 
         getDependentEdges(element, true).forEach((edge) => {
-
-          
           let isAnomalous = false;
           const source = edge.getSource();
           const sourceId = source.getID();
-          let sourceAnomalyState: {
-            id: string;
-            hasNewAnomaly: boolean;
-          } | undefined;
-          if(!showRealData){
+          let sourceAnomalyState:
+            | {
+              id: string;
+              hasNewAnomaly: boolean;
+            }
+            | undefined;
+          if (!showRealData) {
             sourceAnomalyState = defaultAnomalyStates.find(
               (state) => state.id === sourceId
-              );
-              if (!sourceAnomalyState)
+            );
+            if (!sourceAnomalyState)
               throw new ReferenceError('Anomaly state not found');
-              
-              isAnomalous = edgeHasAnomalousAncestor(source, false);
-            }
+
+            isAnomalous = edgeHasAnomalousAncestor(source, false);
+          }
 
           graphObj.setItemState(
             edge.getID(),
@@ -1018,7 +1174,6 @@ export default (): ReactElement => {
         });
 
         getDependentEdges(element, false).forEach((edge) => {
-          
           const isAnomalous = edgeHasAnomalousAncestor(edge.getSource(), false);
           graphObj.setItemState(
             edge.getID(),
@@ -1043,6 +1198,7 @@ export default (): ReactElement => {
       const clearStates = () => {
         closeMatSidePanel();
         closeColSidePanel();
+        closeIntegrationSidePanel();
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         const selectedAnomalyEdges = graphObj.findAllByState(
           'edge',
@@ -1056,6 +1212,7 @@ export default (): ReactElement => {
       else if (!event.select) clearStates();
       else if (event.target.get('type') === 'node') {
         closeMatSidePanel();
+        closeIntegrationSidePanel();
         const isNode = (object: any): object is INode => 'getEdges' in object;
 
         if (!isNode(event.target))
@@ -1102,42 +1259,41 @@ export default (): ReactElement => {
 
         const dashCombo = dashboards.find(
           (dashboard) => dashboard.url === comboId
-          );
-          
+        );
+
         const combo = matCombo ? matCombo : dashCombo;
-        
-        if (!combo) 
+
+        if (!combo)
           throw new ReferenceError(
             'Materialization object for selected combo not found'
           );
 
         if (showRealData) {
-          if('logicId' in combo){
-
+          if ('logicId' in combo) {
             LogicApiRepository.getOne(combo.logicId, 'todo-replace').then(
               (logicDto) => {
                 console.log(logicDto?.sql);
-                
+
                 if (!logicDto)
-                throw new ReferenceError('Not able to retrieve logic object');
-                
+                  throw new ReferenceError('Not able to retrieve logic object');
+
                 setSQL(logicDto.sql);
               }
-              );
+            );
           }
         } else {
           const checkedCombo = combo;
 
-          if('logicId' in checkedCombo  && checkedCombo.logicId.length !== 0){
+          if ('logicId' in checkedCombo && checkedCombo.logicId.length !== 0) {
             const logic = defaultLogics.find(
               (element) => element.id === checkedCombo.logicId
             );
-            
+
             if (!logic)
-            throw new ReferenceError(
-              'Logic object for selected combo not found'
+              throw new ReferenceError(
+                'Logic object for selected combo not found'
               );
-              
+
             setSQL(logic.sql);
           }
         }
@@ -1155,11 +1311,27 @@ export default (): ReactElement => {
         ? data.nodes[0].id
         : '62715f907e3d8066494d409f';
 
-    const initialData = data;
+    // const initialData = data;
 
-    graphObj.data(initialData);
+    // graphObj.data(initialData);
 
     graphObj.set('selectedElementId', defaultNodeId);
+
+    const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
+    const selectedAnomalyEdges = graphObj.findAllByState(
+      'edge',
+      'anomalyNodeSelected'
+    );
+    const edges = selectedEdges.concat(selectedAnomalyEdges);
+    edges.forEach((edge) => edge.clearStates());
+
+    setSelectedNodeId(defaultNodeId);
+    graphObj.data(loadData(defaultNodeId, DataLoadNodeType.Self, [], [], data));
+
+    setColumnTest(Date.now().toString());
+
+    graphObj.set('latestZoom', graphObj.getZoom());
+
 
     graphObj.render();
 
@@ -1168,6 +1340,9 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (!graph) return;
+
+    const targetResourceId = searchParams.get('targetResourceId');
+    if (targetResourceId) handleSelect(targetResourceId);
 
     toggleShowSideNav();
   }, [graph]);
@@ -1181,85 +1356,93 @@ export default (): ReactElement => {
               <MdMenu />
             </button>
 
-            <img height="40" width="150" src={Logo} alt="logo"              onClick={() =>
+            <img
+              height="40"
+              width="150"
+              src={Logo}
+              alt="logo"
+              onClick={() =>
                 navigate(`/lineage`, {
-                  state: {
-                  },
+                  state: {},
                 })
-              } />
+              }
+            />
           </div>
           <div id="sign-out-container">
-          <Box m={0.5}>
-          <Button startIcon = {<TableChartIcon/>}
-              onClick={() =>
-                navigate(`/lineage`, {
-                  state: {
-                  },
-                })
-              }
-              color="secondary"
-              size="medium"
-              variant="contained"
-              style={{
-                borderRadius: 30,
-                backgroundColor: "#4EC4C4",
-                fontSize: "12px"
-            }}
-            >
-              Lineage
-            </Button>
-            </Box>
-          <Box m={0.5}>
-          <Button startIcon = {<AppsIcon/>}
-              onClick={() =>
-                navigate(`/test`, {
-                  state: {
-                    foo: 'bar',
-                    data,
-                  },
-                })
-              }
-              color="secondary"
-              size="medium"
-              variant="contained"
-              style={{
-                borderRadius: 30,
-                backgroundColor: "#674BCE",
-                fontSize: "12px"
-            }}
-            >
-              Tests
-            </Button>
+            <Box m={0.5}>
+              <Button
+                startIcon={<TableChartIcon />}
+                onClick={() =>
+                  navigate(`/lineage`, {
+                    state: {},
+                  })
+                }
+                color="secondary"
+                size="medium"
+                variant="contained"
+                style={{
+                  borderRadius: 30,
+                  backgroundColor: '#4EC4C4',
+                  fontSize: '12px',
+                }}
+              >
+                Lineage
+              </Button>
             </Box>
             <Box m={0.5}>
-            <Button startIcon = {<IntegrationInstructionsIcon />}
-              onClick={() => console.log('todo-integration screen')}
-              color="secondary"
-              size="medium"
-              variant="contained"
-              style ={{
-                borderRadius: 30,
-                backgroundColor: "#674BCE",
-                fontSize: "12px"
-            }}
-            >
-              Integrations
-            </Button>
+              <Button
+                startIcon={<AppsIcon />}
+                onClick={() =>
+                  navigate(`/test`, {
+                    state: {
+                      foo: 'bar',
+                      data,
+                    },
+                  })
+                }
+                color="secondary"
+                size="medium"
+                variant="contained"
+                style={{
+                  borderRadius: 30,
+                  backgroundColor: '#674BCE',
+                  fontSize: '12px',
+                }}
+              >
+                Tests
+              </Button>
             </Box>
             <Box m={0.5}>
-            <Button startIcon = {< LogoutIcon />}
-              onClick={() => Auth.signOut()}
-              color="secondary"
-              size="medium"
-              variant="contained"
-              style={{
-                borderRadius: 30,
-                backgroundColor: "#A5A0A0",
-                fontSize: "12px"
-            }}
-            >
-              Sign Out
-            </Button>
+              <Button
+                startIcon={<IntegrationInstructionsIcon />}
+                onClick={() => setShowIntegrationSidePanel(true)}
+                color="secondary"
+                size="medium"
+                variant="contained"
+                style={{
+                  borderRadius: 30,
+                  backgroundColor: '#674BCE',
+                  fontSize: '12px',
+                }}
+              >
+                Integrations
+              </Button>
+            </Box>
+            <Box m={0.5}>
+              <Button
+                startIcon={<LogoutIcon />}
+                onClick={() => Auth.signOut()}
+                color="secondary"
+                size="medium"
+                variant="contained"
+                style={{
+                  borderRadius: 30,
+                  backgroundColor: '#A5A0A0',
+                  fontSize: '12px',
+                }}
+              >
+                Sign Out
+              </Button>
             </Box>
           </div>
         </div>
@@ -1269,7 +1452,7 @@ export default (): ReactElement => {
             <TextField
               label="Search"
               onChange={handleSearchChange}
-              size='small'
+              size="small"
               fullWidth={true}
             />
           </div>
@@ -1282,9 +1465,9 @@ export default (): ReactElement => {
                 ? 'Expand all'
                 : 'Collapse all'}
             </button>
-            <button className="control-button" onClick={handleShowAll}>
+            {/* <button className="control-button" onClick={handleShowAll}>
               Show all
-            </button>
+            </button> */}
             <button
               className={anomalyFilterOn ? 'filter-button' : 'control-button'}
               onClick={handleFilterAnomalies}
@@ -1299,7 +1482,7 @@ export default (): ReactElement => {
               defaultExpandIcon={<MdChevronRight />}
               expanded={expandedTreeViewElementIds}
               onNodeToggle={toggleSideNavTreeView}
-              onNodeSelect={handleSelect}
+              onNodeSelect={handleSelectEvent}
             >
               {data ? treeViewElements : <></>}
             </TreeView>
@@ -1333,7 +1516,7 @@ export default (): ReactElement => {
           <div className="content">
             <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
               <Tab label="Overview" />
-              <Tab/>
+              <Tab />
               <Tab label="Alert History" />
             </Tabs>
             <br></br>
@@ -1348,65 +1531,82 @@ export default (): ReactElement => {
                   )}
                 </div>
                 <div className="Distribution">
-                <h4>Distribution</h4>
-                <MetricsGraph
-                  option={
-                    selectedNodeId === '627160717e3d8066494d41ff'
-                      ? defaultOption(
+                  <h4>Distribution</h4>
+                  <MetricsGraph
+                    option={
+                      selectedNodeId === '627160717e3d8066494d41ff'
+                        ? defaultOption(
                           defaultYAxis,
                           effectiveRateSampleDistributionData,
                           7,
                           8
                         )
-                      : defaultOption(
+                        : defaultOption(
                           defaultYAxis,
                           defaultDistributionData,
                           7,
                           8
                         )
-                  }
-                ></MetricsGraph>
+                    }
+                  ></MetricsGraph>
                 </div>
                 <div className="Freshness">
-                <h4>Freshness</h4>
-                <MetricsGraph
-                  option={
-                    selectedNodeId === '627160717e3d8066494d41ff'
-                      ? defaultOption(
+                  <h4>Freshness</h4>
+                  <MetricsGraph
+                    option={
+                      selectedNodeId === '627160717e3d8066494d41ff'
+                        ? defaultOption(
                           defaultYAxis,
                           effectiveRateSampleFreshnessData,
                           5,
                           7
                         )
-                      : defaultOption(
+                        : defaultOption(
                           defaultYAxisTime,
                           defaultFreshnessData,
                           3,
                           5
                         )
-                  }
-                ></MetricsGraph>
+                    }
+                  ></MetricsGraph>
                 </div>
-                <div className = "Nullness">
-                <h4>Nullness</h4>
-                <MetricsGraph
-                  option={
-                    selectedNodeId === '627160717e3d8066494d41ff'
-                      ? defaultOption(
+                <div className="Nullness">
+                  <h4>Nullness</h4>
+                  <MetricsGraph
+                    option={
+                      selectedNodeId === '627160717e3d8066494d41ff'
+                        ? defaultOption(
                           defaultYAxis,
                           effectiveRateSampleNullnessData,
                           1,
                           3
                         )
-                      : defaultOption(defaultYAxis, defaultNullnessData, 4, 6)
-                  }
-                ></MetricsGraph>
+                        : defaultOption(defaultYAxis, defaultNullnessData, 4, 6)
+                    }
+                  ></MetricsGraph>
                 </div>
                 <br></br>
               </>
             ) : (
               <>{BasicTable()}</>
             )}
+          </div>
+        </div>
+
+        <div id="integrationsSidePanel" className="sidepanel">
+          <div className="header">
+            <p className="title">Integrations</p>
+            <button className="closebtn" onClick={closeIntegrationSidePanel}>
+              &times;
+            </button>
+          </div>
+          <div className="content">
+            <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
+              <Tab icon={<FaGithub />} label="GitHub" />
+              <Tab icon={<SiSnowflake />} label="Snowflake" />
+              <Tab icon={<FaSlack />} label="Slack" />
+            </Tabs>
+            {integrationComponent}
           </div>
         </div>
         {/* <div id="snackbar">{info}</div> */}

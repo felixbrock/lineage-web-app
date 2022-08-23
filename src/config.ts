@@ -1,9 +1,11 @@
 export const serviceDiscoveryNamespace = 'cito';
 
+export const mode = process.env.REACT_APP_STAGE;
+
 const getAuthEnvConfig = (): any => {
   const authEnvConfig: any = {};
 
-  switch (process.env.REACT_APP_STAGE) {
+  switch (mode) {
       case 'development':
         authEnvConfig.userPoolId = 'eu-central-1_0Z8JhFj8z';
         authEnvConfig.userPoolWebClientId = '2kt5cdpsbfc53sokgii4l5lecc';
@@ -32,7 +34,7 @@ export const authEnvConfig = getAuthEnvConfig();
 const getOAuthEnvConfig = (): any => {
   const oAuthEnvConfig: any = {};
 
-  switch (process.env.REACT_APP_STAGE) {
+  switch (mode) {
     case 'development':
       oAuthEnvConfig.domain =
         'auth-cito-dev.auth.eu-central-1.amazoncognito.com';
@@ -63,7 +65,8 @@ interface SlackConfig {slackClientId: string, slackClientSecret:string};
 const getSlackConfig = (): SlackConfig  => {
   const slackConfig : any = {};
 
-  switch (process.env.REACT_APP_STAGE) {
+
+  switch (mode) {
     case 'development':
       slackConfig.slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID_DEV || '';
       slackConfig.slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET_DEV || '';
@@ -84,3 +87,30 @@ const getSlackConfig = (): SlackConfig  => {
 };
 
 export const slackConfig = getSlackConfig();
+
+interface GithubConfig {githubClientId: string, githubClientSecret:string}; 
+
+const getGithubConfig = (): GithubConfig  => {
+  const githubConfig : any = {};
+
+  switch (mode) {
+    case 'development':
+      githubConfig.githubClientId = process.env.REACT_APP_GITHUB_CLIENT_ID || '';
+      githubConfig.githubClientSecret = process.env.REACT_APP_GITHUB_CLIENT_SECRET || '';
+      break;
+    case 'test':
+      githubConfig.githubClientId = '';
+      githubConfig.githubClientSecret = '';
+      break;
+    case 'production':
+      githubConfig.githubClientId = process.env.REACT_APP_GITHUB_CLIENT_ID || '';
+      githubConfig.githubClientSecret = process.env.REACT_APP_GITHUB_CLIENT_SECRET || '';
+      break;
+    default:
+      throw new Error('app stage not found');
+  }
+
+  return githubConfig;
+};
+
+export const githubConfig = getGithubConfig();

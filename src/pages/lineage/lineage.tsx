@@ -911,7 +911,7 @@ export default (): ReactElement => {
   useEffect(() => {
 
     const definedTests: any[] = [];
-    let alertList: any[] = [];
+    const alertList: any[] = [];
 
     const sqlQuery = `select distinct TEST_TYPE, ID from cito.public.test_suites
      where TARGET_RESOURCE_ID = ${selectedNodeId} AND ACTIVATED = TRUE`;
@@ -922,7 +922,7 @@ export default (): ReactElement => {
         results.forEach((entry: { TEST_TYPE: string, ID: string }) => {
 
           const query = `select VALUE from cito.public.test_history
-          where TEST_SUIT_ID = ${entry.ID} AND TEST_TYPE = ${entry.TEST_TYPE}`;
+          where TEST_SUITE_ID = ${entry.ID} AND TEST_TYPE = ${entry.TEST_TYPE}`;
 
           IntegrationApiRepo.querySnowflake(query, organizationId, jwt)
             .then((history) => {
@@ -935,20 +935,21 @@ export default (): ReactElement => {
 
           const alertQuery = `select DEVIATION, EXECUTED_ON from 
           (cito.public.alerts join cito.public.test_results 
-            on cito.public.alerts.TEST_SUIT_ID = cito.public.test_results.TEST_SUIT_ID) 
-            join cito.public.exectuions on cito.public.alerts.TEST_SUIT_ID = cito.public.executions.TEST_SUIT_ID
-          where TEST_SUIT_ID = ${entry.ID}`;
+            on cito.public.alerts.TEST_SUITE_ID = cito.public.test_results.TEST_SUITE_ID) 
+            join cito.public.executions on cito.public.alerts.TEST_SUITE_ID = cito.public.executions.TEST_SUITE_ID
+          where TEST_SUITE_ID = ${entry.ID}`;
 
           IntegrationApiRepo.querySnowflake(alertQuery, organizationId, jwt)
             .then((alerts) => {
               const valueList: any[] = Object.values(alerts);
-              alertList = valueList.map((value: { DEVIATION: string, EXECUTED_ON: string}) =>  {
+              const alertsForEntry = valueList.map((value: { DEVIATION: string, EXECUTED_ON: string}) =>  {
                   return {
                     date: value.EXECUTED_ON,
                     type: entry.TEST_TYPE,
                     deviation: value.DEVIATION
                   };
               });
+              alertList.push(...alertsForEntry);
             });
         });
 

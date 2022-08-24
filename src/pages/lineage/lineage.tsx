@@ -781,7 +781,7 @@ export default (): ReactElement => {
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
 
-        Auth.signOut();
+        // Auth.signOut();
       });
     setReadyToBuild(true);
 

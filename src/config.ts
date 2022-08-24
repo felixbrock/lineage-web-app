@@ -43,8 +43,8 @@ const getOAuthEnvConfig = (): any => {
       break;
     case 'demo':
       oAuthEnvConfig.domain = 'auth-cito-demo.auth.eu-central-1.amazoncognito.com';
-      oAuthEnvConfig.redirectSignIn = 'https://www.demo-environment.d3pbv3guh4fc7o.amplifyapp.com';
-      oAuthEnvConfig.redirectSignOut = 'https://www.demo-environment.d3pbv3guh4fc7o.amplifyapp.com';
+      oAuthEnvConfig.redirectSignIn = 'https://demo-environment.d3pbv3guh4fc7o.amplifyapp.com';
+      oAuthEnvConfig.redirectSignOut = 'https://demo-environment.d3pbv3guh4fc7o.amplifyapp.com';
       break;
     case 'production':
       oAuthEnvConfig.domain = 'auth.citodata.com';

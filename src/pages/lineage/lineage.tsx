@@ -71,6 +71,7 @@ import IntegrationApiRepo from '../../infrastructure/integration-api/integration
 import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
 import Snowflake from '../../components/integration/snowflake/snowflake';
+import { mode } from '../../config';
 
 
 const showRealData = false;
@@ -445,6 +446,7 @@ export default (): ReactElement => {
   >([]);
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
   const [tabIndex, setTabIndex] = React.useState(0);
+  const [columnPanelTabIndex, setColumnPanelTabIndex] = React.useState(0);
   const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
@@ -460,6 +462,13 @@ export default (): ReactElement => {
     newValue: number
   ) => {
     setTabIndex(newValue);
+  };
+
+  const handleColumnPanelTabIndexChange = (
+    event: React.SyntheticEvent,
+    newValue: number
+  ) => {
+    setColumnPanelTabIndex(newValue);
   };
 
   const handleSelect = (nodeId: string) => {
@@ -891,10 +900,10 @@ export default (): ReactElement => {
     console.log(slackToken);
 
 
-    if (tabIndex === 0) setIntegrationComponent(<Github installationId={installationId} jwt={jwt}></Github>);
-    else if (tabIndex === 1) setIntegrationComponent(<Snowflake jwt={jwt}></Snowflake>);
+    if (tabIndex === 0) setIntegrationComponent(mode === 'demo' || mode === 'development'?  <>Install Github</> : <Github installationId={installationId} jwt={jwt}></Github>);
+    else if (tabIndex === 1) setIntegrationComponent(mode === 'demo' || mode === 'development'? <>Install Snowflake</> : <Snowflake jwt={jwt}></Snowflake>);
     else if (tabIndex === 2)
-      setIntegrationComponent(<Slack accountId={accountId} jwt={jwt}></Slack>);
+      setIntegrationComponent(mode === 'demo' || mode === 'development'? <>Install Slack</> : <Slack accountId={accountId} jwt={jwt}></Slack>);
   }, [tabIndex]);
 
   useEffect(() => {
@@ -1574,13 +1583,13 @@ export default (): ReactElement => {
             </button>
           </div>
           <div className="content">
-            <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
+            <Tabs value={columnPanelTabIndex} onChange={handleColumnPanelTabIndexChange} centered>
               <Tab label="Overview" />
               <Tab />
               <Tab label="Alert History" />
             </Tabs>
             <br></br>
-            {tabIndex === 0 ? (
+            {columnPanelTabIndex === 0 ? (
               <>
                 <div className="card">
                   {selectedNodeId === '627160717e3d8066494d41ff' ? (

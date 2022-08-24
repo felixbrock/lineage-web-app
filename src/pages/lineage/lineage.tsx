@@ -73,6 +73,7 @@ import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
 import Snowflake from '../../components/integration/snowflake/snowflake';
 import { showRealData } from '../../config';
+import AccountDto from '../../infrastructure/account-api/account-dto';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -409,8 +410,7 @@ export default (): ReactElement => {
 
   const navigate = useNavigate();
 
-  const [accountId, setAccountId] = useState('');
-  const [organizationId, setOrganizationId] = useState('');
+  const [account, setAccount] = useState<AccountDto>(undefined);
   const [user, setUser] = useState<any>();
   const [jwt, setJwt] = useState('');
 
@@ -723,7 +723,7 @@ export default (): ReactElement => {
   const renderLineage = () => {
     setUser(undefined);
     setJwt('');
-    setAccountId('');
+    setAccount(undefined);
 
     Auth.currentAuthenticatedUser()
       .then((cognitoUser) => setUser(cognitoUser))
@@ -759,22 +759,7 @@ export default (): ReactElement => {
         if (accounts.length > 1)
           throw new Error(`Multiple accounts found for user`);
 
-        setAccountId(accounts[0].id);
-
-        setOrganizationId(accounts[0].organizationId);
-        if (showRealData) {
-
-          return LineageApiRepository.getByOrgId(organizationId, token)
-
-            .then((lineageResponse) => {
-
-              if (lineageResponse)
-                setLineageId(lineageResponse.id);
-              else
-                setLineageId('');
-
-            });
-        }
+        setAccount(accounts[0]);
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
@@ -832,47 +817,22 @@ export default (): ReactElement => {
   };
 
   useEffect(() => {
-    if (!accountId || lineage) return;
+    if(!account) return;
 
     if (!jwt) throw new Error('No user authorization found');
 
-    if (!lineageId) return;
+    if (lineage) return;
 
     if (showRealData) {
-      LineageApiRepository.getOne(lineageId, jwt)
-        .then((lineageDto) => {
-          if (!lineageDto)
-            throw new TypeError('Queried lineage object not found');
-          setLineage(lineageDto);
-          return MaterializationsApiRepository.getBy(
-            new URLSearchParams({ lineageId: lineageId }),
-            jwt
-          );
-        })
-        .then((materializationDtos) => {
-          setMaterializations(materializationDtos);
-          return DashboardsApiRepository.getBy(
-            new URLSearchParams({ lineageId: lineageId }),
-            jwt
-          );
-        })
-        .then((dashboardDtos) => {
-          setDashboards(dashboardDtos);
-          return ColumnsApiRepository.getBy(
-            new URLSearchParams({ lineageId: lineageId }),
-            jwt
-          );
-        })
-        .then((columnDtos) => {
-          setColumns(columnDtos);
-          return DependenciesApiRepository.getBy(
-            new URLSearchParams({ lineageId: lineageId }),
-            jwt
-          );
-        })
-        .then((dependencyDtos) => {
-          setDependencies(dependencyDtos);
-          setReadyToBuild(true);
+      LineageApiRepository.getByOrgId(account.organizationId, jwt)
+
+        .then((lineageResponse) => {
+
+          if (lineageResponse)
+            setLineageId(lineageResponse.id);
+          else
+            setLineageId('');
+
         })
         .catch((error) => {
           console.log(error);
@@ -884,7 +844,62 @@ export default (): ReactElement => {
 
     handleSlackRedirect();
     handleGithubRedirect();
-  }, [accountId]);
+  }, [account]);
+
+  useEffect(() => {
+    if (!lineageId) return;
+
+    if(!account) return;
+
+    if (!jwt) throw new Error('No user authorization found');
+
+    if (showRealData) {
+      LineageApiRepository.getOne(lineageId, jwt)
+    .then((lineageDto) => {
+      if (!lineageDto)
+        throw new TypeError('Queried lineage object not found');
+      setLineage(lineageDto);
+      return MaterializationsApiRepository.getBy(
+        new URLSearchParams({ lineageId: lineageId }),
+        jwt
+      );
+    })
+    .then((materializationDtos) => {
+      setMaterializations(materializationDtos);
+      return DashboardsApiRepository.getBy(
+        new URLSearchParams({ lineageId: lineageId }),
+        jwt
+      );
+    })
+    .then((dashboardDtos) => {
+      setDashboards(dashboardDtos);
+      return ColumnsApiRepository.getBy(
+        new URLSearchParams({ lineageId: lineageId }),
+        jwt
+      );
+    })
+    .then((columnDtos) => {
+      setColumns(columnDtos);
+      return DependenciesApiRepository.getBy(
+        new URLSearchParams({ lineageId: lineageId }),
+        jwt
+      );
+    })
+    .then((dependencyDtos) => {
+      setDependencies(dependencyDtos);
+      setReadyToBuild(true);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  } else {
+    setLineage({ id: 'todo', createdAt: 1 });
+    setReadyToBuild(true);
+  }
+
+    
+
+  }, [lineageId]);
 
   useEffect(() => {
     console.log(slackToken);

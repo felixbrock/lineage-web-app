@@ -12,7 +12,7 @@ const getAuthEnvConfig = (): any => {
         authEnvConfig.tokenUrl =
           '';
         break;
-      case 'test':
+      case 'staging':
         authEnvConfig.userPoolId = '';
         authEnvConfig.userPoolWebClientId = '';
         authEnvConfig.tokenUrl = '';
@@ -41,7 +41,7 @@ const getOAuthEnvConfig = (): any => {
       oAuthEnvConfig.redirectSignIn = 'http://localhost:3006';
       oAuthEnvConfig.redirectSignOut = 'http://localhost:3006';
       break;
-    case 'test':
+    case 'staging':
       oAuthEnvConfig.domain = 'auth-cito-staging.auth.eu-central-1.amazoncognito.com';
       oAuthEnvConfig.redirectSignIn = 'https://www.app-staging.citodata.com';
       oAuthEnvConfig.redirectSignOut = 'https://www.app-staging.citodata.com';
@@ -71,7 +71,7 @@ const getSlackConfig = (): SlackConfig  => {
       slackConfig.slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID_DEV || '';
       slackConfig.slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET_DEV || '';
       break;
-    case 'test':
+    case 'staging':
       slackConfig.slackClientId = '';
       slackConfig.slackClientSecret = '';
       break;
@@ -98,7 +98,7 @@ const getGithubConfig = (): GithubConfig  => {
       githubConfig.githubClientId = process.env.REACT_APP_GITHUB_CLIENT_ID || '';
       githubConfig.githubClientSecret = process.env.REACT_APP_GITHUB_CLIENT_SECRET || '';
       break;
-    case 'test':
+    case 'staging':
       githubConfig.githubClientId = '';
       githubConfig.githubClientSecret = '';
       break;

@@ -894,6 +894,8 @@ export default (): ReactElement => {
     if (!panel) throw new ReferenceError('Integrations Panel does not exist');
     panel.style.visibility = 'visible';
     panel.style.opacity = '1';
+
+    setTabIndex(0);
   }, [showIntegrationSidePanel]);
 
   useEffect(() => {

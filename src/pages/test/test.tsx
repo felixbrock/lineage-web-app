@@ -24,7 +24,6 @@ import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/colum
 import LineageDto from '../../infrastructure/lineage-api/lineage/lineage-dto';
 import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
 import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
-import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
 
 import TextField from '@mui/material/TextField';
 
@@ -1383,28 +1382,29 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!user) return;
 
-    Auth.currentSession()
-      .then((session) => {
-        const accessToken = session.getAccessToken();
+    // Auth.currentSession()
+    //   .then((session) => {
+    //     const accessToken = session.getAccessToken();
 
-        const token = accessToken.getJwtToken();
-        setJwt(token);
+    //     const token = accessToken.getJwtToken();
+    //     setJwt(token);
 
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
-      })
-      .then((accounts) => {
-        if (!accounts.length) throw new Error(`No accounts found for user`);
+    //     return AccountApiRepository.getBy(new URLSearchParams({}), token);
+    //   })
+    //   .then((accounts) => {
+    //     if (!accounts.length) throw new Error(`No accounts found for user`);
 
-        if (accounts.length > 1)
-          throw new Error(`Multiple accounts found for user`);
+    //     if (accounts.length > 1)
+    //       throw new Error(`Multiple accounts found for user`);
 
-        setAccountId(accounts[0].id);
-      })
-      .catch((error) => {
-        console.trace(typeof error === 'string' ? error : error.message);
+    //     setAccountId(accounts[0].id);
+    //   })
+    //   .catch((error) => {
+    //     console.trace(typeof error === 'string' ? error : error.message);
 
-        Auth.signOut();
-      });
+    //     Auth.signOut();
+    //   });
+    setAccountId('todo');
   }, [user]);
 
   const handleUserFeedback = () => {
@@ -1434,10 +1434,10 @@ export default (): ReactElement => {
 
     if (!jwt) throw new Error('No user authorization found');
 
-    handleUserFeedback();
 
     if (showRealData) {
-      LineageApiRepository.getOne(lineageId, jwt)
+    handleUserFeedback();
+    LineageApiRepository.getOne(lineageId, jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');

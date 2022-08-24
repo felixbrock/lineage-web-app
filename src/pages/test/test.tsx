@@ -287,13 +287,13 @@ export default (): ReactElement => {
       if (!test.testSuiteId)
         throw new Error('Test with status activated found that does not exist');
 
-      ObservabilityApiRepo.updateTestSuite(
-        test.testSuiteId,
-        jwt,
-        undefined,
-        undefined,
-        value
-      );
+      // ObservabilityApiRepo.updateTestSuite(
+      //   test.testSuiteId,
+      //   jwt,
+      //   undefined,
+      //   undefined,
+      //   value
+      // );
     });
 
     testSelectionLocal[props[1]].columnTestConfig[
@@ -305,7 +305,7 @@ export default (): ReactElement => {
 
   const handleMatFrequencyChange = (event: any) => {
     const name = event.target.name as string;
-    const value = event.target.value as number;
+    // const value = event.target.value as number;
     const props = name.split('-');
 
     const testSelectionLocal = testSelection;
@@ -323,13 +323,13 @@ export default (): ReactElement => {
         if (!testSuiteId)
           throw new Error('Activated test without test suite id');
 
-        ObservabilityApiRepo.updateTestSuite(
-          testSuiteId,
-          jwt,
-          undefined,
-          undefined,
-          value
-        );
+        // ObservabilityApiRepo.updateTestSuite(
+        //   testSuiteId,
+        //   jwt,
+        //   undefined,
+        //   undefined,
+        //   value
+        // );
       });
 
       testSelectionLocal[props[1]].columnTestConfig[index].frequency =
@@ -368,12 +368,12 @@ export default (): ReactElement => {
       if (!test.testSuiteId)
         throw new Error('Test with status activated found that does not exist');
 
-      ObservabilityApiRepo.updateTestSuite(
-        test.testSuiteId,
-        jwt,
-        undefined,
-        value
-      );
+      // ObservabilityApiRepo.updateTestSuite(
+      //   test.testSuiteId,
+      //   jwt,
+      //   undefined,
+      //   value
+      // );
     });
 
     testSelectionLocal[props[1]].columnTestConfig[
@@ -403,13 +403,13 @@ export default (): ReactElement => {
         if (!testSuiteId)
           throw new Error('Activated test without test suite id');
 
-        ObservabilityApiRepo.updateTestSuite(
-          testSuiteId,
-          jwt,
-          undefined,
-          value,
-          undefined
-        );
+        // ObservabilityApiRepo.updateTestSuite(
+        //   testSuiteId,
+        //   jwt,
+        //   undefined,
+        //   value,
+        //   undefined
+        // );
       });
 
       testSelectionLocal[props[1]].columnTestConfig[index].sensitivity = value;
@@ -535,31 +535,33 @@ export default (): ReactElement => {
 
       if (!column) throw new Error('Column not found');
 
-      const testSuite = await ObservabilityApiRepo.postTestSuite(
-        {
-          activated: newActivatedValue,
-          columnName: column.name,
-          databaseName: materalization.databaseName,
-          schemaName: materalization.schemaName,
-          materializationName: materalization.name,
-          materializationType: parseMaterializationType(
-            materalization.materializationType
-          ),
-          targetResourceId: column.id,
-          type,
-          executionFrequency: columnTestConfig.frequency,
-          threshold: columnTestConfig.sensitivity,
-        },
-        jwt
-      );
+      // const testSuite = await ObservabilityApiRepo.postTestSuite(
+      //   {
+      //     activated: newActivatedValue,
+      //     columnName: column.name,
+      //     databaseName: materalization.databaseName,
+      //     schemaName: materalization.schemaName,
+      //     materializationName: materalization.name,
+      //     materializationType: parseMaterializationType(
+      //       materalization.materializationType
+      //     ),
+      //     targetResourceId: column.id,
+      //     type,
+      //     executionFrequency: columnTestConfig.frequency,
+      //     threshold: columnTestConfig.sensitivity,
+      //   },
+      //   jwt
+      // );
 
       testSelectionLocal[props[1]].columnTestConfig[
         columnTestConfigIndex
-      ].testConfig[testConfigIndex].testSuiteId = testSuite.id;
+      ].testConfig[testConfigIndex].testSuiteId = 'testSuite.id';
 
       setTestSelection({ ...testSelectionLocal });
     } else
-      ObservabilityApiRepo.updateTestSuite(testSuiteId, jwt, newActivatedValue);
+      // ObservabilityApiRepo.updateTestSuite(testSuiteId, jwt, newActivatedValue);
+      console.log('Update Test Suite');
+      
   };
 
   const handleMatTestSelectButtonClick = async (event: any) => {
@@ -620,35 +622,37 @@ export default (): ReactElement => {
 
             if (!column) throw new Error('Column not found');
 
-            const testSuite = await ObservabilityApiRepo.postTestSuite(
-              {
-                activated: newActivatedValue,
-                columnName: column.name,
-                databaseName: materalization.databaseName,
-                schemaName: materalization.schemaName,
-                materializationName: materalization.name,
-                materializationType: parseMaterializationType(
-                  materalization.materializationType
-                ),
-                targetResourceId: column.id,
-                type,
-                executionFrequency: config.frequency,
-                threshold: config.sensitivity,
-              },
-              jwt
-            );
+            // const testSuite = await ObservabilityApiRepo.postTestSuite(
+            //   {
+            //     activated: newActivatedValue,
+            //     columnName: column.name,
+            //     databaseName: materalization.databaseName,
+            //     schemaName: materalization.schemaName,
+            //     materializationName: materalization.name,
+            //     materializationType: parseMaterializationType(
+            //       materalization.materializationType
+            //     ),
+            //     targetResourceId: column.id,
+            //     type,
+            //     executionFrequency: config.frequency,
+            //     threshold: config.sensitivity,
+            //   },
+            //   jwt
+            // );
 
             testSelectionLocal[props[1]].columnTestConfig[index].testConfig[
               testConfigIndex
-            ].testSuiteId = testSuite.id;
+            ].testSuiteId = 'testSuite.id';
 
             setTestSelection({ ...testSelectionLocal });
           } else
-            ObservabilityApiRepo.updateTestSuite(
-              testSuiteId,
-              jwt,
-              newActivatedValue
-            );
+            // ObservabilityApiRepo.updateTestSuite(
+            //   testSuiteId,
+            //   jwt,
+            //   newActivatedValue
+            // );
+            console.log('Update Test Suite');
+            
         }
       )
     );
@@ -1389,21 +1393,21 @@ export default (): ReactElement => {
     //     const token = accessToken.getJwtToken();
     //     setJwt(token);
 
-    //     return AccountApiRepository.getBy(new URLSearchParams({}), token);
-    //   })
-    //   .then((accounts) => {
-    //     if (!accounts.length) throw new Error(`No accounts found for user`);
+        // return AccountApiRepository.getBy(new URLSearchParams({}), token);
+      // })
+      // .then((accounts) => {
+      //   if (!accounts.length) throw new Error(`No accounts found for user`);
 
-    //     if (accounts.length > 1)
-    //       throw new Error(`Multiple accounts found for user`);
+      //   if (accounts.length > 1)
+      //     throw new Error(`Multiple accounts found for user`);
 
-    //     setAccountId(accounts[0].id);
-    //   })
-    //   .catch((error) => {
-    //     console.trace(typeof error === 'string' ? error : error.message);
+      //   setAccountId(accounts[0].id);
+      // })
+      // .catch((error) => {
+      //   console.trace(typeof error === 'string' ? error : error.message);
 
-    //     Auth.signOut();
-    //   });
+      //   // Auth.signOut();
+      // });
     setAccountId('todo');
   }, [user]);
 
@@ -1415,24 +1419,24 @@ export default (): ReactElement => {
 
     const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
     if (!userFeedbackIsAnomaly) return;
-    ObservabilityApiRepo.updateTestHistoryEntry(
-      { alertId, userFeedbackIsAnomaly },
-      jwt
-    )
-      .then(() => {
-        setSnackbarOpen(true);
-      })
-      .catch(() => {
-        console.trace(
-          'Something went wrong saving user feedback to persistence'
-        );
-      });
+    // ObservabilityApiRepo.updateTestHistoryEntry(
+    //   { alertId, userFeedbackIsAnomaly },
+    //   jwt
+    // )
+    //   .then(() => {
+    //     setSnackbarOpen(true);
+    //   })
+    //   .catch(() => {
+    //     console.trace(
+    //       'Something went wrong saving user feedback to persistence'
+    //     );
+    //   });
   };
 
   useEffect(() => {
     if (!accountId || lineage) return;
 
-    if (!jwt) throw new Error('No user authorization found');
+    // if (!jwt) throw new Error('No user authorization found');
 
 
     if (showRealData) {

@@ -67,7 +67,6 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
 import Box from '@mui/material/Box';
-import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
 import IntegrationApiRepo from '../../infrastructure/integration-api/integration-api-repo';
 import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
@@ -75,6 +74,8 @@ import Snowflake from '../../components/integration/snowflake/snowflake';
 
 
 const showRealData = false;
+const lineageId = '';
+const organizationId = '';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -412,7 +413,6 @@ export default (): ReactElement => {
   const navigate = useNavigate();
 
   const [accountId, setAccountId] = useState('');
-  const [organizationId, setOrganizationId] = useState('');
   const [user, setUser] = useState<any>();
   const [jwt, setJwt] = useState('');
 
@@ -422,7 +422,6 @@ export default (): ReactElement => {
   const [availableTests, setAvailableTests] = useState<any[]>([]);
   const [alertHistory, setAlertHistory] = useState<any[]>([]);
   // const [info, setInfo] = useState('');
-  const [lineageId, setLineageId] = useState<string>();
   const [lineage, setLineage] = useState<LineageDto>();
   const [materializations, setMaterializations] = useState<
     MaterializationDto[]
@@ -744,45 +743,45 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (!user) return;
-    let token: string;
-    Auth.currentSession()
-      .then((session) => {
-        const accessToken = session.getAccessToken();
+    // let token: string;
+    // Auth.currentSession()
+    //   .then((session) => {
+    //     const accessToken = session.getAccessToken();
 
-        token = accessToken.getJwtToken();
+    //     token = accessToken.getJwtToken();
 
-        setJwt(token);
+    //     setJwt(token);
 
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
-      })
-      .then((accounts) => {
-        if (!accounts.length) throw new Error(`No accounts found for user`);
+    //     return AccountApiRepository.getBy(new URLSearchParams({}), token);
+    //   })
+    //   .then((accounts) => {
+    //     if (!accounts.length) throw new Error(`No accounts found for user`);
 
-        if (accounts.length > 1)
-          throw new Error(`Multiple accounts found for user`);
+    //     if (accounts.length > 1)
+    //       throw new Error(`Multiple accounts found for user`);
 
-        setAccountId(accounts[0].id);
+    //     setAccountId(accounts[0].id);
 
-        setOrganizationId(accounts[0].organizationId);
-        if (showRealData) {
+    //     setOrganizationId(accounts[0].organizationId);
+    //     if (showRealData) {
 
-          return LineageApiRepository.getByOrgId(organizationId, token)
+    //       return LineageApiRepository.getByOrgId(organizationId, token)
 
-            .then((lineageResponse) => {
+    //         .then((lineageResponse) => {
 
-              if (lineageResponse)
-                setLineageId(lineageResponse.id);
-              else
-                setLineageId('');
+    //           if (lineageResponse)
+    //             setLineageId(lineageResponse.id);
+    //           else
+    //             setLineageId('');
 
-            });
-        }
-      })
-      .catch((error) => {
-        console.trace(typeof error === 'string' ? error : error.message);
+    //         });
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     console.trace(typeof error === 'string' ? error : error.message);
 
-        // Auth.signOut();
-      });
+    //     // Auth.signOut();
+    //   });
     setReadyToBuild(true);
 
   }, [user]);
@@ -838,10 +837,10 @@ export default (): ReactElement => {
 
     if (!jwt) throw new Error('No user authorization found');
 
-    if (!lineageId) return;
 
     if (showRealData) {
-      LineageApiRepository.getOne(lineageId, jwt)
+    if (!lineageId) return;
+    LineageApiRepository.getOne(lineageId, jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
@@ -913,6 +912,8 @@ export default (): ReactElement => {
   useEffect(() => {
 
     if (showRealData) {
+      if(!organizationId) return;
+
       const definedTests: any[] = [];
       const alertList: any[] = [];
 

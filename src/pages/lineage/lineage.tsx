@@ -448,6 +448,7 @@ export default (): ReactElement => {
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
     useState<boolean>();
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [slackToken, setSlackToken] = useState<string>('');
   const [installationId, setInstallationId] = useState<string>('');
   const [integrationComponent, setIntegrationComponent] =
@@ -875,9 +876,6 @@ export default (): ReactElement => {
   useEffect(() => {
     if(!account) return;
 
-    console.log(slackToken);
-
-
     if (tabIndex === 0) setIntegrationComponent(<Github installationId={installationId} jwt={jwt}></Github>);
     else if (tabIndex === 1) setIntegrationComponent(<Snowflake jwt={jwt}></Snowflake>);
     else if (tabIndex === 2)
@@ -894,6 +892,8 @@ export default (): ReactElement => {
     if (!panel) throw new ReferenceError('Integrations Panel does not exist');
     panel.style.visibility = 'visible';
     panel.style.opacity = '1';
+
+    setTabIndex(0);
   }, [showIntegrationSidePanel]);
 
   useEffect(() => {
@@ -1318,8 +1318,6 @@ export default (): ReactElement => {
           if ('logicId' in combo) {
             LogicApiRepository.getOne(combo.logicId, 'todo-replace').then(
               (logicDto) => {
-                console.log(logicDto?.sql);
-
                 if (!logicDto)
                   throw new ReferenceError('Not able to retrieve logic object');
 

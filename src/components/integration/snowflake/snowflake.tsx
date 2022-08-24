@@ -9,8 +9,6 @@ interface SnowflakeProps {
 }
 
 export default ({ jwt }: SnowflakeProps): ReactElement => {
-  console.log(jwt);
-
   const [accountId, setAccountId] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

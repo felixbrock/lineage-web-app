@@ -443,6 +443,7 @@ export default (): ReactElement => {
   >([]);
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
   const [tabIndex, setTabIndex] = React.useState(0);
+  const [columnPanelTabIndex, setColumnPanelTabIndex] = React.useState(0);
   const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
@@ -459,6 +460,13 @@ export default (): ReactElement => {
     newValue: number
   ) => {
     setTabIndex(newValue);
+  };
+
+  const handleColumnPanelTabIndexChange = (
+    event: React.SyntheticEvent,
+    newValue: number
+  ) => {
+    setColumnPanelTabIndex(newValue);
   };
 
   const handleSelect = (nodeId: string) => {
@@ -1558,13 +1566,13 @@ export default (): ReactElement => {
             </button>
           </div>
           <div className="content">
-            <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
+            <Tabs value={columnPanelTabIndex} onChange={handleColumnPanelTabIndexChange} centered>
               <Tab label="Overview" />
               <Tab />
               <Tab label="Alert History" />
             </Tabs>
             <br></br>
-            {tabIndex === 0 ? (
+            {columnPanelTabIndex === 0 ? (
               <>
                 <div className="card">
                   {selectedNodeId === '627160717e3d8066494d41ff' ? (

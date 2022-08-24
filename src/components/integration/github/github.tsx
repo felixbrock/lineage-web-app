@@ -9,6 +9,8 @@ interface GithubProps {
 
 export default ({ installationId, jwt }: GithubProps): ReactElement => {
 
+  if(!installationId) return (<>Install Github</>);
+
   const [repoNameList, setRepoNameList] = useState<string[]>([]);
 
   

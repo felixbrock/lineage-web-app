@@ -18,6 +18,13 @@ interface UpdateSlackProfileDto {
   channelName?: string;
 }
 
+
+interface PostSnowflakeProfileDto {
+  accountId: string;
+  username: string;
+  password: string;
+}
+
 interface UpdateSnowflakeProfileDto {
   accountId?: string;
   username?: string;
@@ -294,6 +301,28 @@ try {
       const response = await axios.patch(`${apiRoot}/snowflake/profile`, data, config);
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
+  public static postSnowflakeProfile = async (
+    postSnowflakeProfileDto: PostSnowflakeProfileDto,
+    jwt: string
+  ): Promise<unknown> => {
+    try {
+      const apiRoot = await IntegrationApiRepo.root;
+
+      const data = postSnowflakeProfileDto;
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.post(`${apiRoot}/snowflake/profile`, data, config);
+      const jsonResponse = response.data;
+      if (response.status === 201) return jsonResponse;
       throw new Error(jsonResponse);
     } catch (error: any) {
       return Promise.reject(new Error(error.response.data.message));

@@ -410,7 +410,7 @@ export default (): ReactElement => {
 
   const navigate = useNavigate();
 
-  const [account, setAccount] = useState<AccountDto>(undefined);
+  const [account, setAccount] = useState<AccountDto>();
   const [user, setUser] = useState<any>();
   const [jwt, setJwt] = useState('');
 
@@ -420,7 +420,6 @@ export default (): ReactElement => {
   const [availableTests, setAvailableTests] = useState<any[]>([]);
   const [alertHistory, setAlertHistory] = useState<any[]>([]);
   // const [info, setInfo] = useState('');
-  const [lineageId, setLineageId] = useState<string>();
   const [lineage, setLineage] = useState<LineageDto>();
   const [materializations, setMaterializations] = useState<
     MaterializationDto[]
@@ -766,8 +765,6 @@ export default (): ReactElement => {
 
         Auth.signOut();
       });
-    setReadyToBuild(true);
-
   }, [user]);
 
   const handleSlackRedirect = () => {
@@ -824,64 +821,38 @@ export default (): ReactElement => {
     if (lineage) return;
 
     if (showRealData) {
+      let lineageId: string;
+
       LineageApiRepository.getByOrgId(account.organizationId, jwt)
-
-        .then((lineageResponse) => {
-
-          if (lineageResponse)
-            setLineageId(lineageResponse.id);
-          else
-            setLineageId('');
-
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    } else {
-      setLineage({ id: 'todo', createdAt: 1 });
-      setReadyToBuild(true);
-    }
-
-    handleSlackRedirect();
-    handleGithubRedirect();
-  }, [account]);
-
-  useEffect(() => {
-    if (!lineageId) return;
-
-    if(!account) return;
-
-    if (!jwt) throw new Error('No user authorization found');
-
-    if (showRealData) {
-      LineageApiRepository.getOne(lineageId, jwt)
+      // LineageApiRepository.getOne(lineageId, jwt)
     .then((lineageDto) => {
       if (!lineageDto)
         throw new TypeError('Queried lineage object not found');
       setLineage(lineageDto);
+      lineageId = lineageDto.id;
       return MaterializationsApiRepository.getBy(
-        new URLSearchParams({ lineageId: lineageId }),
+        new URLSearchParams({ lineageId }),
         jwt
       );
     })
     .then((materializationDtos) => {
       setMaterializations(materializationDtos);
       return DashboardsApiRepository.getBy(
-        new URLSearchParams({ lineageId: lineageId }),
+        new URLSearchParams({ lineageId }),
         jwt
       );
     })
     .then((dashboardDtos) => {
       setDashboards(dashboardDtos);
       return ColumnsApiRepository.getBy(
-        new URLSearchParams({ lineageId: lineageId }),
+        new URLSearchParams({ lineageId }),
         jwt
       );
     })
     .then((columnDtos) => {
       setColumns(columnDtos);
       return DependenciesApiRepository.getBy(
-        new URLSearchParams({ lineageId: lineageId }),
+        new URLSearchParams({ lineageId }),
         jwt
       );
     })
@@ -897,18 +868,20 @@ export default (): ReactElement => {
     setReadyToBuild(true);
   }
 
-    
-
-  }, [lineageId]);
+    handleSlackRedirect();
+    handleGithubRedirect();
+  }, [account]);
 
   useEffect(() => {
+    if(!account) return;
+
     console.log(slackToken);
 
 
     if (tabIndex === 0) setIntegrationComponent(<Github installationId={installationId} jwt={jwt}></Github>);
     else if (tabIndex === 1) setIntegrationComponent(<Snowflake jwt={jwt}></Snowflake>);
     else if (tabIndex === 2)
-      setIntegrationComponent(<Slack accountId={accountId} jwt={jwt}></Slack>);
+      setIntegrationComponent(<Slack accountId={account.id} jwt={jwt}></Slack>);
   }, [tabIndex]);
 
   useEffect(() => {
@@ -924,6 +897,8 @@ export default (): ReactElement => {
   }, [showIntegrationSidePanel]);
 
   useEffect(() => {
+    if(!account) return;
+
 
     const definedTests: any[] = [];
     const alertList: any[] = [];
@@ -931,7 +906,7 @@ export default (): ReactElement => {
     const sqlQuery = `select distinct TEST_TYPE, ID from cito.public.test_suites
      where TARGET_RESOURCE_ID = ${selectedNodeId} AND ACTIVATED = TRUE`;
 
-    IntegrationApiRepo.querySnowflake(sqlQuery, organizationId, jwt)
+    IntegrationApiRepo.querySnowflake(sqlQuery, account.organizationId, jwt)
       .then((results) => {
 
         results.forEach((entry: { TEST_TYPE: string, ID: string }) => {
@@ -939,7 +914,7 @@ export default (): ReactElement => {
           const query = `select VALUE from cito.public.test_history
           where TEST_SUITE_ID = ${entry.ID} AND TEST_TYPE = ${entry.TEST_TYPE}`;
 
-          IntegrationApiRepo.querySnowflake(query, organizationId, jwt)
+          IntegrationApiRepo.querySnowflake(query, account.organizationId, jwt)
             .then((history) => {
               const valueList: string[] = Object.values(history);
               const numList = valueList.map((val: string) => parseFloat(val));
@@ -954,7 +929,7 @@ export default (): ReactElement => {
             join cito.public.executions on cito.public.alerts.TEST_SUITE_ID = cito.public.executions.TEST_SUITE_ID
           where TEST_SUITE_ID = ${entry.ID}`;
 
-          IntegrationApiRepo.querySnowflake(alertQuery, organizationId, jwt)
+          IntegrationApiRepo.querySnowflake(alertQuery, account.organizationId, jwt)
             .then((alerts) => {
               const valueList: any[] = Object.values(alerts);
               const alertsForEntry = valueList.map((value: { DEVIATION: string, EXECUTED_ON: string}) =>  {

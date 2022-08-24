@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography';
 import { Avatar, CardHeader } from '@mui/material';
 import { BsSlack } from 'react-icons/bs';
 
-export default (value: number, relativeDeviation: number, rangeLowerBorder: number, rangeUpperBorder: number) => (
+export default (value: number, relativeDeviation: number, rangeLowerBorder: number, rangeUpperBorder: number, anomalyType: string) => (
   <Card sx={{ minWidth: 275 }}>
     <CardHeader
       avatar={
@@ -26,7 +26,7 @@ export default (value: number, relativeDeviation: number, rangeLowerBorder: numb
         of <span style={{ color: '#db1d33' }}>{relativeDeviation}%</span>
       </Typography>
       <Typography sx={{ mb: 1.5 }} color="text.secondary">
-        Data distribution significantly higher than expected
+        Data {anomalyType} significantly higher than expected
       </Typography>
       <Typography variant="body2">Expected range: {rangeLowerBorder} - {rangeUpperBorder}</Typography>
     </CardContent>

@@ -43,8 +43,14 @@ import TablePagination from '@mui/material/TablePagination';
 import ObservabilityApiRepo from '../../infrastructure/observability-api/observability-api-repo';
 import { Alert, Snackbar } from '@mui/material';
 import { TestSuiteDto } from '../../infrastructure/observability-api/test-suite-dto';
+import {
+  defaultMaterializations,
+  defaultColumns,
+  defaultTestSuits,
+} from '../lineage/test-data';
 
-const showRealData = true;
+
+const showRealData = false;
 const lineageId = '62f90bec34a8584bd1f6534a';
 
 export const testTypes = [
@@ -1461,6 +1467,9 @@ export default (): ReactElement => {
           console.log(error);
         });
     } else {
+      setMaterializations(defaultMaterializations);
+      setColumns(defaultColumns);
+      setTestSuites(defaultTestSuits);
       setLineage({ id: 'todo', createdAt: 1 });
       setReadyToBuild(true);
     }

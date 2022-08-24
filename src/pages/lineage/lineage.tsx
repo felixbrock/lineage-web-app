@@ -28,9 +28,9 @@ import MetricsGraph, {
   defaultOption,
   defaultYAxis,
   // defaultYAxisTime,
-  // effectiveRateSampleDistributionData,
-  // effectiveRateSampleFreshnessData,
-  // effectiveRateSampleNullnessData,
+  effectiveRateSampleDistributionData,
+  effectiveRateSampleFreshnessData,
+  effectiveRateSampleNullnessData,
 } from '../../components/metrics-graph';
 
 import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
@@ -74,7 +74,7 @@ import Slack from '../../components/integration/slack/slack';
 import Snowflake from '../../components/integration/snowflake/snowflake';
 
 
-const showRealData = true;
+const showRealData = false;
 
 //'62e7b2bcaa9205236c323795';
 
@@ -912,56 +912,57 @@ export default (): ReactElement => {
 
   useEffect(() => {
 
-    const definedTests: any[] = [];
-    const alertList: any[] = [];
+    if (showRealData) {
+      const definedTests: any[] = [];
+      const alertList: any[] = [];
 
-    const sqlQuery = `select distinct TEST_TYPE, ID from cito.public.test_suites
+      const sqlQuery = `select distinct TEST_TYPE, ID from cito.public.test_suites
      where TARGET_RESOURCE_ID = ${selectedNodeId} AND ACTIVATED = TRUE`;
 
-    IntegrationApiRepo.querySnowflake(sqlQuery, organizationId, jwt)
-      .then((results) => {
+      IntegrationApiRepo.querySnowflake(sqlQuery, organizationId, jwt)
+        .then((results) => {
 
-        results.forEach((entry: { TEST_TYPE: string, ID: string }) => {
+          results.forEach((entry: { TEST_TYPE: string, ID: string }) => {
 
-          const query = `select VALUE from cito.public.test_history
+            const query = `select VALUE from cito.public.test_history
           where TEST_SUITE_ID = ${entry.ID} AND TEST_TYPE = ${entry.TEST_TYPE}`;
 
-          IntegrationApiRepo.querySnowflake(query, organizationId, jwt)
-            .then((history) => {
-              const valueList: string[] = Object.values(history);
-              const numList = valueList.map((val: string) => parseFloat(val));
+            IntegrationApiRepo.querySnowflake(query, organizationId, jwt)
+              .then((history) => {
+                const valueList: string[] = Object.values(history);
+                const numList = valueList.map((val: string) => parseFloat(val));
 
-              const newTest = { TEST_TYPE: entry.TEST_TYPE, TEST_SUITE_ID: entry.ID, HISTORY: numList };
-              definedTests.push(newTest);
-            });
+                const newTest = { TEST_TYPE: entry.TEST_TYPE, TEST_SUITE_ID: entry.ID, HISTORY: numList };
+                definedTests.push(newTest);
+              });
 
-          const alertQuery = `select DEVIATION, EXECUTED_ON from 
+            const alertQuery = `select DEVIATION, EXECUTED_ON from 
           (cito.public.alerts join cito.public.test_results 
             on cito.public.alerts.TEST_SUITE_ID = cito.public.test_results.TEST_SUITE_ID) 
             join cito.public.executions on cito.public.alerts.TEST_SUITE_ID = cito.public.executions.TEST_SUITE_ID
           where TEST_SUITE_ID = ${entry.ID}`;
 
-          IntegrationApiRepo.querySnowflake(alertQuery, organizationId, jwt)
-            .then((alerts) => {
-              const valueList: any[] = Object.values(alerts);
-              const alertsForEntry = valueList.map((value: { DEVIATION: string, EXECUTED_ON: string}) =>  {
+            IntegrationApiRepo.querySnowflake(alertQuery, organizationId, jwt)
+              .then((alerts) => {
+                const valueList: any[] = Object.values(alerts);
+                const alertsForEntry = valueList.map((value: { DEVIATION: string, EXECUTED_ON: string }) => {
                   return {
                     date: value.EXECUTED_ON,
                     type: entry.TEST_TYPE,
                     deviation: value.DEVIATION
                   };
+                });
+                alertList.push(...alertsForEntry);
               });
-              alertList.push(...alertsForEntry);
-            });
+          });
+
+          setAvailableTests(definedTests);
+          setAlertHistory(alertList);
+        })
+        .catch((error) => {
+          console.trace(typeof error === 'string' ? error : error.message);
         });
-
-       setAvailableTests(definedTests);
-       setAlertHistory(alertList);
-      })
-      .catch((error) => {
-        console.trace(typeof error === 'string' ? error : error.message);
-      });
-
+    }
   }, [selectedNodeId]);
 
   useEffect(() => {
@@ -1582,14 +1583,21 @@ export default (): ReactElement => {
               <>
                 <div className="card">
                   {selectedNodeId === '627160717e3d8066494d41ff' ? (
-                    BasicCard(20.6, 448, 3.4, 5.6)
-                  ) : (
-                    // : BasicCard(47011, 448, 4129, 17521)}
-                    <></>
-                  )}
+                    BasicCard(20.6, 448, 3.4, 5.6, 'distribution')
+                  ) : 
+                   selectedNodeId === '6271607e7e3d8066494d42d7' ? (
+                    BasicCard(92, 195, 28, 33, 'distribution')
+                    
+                  ) :
+                   selectedNodeId === '62715f917e3d8066494d40f7' ? (
+                    BasicCard(2561, 380, 425, 641, 'nullness')
+
+                  ) :
+                    (<></>)
+                  }
                 </div>
                 {availableTests.map((entry) => {
-                  const history:number[] = entry.HISTORY;
+                  const history: number[] = entry.HISTORY;
 
                   return (
 
@@ -1610,61 +1618,55 @@ export default (): ReactElement => {
                   );
                 })
                 }
-                {/* <div className="Distribution">
+                {
+                selectedNodeId === '627160717e3d8066494d41ff' ? 
+                <div className="Distribution">
                   <h4>Distribution</h4>
                   <MetricsGraph
                     option={
-                      selectedNodeId === '627160717e3d8066494d41ff'
-                        ? defaultOption(
+                      defaultOption(
                           defaultYAxis,
                           effectiveRateSampleDistributionData,
                           7,
                           8
                         )
-                        : defaultOption(
-                          defaultYAxis,
-                          defaultDistributionData,
-                          7,
-                          8
-                        )
                     }
                   ></MetricsGraph>
-                </div>
-                <div className="Freshness">
-                  <h4>Freshness</h4>
+                </div> 
+                : <></>
+                }
+                {selectedNodeId === '6271607e7e3d8066494d42d7' ?
+                <div className="Distribution">
+                  <h4>Distribution</h4>
                   <MetricsGraph
                     option={
-                      selectedNodeId === '627160717e3d8066494d41ff'
-                        ? defaultOption(
+                     defaultOption(
                           defaultYAxis,
                           effectiveRateSampleFreshnessData,
                           5,
                           7
                         )
-                        : defaultOption(
-                          defaultYAxisTime,
-                          defaultFreshnessData,
-                          3,
-                          5
-                        )
                     }
                   ></MetricsGraph>
-                </div>
+                  </div>
+                : <></>
+                }
+                {selectedNodeId === '62715f917e3d8066494d40f7' ?
                 <div className="Nullness">
                   <h4>Nullness</h4>
                   <MetricsGraph
                     option={
-                      selectedNodeId === '627160717e3d8066494d41ff'
-                        ? defaultOption(
+                      defaultOption(
                           defaultYAxis,
                           effectiveRateSampleNullnessData,
                           1,
                           3
                         )
-                        : defaultOption(defaultYAxis, defaultNullnessData, 4, 6)
                     }
                   ></MetricsGraph>
-                </div> */}
+                </div>
+                : <></>
+                }
                 <br></br>
               </>
             ) : (

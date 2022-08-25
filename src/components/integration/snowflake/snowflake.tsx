@@ -45,6 +45,8 @@ export default ({ jwt }: SnowflakeProps): ReactElement => {
       );
 
     setButtonText('Saved');
+
+    await IntegrationApiRepo.createSnowflakeEnvironment(jwt);
   };
 
   useEffect(() => {

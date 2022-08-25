@@ -178,6 +178,6 @@ export default () => {
       .catch((error) => console.trace(error));
   }, [organizationId]);
 
-  return <></>;
+  return <>redirecting...</>;
 };
 

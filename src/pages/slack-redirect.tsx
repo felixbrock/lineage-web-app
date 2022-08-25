@@ -93,5 +93,5 @@ export default () => {
       .catch((error) => console.trace(error));
   }, [accountId]);
 
-  return <></>;
+  return <>redirecting...</>;
 };

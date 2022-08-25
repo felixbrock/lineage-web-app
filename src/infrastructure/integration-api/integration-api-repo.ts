@@ -61,7 +61,7 @@ export default class IntegrationApiRepo {
   public static postSlackProfile = async (
     postSlackProfileDto: PostSlackProfileDto,
     jwt: string
-  ): Promise<unknown> => {
+  ): Promise<SlackProfileDto | undefined> => {
     try {
       const apiRoot = await IntegrationApiRepo.root;
 
@@ -103,6 +103,7 @@ export default class IntegrationApiRepo {
   };
 
   public static getSlackConversations = async (
+    params: URLSearchParams,
     jwt: string
   ): Promise<SlackConversationInfoDto[]> => {
     try {
@@ -111,7 +112,8 @@ export default class IntegrationApiRepo {
       const config: AxiosRequestConfig = {
         headers: {
           Authorization: `Bearer ${jwt}`
-        }
+        },
+        params
       };
 
       const response = await axios.get(
@@ -131,8 +133,11 @@ export default class IntegrationApiRepo {
   };
 
   public static joinSlackConversation = async (
+    oldChannelId: string,
+    newChannelId: string,
+    accessToken: string,
     jwt: string
-  ): Promise<SlackConversationInfoDto[]> => {
+  ): Promise<undefined> => {
     try {
       const apiRoot = await IntegrationApiRepo.root;
 
@@ -143,13 +148,11 @@ export default class IntegrationApiRepo {
       };
 
       const response = await axios.post(
-        `${apiRoot}/slack/conversation/join`, undefined,
+        `${apiRoot}/slack/conversation/join`, {oldChannelId, newChannelId, accessToken},
         config
       );
       const jsonResponse = response.data;
       if (response.status !== 201) throw new Error(jsonResponse.message);
-      if (!jsonResponse)
-        throw new Error('Slack conversation join failed');
       return jsonResponse;
     } catch (error: unknown) {
       if (typeof error === 'string') return Promise.reject(error);

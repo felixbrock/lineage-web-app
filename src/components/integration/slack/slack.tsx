@@ -12,11 +12,12 @@ import {
 import { mode, slackConfig } from '../../../config';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 import SlackConversationInfoDto from '../../../infrastructure/integration-api/slack-channel-info-dto';
+import SlackProfileDto from '../../../infrastructure/integration-api/slack-profile-dto';
 
 const buildOAuthUrl = (accountId: string) => {
   const clientId = encodeURIComponent(slackConfig.slackClientId);
   const scopes = encodeURIComponent(
-    'channels:read,channels:join,chat:write,groups:read,im:read,mpim:read'
+    'channels:read,channels:join,channels:manage,chat:write,groups:read,groups:write,im:read,im:write,mpim:read,mpim:write'
   );
 
   return `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&state=${accountId}`;
@@ -24,13 +25,15 @@ const buildOAuthUrl = (accountId: string) => {
 
 interface SlackProps {
   accountId: string;
+  accessToken?: string;
   jwt: string;
 }
 
-export default ({ accountId, jwt }: SlackProps): ReactElement => {
+export default ({ accessToken, accountId, jwt }: SlackProps): ReactElement => {
   const [channels, setChannels] = useState<SlackConversationInfoDto[]>([]);
-  const [selectedChannel, setSelectedChannel] = useState('');
+  const [selectedChannelId, setSelectedChannelId] = useState('');
   const [selectElements, setSelectElements] = useState<ReactElement[]>([]);
+  const [profile, setProfile] = useState<SlackProfileDto | null>();
 
   const handleChannelSelectChange = async (
     event: SelectChangeEvent
@@ -40,25 +43,49 @@ export default ({ accountId, jwt }: SlackProps): ReactElement => {
       (element) => element.id === channelId
     )[0].name;
 
-    await IntegrationApiRepo.updateSlackProfile(
-      { channelId, channelName: channelName },
-      jwt
-    );
+    const oldChannelId = profile ? profile.channelId : selectedChannelId;
 
-    await IntegrationApiRepo.joinSlackConversation(jwt);
+    const slackAccessToken = accessToken || profile?.accessToken;
 
-    setSelectedChannel(channelId);
+    if(slackAccessToken)
+      await IntegrationApiRepo.joinSlackConversation(oldChannelId, channelId, slackAccessToken,  jwt);
+
+    if (profile){
+      await IntegrationApiRepo.updateSlackProfile(
+        { channelId, channelName },
+        jwt
+      );
+      setProfile({...profile, channelId, channelName});
+    }
+      
+    else if (accessToken) {
+      const slackProfile = await IntegrationApiRepo.postSlackProfile(
+        { accessToken, channelId, channelName },
+        jwt
+      );
+      if (!slackProfile)
+        throw new Error('Did not receive slack profile after creating it');
+      setProfile(slackProfile);
+    }
+
+    setSelectedChannelId(channelId);
   };
 
   useEffect(() => {
-    IntegrationApiRepo.getSlackConversations(jwt)
+    IntegrationApiRepo.getSlackConversations(
+      new URLSearchParams(accessToken ? { accessToken } : {}),
+      jwt
+    )
       .then((res) => {
         setChannels(res);
 
         return IntegrationApiRepo.getSlackProfile(jwt);
       })
       .then((res) => {
-        if (res) setSelectedChannel(res.channelId);
+        if (res) {
+          setProfile(res);
+          setSelectedChannelId(res.channelId);
+        }
       })
       .catch((error: any) => {
         console.trace(error);
@@ -95,7 +122,7 @@ export default ({ accountId, jwt }: SlackProps): ReactElement => {
         <Select
           labelId="select-channel-label"
           id="select-channel"
-          value={selectedChannel}
+          value={selectedChannelId}
           label="Select Channel"
           onChange={handleChannelSelectChange}
         >

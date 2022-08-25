@@ -887,7 +887,7 @@ export default (): ReactElement => {
     if (tabIndex === 0) setIntegrationComponent(<Github installationId={installationId} jwt={jwt}></Github>);
     else if (tabIndex === 1) setIntegrationComponent(<Snowflake jwt={jwt}></Snowflake>);
     else if (tabIndex === 2)
-      setIntegrationComponent(<Slack accountId={account.id} jwt={jwt}></Slack>);
+      setIntegrationComponent(<Slack accountId={account.id} accessToken={slackToken} jwt={jwt}></Slack>);
   }, [tabIndex]);
 
   useEffect(() => {
@@ -901,7 +901,6 @@ export default (): ReactElement => {
     panel.style.visibility = 'visible';
     panel.style.opacity = '1';
 
-    setTabIndex(0);
   }, [showIntegrationSidePanel]);
 
   useEffect(() => {

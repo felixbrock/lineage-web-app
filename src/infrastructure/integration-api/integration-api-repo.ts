@@ -30,6 +30,16 @@ interface UpdateSnowflakeProfileDto {
   password?: string;
 }
 
+interface PostGithubProfileDto {
+  installationId: string;
+  organizationId: string;
+  repositoryNames: string[];
+}
+
+interface UpdateGithubProfileDto {
+  installationId?: string;
+}
+
 // TODO - Implement Interface regarding clean architecture
 export default class IntegrationApiRepo {
   private static gateway =
@@ -174,10 +184,8 @@ export default class IntegrationApiRepo {
     }
   };
 
-  public static createGithubProfile = async (
-    installationId: string,
-    organizationId: string,
-    repositoryNames: string[],
+  public static postGithubProfile = async (
+    postGithubProfileDto: PostGithubProfileDto,
     jwt: string
   ): Promise<string> => {
     try {
@@ -191,11 +199,7 @@ export default class IntegrationApiRepo {
 
       const response = await axios.post(
         `${apiRoot}/github/profile`,
-        {
-          installationId,
-          organizationId,
-          repositoryNames,
-        },
+        postGithubProfileDto,
         config
       );
       const jsonResponse = response.data;
@@ -209,10 +213,36 @@ export default class IntegrationApiRepo {
     }
   };
 
-  public static readGithubProfile = async (
-    installationId: string,
+  public static updateGithubProfile = async (
+    updateGithubProfileDto: UpdateGithubProfileDto,
     jwt: string
-  ): Promise<GithubProfileDto> => {
+  ): Promise<unknown> => {
+    try {
+      const apiRoot = await IntegrationApiRepo.root;
+
+      const data = updateGithubProfileDto;
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.patch(
+        `${apiRoot}/github/profile`,
+        data,
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
+  public static getGithubProfile = async (
+    params: URLSearchParams,
+    jwt: string
+  ): Promise<GithubProfileDto | undefined> => {
     try {
       const apiRoot = await IntegrationApiRepo.root;
 
@@ -221,9 +251,7 @@ export default class IntegrationApiRepo {
           Authorization: `Bearer ${jwt}`,
           'Content-Type': 'application/json',
         },
-        params: {
-          installationId,
-        },
+        params,
       };
 
       const response = await axios.get(
@@ -235,6 +263,35 @@ export default class IntegrationApiRepo {
       console.log(jsonResponse);
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse.message);
+    } catch (error: unknown) {
+      if (typeof error === 'string') return Promise.reject(error);
+      if (error instanceof Error) return Promise.reject(error.message);
+      return Promise.reject(new Error('Unknown error occured'));
+    }
+  };
+
+  public static getAccessToken = async (
+    code: string,
+    jwt: string
+  ): Promise<string> => {
+    try {
+      const apiRoot = await IntegrationApiRepo.root;
+
+      const config: AxiosRequestConfig = {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      };
+
+      const response = await axios.post(
+        `${apiRoot}/github/token`,
+        {code},
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status !== 201) throw new Error(jsonResponse.message);
+      if (!jsonResponse) throw new Error('Github access token retrieval failed');
+      return jsonResponse;
     } catch (error: unknown) {
       if (typeof error === 'string') return Promise.reject(error);
       if (error instanceof Error) return Promise.reject(error.message);
@@ -346,7 +403,7 @@ export default class IntegrationApiRepo {
     }
   };
 
-  public static createSnowflakeEnvironment = async (
+  public static postSnowflakeEnvironment = async (
     jwt: string
   ): Promise<unknown> => {
     try {

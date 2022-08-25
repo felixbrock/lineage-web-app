@@ -14,22 +14,22 @@ import IntegrationApiRepo from '../../../infrastructure/integration-api/integrat
 import SlackConversationInfoDto from '../../../infrastructure/integration-api/slack-channel-info-dto';
 import SlackProfileDto from '../../../infrastructure/integration-api/slack-profile-dto';
 
-const buildOAuthUrl = (accountId: string) => {
+const buildOAuthUrl = (organizationId: string) => {
   const clientId = encodeURIComponent(slackConfig.slackClientId);
   const scopes = encodeURIComponent(
     'channels:read,channels:join,channels:manage,chat:write,groups:read,groups:write,im:read,im:write,mpim:read,mpim:write'
   );
 
-  return `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&state=${accountId}`;
+  return `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&state=${organizationId}`;
 };
 
 interface SlackProps {
-  accountId: string;
+  organizationId: string;
   accessToken?: string;
   jwt: string;
 }
 
-export default ({ accessToken, accountId, jwt }: SlackProps): ReactElement => {
+export default ({ accessToken, organizationId, jwt }: SlackProps): ReactElement => {
   const [channels, setChannels] = useState<SlackConversationInfoDto[]>([]);
   const [selectedChannelId, setSelectedChannelId] = useState('');
   const [selectElements, setSelectElements] = useState<ReactElement[]>([]);
@@ -105,7 +105,7 @@ export default ({ accessToken, accountId, jwt }: SlackProps): ReactElement => {
   return (
     <>
       {mode === 'production' ? (
-        <a href={buildOAuthUrl(accountId)}>
+        <a href={buildOAuthUrl(organizationId)}>
           <img
             alt="Add to Slack"
             height="40"
@@ -115,7 +115,7 @@ export default ({ accessToken, accountId, jwt }: SlackProps): ReactElement => {
           />
         </a>
       ) : (
-        <Button href={buildOAuthUrl(accountId)}>{'Install'}</Button>
+        <Button href={buildOAuthUrl(organizationId)}>{'Install'}</Button>
       )}
       <FormControl fullWidth>
         <InputLabel id="select-channel-label">Select Channel</InputLabel>

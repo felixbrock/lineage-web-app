@@ -77,7 +77,6 @@ import AccountDto from '../../infrastructure/account-api/account-dto';
 
 //'62e7b2bcaa9205236c323795';
 
-
 // 62e79c2cd6fc4eb07b664eb5';
 
 // 62e2a8e9aef38b28f49d9c8f
@@ -442,7 +441,7 @@ export default (): ReactElement => {
     ReactElement[]
   >([]);
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
-  const [tabIndex, setTabIndex] = React.useState(0);
+  const [tabIndex, setTabIndex] = React.useState<number>(0);
   const [columnPanelTabIndex, setColumnPanelTabIndex] = React.useState(0);
   const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState('');
@@ -450,8 +449,9 @@ export default (): ReactElement => {
     useState<boolean>();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [slackToken, setSlackToken] = useState<string>('');
-  const [installationId, setInstallationId] = useState<string>('');
+  const [slackAccessToken, setSlackAccessToken] = useState<string>('');
+  const [githubInstallationId, setGithubInstallationId] = useState<string>('');
+  const [githubAccessToken, setGithubAccessToken] = useState<string>('');
   const [integrationComponent, setIntegrationComponent] =
     useState<ReactElement>();
 
@@ -783,16 +783,15 @@ export default (): ReactElement => {
     if (typeof state !== 'object')
       throw new Error('Unexpected navigation state type');
 
-    const { slackAccessToken, showIntegrationPanel, sidePanelTabIndex } =
+    const { slackToken, showIntegrationPanel, sidePanelTabIndex } =
       state as any;
 
-    if (!slackAccessToken || !showIntegrationPanel || !sidePanelTabIndex)
-      return;
+    if (!slackToken || !showIntegrationPanel || !sidePanelTabIndex) return;
 
-    if (slackAccessToken) setSlackToken(slackAccessToken);
+    if (slackToken) setSlackAccessToken(slackToken);
     else {
       IntegrationApiRepo.getSlackProfile(jwt)
-        .then((res) => setSlackToken(res ? res.accessToken : ''))
+        .then((res) => setSlackAccessToken(res ? res.accessToken : ''))
         .catch(() => console.trace('Slack profile retrieval failed'));
     }
 
@@ -809,13 +808,23 @@ export default (): ReactElement => {
     if (typeof state !== 'object')
       throw new Error('Unexpected navigation state type');
 
-    const { installation, showIntegrationPanel, sidePanelTabIndex } =
-      state as any;
+    const {
+      githubInstallId,
+      githubToken,
+      showIntegrationPanel,
+      sidePanelTabIndex,
+    } = state as any;
 
-    if (!installationId || !showIntegrationPanel || !sidePanelTabIndex)
+    if (
+      !githubInstallId ||
+      !githubToken ||
+      !showIntegrationPanel ||
+      !sidePanelTabIndex
+    )
       return;
 
-    if (installation) setInstallationId(installation);
+    if (githubInstallId) setGithubInstallationId(githubInstallId);
+    if (githubToken) setGithubAccessToken(githubToken);
     if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
     if (sidePanelTabIndex) setTabIndex(sidePanelTabIndex);
 
@@ -823,71 +832,95 @@ export default (): ReactElement => {
   };
 
   useEffect(() => {
-    if(!account) return;
+    if (!account) return;
 
     if (!jwt) throw new Error('No user authorization found');
 
     if (lineage) return;
 
     if (showRealData) {
+      setIntegrationComponent(
+        <Github
+          installationId={githubInstallationId}
+          accessToken={githubAccessToken}
+          organizationId={account.organizationId}
+          jwt={jwt}
+        ></Github>
+      );
+
       let lineageId: string;
 
       LineageApiRepository.getByOrgId(account.organizationId, jwt)
-      // LineageApiRepository.getOne(lineageId, jwt)
-    .then((lineageDto) => {
-      if (!lineageDto)
-        throw new TypeError('Queried lineage object not found');
-      setLineage(lineageDto);
-      lineageId = lineageDto.id;
-      return MaterializationsApiRepository.getBy(
-        new URLSearchParams({ lineageId }),
-        jwt
-      );
-    })
-    .then((materializationDtos) => {
-      setMaterializations(materializationDtos);
-      return DashboardsApiRepository.getBy(
-        new URLSearchParams({ lineageId }),
-        jwt
-      );
-    })
-    .then((dashboardDtos) => {
-      setDashboards(dashboardDtos);
-      return ColumnsApiRepository.getBy(
-        new URLSearchParams({ lineageId }),
-        jwt
-      );
-    })
-    .then((columnDtos) => {
-      setColumns(columnDtos);
-      return DependenciesApiRepository.getBy(
-        new URLSearchParams({ lineageId }),
-        jwt
-      );
-    })
-    .then((dependencyDtos) => {
-      setDependencies(dependencyDtos);
+        // LineageApiRepository.getOne(lineageId, jwt)
+        .then((lineageDto) => {
+          if (!lineageDto)
+            throw new TypeError('Queried lineage object not found');
+          setLineage(lineageDto);
+          lineageId = lineageDto.id;
+          return MaterializationsApiRepository.getBy(
+            new URLSearchParams({ lineageId }),
+            jwt
+          );
+        })
+        .then((materializationDtos) => {
+          setMaterializations(materializationDtos);
+          return DashboardsApiRepository.getBy(
+            new URLSearchParams({ lineageId }),
+            jwt
+          );
+        })
+        .then((dashboardDtos) => {
+          setDashboards(dashboardDtos);
+          return ColumnsApiRepository.getBy(
+            new URLSearchParams({ lineageId }),
+            jwt
+          );
+        })
+        .then((columnDtos) => {
+          setColumns(columnDtos);
+          return DependenciesApiRepository.getBy(
+            new URLSearchParams({ lineageId }),
+            jwt
+          );
+        })
+        .then((dependencyDtos) => {
+          setDependencies(dependencyDtos);
+          setReadyToBuild(true);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
+      setLineage({ id: 'todo', createdAt: 1 });
       setReadyToBuild(true);
-    })
-    .catch((error) => {
-      console.log(error);
-    });
-  } else {
-    setLineage({ id: 'todo', createdAt: 1 });
-    setReadyToBuild(true);
-  }
+    }
 
     handleSlackRedirect();
     handleGithubRedirect();
   }, [account]);
 
   useEffect(() => {
-    if(!account) return;
+    if (!account) return;
 
-    if (tabIndex === 0) setIntegrationComponent(<Github installationId={installationId} jwt={jwt}></Github>);
-    else if (tabIndex === 1) setIntegrationComponent(<Snowflake jwt={jwt}></Snowflake>);
+    if (tabIndex === 0)
+      setIntegrationComponent(
+        <Github
+          installationId={githubInstallationId}
+          accessToken={githubAccessToken}
+          organizationId={account.organizationId}
+          jwt={jwt}
+        ></Github>
+      );
+    else if (tabIndex === 1)
+      setIntegrationComponent(<Snowflake jwt={jwt}></Snowflake>);
     else if (tabIndex === 2)
-      setIntegrationComponent(<Slack accountId={account.id} accessToken={slackToken} jwt={jwt}></Slack>);
+      setIntegrationComponent(
+        <Slack
+          organizationId={account.organizationId}
+          accessToken={slackAccessToken}
+          jwt={jwt}
+        ></Slack>
+      );
   }, [tabIndex]);
 
   useEffect(() => {
@@ -900,12 +933,10 @@ export default (): ReactElement => {
     if (!panel) throw new ReferenceError('Integrations Panel does not exist');
     panel.style.visibility = 'visible';
     panel.style.opacity = '1';
-
   }, [showIntegrationSidePanel]);
 
   useEffect(() => {
-    if(!account) return;
-
+    if (!account) return;
 
     const definedTests: any[] = [];
     const alertList: any[] = [];
@@ -915,20 +946,25 @@ export default (): ReactElement => {
 
     IntegrationApiRepo.querySnowflake(sqlQuery, account.organizationId, jwt)
       .then((results) => {
-
-        results.forEach((entry: { TEST_TYPE: string, ID: string }) => {
-
+        results.forEach((entry: { TEST_TYPE: string; ID: string }) => {
           const query = `select VALUE from cito.public.test_history
           where TEST_SUITE_ID = ${entry.ID} AND TEST_TYPE = ${entry.TEST_TYPE}`;
 
-          IntegrationApiRepo.querySnowflake(query, account.organizationId, jwt)
-            .then((history) => {
-              const valueList: string[] = Object.values(history);
-              const numList = valueList.map((val: string) => parseFloat(val));
+          IntegrationApiRepo.querySnowflake(
+            query,
+            account.organizationId,
+            jwt
+          ).then((history) => {
+            const valueList: string[] = Object.values(history);
+            const numList = valueList.map((val: string) => parseFloat(val));
 
-              const newTest = { TEST_TYPE: entry.TEST_TYPE, TEST_SUITE_ID: entry.ID, HISTORY: numList };
-              definedTests.push(newTest);
-            });
+            const newTest = {
+              TEST_TYPE: entry.TEST_TYPE,
+              TEST_SUITE_ID: entry.ID,
+              HISTORY: numList,
+            };
+            definedTests.push(newTest);
+          });
 
           const alertQuery = `select DEVIATION, EXECUTED_ON from 
           (cito.public.alerts join cito.public.test_results 
@@ -936,27 +972,31 @@ export default (): ReactElement => {
             join cito.public.executions on cito.public.alerts.TEST_SUITE_ID = cito.public.executions.TEST_SUITE_ID
           where TEST_SUITE_ID = ${entry.ID}`;
 
-          IntegrationApiRepo.querySnowflake(alertQuery, account.organizationId, jwt)
-            .then((alerts) => {
-              const valueList: any[] = Object.values(alerts);
-              const alertsForEntry = valueList.map((value: { DEVIATION: string, EXECUTED_ON: string}) =>  {
-                  return {
-                    date: value.EXECUTED_ON,
-                    type: entry.TEST_TYPE,
-                    deviation: value.DEVIATION
-                  };
-              });
-              alertList.push(...alertsForEntry);
-            });
+          IntegrationApiRepo.querySnowflake(
+            alertQuery,
+            account.organizationId,
+            jwt
+          ).then((alerts) => {
+            const valueList: any[] = Object.values(alerts);
+            const alertsForEntry = valueList.map(
+              (value: { DEVIATION: string; EXECUTED_ON: string }) => {
+                return {
+                  date: value.EXECUTED_ON,
+                  type: entry.TEST_TYPE,
+                  deviation: value.DEVIATION,
+                };
+              }
+            );
+            alertList.push(...alertsForEntry);
+          });
         });
 
-       setAvailableTests(definedTests);
-       setAlertHistory(alertList);
+        setAvailableTests(definedTests);
+        setAlertHistory(alertList);
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
       });
-
   }, [selectedNodeId]);
 
   useEffect(() => {
@@ -1180,9 +1220,9 @@ export default (): ReactElement => {
       if (isNode(element)) {
         let anomalyState:
           | {
-            id: string;
-            hasNewAnomaly: boolean;
-          }
+              id: string;
+              hasNewAnomaly: boolean;
+            }
           | undefined;
         if (!showRealData) {
           anomalyState = defaultAnomalyStates.find(
@@ -1203,9 +1243,9 @@ export default (): ReactElement => {
           const sourceId = source.getID();
           let sourceAnomalyState:
             | {
-              id: string;
-              hasNewAnomaly: boolean;
-            }
+                id: string;
+                hasNewAnomaly: boolean;
+              }
             | undefined;
           if (!showRealData) {
             sourceAnomalyState = defaultAnomalyStates.find(
@@ -1382,7 +1422,6 @@ export default (): ReactElement => {
     setColumnTest(Date.now().toString());
 
     graphObj.set('latestZoom', graphObj.getZoom());
-
 
     graphObj.render();
 
@@ -1565,7 +1604,11 @@ export default (): ReactElement => {
             </button>
           </div>
           <div className="content">
-            <Tabs value={columnPanelTabIndex} onChange={handleColumnPanelTabIndexChange} centered>
+            <Tabs
+              value={columnPanelTabIndex}
+              onChange={handleColumnPanelTabIndexChange}
+              centered
+            >
               <Tab label="Overview" />
               <Tab />
               <Tab label="Alert History" />
@@ -1582,27 +1625,17 @@ export default (): ReactElement => {
                   )}
                 </div>
                 {availableTests.map((entry) => {
-                  const history:number[] = entry.HISTORY;
+                  const history: number[] = entry.HISTORY;
 
                   return (
-
                     <div className={entry.TEST_TYPE}>
                       <h4>{entry.TEST_TYPE}</h4>
                       <MetricsGraph
-                        option={
-                          defaultOption(
-                            defaultYAxis,
-                            history,
-                            7,
-                            8
-                          )
-                        }
+                        option={defaultOption(defaultYAxis, history, 7, 8)}
                       ></MetricsGraph>
                     </div>
-
                   );
-                })
-                }
+                })}
                 {/* <div className="Distribution">
                   <h4>Distribution</h4>
                   <MetricsGraph

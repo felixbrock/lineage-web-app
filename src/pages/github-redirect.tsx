@@ -2,6 +2,7 @@ import { Auth } from 'aws-amplify';
 import { useEffect, useState } from 'react';
 import AccountApiRepository from '../infrastructure/account-api/account-api-repo';
 import { useNavigate, useParams } from 'react-router-dom';
+import IntegrationApiRepo from '../infrastructure/integration-api/integration-api-repo';
 
 export default () => {
   const navigate = useNavigate();
@@ -70,19 +71,19 @@ export default () => {
         `Detected potential forgery attack with received state ${state}`
       );
 
-    // IntegrationApiRepo.getAccessToken(code, jwt)
-    //   .then((accessToken) => {
+    IntegrationApiRepo.getAccessToken(code, jwt)
+      .then((accessToken) => {
         navigate(`/lineage`, {
           state: {
-            githubInstallId: '28593948',
-            githubToken: 'ghu_dUI2CHOKjX4vYqnCDibzwFgSn97RFy3T7ldt',
+            githubInstallId: installationId,
+            githubToken: accessToken,
             showIntegrationPanel: true,
             sidePanelTabIndex: 0,
           },
           replace: true,
         });
-      // })
-      // .catch((error) => console.trace(error));
+      })
+      .catch((error) => console.trace(error));
   }, [organizationId]);
 
   return <>redirecting...</>;

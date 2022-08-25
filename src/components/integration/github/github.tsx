@@ -10,19 +10,24 @@ interface GithubProps {
   jwt: string;
 }
 
+interface RepoNameResult {
+  repoNames: string[],
+  checked: boolean
+}
+
 export default ({
   installationId,
   accessToken,
   organizationId,
   jwt,
 }: GithubProps): ReactElement => {
-  const [repoNames, setRepoNames] = useState<string[]>([]);
+  const [repoNameResult, setRepoNameResult] = useState<RepoNameResult>({repoNames: [], checked: false});
 
-  useEffect(() => {
+  useEffect(() => {    
     if (installationId && accessToken){
-      GithubApiRepo.getRepositories(installationId, accessToken)
+      GithubApiRepo.getRepositories(accessToken, installationId)
         .then((repos) => {
-          setRepoNames(repos.map((repo) => repo.full_name));
+          setRepoNameResult({repoNames: repos.map((repo) => repo.full_name), checked: true});
         })
         .catch((error: any) => {
           console.trace(error);
@@ -34,7 +39,7 @@ export default ({
         jwt
       )
         .then((profile) => {
-          if (profile) setRepoNames(profile.repositoryNames);
+          if (profile) setRepoNameResult({repoNames: profile.repositoryNames, checked: true});
         })
         .catch((error: any) => {
           console.trace(error);
@@ -43,6 +48,8 @@ export default ({
   }, []);
 
   useEffect(() => {
+    if(!repoNameResult.checked) return;
+
     if (installationId && accessToken)
       IntegrationApiRepo.getGithubProfile(
         new URLSearchParams({ organizationId }),
@@ -58,7 +65,7 @@ export default ({
             {
               installationId,
               organizationId,
-              repositoryNames: repoNames,
+              repositoryNames: repoNameResult.repoNames,
             },
             jwt
           );
@@ -66,7 +73,7 @@ export default ({
         .catch((error: any) => {
           console.trace(error);
         });
-  }, [repoNames]);
+  }, [repoNameResult]);
 
   return (
     <>
@@ -79,7 +86,7 @@ export default ({
       <p>Github App installed on repositories:</p>
 
       <List>
-        {repoNames.map((name) => {
+        {repoNameResult.repoNames.map((name) => {
           return (
             <ListItem>
               <ListItemText primary={name} />

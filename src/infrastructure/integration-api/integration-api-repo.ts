@@ -260,7 +260,6 @@ export default class IntegrationApiRepo {
       );
 
       const jsonResponse = response.data;
-      console.log(jsonResponse);
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse.message);
     } catch (error: unknown) {

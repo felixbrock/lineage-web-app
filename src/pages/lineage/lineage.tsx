@@ -776,7 +776,7 @@ export default (): ReactElement => {
       });
   }, [user]);
 
-  const handleSlackRedirect = () => {
+  const handleSlackRedirect = (organizationId: string) => {
     const state = location.state;
 
     if (!state) return;
@@ -786,7 +786,7 @@ export default (): ReactElement => {
     const { slackToken, showIntegrationPanel, sidePanelTabIndex } =
       state as any;
 
-    if (!slackToken || !showIntegrationPanel || !sidePanelTabIndex) return;
+    if (!slackToken || !showIntegrationPanel || sidePanelTabIndex === undefined) return;
 
     if (slackToken) setSlackAccessToken(slackToken);
     else {
@@ -795,13 +795,19 @@ export default (): ReactElement => {
         .catch(() => console.trace('Slack profile retrieval failed'));
     }
 
+    setIntegrationComponent(
+      <Slack
+        organizationId={organizationId}
+        accessToken={slackToken}
+        jwt={jwt}
+      ></Slack>
+    );
     if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
-    if (sidePanelTabIndex) setTabIndex(sidePanelTabIndex);
 
     window.history.replaceState({}, document.title);
   };
 
-  const handleGithubRedirect = () => {
+  const handleGithubRedirect = (organizationId: string) => {
     const state = location.state;
 
     if (!state) return;
@@ -819,14 +825,22 @@ export default (): ReactElement => {
       !githubInstallId ||
       !githubToken ||
       !showIntegrationPanel ||
-      !sidePanelTabIndex
+      sidePanelTabIndex === undefined
     )
       return;
 
     if (githubInstallId) setGithubInstallationId(githubInstallId);
     if (githubToken) setGithubAccessToken(githubToken);
+
+    setIntegrationComponent(
+      <Github
+        installationId={githubInstallId}
+        accessToken={githubToken}
+        organizationId={organizationId}
+        jwt={jwt}
+      ></Github>
+    );
     if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
-    if (sidePanelTabIndex) setTabIndex(sidePanelTabIndex);
 
     window.history.replaceState({}, document.title);
   };
@@ -895,8 +909,8 @@ export default (): ReactElement => {
       setReadyToBuild(true);
     }
 
-    handleSlackRedirect();
-    handleGithubRedirect();
+    handleSlackRedirect(account.organizationId);
+    handleGithubRedirect(account.organizationId);
   }, [account]);
 
   useEffect(() => {

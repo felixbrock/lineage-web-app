@@ -22,12 +22,14 @@ interface PostSnowflakeProfileDto {
   accountId: string;
   username: string;
   password: string;
+  warehouseName: string;
 }
 
 interface UpdateSnowflakeProfileDto {
   accountId?: string;
   username?: string;
   password?: string;
+  warehouseName?: string;
 }
 
 interface PostGithubProfileDto {

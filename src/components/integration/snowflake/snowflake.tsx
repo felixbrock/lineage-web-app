@@ -12,6 +12,7 @@ export default ({ jwt }: SnowflakeProps): ReactElement => {
   const [accountId, setAccountId] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [warehouseName, setWarehouseName] = useState('');
 
   const [buttonText, setButtonText] = useState('Save');
 
@@ -30,17 +31,22 @@ export default ({ jwt }: SnowflakeProps): ReactElement => {
     setPassword(event.target.value);
   };
 
+  const handleWarehouseNameChange = (event: any): void => {
+    setButtonText('Save');
+    setWarehouseName(event.target.value);
+  };
+
   const handleSaveClick = async (): Promise<void> => {
     const snowflakeProfile = await IntegrationApiRepo.getSnowflakeProfile(jwt);
 
     if (!snowflakeProfile)
       await IntegrationApiRepo.postSnowflakeProfile(
-        { accountId, password, username },
+        { accountId, password, username, warehouseName },
         jwt
       );
     else
       await IntegrationApiRepo.updateSnowflakeProfile(
-        { accountId, password, username },
+        { accountId, password, username, warehouseName },
         jwt
       );
 
@@ -57,6 +63,7 @@ export default ({ jwt }: SnowflakeProps): ReactElement => {
         setAccountId(res.accountId);
         setUsername(res.username);
         setPassword(res.password);
+        setWarehouseName(res.warehouseName);
       })
       .catch((error: any) => {
         console.trace(error);
@@ -96,6 +103,14 @@ export default ({ jwt }: SnowflakeProps): ReactElement => {
           onChange={handlePasswordChange}
           color="primary"
           type="password"
+          variant="filled"
+        />
+                <TextField
+          id="snowflake-warehouse-name"
+          label="Snowflake Warehouse Name"
+          value={warehouseName}
+          onChange={handleWarehouseNameChange}
+          color="primary"
           variant="filled"
         />
         <Button onClick={handleSaveClick}>{buttonText}</Button>

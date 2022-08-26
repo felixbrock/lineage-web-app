@@ -8,11 +8,13 @@ import {
   Select,
   SelectChangeEvent,
   FormControl,
+  Divider,
 } from '@mui/material';
 import { mode, slackConfig } from '../../../config';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 import SlackConversationInfoDto from '../../../infrastructure/integration-api/slack-channel-info-dto';
 import SlackProfileDto from '../../../infrastructure/integration-api/slack-profile-dto';
+import './slack.scss';
 
 const buildOAuthUrl = (organizationId: string) => {
   const clientId = encodeURIComponent(slackConfig.slackClientId);
@@ -29,7 +31,11 @@ interface SlackProps {
   jwt: string;
 }
 
-export default ({ accessToken, organizationId, jwt }: SlackProps): ReactElement => {
+export default ({
+  accessToken,
+  organizationId,
+  jwt,
+}: SlackProps): ReactElement => {
   const [channels, setChannels] = useState<SlackConversationInfoDto[]>([]);
   const [selectedChannelId, setSelectedChannelId] = useState('');
   const [selectElements, setSelectElements] = useState<ReactElement[]>([]);
@@ -47,18 +53,21 @@ export default ({ accessToken, organizationId, jwt }: SlackProps): ReactElement 
 
     const slackAccessToken = accessToken || profile?.accessToken;
 
-    if(slackAccessToken)
-      await IntegrationApiRepo.joinSlackConversation(oldChannelId, channelId, slackAccessToken,  jwt);
+    if (slackAccessToken)
+      await IntegrationApiRepo.joinSlackConversation(
+        oldChannelId,
+        channelId,
+        slackAccessToken,
+        jwt
+      );
 
-    if (profile){
+    if (profile) {
       await IntegrationApiRepo.updateSlackProfile(
         { channelId, channelName },
         jwt
       );
-      setProfile({...profile, channelId, channelName});
-    }
-      
-    else if (accessToken) {
+      setProfile({ ...profile, channelId, channelName });
+    } else if (accessToken) {
       const slackProfile = await IntegrationApiRepo.postSlackProfile(
         { accessToken, channelId, channelName },
         jwt
@@ -104,19 +113,31 @@ export default ({ accessToken, organizationId, jwt }: SlackProps): ReactElement 
 
   return (
     <>
+      <h4>Connect to Slack</h4>
+
+      <Divider />
+
       {mode === 'production' ? (
-        <a href={buildOAuthUrl(organizationId)}>
-          <img
-            alt="Add to Slack"
-            height="40"
-            width="139"
-            src="https://platform.slack-edge.com/img/add_to_slack.png"
-            srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-          />
-        </a>
+        <div className="integration-button">
+          <a href={buildOAuthUrl(organizationId)}>
+            <img
+              alt="Add to Slack"
+              height="40"
+              width="139"
+              src="https://platform.slack-edge.com/img/add_to_slack.png"
+              srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+            />
+          </a>
+        </div>
       ) : (
-        <Button href={buildOAuthUrl(organizationId)}>{'Install'}</Button>
+        <Button
+          sx={{ minHeight: 0, minWidth: 0, padding: 0, mt: 2, mb: 2, fontWeight: 'bold' }}
+          href={buildOAuthUrl(organizationId)}
+        >
+          {'Install'}
+        </Button>
       )}
+
       <FormControl fullWidth>
         <InputLabel id="select-channel-label">Select Channel</InputLabel>
         <Select

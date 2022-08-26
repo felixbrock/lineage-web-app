@@ -1,7 +1,8 @@
-import { Button, List, ListItem, ListItemText } from '@mui/material';
+import { Button, List, ListItem, ListItemText, Divider } from '@mui/material';
 import { ReactElement, useEffect, useState } from 'react';
 import GithubApiRepo from '../../../infrastructure/github-api/github-api-repo';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
+import './github.scss';
 
 interface GithubProps {
   installationId?: string;
@@ -11,8 +12,8 @@ interface GithubProps {
 }
 
 interface RepoNameResult {
-  repoNames: string[],
-  checked: boolean
+  repoNames: string[];
+  checked: boolean;
 }
 
 export default ({
@@ -21,34 +22,43 @@ export default ({
   organizationId,
   jwt,
 }: GithubProps): ReactElement => {
-  const [repoNameResult, setRepoNameResult] = useState<RepoNameResult>({repoNames: [], checked: false});
+  const [repoNameResult, setRepoNameResult] = useState<RepoNameResult>({
+    repoNames: [],
+    checked: false,
+  });
 
-  useEffect(() => {    
-    if (installationId && accessToken){
+  useEffect(() => {
+    if (installationId && accessToken) {
       GithubApiRepo.getRepositories(accessToken, installationId)
         .then((repos) => {
-          setRepoNameResult({repoNames: repos.map((repo) => repo.full_name), checked: true});
+          setRepoNameResult({
+            repoNames: repos.map((repo) => repo.full_name),
+            checked: true,
+          });
         })
         .catch((error: any) => {
           console.trace(error);
         });
-      }
-    else {
+    } else {
       IntegrationApiRepo.getGithubProfile(
         new URLSearchParams({ organizationId }),
         jwt
       )
         .then((profile) => {
-          if (profile) setRepoNameResult({repoNames: profile.repositoryNames, checked: true});
+          if (profile)
+            setRepoNameResult({
+              repoNames: profile.repositoryNames,
+              checked: true,
+            });
         })
         .catch((error: any) => {
           console.trace(error);
         });
-      }
+    }
   }, []);
 
   useEffect(() => {
-    if(!repoNameResult.checked) return;
+    if (!repoNameResult.checked) return;
 
     if (installationId && accessToken)
       IntegrationApiRepo.getGithubProfile(
@@ -77,18 +87,22 @@ export default ({
 
   return (
     <>
+      <h4>Connect to Github</h4>
+      <Divider />
+
       <Button
+        sx={{ minHeight: 0, minWidth: 0, padding: 0, mt: 2, mb: 2, fontWeight: 'bold' }}
         href={`https://github.com/apps/cito-data/installations/new?state=${organizationId}`}
       >
         Install Cito Data Github App
       </Button>
 
-      <p>Github App installed on repositories:</p>
+      <p className="caption">Installed on Following Repositories:</p>
 
       <List>
         {repoNameResult.repoNames.map((name) => {
           return (
-            <ListItem>
+            <ListItem dense={true}>
               <ListItemText primary={name} />
             </ListItem>
           );

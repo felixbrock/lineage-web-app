@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/dot-notation */
 import { ReactElement, useEffect, useState } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Box, Button, TextField } from '@mui/material';
+import { Box, Button, TextField, Divider } from '@mui/material';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 
 interface SnowflakeProps {
@@ -72,6 +72,10 @@ export default ({ jwt }: SnowflakeProps): ReactElement => {
 
   return (
     <>
+      <h4>Connect to Snowflake</h4>
+
+      <Divider />
+
       <Box
         component="form"
         sx={{
@@ -105,7 +109,7 @@ export default ({ jwt }: SnowflakeProps): ReactElement => {
           type="password"
           variant="filled"
         />
-                <TextField
+        <TextField
           id="snowflake-warehouse-name"
           label="Snowflake Warehouse Name"
           value={warehouseName}
@@ -113,8 +117,8 @@ export default ({ jwt }: SnowflakeProps): ReactElement => {
           color="primary"
           variant="filled"
         />
-        <Button onClick={handleSaveClick}>{buttonText}</Button>
       </Box>
+      <Button sx= {{fontWeight: 'bold'}} onClick={handleSaveClick}>{buttonText}</Button>
     </>
   );
 };

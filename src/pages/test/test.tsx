@@ -43,9 +43,10 @@ import TablePagination from '@mui/material/TablePagination';
 import ObservabilityApiRepo from '../../infrastructure/observability-api/observability-api-repo';
 import { Alert, Snackbar } from '@mui/material';
 import { TestSuiteDto } from '../../infrastructure/observability-api/test-suite-dto';
+import AccountDto from '../../infrastructure/account-api/account-dto';
 
 const showRealData = true;
-const lineageId = '62f90bec34a8584bd1f6534a';
+// const lineageId = '62f90bec34a8584bd1f6534a';
 
 export const testTypes = [
   'ColumnFreshness',
@@ -199,7 +200,7 @@ const tableNameSx = { mt: '0px', mb: '0px', mr: '2px', ml: '2px' };
 export default (): ReactElement => {
   const navigate = useNavigate();
 
-  const [accountId, setAccountId] = useState('');
+  const [account, setAccount] = useState<AccountDto>();
   const [user, setUser] = useState<any>();
   const [jwt, setJwt] = useState('');
 
@@ -308,7 +309,9 @@ export default (): ReactElement => {
     testSelectionLocal[props[1]].frequency = event.target.value;
 
     testSelectionLocal[props[1]].columnTestConfig.forEach((el, index) => {
-      const existingTests = el.testConfig.filter((config) => config.testSuiteId);
+      const existingTests = el.testConfig.filter(
+        (config) => config.testSuiteId
+      );
 
       if (!existingTests.length) return;
 
@@ -388,7 +391,9 @@ export default (): ReactElement => {
     testSelectionLocal[props[1]].sensitivity = value;
 
     testSelectionLocal[props[1]].columnTestConfig.forEach((el, index) => {
-      const existingTests = el.testConfig.filter((config) => config.testSuiteId);
+      const existingTests = el.testConfig.filter(
+        (config) => config.testSuiteId
+      );
 
       if (!existingTests.length) return;
 
@@ -1361,7 +1366,7 @@ export default (): ReactElement => {
   const renderTests = () => {
     setUser(undefined);
     setJwt('');
-    setAccountId('');
+    setAccount(undefined);
 
     Auth.currentAuthenticatedUser()
       .then((cognitoUser) => setUser(cognitoUser))
@@ -1392,7 +1397,7 @@ export default (): ReactElement => {
         if (accounts.length > 1)
           throw new Error(`Multiple accounts found for user`);
 
-        setAccountId(accounts[0].id);
+        setAccount(accounts[0]);
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
@@ -1424,20 +1429,24 @@ export default (): ReactElement => {
   };
 
   useEffect(() => {
-    if (!accountId || lineage) return;
+    if (!account || lineage) return;
 
     if (!jwt) throw new Error('No user authorization found');
 
     handleUserFeedback();
 
     if (showRealData) {
-      LineageApiRepository.getOne(lineageId, jwt)
+      let lineageId: string;
+
+      LineageApiRepository.getByOrgId(account.organizationId, jwt)
+        // LineageApiRepository.getOne(lineageId, jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
           setLineage(lineageDto);
+          lineageId = lineageDto.id;
           return MaterializationsApiRepository.getBy(
-            new URLSearchParams({ lineageId: lineageId }),
+            new URLSearchParams({ lineageId }),
             jwt
           );
         })
@@ -1464,7 +1473,7 @@ export default (): ReactElement => {
       setLineage({ id: 'todo', createdAt: 1 });
       setReadyToBuild(true);
     }
-  }, [accountId]);
+  }, [account]);
 
   useEffect(() => {
     if (!readyToBuild) return;

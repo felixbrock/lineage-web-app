@@ -1,8 +1,9 @@
-import { Button, List, ListItem, ListItemText, Divider } from '@mui/material';
+import { Button, List, ListItem, ListItemText, Divider, ListItemIcon } from '@mui/material';
 import { ReactElement, useEffect, useState } from 'react';
 import GithubApiRepo from '../../../infrastructure/github-api/github-api-repo';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 import './github.scss';
+import { BiGitBranch } from "react-icons/bi";
 
 interface GithubProps {
   installationId?: string;
@@ -91,7 +92,14 @@ export default ({
       <Divider />
 
       <Button
-        sx={{ minHeight: 0, minWidth: 0, padding: 0, mt: 2, mb: 2, fontWeight: 'bold' }}
+        sx={{
+          minHeight: 0,
+          minWidth: 0,
+          padding: 0,
+          mt: 2,
+          mb: 2,
+          fontWeight: 'bold',
+        }}
         href={`https://github.com/apps/cito-data/installations/new?state=${organizationId}`}
       >
         Install Cito Data Github App
@@ -103,6 +111,9 @@ export default ({
         {repoNameResult.repoNames.map((name) => {
           return (
             <ListItem dense={true}>
+              <ListItemIcon>
+                <BiGitBranch />
+              </ListItemIcon>
               <ListItemText primary={name} />
             </ListItem>
           );

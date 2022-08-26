@@ -852,6 +852,8 @@ export default (): ReactElement => {
 
     if (lineage) return;
 
+    toggleShowSideNav();
+
     if (showRealData) {
       setIntegrationComponent(
         <Github
@@ -903,6 +905,7 @@ export default (): ReactElement => {
         })
         .catch((error) => {
           console.log(error);
+          
         });
     } else {
       setLineage({ id: 'todo', createdAt: 1 });
@@ -1448,7 +1451,6 @@ export default (): ReactElement => {
     const targetResourceId = searchParams.get('targetResourceId');
     if (targetResourceId) handleSelect(targetResourceId);
 
-    toggleShowSideNav();
   }, [graph]);
 
   return (

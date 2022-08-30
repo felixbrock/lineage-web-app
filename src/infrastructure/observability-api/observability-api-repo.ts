@@ -130,7 +130,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.patch(
-        `${apiRoot}/test-suite/history/${updateTestHistoryEntryDto.alertId}`,
+        `${apiRoot}/test-data/history/${updateTestHistoryEntryDto.alertId}`,
         data,
         config
       );

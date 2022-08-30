@@ -41,7 +41,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import Chip from '@mui/material/Chip';
 import TablePagination from '@mui/material/TablePagination';
 import ObservabilityApiRepo from '../../infrastructure/observability-api/observability-api-repo';
-import { Alert, Snackbar } from '@mui/material';
+import { Alert, Snackbar, Tab, Tabs } from '@mui/material';
 import { TestSuiteDto } from '../../infrastructure/observability-api/test-suite-dto';
 import AccountDto from '../../infrastructure/account-api/account-dto';
 
@@ -221,7 +221,16 @@ export default (): ReactElement => {
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [searchParams] = useSearchParams();
 
+  const [tabIndex, setTabIndex] = React.useState(0);
+
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+
+  const handleTabIndexChange = (
+    event: React.SyntheticEvent,
+    newValue: number
+  ) => {
+    setTabIndex(newValue);
+  };
 
   const handleSnackbarClose = (
     event?: React.SyntheticEvent | Event,
@@ -1585,15 +1594,27 @@ export default (): ReactElement => {
           </div>
         </div>
         <>
-          <div id="search-nav-container">
-            <div id="search">
-              <TextField
-                label="Search"
-                onChange={handleSearchChange}
-                fullWidth={true}
-                size="small"
-              />
+          <div className="content-selection-row">
+            <div className="content-selection-column">
+              <div id="search-nav-container">
+                <div id="search">
+                  <TextField
+                    label="Search"
+                    onChange={handleSearchChange}
+                    fullWidth={true}
+                    size="small"
+                  />
+                </div>
+              </div>
             </div>
+            <div className="content-selection-column">
+              <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
+                <Tab label="Tests Overview" />
+                <Tab label="Custom Test Definitions" />
+                <Tab label="Test Templates" />
+              </Tabs>
+            </div>
+            <div className="content-selection-column" />
           </div>
           <Paper sx={{ width: '100%', overflow: 'hidden' }}>
             <TableContainer sx={{ height: window.innerHeight - 50 - 67 - 52 }}>

@@ -1610,7 +1610,7 @@ export default (): ReactElement => {
             <div className="content-selection-column">
               <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
                 <Tab label="Tests Overview" />
-                <Tab label="Custom Test Definitions" />
+                <Tab label="Test Definitions" />
                 <Tab label="Test Templates" />
               </Tabs>
             </div>

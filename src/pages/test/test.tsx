@@ -43,6 +43,7 @@ import TablePagination from '@mui/material/TablePagination';
 import ObservabilityApiRepo from '../../infrastructure/observability-api/observability-api-repo';
 import { Alert, Snackbar } from '@mui/material';
 import { TestSuiteDto } from '../../infrastructure/observability-api/test-suite-dto';
+import { RRule } from 'rrule'
 import {
   defaultMaterializations,
   defaultColumns,
@@ -153,7 +154,7 @@ interface ColumnTestConfig {
   id: string;
   label: string;
   type: string;
-  frequency: number;
+  frequency: number | RRule;
   sensitivity: number;
   testConfig: TestConfig[];
   testsActivated: boolean;
@@ -169,7 +170,7 @@ interface MaterializationTestsConfig {
   columnTestConfig: ColumnTestConfig[];
   navExpanded: boolean;
   label: string;
-  frequency?: number;
+  frequency?: number | RRule;
   sensitivity?: number;
   testDefinitionSummary: TestDefinitionSummary[];
   testsActivated: boolean;
@@ -229,6 +230,7 @@ export default (): ReactElement => {
 
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
+  const [rrule, setRrule] = useState<RRule>();
 
   const handlePopupOpen = () => {
     setPopupOpen(true);
@@ -236,6 +238,11 @@ export default (): ReactElement => {
   const handlePopupClose = () => {
     setPopupOpen(false);
   };
+
+  const getRrule = (rule: RRule) => {
+
+    setRrule(rule);
+  }
 
   const handleSnackbarClose = (
     event?: React.SyntheticEvent | Event,
@@ -315,12 +322,17 @@ export default (): ReactElement => {
 
   const handleMatFrequencyChange = (event: any) => {
     const name = event.target.name as string;
-    const value = event.target.value as number;
+    let value = event.target.value as number;
     const props = name.split('-');
 
+    if(value === -1) {
+      handlePopupOpen();
+      console.log("Rule is: " + rrule)
+    }; 
+    console.log("Value is: " + value);
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].frequency = event.target.value;
+    testSelectionLocal[props[1]].frequency = value;
 
     testSelectionLocal[props[1]].columnTestConfig.forEach((el, index) => {
       const existingTests = el.testConfig.filter((config) => config.testSuiteId);
@@ -343,7 +355,7 @@ export default (): ReactElement => {
       });
 
       testSelectionLocal[props[1]].columnTestConfig[index].frequency =
-        event.target.value;
+        value;
     });
 
     setTestSelection({ ...testSelectionLocal });
@@ -727,7 +739,7 @@ export default (): ReactElement => {
               <MenuItem value={6}>6h</MenuItem>
               <MenuItem value={12}>12h</MenuItem>
               <MenuItem value={24}>1d</MenuItem>
-              <MenuItem onClick={handlePopupOpen} value={69}>Custom..</MenuItem>
+              <MenuItem onClick={handlePopupOpen} value={-1}>Custom...</MenuItem>
             </Select>
           </FormControl>
         </TableCell>
@@ -1096,7 +1108,7 @@ export default (): ReactElement => {
                 <MenuItem value={6}>6h</MenuItem>
                 <MenuItem value={12}>12h</MenuItem>
                 <MenuItem value={24}>1d</MenuItem>
-                <MenuItem onClick={handlePopupOpen} value={69}>Custom...</MenuItem>
+                <MenuItem value={-1}>Custom...</MenuItem>
               </Select>
             </FormControl>
           </TableCell>
@@ -1678,10 +1690,11 @@ export default (): ReactElement => {
             />
 
           </Paper>
-          
+        {/* {rrule} */}
         <CustomPopup
           popupOpen = {popupOpen}
           handlePopupClose={handlePopupClose}
+          getRrule={getRrule}
         />        
           
         </>

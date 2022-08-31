@@ -3,6 +3,7 @@ import { mode } from '../../config';
 import { MaterializationType, TestType } from '../../pages/test/test';
 import getRoot from '../shared/api-root-builder';
 import { TestSuiteDto } from './test-suite-dto';
+import { RRule } from 'rrule'
 
 interface UpdateTestHistoryEntryDto {
   alertId: string;
@@ -13,7 +14,7 @@ export interface TestSuiteProps {
   activated: boolean,
   type: TestType,
   threshold: number,
-  executionFrequency: number,
+  executionFrequency: number | RRule,
   databaseName: string,
   schemaName: string,
   materializationName: string, 
@@ -63,7 +64,7 @@ export default class ObservabilityApiRepo {
     jwt: string,
     activated?: boolean,
     threshold?: number,
-    frequency?: number,
+    frequency?: number | RRule,
   ): Promise<void> => {
     try {
       const apiRoot = await ObservabilityApiRepo.root;

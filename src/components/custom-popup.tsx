@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Checkbox, FormControlLabel, FormGroup, Popover, TextField, Typography, Button, Radio, RadioGroup } from "@mui/material";
-import { RRule, Frequency } from 'rrule'
+import { RRule, Frequency } from 'rrule';
 
 interface PopupProps {
     popupOpen: boolean,

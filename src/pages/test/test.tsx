@@ -43,7 +43,7 @@ import TablePagination from '@mui/material/TablePagination';
 import ObservabilityApiRepo from '../../infrastructure/observability-api/observability-api-repo';
 import { Alert, Snackbar } from '@mui/material';
 import { TestSuiteDto } from '../../infrastructure/observability-api/test-suite-dto';
-import { RRule } from 'rrule'
+import { RRule } from 'rrule';
 import {
   defaultMaterializations,
   defaultColumns,
@@ -231,6 +231,7 @@ export default (): ReactElement => {
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
   const [rrule, setRrule] = useState<RRule>();
+  const [customEvent, setCustomEvent] = useState<any>();
 
   const handlePopupOpen = () => {
     setPopupOpen(true);
@@ -242,7 +243,7 @@ export default (): ReactElement => {
   const getRrule = (rule: RRule) => {
 
     setRrule(rule);
-  }
+  };
 
   const handleSnackbarClose = (
     event?: React.SyntheticEvent | Event,
@@ -321,15 +322,28 @@ export default (): ReactElement => {
   };
 
   const handleMatFrequencyChange = (event: any) => {
+
+    let value: number | RRule = event.target.value as number;
+
+    if (value === -1) {
+      if (!rrule) {
+
+        if (event.target.name) {
+          handlePopupOpen();
+          setCustomEvent(event);
+        }
+        return;
+
+      } else {
+        event = customEvent;
+        value = rrule;
+        setRrule(undefined);
+      }
+    }
+    console.log(event);
     const name = event.target.name as string;
-    let value = event.target.value as number;
     const props = name.split('-');
 
-    if(value === -1) {
-      handlePopupOpen();
-      console.log("Rule is: " + rrule)
-    }; 
-    console.log("Value is: " + value);
     const testSelectionLocal = testSelection;
 
     testSelectionLocal[props[1]].frequency = value;
@@ -1458,7 +1472,7 @@ export default (): ReactElement => {
     handleUserFeedback();
 
     if (showRealData) {
-    LineageApiRepository.getOne(lineageId, jwt)
+      LineageApiRepository.getOne(lineageId, jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
@@ -1516,6 +1530,12 @@ export default (): ReactElement => {
 
     setSearchedTestSelection(testSelection);
   }, [testSelection]);
+
+  useEffect(() => {
+
+    handleMatFrequencyChange({ target: { value: -1 } });
+
+  }, [rrule]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -1690,13 +1710,13 @@ export default (): ReactElement => {
             />
 
           </Paper>
-        {/* {rrule} */}
-        <CustomPopup
-          popupOpen = {popupOpen}
-          handlePopupClose={handlePopupClose}
-          getRrule={getRrule}
-        />        
-          
+          {/* {rrule} */}
+          <CustomPopup
+            popupOpen={popupOpen}
+            handlePopupClose={handlePopupClose}
+            getRrule={getRrule}
+          />
+
         </>
         <Snackbar
           open={snackbarOpen}

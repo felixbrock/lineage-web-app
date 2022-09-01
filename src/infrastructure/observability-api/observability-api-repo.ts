@@ -3,7 +3,7 @@ import { mode } from '../../config';
 import { MaterializationType, TestType } from '../../pages/test/test';
 import getRoot from '../shared/api-root-builder';
 import { TestSuiteDto } from './test-suite-dto';
-import { RRule } from 'rrule'
+import { RRule } from 'rrule';
 
 interface UpdateTestHistoryEntryDto {
   alertId: string;

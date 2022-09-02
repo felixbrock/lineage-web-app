@@ -32,6 +32,7 @@
   },
   "scripts": {
     "start": "set PORT=3006 && react-scripts start",
+    "start-dependencies": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./start-dependencies.ps1 -serviceDependencyNames @('account')",
     "lint": "npx eslint . --ext .js,.jsx,.ts,.tsx",
     "build": "react-scripts build",
     "test": "react-scripts test",

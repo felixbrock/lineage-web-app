@@ -49,6 +49,7 @@ import {
   defaultAnomalyStates,
 } from './test-data';
 
+
 import TreeView from '@mui/lab/TreeView';
 // import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 // import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -74,6 +75,7 @@ import Slack from '../../components/integration/slack/slack';
 import Snowflake from '../../components/integration/snowflake/snowflake';
 import { showRealData } from '../../config';
 import AccountDto from '../../infrastructure/account-api/account-dto';
+import { deafultErrorDashboards, defaultErrorColumns, defaultErrorDependencies, defaultErrorLineage, defaultErrorMaterializations } from './error-handling-data';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -786,7 +788,8 @@ export default (): ReactElement => {
     const { slackToken, showIntegrationPanel, sidePanelTabIndex } =
       state as any;
 
-    if (!slackToken || !showIntegrationPanel || sidePanelTabIndex === undefined) return;
+    if (!slackToken || !showIntegrationPanel || sidePanelTabIndex === undefined)
+      return;
 
     if (slackToken) setSlackAccessToken(slackToken);
     else {
@@ -905,7 +908,14 @@ export default (): ReactElement => {
         })
         .catch((error) => {
           console.log(error);
-          
+
+          setLineage(defaultErrorLineage);
+          setMaterializations(defaultErrorMaterializations);
+          setColumns(defaultErrorColumns);
+          setDependencies(defaultErrorDependencies);
+          setDashboards(deafultErrorDashboards);
+
+          setReadyToBuild(true);
         });
     } else {
       setLineage({ id: 'todo', createdAt: 1 });
@@ -1450,7 +1460,6 @@ export default (): ReactElement => {
 
     const targetResourceId = searchParams.get('targetResourceId');
     if (targetResourceId) handleSelect(targetResourceId);
-
   }, [graph]);
 
   return (

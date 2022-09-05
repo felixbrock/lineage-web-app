@@ -1,9 +1,17 @@
-import { Button, List, ListItem, ListItemText, Divider, ListItemIcon } from '@mui/material';
+import {
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
+  ListItemIcon,
+} from '@mui/material';
 import { ReactElement, useEffect, useState } from 'react';
 import GithubApiRepo from '../../../infrastructure/github-api/github-api-repo';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 import './github.scss';
-import { BiGitBranch } from "react-icons/bi";
+import { BiGitBranch } from 'react-icons/bi';
+import { mode } from '../../../config';
 
 interface GithubProps {
   installationId?: string;
@@ -100,7 +108,9 @@ export default ({
           mb: 2,
           fontWeight: 'bold',
         }}
-        href={`https://github.com/apps/cito-data/installations/new?state=${organizationId}`}
+        href={`https://github.com/apps/${
+          mode === 'development' ? 'cito-data-dev' : 'cito-data'
+        }/installations/new?state=${organizationId}`}
       >
         Install Cito Data Github App
       </Button>

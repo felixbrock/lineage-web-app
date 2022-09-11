@@ -1465,13 +1465,13 @@ export default (): ReactElement => {
           return ObservabilityApiRepo.getTestSuites(jwt);
         })
         .then((testSuiteDtos) => {
+          setInitialLoadCompleted(true);
           setTestSuites(testSuiteDtos);
         })
         .catch((error) => {
           console.log(error);
         });
     } else {
-      setInitialLoadCompleted(true);
       setLineage({ id: 'todo', createdAt: 1 });
     }
   }, [account]);

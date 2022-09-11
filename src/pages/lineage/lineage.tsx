@@ -1390,7 +1390,7 @@ export default (): ReactElement => {
 
         if (showRealData) {
           if ('logicId' in combo) {
-            LogicApiRepository.getOne(combo.logicId, 'todo-replace').then(
+            LogicApiRepository.getOne(combo.logicId, jwt).then(
               (logicDto) => {
                 if (!logicDto)
                   throw new ReferenceError('Not able to retrieve logic object');

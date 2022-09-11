@@ -867,7 +867,7 @@ export default (): ReactElement => {
         const allowedTests = getAllowedTestTypes(column.type);
 
         const suites = testSuites.filter(
-          (el) => el.targetResourceId === column.id
+          (el) => el.target.targetResourceId === column.id
         );
 
         let testsActivated = false;

@@ -223,6 +223,8 @@ export default (): ReactElement => {
 
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
 
+  const [initialLoadCompleted, setInitialLoadCompleted] = React.useState(false);
+
   const handleSnackbarClose = (
     event?: React.SyntheticEvent | Event,
     reason?: string
@@ -1464,16 +1466,21 @@ export default (): ReactElement => {
         })
         .then((testSuiteDtos) => {
           setTestSuites(testSuiteDtos);
-          setReadyToBuild(true);
         })
         .catch((error) => {
           console.log(error);
         });
     } else {
+      setInitialLoadCompleted(true);
       setLineage({ id: 'todo', createdAt: 1 });
-      setReadyToBuild(true);
     }
   }, [account]);
+
+  useEffect(() => {
+    if (!initialLoadCompleted) return;
+
+    setReadyToBuild(true);
+  }, [testSuites]);
 
   useEffect(() => {
     if (!readyToBuild) return;

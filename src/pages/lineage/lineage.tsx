@@ -968,17 +968,17 @@ export default (): ReactElement => {
     const definedTests: any[] = [];
     const alertList: any[] = [];
 
-    const sqlQuery = `select distinct TEST_TYPE, ID from cito.public.test_suites
-     where TARGET_RESOURCE_ID = ${selectedNodeId} AND ACTIVATED = TRUE`;
+    const testSuiteQuery = `select distinct test_type, id from cito.public.test_suites
+     where target_resource_id = "${selectedNodeId}" and activated = true`;
 
-    IntegrationApiRepo.querySnowflake(sqlQuery, account.organizationId, jwt)
+    IntegrationApiRepo.querySnowflake(testSuiteQuery, account.organizationId, jwt)
       .then((results) => {
         results.forEach((entry: { TEST_TYPE: string; ID: string }) => {
-          const query = `select VALUE from cito.public.test_history
-          where TEST_SUITE_ID = ${entry.ID} AND TEST_TYPE = ${entry.TEST_TYPE}`;
+          const testHistoryQuery = `select value from cito.public.test_history
+          where test_suite_id = "${entry.ID}" and test_type = "${entry.TEST_TYPE}"`;
 
           IntegrationApiRepo.querySnowflake(
-            query,
+            testHistoryQuery,
             account.organizationId,
             jwt
           ).then((history) => {
@@ -993,10 +993,10 @@ export default (): ReactElement => {
             definedTests.push(newTest);
           });
 
-          const alertQuery = `select DEVIATION, EXECUTED_ON from 
+          const alertQuery = `select deviation, executed_on from 
           (cito.public.alerts join cito.public.test_results 
-            on cito.public.alerts.TEST_SUITE_ID = cito.public.test_results.TEST_SUITE_ID) 
-            join cito.public.executions on cito.public.alerts.TEST_SUITE_ID = cito.public.executions.TEST_SUITE_ID
+            on cito.public.alerts.test_suite_id = cito.public.test_results.test_suite_id) 
+            join cito.public.executions on cito.public.alerts.test_suite_id = cito.public.executions.test_suite_id
           where TEST_SUITE_ID = ${entry.ID}`;
 
           IntegrationApiRepo.querySnowflake(

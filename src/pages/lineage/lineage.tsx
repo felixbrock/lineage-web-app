@@ -969,13 +969,13 @@ export default (): ReactElement => {
     const alertList: any[] = [];
 
     const testSuiteQuery = `select distinct test_type, id from cito.public.test_suites
-     where target_resource_id = "${selectedNodeId}" and activated = true`;
+     where target_resource_id = '${selectedNodeId}' and activated = true`;
 
     IntegrationApiRepo.querySnowflake(testSuiteQuery, account.organizationId, jwt)
       .then((results) => {
         results.forEach((entry: { TEST_TYPE: string; ID: string }) => {
           const testHistoryQuery = `select value from cito.public.test_history
-          where test_suite_id = "${entry.ID}" and test_type = "${entry.TEST_TYPE}"`;
+          where test_suite_id = '${entry.ID}' and test_type = '${entry.TEST_TYPE}'`;
 
           IntegrationApiRepo.querySnowflake(
             testHistoryQuery,
@@ -997,7 +997,7 @@ export default (): ReactElement => {
           (cito.public.alerts join cito.public.test_results 
             on cito.public.alerts.test_suite_id = cito.public.test_results.test_suite_id) 
             join cito.public.executions on cito.public.alerts.test_suite_id = cito.public.executions.test_suite_id
-          where TEST_SUITE_ID = ${entry.ID}`;
+          where test_suite_id = '${entry.ID}'`;
 
           IntegrationApiRepo.querySnowflake(
             alertQuery,

@@ -43,7 +43,6 @@ import TablePagination from '@mui/material/TablePagination';
 import ObservabilityApiRepo from '../../infrastructure/observability-api/observability-api-repo';
 import { Alert, Snackbar } from '@mui/material';
 import { TestSuiteDto } from '../../infrastructure/observability-api/test-suite-dto';
-import { RRule } from 'rrule';
 import {
   defaultMaterializations,
   defaultColumns,
@@ -154,7 +153,7 @@ interface ColumnTestConfig {
   id: string;
   label: string;
   type: string;
-  frequency: number | RRule;
+  frequency: number | string;
   sensitivity: number;
   testConfig: TestConfig[];
   testsActivated: boolean;
@@ -170,7 +169,7 @@ interface MaterializationTestsConfig {
   columnTestConfig: ColumnTestConfig[];
   navExpanded: boolean;
   label: string;
-  frequency?: number | RRule;
+  frequency?: number | string;
   sensitivity?: number;
   testDefinitionSummary: TestDefinitionSummary[];
   testsActivated: boolean;
@@ -230,7 +229,7 @@ export default (): ReactElement => {
 
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
-  const [rrule, setRrule] = useState<RRule>();
+  const [cron, setCron] = useState<string>();
   const [customEvent, setCustomEvent] = useState<any>();
 
   const handlePopupOpen = () => {
@@ -240,9 +239,9 @@ export default (): ReactElement => {
     setPopupOpen(false);
   };
 
-  const getRrule = (rule: RRule) => {
+  const getCron = (newCron: string) => {
 
-    setRrule(rule);
+    setCron(newCron);
   };
 
   const handleSnackbarClose = (
@@ -321,12 +320,13 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
+
   const handleMatFrequencyChange = (event: any) => {
 
-    let value: number | RRule = event.target.value as number;
+    let value: number | string = event.target.value as number;
 
     if (value === -1) {
-      if (!rrule) {
+      if (!cron) {
 
         if (event.target.name) {
           handlePopupOpen();
@@ -336,8 +336,8 @@ export default (): ReactElement => {
 
       } else {
         event = customEvent;
-        value = rrule;
-        setRrule(undefined);
+        value = cron;
+        setCron(undefined);
       }
     }
     console.log(event);
@@ -1535,7 +1535,7 @@ export default (): ReactElement => {
 
     handleMatFrequencyChange({ target: { value: -1 } });
 
-  }, [rrule]);
+  }, [cron]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -1714,7 +1714,7 @@ export default (): ReactElement => {
           <CustomPopup
             popupOpen={popupOpen}
             handlePopupClose={handlePopupClose}
-            getRrule={getRrule}
+            getCron={getCron}
           />
 
         </>

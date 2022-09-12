@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Popover, TextField, Typography, Button } from "@mui/material";
-import { RRule, Frequency } from 'rrule';
 //@ts-ignore
 import RRuleGenerator from 'react-rrule-generator-tt';
 import * as cronstrue from "cronstrue";
@@ -9,7 +8,7 @@ import * as cronstrue from "cronstrue";
 interface PopupProps {
     popupOpen: boolean,
     handlePopupClose: () => void,
-    getRrule: any,
+    getCron: any,
 }
 export default (props: PopupProps) => {
 
@@ -24,7 +23,9 @@ export default (props: PopupProps) => {
 
         const fullCron = `cron(${cron})`;
 
-        props.getRrule(rule);
+        console.log(fullCron);
+
+        props.getCron(fullCron);
         props.handlePopupClose();
     };
 

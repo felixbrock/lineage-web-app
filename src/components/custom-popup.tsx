@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
-import { Checkbox, FormControlLabel, FormGroup, Popover, TextField, Typography, Button, Radio, RadioGroup } from "@mui/material";
+import React, { useEffect, useState } from 'react';
+import { Popover, TextField, Typography, Button } from "@mui/material";
 import { RRule, Frequency } from 'rrule';
+//@ts-ignore
+import RRuleGenerator from 'react-rrule-generator-tt';
+import * as cronstrue from "cronstrue";
+
 
 interface PopupProps {
     popupOpen: boolean,
@@ -8,73 +12,264 @@ interface PopupProps {
     getRrule: any,
 }
 export default (props: PopupProps) => {
-    const [frequency, setFrequency] = useState<string>();
-    const [interval, setInterval] = useState<number>();
-    const [occurances, setOccurances] = useState<number>();
 
-    const [startTime, setStartTime] = useState<Date>();
-    const [endTime, setEndTime] = useState<Date>();
+    const [rule, setRule] = useState<string>('');
+    const [cron, setCron] = useState<string>('');
 
-    const [days, setDays] = useState<boolean[]>(new Array(7).fill(false));
-    const [months, setMonths] = useState<boolean[]>(new Array(12).fill(false));
-
-
-    const [minutes, setMinutes] = useState<number[]>([]);
-    const [hours, setHours] = useState<number[]>([]);
-    const [weekNumber, setWeekNumber] = useState<number[]>([]);
-    const [monthDays, setMonthDays] = useState<number[]>([]);
-    const [yearDays, setYearDays] = useState<number[]>([]);
-
-
-    const handleDaysChange = (index: number) => {
-        days[index] = !days[index];
-        setDays(days);
-    };
-
-    const handleMonthsChange = (index: number) => {
-        months[index] = !months[index];
-        setMonths(months);
-    };
 
     const handleSave = () => {
 
-        console.log("frequency is: " + frequency);
-        console.log("interval is: " + interval);
-        console.log("occurances is: " + occurances);
-        console.log("startTime is: " + startTime);
-        console.log("endTime is: " + endTime);
-        console.log("days is: " + days);
-        console.log("months is: " + months);
-        console.log("minutes is: " + minutes);
-        console.log("hours is: " + hours);
-        console.log("weekNumber is: " + weekNumber);
-        console.log("monthDays is: " + monthDays);
-        console.log("yearDays is: " + yearDays);
-
-        const trueDays = days.map((bool, index) => bool ? index : -1).filter(index => index !== -1);
-
-        const trueMonths = months.map((bool, index) => bool ? index : -1).filter(index => index !== -1);;
-
-        const rule = new RRule({
-            freq: Frequency[frequency as keyof typeof Frequency],
-            dtstart: startTime,
-            interval,
-            count: occurances,
-            until: endTime,
-            
-            bymonth: trueMonths,
-            bymonthday: monthDays,
-            byyearday: yearDays,
-            byweekno: weekNumber,
-            byweekday: trueDays,
-            byhour: hours,
-            byminute: minutes
-        });
         console.log(rule);
+        console.log(cron);
+
+        const fullCron = `cron(${cron})`;
 
         props.getRrule(rule);
         props.handlePopupClose();
     };
+
+    const stringToDate = (until: string): Date => {
+        const re = /^(\d{4})(\d{2})(\d{2})(T(\d{2})(\d{2})(\d{2})Z?)?$/;
+        const bits = re.exec(until);
+
+        if (!bits) throw new Error(`Invalid UNTIL value: ${until}`);
+
+        return new Date(
+            Date.UTC(
+                parseInt(bits[1], 10),
+                parseInt(bits[2], 10) - 1,
+                parseInt(bits[3], 10),
+                parseInt(bits[5], 10) || 0,
+                parseInt(bits[6], 10) || 0,
+                parseInt(bits[7], 10) || 0
+            )
+        );
+    };
+
+    const NOT_SUPPORTED = 'NOT SUPPORTED YET';
+    const rruleToCron = (rrule: string): string => {
+
+        const ruleString = rrule.includes('DTSTART')
+            ? rrule.replace(/\n.*RRULE:/, ';')
+            : rrule.replace('RRULE:', '');
+        const C_DAYS_OF_WEEK_RRULE = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+        const C_DAYS_WEEKDAYS_RRULE = ['MO', 'TU', 'WE', 'TH', 'FR'];
+        const C_DAYS_OF_WEEK_CRONE = ['2', '3', '4', '5', '6', '7', '1'];
+        const C_DAYS_OF_WEEK_CRONE_NAMED = [
+            'MON',
+            'TUE',
+            'WED',
+            'THU',
+            'FRI',
+            'SAT',
+            'SUN',
+        ];
+        const C_MONTHS = [
+            'JAN',
+            'FEB',
+            'MAR',
+            'APR',
+            'MAY',
+            'JUN',
+            'JUL',
+            'AUG',
+            'SEP',
+            'OCT',
+            'NOV',
+            'DEC',
+        ];
+
+        let dayTime = '0 0 0';
+        let dayOfMonth: number | string = '?';
+        let month = '*';
+        let dayOfWeek = '?';
+
+        let FREQ = '';
+        let DTSTART: string | Date = '';
+        let INTERVAL = -1;
+        let BYMONTHDAY = -1;
+        let BYMONTH = -1;
+        let BYDAY = '';
+        let BYSETPOS = 0;
+        let BYHOUR = 0;
+        let BYMINUTE = 0;
+
+        const rarr = ruleString.split(';');
+        for (let i = 0; i < rarr.length; i += 1) {
+            const param = rarr[i].includes('=')
+                ? rarr[i].split('=')[0]
+                : rarr[i].split(':')[0];
+            const value = rarr[i].includes('=')
+                ? rarr[i].split('=')[1]
+                : rarr[i].split(':')[1];
+            if (param === 'FREQ') FREQ = value;
+            if (param === 'DTSTART') DTSTART = value;
+            if (param === 'INTERVAL') INTERVAL = parseInt(value, 10);
+            if (param === 'BYMONTHDAY') BYMONTHDAY = parseInt(value, 10);
+            if (param === 'BYDAY') BYDAY = value;
+            if (param === 'BYSETPOS') BYSETPOS = parseInt(value, 10);
+            if (param === 'BYMONTH') BYMONTH = parseInt(value, 10);
+            if (param === 'BYHOUR') BYHOUR = parseInt(value, 10);
+            if (param === 'BYMINUTE') BYMINUTE = parseInt(value, 10);
+        }
+
+        if (DTSTART !== '') {
+            DTSTART = stringToDate(DTSTART);
+            dayTime = `0 ${DTSTART.getUTCMinutes()} ${DTSTART.getUTCHours()}`;
+        }
+        if (BYHOUR !== 0 || BYMINUTE !== 0) {
+            dayTime = `0 ${BYMINUTE} ${BYHOUR}`;
+        }
+        switch (FREQ) {
+            case 'MONTHLY':
+                if (INTERVAL === 1) {
+                    month = '*'; // every month
+                } else {
+                    month = `1/${INTERVAL}`; // 1 - start of january, every INTERVALth month
+                }
+                if (BYMONTHDAY === -1 && DTSTART !== '') {
+                    dayOfMonth = DTSTART.getUTCDate();
+                } else if (BYMONTHDAY !== -1) {
+                    dayOfMonth = BYMONTHDAY.toString();
+                } else if (BYSETPOS !== 0) {
+                    if (BYDAY === '') {
+                        console.log('No BYDAY specified for MONTHLY/BYSETPOS rule');
+                        return NOT_SUPPORTED;
+                    }
+
+                    if (BYDAY === 'MO,TU,WE,TH,FR') {
+                        if (BYSETPOS === 1) {
+                            // First weekday of every month
+                            // "FREQ=MONTHLY;INTERVAL=1;BYSETPOS=1;BYDAY=MO,TU,WE,TH,FR",
+                            dayOfMonth = '1W';
+                        } else if (BYSETPOS === -1) {
+                            // Last weekday of every month
+                            // "FREQ=MONTHLY;INTERVAL=1;BYSETPOS=-1;BYDAY=MO,TU,WE,TH,FR",
+                            dayOfMonth = 'LW';
+                        } else {
+                            console.log(
+                                'Unsupported Xth weekday for MONTHLY rule (only 1st and last weekday are supported)'
+                            );
+                            return NOT_SUPPORTED;
+                        }
+                    } else if (C_DAYS_OF_WEEK_RRULE.indexOf(BYDAY) === -1) {
+                        console.log(
+                            `Unsupported BYDAY rule (multiple days are not supported by crone): ${BYDAY}`
+                        );
+                        return NOT_SUPPORTED;
+                    } else {
+                        dayOfMonth = '?';
+                        if (BYSETPOS > 0) {
+                            // 3rd friday = BYSETPOS=3;BYDAY=FR in RRULE, 6#3
+                            dayOfWeek =
+                                `${C_DAYS_OF_WEEK_CRONE[C_DAYS_OF_WEEK_RRULE.indexOf(BYDAY)]}#${BYSETPOS.toString()}`;
+                        } else {
+                            // last specific day
+                            dayOfWeek =
+                                `${C_DAYS_OF_WEEK_CRONE[C_DAYS_OF_WEEK_RRULE.indexOf(BYDAY)]}L`;
+                        }
+                    }
+                } else {
+                    console.log('No BYMONTHDAY or BYSETPOS in MONTHLY rrule');
+                    return NOT_SUPPORTED;
+                }
+                break;
+            case 'WEEKLY':
+                if (INTERVAL !== 1) {
+                    console.log('every X week different from 1st is not supported');
+                    return NOT_SUPPORTED;
+                }
+                if (
+                    BYDAY.split(',').sort().join(',') ===
+                    C_DAYS_OF_WEEK_RRULE.concat().sort().join(',')
+                ) {
+                    dayOfWeek = '*'; // all days of week
+                } else {
+                    const arrByDayRRule = BYDAY.split(',');
+                    const arrByDayCron = [];
+                    for (let i = 0; i < arrByDayRRule.length; i += 1) {
+                        const indexOfDayOfWeek = C_DAYS_OF_WEEK_RRULE.indexOf(arrByDayRRule[i]);
+                        arrByDayCron.push(C_DAYS_OF_WEEK_CRONE_NAMED[indexOfDayOfWeek]);
+                    }
+                    dayOfWeek = arrByDayCron.join(',');
+                }
+                break;
+            case 'DAILY':
+                if (INTERVAL !== 1) {
+                    dayOfMonth = `1/${INTERVAL.toString()}`;
+                }
+                break;
+            case 'YEARLY':
+                if (BYMONTH === -1) {
+                    console.log('Missing BYMONTH in YEARLY rule');
+                    return NOT_SUPPORTED;
+                }
+                month = C_MONTHS[BYMONTH - 1];
+                if (BYMONTHDAY !== -1) {
+                    // FREQ=YEARLY;BYMONTH=3;BYMONTHDAY=2  // 2nd day of March
+                    dayOfMonth = BYMONTHDAY;
+                } else if (BYSETPOS === -1) {
+                    if (
+                        BYDAY.split(',').sort().join(',') ===
+                        C_DAYS_OF_WEEK_RRULE.concat().sort().join(',')
+                    ) {
+                        dayOfMonth = 'L';
+                    } else if (
+                        BYDAY.split(',').sort().join(',') ===
+                        C_DAYS_WEEKDAYS_RRULE.concat().sort().join(',')
+                    ) {
+                        dayOfMonth = 'LW';
+                    } else {
+                        console.log(
+                            'Last weekends and just last specific days of Month are not supported'
+                        );
+                        return NOT_SUPPORTED;
+                    }
+                } else if (
+                    BYDAY.split(',').sort().join(',') ===
+                    C_DAYS_WEEKDAYS_RRULE.concat().sort().join(',') &&
+                    BYSETPOS === 1
+                ) {
+                    dayOfMonth = `${BYSETPOS.toString()}W`;
+                } else if (BYDAY.split(',').length === 1) {
+                    dayOfWeek =
+                        `${C_DAYS_OF_WEEK_CRONE[C_DAYS_OF_WEEK_RRULE.indexOf(BYDAY)]}#${BYSETPOS.toString()}`;
+                } else {
+                    console.log('Multiple days are not supported in YEARLY rule');
+                    return NOT_SUPPORTED;
+                }
+
+
+                break;
+            default:
+                return NOT_SUPPORTED;
+        }
+
+        return `${dayTime} ${dayOfMonth} ${month} ${dayOfWeek}`;
+
+    };
+
+    const explainRule = (rrule: string): string => {
+        const newCron = rruleToCron(rrule);
+        if (newCron === NOT_SUPPORTED) {
+            return NOT_SUPPORTED;
+        } else {
+            try {
+                return cronstrue.toString(newCron, {
+                    dayOfWeekStartIndexZero: false,
+                    use24HourTimeFormat: true,
+                    verbose: true,
+                });
+            } catch (error: any) {
+                return NOT_SUPPORTED;
+            }
+
+        }
+    };
+
+    useEffect(() => {
+        setCron(rruleToCron(rule));
+    }, [rule]);
 
     return (
         <Popover
@@ -92,168 +287,34 @@ export default (props: PopupProps) => {
             }}
         >
             <Typography sx={{ p: 2 }}>Define custom exectuion schedule.</Typography>
-            <Typography sx={{ p: 2 }}>Frequency?</Typography>
-            <FormGroup>
-                <RadioGroup
-                    row
-                    defaultValue="Daily"
-                    onChange={(_, value) => setFrequency(value)}
-                    value={frequency}
-                >
-                    <FormControlLabel value={"MINUTELY"} control={<Radio />} label="Minutely" />
-                    <FormControlLabel value={"DAILY"} control={<Radio />} label="Daily" />
-                    <FormControlLabel value={"WEEKLY"} control={<Radio />} label="Weekly" />
-                    <FormControlLabel value={"MONTHLY"} control={<Radio />} label="Monthly" />
-                    <FormControlLabel value={"YEARLY"} control={<Radio />} label="Yearly" />
-                </RadioGroup>
-            </FormGroup>
 
 
-            <Typography sx={{ p: 2 }}>Interval?</Typography>
-            <TextField
-                id="interval"
-                label=""
-                type="number"
-                onChange={(event) => setInterval(parseInt(event.target.value))}
-                value={interval}
-                sx={{ width: 250 }}
-                InputLabelProps={{
-                    shrink: true,
+            <RRuleGenerator
+                onChange={(rrule: React.SetStateAction<string>) => setRule(rrule)}
+                config={{
+                    repeat: ["Monthly", "Weekly", "Daily", "Yearly"],
+                    hideEnd: true,
+                    weekStartsOnSunday: false,
                 }}
-                InputProps={{ inputProps: { min: 0 } }}
+                value={rule}
             />
 
+            <React.Fragment>
 
-            <Typography sx={{ p: 2 }}>Start time? (Default now)</Typography>
-            <TextField
-                id="start-time"
-                label="Start time"
-                type="datetime-local"
-                onChange={(event) => setStartTime(new Date(event.target.value))}
-                sx={{ width: 250 }}
-                InputLabelProps={{
-                    shrink: true,
-                }}
-            />
+                <b>&nbsp;Execution Schedule Explained:</b>
+                <TextField
+                    id="interval"
+                    label=""
+                    type="text"
+                    value={explainRule(rule)}
+                    defaultValue={''}
+                    sx={{ width: 250 }}
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
+                />
 
-            <Typography sx={{ p: 2 }}>End time? (Default none)</Typography>
-            <TextField
-                id="end-time"
-                label="End time"
-                type="datetime-local"
-                onChange={(event) => setEndTime(new Date(event.target.value))}
-                sx={{ width: 250 }}
-                InputLabelProps={{
-                    shrink: true,
-                }}
-            />
-
-            <Typography sx={{ p: 2 }}>Number of occurances? </Typography>
-            <TextField
-                id="count"
-                label=""
-                type="number"
-                onChange={(event) => setOccurances(parseInt(event.target.value))}
-                sx={{ width: 250 }}
-                InputLabelProps={{
-                    shrink: true,
-                }}
-                InputProps={{ inputProps: { min: 0 } }}
-            />
-
-
-            <Typography sx={{ p: 2 }}>Days?</Typography>
-            <FormGroup>
-                <FormControlLabel control={<Checkbox checked={days[0]} onChange={()=>handleDaysChange(0)} />} label="Monday" />
-                <FormControlLabel control={<Checkbox checked={days[1]} onChange={()=>handleDaysChange(1)}/>} label="Tuesday" />
-                <FormControlLabel control={<Checkbox checked={days[2]} onChange={()=>handleDaysChange(2)}/>} label="Wednesday" />
-                <FormControlLabel control={<Checkbox checked={days[3]} onChange={()=>handleDaysChange(3)}/>} label="Thursday" />
-                <FormControlLabel control={<Checkbox checked={days[4]} onChange={()=>handleDaysChange(4)}/>} label="Friday" />
-                <FormControlLabel control={<Checkbox checked={days[5]} onChange={()=>handleDaysChange(5)}/>} label="Saturday" />
-                <FormControlLabel control={<Checkbox checked={days[6]} onChange={()=>handleDaysChange(6)}/>} label="Sunday" />
-            </FormGroup>
-
-            <Typography sx={{ p: 2 }}>Months?</Typography>
-            <FormGroup>
-                <FormControlLabel control={<Checkbox checked={months[0]} onChange={()=>handleMonthsChange(0)}/>} label="Jan" />
-                <FormControlLabel control={<Checkbox checked={months[1]} onChange={()=>handleMonthsChange(1)}/>} label="Feb" />
-                <FormControlLabel control={<Checkbox checked={months[2]} onChange={()=>handleMonthsChange(2)}/>} label="Mar" />
-                <FormControlLabel control={<Checkbox checked={months[3]} onChange={()=>handleMonthsChange(3)}/>} label="Apr" />
-                <FormControlLabel control={<Checkbox checked={months[4]} onChange={()=>handleMonthsChange(4)}/>} label="May" />
-                <FormControlLabel control={<Checkbox checked={months[5]} onChange={()=>handleMonthsChange(5)}/>} label="Jun" />
-                <FormControlLabel control={<Checkbox checked={months[6]} onChange={()=>handleMonthsChange(6)}/>} label="Jul" />
-                <FormControlLabel control={<Checkbox checked={months[7]} onChange={()=>handleMonthsChange(7)}/>} label="Aug" />
-                <FormControlLabel control={<Checkbox checked={months[8]} onChange={()=>handleMonthsChange(8)}/>} label="Sep" />
-                <FormControlLabel control={<Checkbox checked={months[9]} onChange={()=>handleMonthsChange(9)}/>} label="Oct" />
-                <FormControlLabel control={<Checkbox checked={months[10]} onChange={()=>handleMonthsChange(10)}/>} label="Nov" />
-                <FormControlLabel control={<Checkbox checked={months[11]} onChange={()=>handleMonthsChange(11)}/>} label="Dec" />
-            </FormGroup>
-
-
-            <Typography sx={{ p: 2 }}>Minutes?</Typography>
-
-            <TextField 
-                id="outlined-basic"
-                label="" 
-                variant="outlined"
-                onChange={(event) => {
-                    const mins:string[] = event.target.value.split(',');
-                    const minNums = mins.map((minute) => parseInt(minute));
-                    setMinutes(minNums);
-                }}
-            />
-
-            <Typography sx={{ p: 2 }}>Hours?</Typography>
-
-            <TextField 
-                id="outlined-basic"
-                label=""
-                variant="outlined"
-                onChange={(event) => {
-                    const hourStr: string[] = event.target.value.split(',');
-                    const hourNums = hourStr.map((hour) => parseInt(hour));
-                    setHours(hourNums);
-                }}
-            />
-
-            <Typography sx={{ p: 2 }}>Week numbers?</Typography>
-
-            <TextField
-                id="outlined-basic"
-                label=""
-                variant="outlined"
-                onChange={(event) => {
-                    const weeks: string[] = event.target.value.split(',');
-                    const weekNums = weeks.map((week) => parseInt(week));
-                    setWeekNumber(weekNums);
-                }}
-            />
-
-            <Typography sx={{ p: 2 }}>Month Days?</Typography>
-
-            <TextField
-                id="outlined-basic"
-                label=""
-                variant="outlined"
-                onChange={(event) => {
-                    const monthDayStr: string[] = event.target.value.split(',');
-                    const monthDayNums = monthDayStr.map((monthDay) => parseInt(monthDay));
-                    setMonthDays(monthDayNums);
-                }}
-            />
-
-            <Typography sx={{ p: 2 }}>Year Days?</Typography>
-
-            <TextField
-                id="outlined-basic"
-                label=""
-                variant="outlined"
-                onChange={(event) => {
-                    const yearDayStr: string[] = event.target.value.split(',');
-                    const yearDayNums = yearDayStr.map((yearDay) => parseInt(yearDay));
-                    setYearDays(yearDayNums);
-                }}
-            />
+            </React.Fragment>
 
             <React.Fragment>
 

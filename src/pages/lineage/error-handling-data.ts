@@ -58,7 +58,7 @@ export const defaultErrorMaterializations = [
     id: '62715f8e7e3d8066494d3fai',
     dbtModelId: '',
     materializationType: '',
-    name: 'In case you are seeking more information:',
+    name: 'If you need more information',
     schemaName: '',
     databaseName: '',
     logicId: '',

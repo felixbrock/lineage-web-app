@@ -50,7 +50,7 @@ export default class ObservabilityApiRepo {
     try {
       const apiRoot = await ObservabilityApiRepo.root;
 
-      const payload = { createTestSuiteObjects: postTestSuiteObjects };
+      const payload = { createObjects: postTestSuiteObjects };
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
@@ -70,13 +70,13 @@ export default class ObservabilityApiRepo {
   };
 
   public static updateTestSuites = async (
-    updateTestSuiteObjects: UpdateTestSuiteObject[],
+    updateObjects: UpdateTestSuiteObject[],
     jwt: string
   ): Promise<void> => {
     try {
       const apiRoot = await ObservabilityApiRepo.root;
 
-      const payload = { updateTestSuiteObjects };
+      const payload = { updateObjects };
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },

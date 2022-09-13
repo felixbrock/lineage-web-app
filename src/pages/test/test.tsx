@@ -1,5 +1,4 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-import IntegrationInstructionsIcon from '@mui/icons-material/IntegrationInstructions';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AppsIcon from '@mui/icons-material/Apps';
 import TableChartIcon from '@mui/icons-material/TableChart';
@@ -57,6 +56,7 @@ export const testTypes = [
   'MaterializationRowCount',
   'MaterializationColumnCount',
   'MaterializationFreshness',
+  'MaterializationSchemaChange'
 ] as const;
 export type TestType = typeof testTypes[number];
 
@@ -1042,7 +1042,12 @@ export default (): ReactElement => {
     const columnCardinalityType: TestType = 'ColumnCardinality';
     const columnUniquenessType: TestType = 'ColumnUniqueness';
     const columnDistributionType: TestType = 'ColumnDistribution';
-    const columnNullnessType: TestType = 'ColumnNullness';
+    const columnNullnessType: TestType = 'ColumnNullness'; 
+
+    const materializationColumnCountType: TestType = 'MaterializationColumnCount';
+    const materializationRowCountType: TestType = 'MaterializationRowCount';
+    const materializationFreshnessType: TestType = 'MaterializationFreshness';
+    const materializationSchemaChangeType: TestType = 'MaterializationSchemaChange';
 
     const columnFreshnessSummary: TestDefinitionSummary = getSummaryConfig(
       props.materializationId,
@@ -1274,6 +1279,50 @@ export default (): ReactElement => {
               size="small"
               sx={{ m: 1 }}
             />
+          </TableCell>
+          <TableCell sx={tableCellSx} align="left">         
+              <Button
+                id={`${materializationRowCountType}-${props.materializationId}`}
+                size="large"
+                variant="contained"
+                color={
+                  'info'
+                }
+                onClick={handleMatTestSelectButtonClick}
+              />
+          </TableCell>
+          <TableCell sx={tableCellSx} align="left">         
+              <Button
+                id={`${materializationColumnCountType}-${props.materializationId}`}
+                size="large"
+                variant="contained"
+                color={
+                  'info'
+                }
+                onClick={handleMatTestSelectButtonClick}
+              />
+          </TableCell>
+          <TableCell sx={tableCellSx} align="left">         
+              <Button
+                id={`${materializationFreshnessType}-${props.materializationId}`}
+                size="large"
+                variant="contained"
+                color={
+                  'info'
+                }
+                onClick={handleMatTestSelectButtonClick}
+              />
+          </TableCell>
+          <TableCell sx={tableCellSx} align="left">         
+              <Button
+                id={`${materializationSchemaChangeType}-${props.materializationId}`}
+                size="large"
+                variant="contained"
+                color={
+                  'info'
+                }
+                onClick={handleMatTestSelectButtonClick}
+              />
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
             <IconButton
@@ -1557,7 +1606,7 @@ export default (): ReactElement => {
                 Tests
               </Button>
             </Box>
-            <Box m={0.5}>
+            {/* <Box m={0.5}>
               <Button
                 startIcon={<IntegrationInstructionsIcon />}
                 onClick={() => console.log('todo-integration screen')}
@@ -1572,7 +1621,7 @@ export default (): ReactElement => {
               >
                 Integrations
               </Button>
-            </Box>
+            </Box> */}
             <Box m={0.5}>
               <Button
                 startIcon={<LogoutIcon />}
@@ -1635,6 +1684,18 @@ export default (): ReactElement => {
                     </TableCell>
                     <TableCell sx={tableHeaderCellSx} width={135} align="left">
                       Distribution
+                    </TableCell>
+                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
+                      Row Count
+                    </TableCell>
+                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
+                      Column Count
+                    </TableCell>
+                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
+                      Materialization Freshness
+                    </TableCell>
+                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
+                      Schema Changes
                     </TableCell>
                   </TableRow>
                 </TableHead>

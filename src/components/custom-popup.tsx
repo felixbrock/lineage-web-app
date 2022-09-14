@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Popover, TextField, Typography, Button } from "@mui/material";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
 import RRuleGenerator from 'react-rrule-generator-tt';
 import * as cronstrue from "cronstrue";
@@ -17,10 +18,8 @@ export default (props: PopupProps) => {
 
 
     const handleSave = () => {
-
-        const fullCron = `cron(${cron})`;
-
-        props.getCron(fullCron);
+        
+        props.getCron(cron);
         props.handlePopupClose();
     };
 

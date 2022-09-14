@@ -312,30 +312,39 @@ export default (): ReactElement => {
 
     testSelectionLocal[props[1]].frequency = event.target.value;
 
-    testSelectionLocal[props[1]].columnTestConfig.forEach((el, index) => {
-      const existingTests = el.testConfig.filter(
-        (config) => config.testSuiteId
-      );
+    const isUpdateObject = (
+      updateObject: UpdateTestSuiteObject | undefined
+    ): updateObject is UpdateTestSuiteObject => !!updateObject;
 
-      if (!existingTests.length) return;
+    const updateObjects = testSelectionLocal[props[1]].columnTestConfig
+      .map((el, index) => {
+        const existingTests = el.testConfig.filter(
+          (config) => config.testSuiteId
+        );
 
-      const updateObjects = existingTests.map((test): UpdateTestSuiteObject => {
-        const testSuiteId = test.testSuiteId;
+        if (!existingTests.length) return;
 
-        if (!testSuiteId)
-          throw new Error('Activated test without test suite id');
+        const objects = existingTests.map((test): UpdateTestSuiteObject => {
+          const testSuiteId = test.testSuiteId;
 
-        return {
-          id: testSuiteId,
-          frequency: value,
-        };
-      });
+          if (!testSuiteId)
+            throw new Error('Activated test without test suite id');
 
-      ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
+          return {
+            id: testSuiteId,
+            frequency: value,
+          };
+        });
 
-      testSelectionLocal[props[1]].columnTestConfig[index].frequency =
-        event.target.value;
-    });
+        testSelectionLocal[props[1]].columnTestConfig[index].frequency =
+          event.target.value;
+
+        return objects;
+      })
+      .flat()
+      .filter(isUpdateObject);
+
+    ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     setTestSelection({ ...testSelectionLocal });
   };
@@ -393,29 +402,39 @@ export default (): ReactElement => {
 
     testSelectionLocal[props[1]].sensitivity = value;
 
-    testSelectionLocal[props[1]].columnTestConfig.forEach((el, index) => {
-      const existingTests = el.testConfig.filter(
-        (config) => config.testSuiteId
-      );
+    const isUpdateObject = (
+      updateObject: UpdateTestSuiteObject | undefined
+    ): updateObject is UpdateTestSuiteObject => !!updateObject;
 
-      if (!existingTests.length) return;
+    const updateObjects = testSelectionLocal[props[1]].columnTestConfig
+      .map((el, index) => {
+        const existingTests = el.testConfig.filter(
+          (config) => config.testSuiteId
+        );
 
-      const updateObjects = existingTests.map((test): UpdateTestSuiteObject => {
-        const testSuiteId = test.testSuiteId;
+        if (!existingTests.length) return;
 
-        if (!testSuiteId)
-          throw new Error('Activated test without test suite id');
+        const objects = existingTests.map((test): UpdateTestSuiteObject => {
+          const testSuiteId = test.testSuiteId;
 
-        return {
-          id: testSuiteId,
-          threshold: value,
-        };
-      });
+          if (!testSuiteId)
+            throw new Error('Activated test without test suite id');
 
-      ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
+          return {
+            id: testSuiteId,
+            threshold: value,
+          };
+        });
 
-      testSelectionLocal[props[1]].columnTestConfig[index].sensitivity = value;
-    });
+        testSelectionLocal[props[1]].columnTestConfig[index].sensitivity =
+          value;
+
+        return objects;
+      })
+      .flat()
+      .filter(isUpdateObject);
+
+    ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     setTestSelection({ ...testSelectionLocal });
   };

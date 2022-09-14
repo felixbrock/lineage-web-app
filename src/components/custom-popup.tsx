@@ -18,12 +18,7 @@ export default (props: PopupProps) => {
 
     const handleSave = () => {
 
-        console.log(rule);
-        console.log(cron);
-
         const fullCron = `cron(${cron})`;
-
-        console.log(fullCron);
 
         props.getCron(fullCron);
         props.handlePopupClose();

@@ -18,7 +18,7 @@ export interface TestSuiteProps {
   schemaName: string,
   materializationName: string, 
   materializationType: MaterializationType,
-  columnName: string, 
+  columnName?: string, 
   targetResourceId: string
 }
 

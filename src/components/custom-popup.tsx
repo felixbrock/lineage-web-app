@@ -80,10 +80,11 @@ export default (props: PopupProps) => {
             'DEC',
         ];
 
-        let dayTime = '0 0 0';
+        let dayTime = '0 0';
         let dayOfMonth: number | string = '?';
         let month = '*';
         let dayOfWeek = '?';
+        const year = '*';
 
         let FREQ = '';
         let DTSTART: string | Date = '';
@@ -116,10 +117,10 @@ export default (props: PopupProps) => {
 
         if (DTSTART !== '') {
             DTSTART = stringToDate(DTSTART);
-            dayTime = `0 ${DTSTART.getUTCMinutes()} ${DTSTART.getUTCHours()}`;
+            dayTime = `${DTSTART.getUTCMinutes()} ${DTSTART.getUTCHours()}`;
         }
         if (BYHOUR !== 0 || BYMINUTE !== 0) {
-            dayTime = `0 ${BYMINUTE} ${BYHOUR}`;
+            dayTime = `${BYMINUTE} ${BYHOUR}`;
         }
         switch (FREQ) {
             case 'MONTHLY':
@@ -246,7 +247,7 @@ export default (props: PopupProps) => {
                 return NOT_SUPPORTED;
         }
 
-        return `${dayTime} ${dayOfMonth} ${month} ${dayOfWeek}`;
+        return `${dayTime} ${dayOfMonth} ${month} ${dayOfWeek} ${year}`;
 
     };
 

@@ -10,16 +10,16 @@ interface UpdateTestHistoryEntryDto {
 }
 
 export interface TestSuiteProps {
-  activated: boolean;
-  type: TestType;
-  threshold: number;
-  executionFrequency: number;
-  databaseName: string;
-  schemaName: string;
-  materializationName: string;
-  materializationType: MaterializationType;
-  columnName: string;
-  targetResourceId: string;
+  activated: boolean,
+  type: TestType,
+  threshold: number,
+  executionFrequency: number,
+  databaseName: string,
+  schemaName: string,
+  materializationName: string, 
+  materializationType: MaterializationType,
+  columnName?: string, 
+  targetResourceId: string
 }
 
 export interface UpdateTestSuiteObject {

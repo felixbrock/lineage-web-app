@@ -295,7 +295,6 @@ export default (): ReactElement => {
       };
     });
 
-
     ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     testSelectionLocal[props[1]].columnTestConfigs[
@@ -318,9 +317,9 @@ export default (): ReactElement => {
       updateObject: UpdateTestSuiteObject | undefined
     ): updateObject is UpdateTestSuiteObject => !!updateObject;
 
-    const updateObjects = testSelectionLocal[props[1]].columnTestConfig
+    const updateObjects = testSelectionLocal[props[1]].columnTestConfigs
       .map((el, index) => {
-        const existingTests = el.testConfig.filter(
+        const existingTests = el.testConfigs.filter(
           (config) => config.testSuiteId
         );
 
@@ -338,7 +337,7 @@ export default (): ReactElement => {
           };
         });
 
-        testSelectionLocal[props[1]].columnTestConfig[index].frequency =
+        testSelectionLocal[props[1]].columnTestConfigs[index].frequency =
           event.target.value;
 
         return objects;
@@ -386,7 +385,6 @@ export default (): ReactElement => {
       };
     });
 
-
     ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     testSelectionLocal[props[1]].columnTestConfigs[
@@ -405,14 +403,13 @@ export default (): ReactElement => {
 
     testSelectionLocal[props[1]].sensitivity = value;
 
-
     const isUpdateObject = (
       updateObject: UpdateTestSuiteObject | undefined
     ): updateObject is UpdateTestSuiteObject => !!updateObject;
 
-    const updateObjects = testSelectionLocal[props[1]].columnTestConfig
+    const updateObjects = testSelectionLocal[props[1]].columnTestConfigs
       .map((el, index) => {
-        const existingTests = el.testConfig.filter(
+        const existingTests = el.testConfigs.filter(
           (config) => config.testSuiteId
         );
 
@@ -424,14 +421,13 @@ export default (): ReactElement => {
           if (!testSuiteId)
             throw new Error('Activated test without test suite id');
 
-
           return {
             id: testSuiteId,
             threshold: value,
           };
         });
 
-        testSelectionLocal[props[1]].columnTestConfig[index].sensitivity =
+        testSelectionLocal[props[1]].columnTestConfigs[index].sensitivity =
           value;
 
         return objects;
@@ -547,10 +543,10 @@ export default (): ReactElement => {
 
     setTestSelection({ ...testSelectionLocal });
 
-    const columnTestConfig =
+    const columnTestConfigs =
       testSelectionLocal[props[1]].columnTestConfigs[columnTestConfigIndex];
     const testSuiteId =
-      columnTestConfig.testConfigs[testConfigIndex].testSuiteId;
+      columnTestConfigs.testConfigs[testConfigIndex].testSuiteId;
 
     if (!testSuiteId) {
       const materalization = materializations.find((el) => el.id === props[1]);
@@ -574,8 +570,8 @@ export default (): ReactElement => {
             ),
             targetResourceId: column.id,
             type,
-            executionFrequency: columnTestConfig.frequency,
-            threshold: columnTestConfig.sensitivity,
+            executionFrequency: columnTestConfigs.frequency,
+            threshold: columnTestConfigs.sensitivity,
           },
         ],
         jwt
@@ -606,21 +602,21 @@ export default (): ReactElement => {
     ].materializationTestConfigs.findIndex((el) => el.type === type);
 
     if (testIndex === -1) throw new Error('Mat test config not found');
-
-    const testConfig =
-      testSelectionLocal[props[1]].materializationTestConfigs[testIndex];
+ 
+    const invertedValueActivated = !testSelectionLocal[props[1]].materializationTestConfigs[testIndex].activated;
 
     testSelectionLocal[props[1]].materializationTestConfigs[
       testIndex
-    ].activated = !testConfig.activated;
+    ].activated = invertedValueActivated;
 
-    const testSuiteId = testConfig.testSuiteId;
+    const testSuiteId = testSelectionLocal[props[1]].materializationTestConfigs[testIndex].testSuiteId;
     if (testSuiteId) {
-      ObservabilityApiRepo.updateTestSuite(
-        testSuiteId,
-        jwt,
-        !testConfig.activated
+      ObservabilityApiRepo.updateTestSuites(
+        [{ id: testSuiteId, activated: invertedValueActivated }],
+        jwt
       );
+      
+      setTestSelection({ ...testSelectionLocal });
       return;
     }
 
@@ -628,22 +624,26 @@ export default (): ReactElement => {
 
     if (!materalization) throw new Error('Materialization not found');
 
-    const testSuite = await ObservabilityApiRepo.postTestSuite(
-      {
-        activated: !testConfig.activated,
-        databaseName: materalization.databaseName,
-        schemaName: materalization.schemaName,
-        materializationName: materalization.name,
-        materializationType: parseMaterializationType(
-          materalization.materializationType
-        ),
-        targetResourceId: materalization.id,
-        type,
-        executionFrequency: testSelectionLocal[props[1]].frequency || 1,
-        threshold: testSelectionLocal[props[1]].sensitivity || 0,
-      },
-      jwt
-    );
+    const testSuite = (
+      await ObservabilityApiRepo.postTestSuites(
+        [
+          {
+            activated: invertedValueActivated,
+            databaseName: materalization.databaseName,
+            schemaName: materalization.schemaName,
+            materializationName: materalization.name,
+            materializationType: parseMaterializationType(
+              materalization.materializationType
+            ),
+            targetResourceId: materalization.id,
+            type,
+            executionFrequency: testSelectionLocal[props[1]].frequency || 1,
+            threshold: testSelectionLocal[props[1]].sensitivity || 0,
+          },
+        ],
+        jwt
+      )
+    )[0];
 
     testSelectionLocal[props[1]].materializationTestConfigs[
       testIndex
@@ -682,8 +682,8 @@ export default (): ReactElement => {
     const testSuiteProps: TestSuiteProps[] = [];
     const updateObjects: UpdateTestSuiteObject[] = [];
 
-    testSelectionLocal[props[1]].columnTestConfig.forEach((config, index) => {
-      const testConfigIndex = config.testConfig.findIndex(
+    testSelectionLocal[props[1]].columnTestConfigs.forEach((config, index) => {
+      const testConfigIndex = config.testConfigs.findIndex(
         (el) => el.type === type
       );
 
@@ -693,16 +693,16 @@ export default (): ReactElement => {
         !!testSelectionLocal[props[1]].testDefinitionSummary[summaryIndex]
           .activationCount;
 
-      testSelectionLocal[props[1]].columnTestConfig[index].testConfig[
+      testSelectionLocal[props[1]].columnTestConfigs[index].testConfigs[
         testConfigIndex
       ].activated = newActivatedValue;
 
-      const activated = config.testConfig.some((el) => el.activated);
+      const activated = config.testConfigs.some((el) => el.activated);
 
-      testSelectionLocal[props[1]].columnTestConfig[index].testsActivated =
+      testSelectionLocal[props[1]].columnTestConfigs[index].testsActivated =
         activated;
 
-      const testSuiteId = config.testConfig[testConfigIndex].testSuiteId;
+      const testSuiteId = config.testConfigs[testConfigIndex].testSuiteId;
 
       if (!testSuiteId) {
         const materalization = materializations.find(
@@ -759,9 +759,9 @@ export default (): ReactElement => {
 
         const postObject = postObjects[index];
 
-        testSelectionLocal[props[1]].columnTestConfig[
+        testSelectionLocal[props[1]].columnTestConfigs[
           postObject.index
-        ].testConfig[postObject.testConfigIndex].testSuiteId =
+        ].testConfigs[postObject.testConfigIndex].testSuiteId =
           filterResult[0].id;
       });
 
@@ -962,7 +962,7 @@ export default (): ReactElement => {
     } = {};
 
     materializations.forEach((materialization) => {
-      const columnTestConfig: ColumnTestConfig[] = [];
+      const columnTestConfigs: ColumnTestConfig[] = [];
 
       const relevantColumns = columns.filter(
         (column) => column.materializationId === materialization.id
@@ -989,7 +989,7 @@ export default (): ReactElement => {
 
         let testsActivated = false;
 
-        columnTestConfig.push({
+        columnTestConfigs.push({
           id: column.id,
           type: column.type,
           label: columnLabel,
@@ -1020,13 +1020,13 @@ export default (): ReactElement => {
       const testDefinitionSummary: TestDefinitionSummary[] = [
         {
           type: 'ColumnCardinality',
-          activationCount: columnTestConfig.filter(
+          activationCount: columnTestConfigs.filter(
             (config) =>
               !!config.testConfigs.filter(
                 (el) => el.type === 'ColumnCardinality' && el.activated
               ).length
           ).length,
-          totalCount: columnTestConfig.filter(
+          totalCount: columnTestConfigs.filter(
             (config) =>
               !!config.testConfigs.filter(
                 (el) => el.type === 'ColumnCardinality'
@@ -1035,13 +1035,13 @@ export default (): ReactElement => {
         },
         {
           type: 'ColumnDistribution',
-          activationCount: columnTestConfig.filter(
+          activationCount: columnTestConfigs.filter(
             (config) =>
               !!config.testConfigs.filter(
                 (el) => el.type === 'ColumnDistribution' && el.activated
               ).length
           ).length,
-          totalCount: columnTestConfig.filter(
+          totalCount: columnTestConfigs.filter(
             (config) =>
               !!config.testConfigs.filter(
                 (el) => el.type === 'ColumnDistribution'
@@ -1050,13 +1050,13 @@ export default (): ReactElement => {
         },
         {
           type: 'ColumnFreshness',
-          activationCount: columnTestConfig.filter(
+          activationCount: columnTestConfigs.filter(
             (config) =>
               !!config.testConfigs.filter(
                 (el) => el.type === 'ColumnFreshness' && el.activated
               ).length
           ).length,
-          totalCount: columnTestConfig.filter(
+          totalCount: columnTestConfigs.filter(
             (config) =>
               !!config.testConfigs.filter((el) => el.type === 'ColumnFreshness')
                 .length
@@ -1064,13 +1064,13 @@ export default (): ReactElement => {
         },
         {
           type: 'ColumnNullness',
-          activationCount: columnTestConfig.filter(
+          activationCount: columnTestConfigs.filter(
             (config) =>
               !!config.testConfigs.filter(
                 (el) => el.type === 'ColumnNullness' && el.activated
               ).length
           ).length,
-          totalCount: columnTestConfig.filter(
+          totalCount: columnTestConfigs.filter(
             (config) =>
               !!config.testConfigs.filter((el) => el.type === 'ColumnNullness')
                 .length
@@ -1078,13 +1078,13 @@ export default (): ReactElement => {
         },
         {
           type: 'ColumnUniqueness',
-          activationCount: columnTestConfig.filter(
+          activationCount: columnTestConfigs.filter(
             (config) =>
               !!config.testConfigs.filter(
                 (el) => el.type === 'ColumnUniqueness' && el.activated
               ).length
           ).length,
-          totalCount: columnTestConfig.filter(
+          totalCount: columnTestConfigs.filter(
             (config) =>
               !!config.testConfigs.filter(
                 (el) => el.type === 'ColumnUniqueness'
@@ -1095,14 +1095,14 @@ export default (): ReactElement => {
 
       const uniqueFrequencyValues = Array.from(
         new Set(
-          columnTestConfig
+          columnTestConfigs
             .filter((el) => el.testsActivated)
             .map((el) => el.frequency)
         )
       );
       const uniqueSensitivityValues = Array.from(
         new Set(
-          columnTestConfig
+          columnTestConfigs
             .filter((el) => el.testsActivated)
             .map((el) => el.sensitivity)
         )
@@ -1138,11 +1138,11 @@ export default (): ReactElement => {
       );
       if (matSchemaChangeMatches.length > 1)
         matchCountError('MaterializationSchemaChange');
-
+    
       const tableTestSelectionStructure: MaterializationTestsConfig = {
         label: materializationLabel,
         navExpanded: false,
-        columnTestConfigs: columnTestConfig,
+        columnTestConfigs: columnTestConfigs,
         frequency:
           uniqueFrequencyValues.length === 1
             ? uniqueFrequencyValues[0]
@@ -1197,6 +1197,16 @@ export default (): ReactElement => {
     });
 
     return testSelectionStructure;
+  };
+
+  const getMatTestConfig = (matId: string, testType: TestType) => {
+    const config = testSelection[matId].materializationTestConfigs.find(
+      (el) => el.type === testType
+    );
+
+    if (!config) throw new Error('Mat test config not found.');
+
+    return config;
   };
 
   const getSummaryConfig = (matId: string, testType: TestType) => {
@@ -1257,6 +1267,22 @@ export default (): ReactElement => {
     const columnNullnessSummary: TestDefinitionSummary = getSummaryConfig(
       props.materializationId,
       columnNullnessType
+    );
+    const materializationColumnCountConfig: TestConfig = getMatTestConfig(
+      props.materializationId,
+      materializationColumnCountType
+    );
+    const materializationRowCountConfig: TestConfig = getMatTestConfig(
+      props.materializationId,
+      materializationRowCountType
+    );
+    const materializationFreshnessConfig: TestConfig = getMatTestConfig(
+      props.materializationId,
+      materializationFreshnessType
+    );
+    const materializationSchemaChangeConfig: TestConfig = getMatTestConfig(
+      props.materializationId,
+      materializationSchemaChangeType
     );
 
     return (
@@ -1474,7 +1500,9 @@ export default (): ReactElement => {
               id={`${materializationRowCountType}-${props.materializationId}`}
               size="large"
               variant="contained"
-              color={'info'}
+              color={
+                materializationRowCountConfig.activated ? 'primary' : 'info'
+              }
               onClick={handleMatTestButtonClick}
             />
           </TableCell>
@@ -1483,7 +1511,9 @@ export default (): ReactElement => {
               id={`${materializationColumnCountType}-${props.materializationId}`}
               size="large"
               variant="contained"
-              color={'info'}
+              color={
+                materializationColumnCountConfig.activated ? 'primary' : 'info'
+              }
               onClick={handleMatTestButtonClick}
             />
           </TableCell>
@@ -1492,7 +1522,9 @@ export default (): ReactElement => {
               id={`${materializationFreshnessType}-${props.materializationId}`}
               size="large"
               variant="contained"
-              color={'info'}
+              color={
+                materializationFreshnessConfig.activated ? 'primary' : 'info'
+              }
               onClick={handleMatTestButtonClick}
             />
           </TableCell>
@@ -1501,7 +1533,9 @@ export default (): ReactElement => {
               id={`${materializationSchemaChangeType}-${props.materializationId}`}
               size="large"
               variant="contained"
-              color={'info'}
+              color={
+                materializationSchemaChangeConfig.activated ? 'primary' : 'info'
+              }
               onClick={handleMatTestButtonClick}
             />
           </TableCell>
@@ -1852,7 +1886,7 @@ export default (): ReactElement => {
                       Sensitivity
                     </TableCell>
                     <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                      Freshness
+                      Column Freshness
                     </TableCell>
                     <TableCell sx={tableHeaderCellSx} width={135} align="left">
                       Cardinality
@@ -1873,7 +1907,7 @@ export default (): ReactElement => {
                       Column Count
                     </TableCell>
                     <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                      Mat. Freshness
+                      Table Freshness
                     </TableCell>
                     <TableCell sx={tableHeaderCellSx} width={135} align="left">
                       Schema Changes

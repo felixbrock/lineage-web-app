@@ -63,7 +63,8 @@ export default class ObservabilityApiRepo {
     jwt: string,
     activated?: boolean,
     threshold?: number,
-    frequency?: number | string,
+    frequency?: number,
+    cron?: string,
   ): Promise<void> => {
     try {
       const apiRoot = await ObservabilityApiRepo.root;
@@ -73,7 +74,8 @@ export default class ObservabilityApiRepo {
 
       if(activated !== undefined) payload.activated = activated;
       if(threshold) payload.threshold = threshold;
-      if(frequency) payload.frequency = frequency;
+      if(frequency && frequency > 0) payload.frequency = frequency;
+      if(cron) payload.cron = cron;
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },

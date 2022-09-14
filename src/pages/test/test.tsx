@@ -323,7 +323,8 @@ export default (): ReactElement => {
 
   const handleMatFrequencyChange = (event: any) => {
 
-    let value: number | string = event.target.value as number;
+    const value: number = event.target.value as number;
+    let cronJob = '';
 
     if (value === -1) {
       if (!cron) {
@@ -336,17 +337,17 @@ export default (): ReactElement => {
 
       } else {
         event = customEvent;
-        value = cron;
+        cronJob = cron;
         setCron(undefined);
       }
     }
-    console.log(event);
+    
     const name = event.target.name as string;
     const props = name.split('-');
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].frequency = value;
+    testSelectionLocal[props[1]].frequency = value > 0 ? value : cronJob;
 
     testSelectionLocal[props[1]].columnTestConfig.forEach((el, index) => {
       const existingTests = el.testConfig.filter((config) => config.testSuiteId);
@@ -364,7 +365,8 @@ export default (): ReactElement => {
           jwt,
           undefined,
           undefined,
-          value
+          value,
+          cron
         );
       });
 

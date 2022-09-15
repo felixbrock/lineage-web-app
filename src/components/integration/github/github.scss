@@ -1,0 +1,27 @@
+.caption {
+  margin: 0;
+}
+
+$citoBlue: #6f47ef;
+$citoGrey: #dfdfdf;
+
+button.cito {
+  font-weight: bold;
+  color: #000000;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+button.cito:hover {
+  color: $citoBlue;
+  border-color: $citoBlue;
+}
+
+.control-button {
+  @extend button, .cito;
+  font-size: 12px;
+  border: 2px solid black;
+  border-radius: 3px;
+  margin: 7px 3px 7px 3px;
+}

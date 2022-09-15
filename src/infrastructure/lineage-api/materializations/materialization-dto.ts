@@ -6,5 +6,6 @@ export default interface MaterializationDto {
   schemaName: string;
   databaseName: string;
   logicId: string;
+  lineageId: string;
   // eslint-disable-next-line semi
 }

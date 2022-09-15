@@ -10,43 +10,54 @@ interface UpdateTestHistoryEntryDto {
 }
 
 export interface TestSuiteProps {
-  activated: boolean,
-  type: TestType,
-  threshold: number,
-  executionFrequency: number,
-  databaseName: string,
-  schemaName: string,
-  materializationName: string, 
-  materializationType: MaterializationType,
-  columnName: string, 
-  targetResourceId: string
+  activated: boolean;
+  type: TestType;
+  threshold: number;
+  executionFrequency: number;
+  databaseName: string;
+  schemaName: string;
+  materializationName: string;
+  materializationType: MaterializationType;
+  columnName: string;
+  targetResourceId: string;
 }
 
+export interface UpdateTestSuiteObject {
+  id: string;
+  activated?: boolean;
+  threshold?: number;
+  frequency?: number;
+}
 
 // TODO - Implement Interface regarding clean architecture
 export default class ObservabilityApiRepo {
-  private static gateway =  mode === 'production' ? 'ax4h0t5r59.execute-api.eu-central-1.amazonaws.com/production' : 'localhost:3012';
+  private static gateway =
+    mode === 'production'
+      ? 'ax4h0t5r59.execute-api.eu-central-1.amazonaws.com/production'
+      : 'localhost:3012';
 
   private static path = 'api/v1';
 
-  private static root = getRoot(ObservabilityApiRepo.gateway, ObservabilityApiRepo.path);
+  private static root = getRoot(
+    ObservabilityApiRepo.gateway,
+    ObservabilityApiRepo.path
+  );
 
-
-  public static postTestSuite = async (
-    testSuiteProps: TestSuiteProps, 
+  public static postTestSuites = async (
+    postTestSuiteObjects: TestSuiteProps[],
     jwt: string
-  ): Promise<TestSuiteDto> => {
+  ): Promise<TestSuiteDto[]> => {
     try {
       const apiRoot = await ObservabilityApiRepo.root;
 
-      const payload = {...testSuiteProps};
+      const payload = { createObjects: postTestSuiteObjects };
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
       const response = await axios.post(
-        `${apiRoot}/test-suite`,
+        `${apiRoot}/test-suites`,
         payload,
         config
       );
@@ -58,29 +69,21 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  public static updateTestSuite = async (
-    id: string,
-    jwt: string,
-    activated?: boolean,
-    threshold?: number,
-    frequency?: number,
+  public static updateTestSuites = async (
+    updateObjects: UpdateTestSuiteObject[],
+    jwt: string
   ): Promise<void> => {
     try {
       const apiRoot = await ObservabilityApiRepo.root;
 
-      const payload : {[key: string]: any} = {
-      };
-
-      if(activated !== undefined) payload.activated = activated;
-      if(threshold) payload.threshold = threshold;
-      if(frequency) payload.frequency = frequency;
+      const payload = { updateObjects };
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
       const response = await axios.patch(
-        `${apiRoot}/test-suite/${id}`,
+        `${apiRoot}/test-suites`,
         payload,
         config
       );
@@ -102,10 +105,7 @@ export default class ObservabilityApiRepo {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
-      const response = await axios.get(
-        `${apiRoot}/test-suites`,
-        config
-      );
+      const response = await axios.get(`${apiRoot}/test-suites`, config);
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);
@@ -130,7 +130,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.patch(
-        `${apiRoot}/test-suite/history/${updateTestHistoryEntryDto.alertId}`,
+        `${apiRoot}/test-data/history/${updateTestHistoryEntryDto.alertId}`,
         data,
         config
       );

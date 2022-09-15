@@ -1,14 +1,16 @@
 export interface TestSuiteDto {
   id: string;
   organizationId: string;
-  targetResourceId: string;
+  target: {
+    databaseName: string;
+    targetResourceId: string;
+    schemaName: string;
+    materializationType: string;
+    columnName?: string;
+    materializationName: string;
+  }
   activated: boolean;
   type: string;
   threshold: number;
   executionFrequency: number;
-  databaseName: string;
-  schemaName: string;
-  materializationName: string;
-  columnName?: string;
-  materializationType: string;
 }

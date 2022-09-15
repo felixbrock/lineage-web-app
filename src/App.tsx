@@ -63,6 +63,7 @@ export default (): ReactElement => {
               <Routes>
                 <Route path="/lineage" element={<Lineage />} />
                 <Route path="/test" element={<Test />} />
+                {/* in development copy query params and manually call Github redirect: https://smee.io/XeUBYbnaoGxxxcf */}
                 <Route path="/oauth/github/:code/:installationId/:state" element={<GithubRedirect/>}/>
                 <Route path="/oauth/slack/:code/:state" element={<SlackRedirect/>}/>
                 <Route path="/" element={<Navigate to="/lineage" />} />

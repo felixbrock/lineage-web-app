@@ -13,13 +13,14 @@ export interface TestSuiteProps {
   activated: boolean,
   type: TestType,
   threshold: number,
-  executionFrequency: number | string,
+  executionFrequency: number,
   databaseName: string,
   schemaName: string,
   materializationName: string, 
   materializationType: MaterializationType,
   columnName: string, 
-  targetResourceId: string
+  targetResourceId: string,
+  cron?: string
 }
 
 

@@ -153,10 +153,11 @@ interface ColumnTestConfig {
   id: string;
   label: string;
   type: string;
-  frequency: number | string;
+  frequency: number;
   sensitivity: number;
   testConfig: TestConfig[];
   testsActivated: boolean;
+  cron?: string;
 }
 
 interface TestDefinitionSummary {
@@ -169,10 +170,11 @@ interface MaterializationTestsConfig {
   columnTestConfig: ColumnTestConfig[];
   navExpanded: boolean;
   label: string;
-  frequency?: number | string;
+  frequency?: number;
   sensitivity?: number;
   testDefinitionSummary: TestDefinitionSummary[];
   testsActivated: boolean;
+  cron?: string;
 }
 
 const theme = createTheme({
@@ -239,7 +241,7 @@ export default (): ReactElement => {
     setPopupOpen(false);
   };
 
-  const getCron = (newCron: string) => {
+  const saveCron = (newCron: string) => {
 
     setCron(newCron);
   };
@@ -347,7 +349,12 @@ export default (): ReactElement => {
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].frequency = value > 0 ? value : cronJob;
+    if(value > 0)
+      testSelectionLocal[props[1]].frequency = value;
+
+    if(cron)
+      testSelectionLocal[props[1]].cron = cronJob;
+
 
     testSelectionLocal[props[1]].columnTestConfig.forEach((el, index) => {
       const existingTests = el.testConfig.filter((config) => config.testSuiteId);
@@ -587,6 +594,7 @@ export default (): ReactElement => {
           type,
           executionFrequency: columnTestConfig.frequency,
           threshold: columnTestConfig.sensitivity,
+          cron: columnTestConfig.cron,
         },
         jwt
       );
@@ -672,6 +680,7 @@ export default (): ReactElement => {
                 type,
                 executionFrequency: config.frequency,
                 threshold: config.sensitivity,
+                cron: config.cron,
               },
               jwt
             );
@@ -1712,11 +1721,11 @@ export default (): ReactElement => {
             />
 
           </Paper>
-          {/* {rrule} */}
+          
           <CustomPopup
             popupOpen={popupOpen}
             handlePopupClose={handlePopupClose}
-            getCron={getCron}
+            saveCron={saveCron}
           />
 
         </>

@@ -9,7 +9,7 @@ import * as cronstrue from "cronstrue";
 interface PopupProps {
     popupOpen: boolean,
     handlePopupClose: () => void,
-    getCron: any,
+    saveCron: any,
 }
 export default (props: PopupProps) => {
 
@@ -19,7 +19,7 @@ export default (props: PopupProps) => {
 
     const handleSave = () => {
         
-        props.getCron(cron);
+        props.saveCron(cron);
         props.handlePopupClose();
     };
 

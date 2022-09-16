@@ -60,7 +60,7 @@ const lineageId = '62f90bec34a8584bd1f6534a';
 
 
 export const testTypes = [
-  'ColumnFreshness',
+  'Freshness',
   'ColumnCardinality',
   'ColumnUniqueness',
   'ColumnNullness',
@@ -89,7 +89,7 @@ const stringAndBinaryDataTests: TestType[] = [
   'ColumnUniqueness',
 ];
 const logicalDataTests: TestType[] = ['ColumnNullness'];
-const dateAndTimeDataTests: TestType[] = ['ColumnNullness', 'ColumnFreshness'];
+const dateAndTimeDataTests: TestType[] = ['ColumnNullness', 'Freshness'];
 const semiStructuredDataTests: TestType[] = ['ColumnNullness'];
 const geospatialDataTests: TestType[] = ['ColumnNullness'];
 
@@ -799,7 +799,7 @@ export default (): ReactElement => {
 
     const columnTestConfig = getColumnTestConfig(materializationId, columnId);
 
-    const columnFreshnessType: TestType = 'ColumnFreshness';
+    const columnFreshnessType: TestType = 'Freshness';
     const columnCardinalityType: TestType = 'ColumnCardinality';
     const columnUniquenessType: TestType = 'ColumnUniqueness';
     const columnDistributionType: TestType = 'ColumnDistribution';
@@ -850,7 +850,7 @@ export default (): ReactElement => {
         </TableCell>
 
         <TableCell sx={tableCellSx} align="left">
-          {allowedTestTypes.includes('ColumnFreshness') ? (
+          {allowedTestTypes.includes('Freshness') ? (
             <Button
               id={`${columnFreshnessType}-${materializationId}-${columnId}`}
               size="large"
@@ -1142,7 +1142,7 @@ export default (): ReactElement => {
         )
     );
 
-    const columnFreshnessType: TestType = 'ColumnFreshness';
+    const columnFreshnessType: TestType = 'Freshness';
     const columnCardinalityType: TestType = 'ColumnCardinality';
     const columnUniquenessType: TestType = 'ColumnUniqueness';
     const columnDistributionType: TestType = 'ColumnDistribution';
@@ -1581,6 +1581,7 @@ export default (): ReactElement => {
       setColumns(defaultColumns);
       setTestSuites(defaultTestSuits);
       setLineage({ id: 'todo', createdAt: 1 });
+      setReadyToBuild(true);
     }
   }, [account]);
 

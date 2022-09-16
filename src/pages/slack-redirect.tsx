@@ -12,12 +12,12 @@ export default () => {
 
   const [user, setUser] = useState<string>();
   const [jwt, setJwt] = useState<any>();
-  const [accountId, setAccountId] = useState<string>();
+  const [organizationId, setOrganizationId] = useState<string>();
 
   const renderSlackRedirect = () => {
     setUser(undefined);
     setJwt('');
-    setAccountId('');
+    setOrganizationId('');
 
     Auth.currentAuthenticatedUser()
       .then((cognitoUser) => setUser(cognitoUser))
@@ -50,7 +50,7 @@ export default () => {
         if (accounts.length > 1)
           throw new Error(`Multiple accounts found for user`);
 
-        setAccountId(accounts[0].id);
+        setOrganizationId(accounts[0].organizationId);
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
@@ -58,18 +58,18 @@ export default () => {
   }, [user]);
 
   useEffect(() => {
-    if (!accountId) return;
+    if (!organizationId) return;
 
     if (!jwt) throw new Error('No user authorization found');
 
     if (!code) throw new Error('Did not receive a temp auth code from Slack');
-    if (state !== accountId)
+    if (state !== organizationId)
       throw new Error(
         `Detected potential forgery attack with received state ${state}`
       );
 
     let accessToken: string;
-   
+
     SlackAccessTokenRepo.getAccessToken(code)
       .then((res) => {
         accessToken = res;
@@ -83,15 +83,15 @@ export default () => {
       .then(() =>
         navigate(`/lineage`, {
           state: {
-            slackAccessToken: accessToken,
+            slackToken: accessToken,
             showIntegrationPanel: true,
             sidePanelTabIndex: 2,
           },
-          replace: true
+          replace: true,
         })
       )
       .catch((error) => console.trace(error));
-  }, [accountId]);
+  }, [organizationId]);
 
-  return <></>;
+  return <>redirecting...</>;
 };

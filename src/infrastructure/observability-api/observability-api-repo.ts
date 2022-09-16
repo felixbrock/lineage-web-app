@@ -10,16 +10,17 @@ interface UpdateTestHistoryEntryDto {
 }
 
 export interface TestSuiteProps {
-  activated: boolean;
-  type: TestType;
-  threshold: number;
-  executionFrequency: number;
-  databaseName: string;
-  schemaName: string;
-  materializationName: string;
-  materializationType: MaterializationType;
-  columnName: string;
-  targetResourceId: string;
+  activated: boolean,
+  type: TestType,
+  threshold: number,
+  executionFrequency: number,
+  databaseName: string,
+  schemaName: string,
+  materializationName: string, 
+  materializationType: MaterializationType,
+  columnName: string, 
+  targetResourceId: string,
+  cron?: string
 }
 
 export interface UpdateTestSuiteObject {
@@ -27,6 +28,7 @@ export interface UpdateTestSuiteObject {
   activated?: boolean;
   threshold?: number;
   frequency?: number;
+  cron?: string;
 }
 
 // TODO - Implement Interface regarding clean architecture
@@ -69,14 +71,16 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  public static updateTestSuites = async (
+public static updateTestSuites = async (
     updateObjects: UpdateTestSuiteObject[],
     jwt: string
   ): Promise<void> => {
     try {
       const apiRoot = await ObservabilityApiRepo.root;
 
+
       const payload = { updateObjects };
+
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },

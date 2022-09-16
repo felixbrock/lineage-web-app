@@ -46,10 +46,17 @@ import ObservabilityApiRepo, {
 } from '../../infrastructure/observability-api/observability-api-repo';
 import { Alert, Snackbar } from '@mui/material';
 import { TestSuiteDto } from '../../infrastructure/observability-api/test-suite-dto';
-import AccountDto from '../../infrastructure/account-api/account-dto';
+import {
+  defaultMaterializations,
+  defaultColumns,
+  defaultTestSuits,
+} from '../lineage/test-data';
+import CustomPopup from '../../components/custom-popup';
+
 
 const showRealData = true;
-// const lineageId = '62f90bec34a8584bd1f6534a';
+const lineageId = '62f90bec34a8584bd1f6534a';
+
 
 export const testTypes = [
   'ColumnFreshness',
@@ -154,6 +161,7 @@ interface ColumnTestConfig {
   sensitivity: number;
   testConfig: TestConfig[];
   testsActivated: boolean;
+  cron?: string;
 }
 
 interface TestDefinitionSummary {
@@ -170,6 +178,7 @@ interface MaterializationTestsConfig {
   sensitivity?: number;
   testDefinitionSummary: TestDefinitionSummary[];
   testsActivated: boolean;
+  cron?: string;
 }
 
 const theme = createTheme({
@@ -225,6 +234,21 @@ export default (): ReactElement => {
   const [searchParams] = useSearchParams();
 
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [cron, setCron] = useState<string>();
+  const [customEvent, setCustomEvent] = useState<any>();
+
+  const handlePopupOpen = () => {
+    setPopupOpen(true);
+  };
+  const handlePopupClose = () => {
+    setPopupOpen(false);
+  };
+
+  const saveCron = (newCron: string) => {
+
+    setCron(newCron);
+  };
 
   const [initialLoadCompleted, setInitialLoadCompleted] = React.useState(false);
 
@@ -254,9 +278,9 @@ export default (): ReactElement => {
   const emptyRows =
     page > 0
       ? Math.max(
-          0,
-          (1 + page) * rowsPerPage - Object.keys(testSelection).length
-        )
+        0,
+        (1 + page) * rowsPerPage - Object.keys(testSelection).length
+      )
       : 0;
 
   const handleColumnFrequencyChange = (event: any) => {
@@ -303,14 +327,39 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
+
   const handleMatFrequencyChange = (event: any) => {
+
+    const value: number = event.target.value as number;
+    let cronJob = '';
+
+    if (value === -1) {
+      if (!cron) {
+
+        if (event.target.name) {
+          handlePopupOpen();
+          setCustomEvent(event);
+        }
+        return;
+
+      } else {
+        event = customEvent;
+        cronJob = cron;
+        setCron(undefined);
+      }
+    }
+    
     const name = event.target.name as string;
-    const value = event.target.value as number;
     const props = name.split('-');
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].frequency = event.target.value;
+    if(value > 0)
+      testSelectionLocal[props[1]].frequency = value;
+
+    if(cron)
+      testSelectionLocal[props[1]].cron = cronJob;
+
 
     const isUpdateObject = (
       updateObject: UpdateTestSuiteObject | undefined
@@ -327,17 +376,19 @@ export default (): ReactElement => {
         const objects = existingTests.map((test): UpdateTestSuiteObject => {
           const testSuiteId = test.testSuiteId;
 
+
           if (!testSuiteId)
             throw new Error('Activated test without test suite id');
 
           return {
             id: testSuiteId,
             frequency: value,
+            cron
           };
         });
 
         testSelectionLocal[props[1]].columnTestConfig[index].frequency =
-          event.target.value;
+          value;
 
         return objects;
       })
@@ -571,6 +622,7 @@ export default (): ReactElement => {
             type,
             executionFrequency: columnTestConfig.frequency,
             threshold: columnTestConfig.sensitivity,
+          cron: columnTestConfig.cron,
           },
         ],
         jwt
@@ -607,8 +659,8 @@ export default (): ReactElement => {
     ].activationCount = testSelectionLocal[props[1]].testDefinitionSummary[
       summaryIndex
     ].activationCount
-      ? 0
-      : testSelectionLocal[props[1]].testDefinitionSummary[summaryIndex]
+        ? 0
+        : testSelectionLocal[props[1]].testDefinitionSummary[summaryIndex]
           .totalCount;
 
     const postObjects: {
@@ -669,6 +721,7 @@ export default (): ReactElement => {
           type,
           executionFrequency: config.frequency,
           threshold: config.sensitivity,
+          cron: config.cron
         });
       } else
         updateObjects.push({ id: testSuiteId, activated: newActivatedValue });
@@ -770,6 +823,7 @@ export default (): ReactElement => {
               <MenuItem value={6}>6h</MenuItem>
               <MenuItem value={12}>12h</MenuItem>
               <MenuItem value={24}>1d</MenuItem>
+              <MenuItem onClick={handlePopupOpen} value={-1}>Custom...</MenuItem>
             </Select>
           </FormControl>
         </TableCell>
@@ -902,11 +956,9 @@ export default (): ReactElement => {
         (column) => column.materializationId === materialization.id
       );
 
-      const materializationLabel = `${
-        materialization.databaseName ? `${materialization.databaseName}.` : ''
-      }${materialization.schemaName ? `${materialization.schemaName}.` : ''}${
-        materialization.name
-      }`;
+      const materializationLabel = `${materialization.databaseName ? `${materialization.databaseName}.` : ''
+        }${materialization.schemaName ? `${materialization.schemaName}.` : ''}${materialization.name
+        }`;
       if (typeof materializationLabel !== 'string')
         throw new Error('Materialization label not of type string');
 
@@ -1140,6 +1192,7 @@ export default (): ReactElement => {
                 <MenuItem value={6}>6h</MenuItem>
                 <MenuItem value={12}>12h</MenuItem>
                 <MenuItem value={24}>1d</MenuItem>
+                <MenuItem value={-1}>Custom...</MenuItem>
               </Select>
             </FormControl>
           </TableCell>
@@ -1155,7 +1208,7 @@ export default (): ReactElement => {
                 displayEmpty={true}
                 value={
                   testSelection[props.materializationId].sensitivity !==
-                  undefined
+                    undefined
                     ? testSelection[props.materializationId].sensitivity
                     : ''
                 }
@@ -1176,7 +1229,7 @@ export default (): ReactElement => {
                 variant="contained"
                 color={
                   columnFreshnessSummary.activationCount &&
-                  columnFreshnessSummary.activationCount ===
+                    columnFreshnessSummary.activationCount ===
                     columnFreshnessSummary.totalCount
                     ? 'primary'
                     : 'info'
@@ -1206,7 +1259,7 @@ export default (): ReactElement => {
                 variant="contained"
                 color={
                   columnCardinalitySummary.activationCount &&
-                  columnCardinalitySummary.activationCount ===
+                    columnCardinalitySummary.activationCount ===
                     columnCardinalitySummary.totalCount
                     ? 'primary'
                     : 'info'
@@ -1238,7 +1291,7 @@ export default (): ReactElement => {
                 variant="contained"
                 color={
                   columnNullnessSummary.activationCount &&
-                  columnNullnessSummary.activationCount ===
+                    columnNullnessSummary.activationCount ===
                     columnNullnessSummary.totalCount
                     ? 'primary'
                     : 'info'
@@ -1268,7 +1321,7 @@ export default (): ReactElement => {
                 variant="contained"
                 color={
                   columnUniquenessSummary.activationCount &&
-                  columnUniquenessSummary.activationCount ===
+                    columnUniquenessSummary.activationCount ===
                     columnUniquenessSummary.totalCount
                     ? 'primary'
                     : 'info'
@@ -1300,7 +1353,7 @@ export default (): ReactElement => {
                 variant="contained"
                 color={
                   columnDistributionSummary.activationCount &&
-                  columnDistributionSummary.activationCount ===
+                    columnDistributionSummary.activationCount ===
                     columnDistributionSummary.totalCount
                     ? 'primary'
                     : 'info'
@@ -1523,6 +1576,9 @@ export default (): ReactElement => {
           console.log(error);
         });
     } else {
+      setMaterializations(defaultMaterializations);
+      setColumns(defaultColumns);
+      setTestSuites(defaultTestSuits);
       setLineage({ id: 'todo', createdAt: 1 });
     }
   }, [account]);
@@ -1553,6 +1609,12 @@ export default (): ReactElement => {
 
     setSearchedTestSelection(testSelection);
   }, [testSelection]);
+
+  useEffect(() => {
+
+    handleMatFrequencyChange({ target: { value: -1 } });
+
+  }, [cron]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -1725,7 +1787,15 @@ export default (): ReactElement => {
               onPageChange={handleChangePage}
               onRowsPerPageChange={handleChangeRowsPerPage}
             />
+
           </Paper>
+          
+          <CustomPopup
+            popupOpen={popupOpen}
+            handlePopupClose={handlePopupClose}
+            saveCron={saveCron}
+          />
+
         </>
         <Snackbar
           open={snackbarOpen}

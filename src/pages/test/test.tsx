@@ -54,13 +54,11 @@ import {
 import CustomPopup from '../../components/custom-popup';
 import AccountDto from '../../infrastructure/account-api/account-dto';
 
-
 const showRealData = true;
-const lineageId = '62f90bec34a8584bd1f6534a';
-
+// const lineageId = '62f90bec34a8584bd1f6534a';
 
 export const testTypes = [
-  'Freshness',
+  'ColumnFreshness',
   'ColumnCardinality',
   'ColumnUniqueness',
   'ColumnNullness',
@@ -89,7 +87,7 @@ const stringAndBinaryDataTests: TestType[] = [
   'ColumnUniqueness',
 ];
 const logicalDataTests: TestType[] = ['ColumnNullness'];
-const dateAndTimeDataTests: TestType[] = ['ColumnNullness', 'Freshness'];
+const dateAndTimeDataTests: TestType[] = ['ColumnNullness', 'ColumnFreshness'];
 const semiStructuredDataTests: TestType[] = ['ColumnNullness'];
 const geospatialDataTests: TestType[] = ['ColumnNullness'];
 
@@ -247,7 +245,6 @@ export default (): ReactElement => {
   };
 
   const saveCron = (newCron: string) => {
-
     setCron(newCron);
   };
 
@@ -279,9 +276,9 @@ export default (): ReactElement => {
   const emptyRows =
     page > 0
       ? Math.max(
-        0,
-        (1 + page) * rowsPerPage - Object.keys(testSelection).length
-      )
+          0,
+          (1 + page) * rowsPerPage - Object.keys(testSelection).length
+        )
       : 0;
 
   const handleColumnFrequencyChange = (event: any) => {
@@ -328,39 +325,32 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
-
   const handleMatFrequencyChange = (event: any) => {
-
     const value: number = event.target.value as number;
     let cronJob = '';
 
     if (value === -1) {
       if (!cron) {
-
         if (event.target.name) {
           handlePopupOpen();
           setCustomEvent(event);
         }
         return;
-
       } else {
         event = customEvent;
         cronJob = cron;
         setCron(undefined);
       }
     }
-    
+
     const name = event.target.name as string;
     const props = name.split('-');
 
     const testSelectionLocal = testSelection;
 
-    if(value > 0)
-      testSelectionLocal[props[1]].frequency = value;
+    if (value > 0) testSelectionLocal[props[1]].frequency = value;
 
-    if(cron)
-      testSelectionLocal[props[1]].cron = cronJob;
-
+    if (cron) testSelectionLocal[props[1]].cron = cronJob;
 
     const isUpdateObject = (
       updateObject: UpdateTestSuiteObject | undefined
@@ -377,19 +367,17 @@ export default (): ReactElement => {
         const objects = existingTests.map((test): UpdateTestSuiteObject => {
           const testSuiteId = test.testSuiteId;
 
-
           if (!testSuiteId)
             throw new Error('Activated test without test suite id');
 
           return {
             id: testSuiteId,
             frequency: value,
-            cron
+            cron,
           };
         });
 
-        testSelectionLocal[props[1]].columnTestConfig[index].frequency =
-          value;
+        testSelectionLocal[props[1]].columnTestConfig[index].frequency = value;
 
         return objects;
       })
@@ -623,7 +611,7 @@ export default (): ReactElement => {
             type,
             executionFrequency: columnTestConfig.frequency,
             threshold: columnTestConfig.sensitivity,
-          cron: columnTestConfig.cron,
+            cron: columnTestConfig.cron,
           },
         ],
         jwt
@@ -660,8 +648,8 @@ export default (): ReactElement => {
     ].activationCount = testSelectionLocal[props[1]].testDefinitionSummary[
       summaryIndex
     ].activationCount
-        ? 0
-        : testSelectionLocal[props[1]].testDefinitionSummary[summaryIndex]
+      ? 0
+      : testSelectionLocal[props[1]].testDefinitionSummary[summaryIndex]
           .totalCount;
 
     const postObjects: {
@@ -722,7 +710,7 @@ export default (): ReactElement => {
           type,
           executionFrequency: config.frequency,
           threshold: config.sensitivity,
-          cron: config.cron
+          cron: config.cron,
         });
       } else
         updateObjects.push({ id: testSuiteId, activated: newActivatedValue });
@@ -799,7 +787,7 @@ export default (): ReactElement => {
 
     const columnTestConfig = getColumnTestConfig(materializationId, columnId);
 
-    const columnFreshnessType: TestType = 'Freshness';
+    const columnFreshnessType: TestType = 'ColumnFreshness';
     const columnCardinalityType: TestType = 'ColumnCardinality';
     const columnUniquenessType: TestType = 'ColumnUniqueness';
     const columnDistributionType: TestType = 'ColumnDistribution';
@@ -824,7 +812,9 @@ export default (): ReactElement => {
               <MenuItem value={6}>6h</MenuItem>
               <MenuItem value={12}>12h</MenuItem>
               <MenuItem value={24}>1d</MenuItem>
-              <MenuItem onClick={handlePopupOpen} value={-1}>Custom...</MenuItem>
+              <MenuItem onClick={handlePopupOpen} value={-1}>
+                Custom...
+              </MenuItem>
             </Select>
           </FormControl>
         </TableCell>
@@ -850,7 +840,7 @@ export default (): ReactElement => {
         </TableCell>
 
         <TableCell sx={tableCellSx} align="left">
-          {allowedTestTypes.includes('Freshness') ? (
+          {allowedTestTypes.includes('ColumnFreshness') ? (
             <Button
               id={`${columnFreshnessType}-${materializationId}-${columnId}`}
               size="large"
@@ -957,9 +947,11 @@ export default (): ReactElement => {
         (column) => column.materializationId === materialization.id
       );
 
-      const materializationLabel = `${materialization.databaseName ? `${materialization.databaseName}.` : ''
-        }${materialization.schemaName ? `${materialization.schemaName}.` : ''}${materialization.name
-        }`;
+      const materializationLabel = `${
+        materialization.databaseName ? `${materialization.databaseName}.` : ''
+      }${materialization.schemaName ? `${materialization.schemaName}.` : ''}${
+        materialization.name
+      }`;
       if (typeof materializationLabel !== 'string')
         throw new Error('Materialization label not of type string');
 
@@ -1142,7 +1134,7 @@ export default (): ReactElement => {
         )
     );
 
-    const columnFreshnessType: TestType = 'Freshness';
+    const columnFreshnessType: TestType = 'ColumnFreshness';
     const columnCardinalityType: TestType = 'ColumnCardinality';
     const columnUniquenessType: TestType = 'ColumnUniqueness';
     const columnDistributionType: TestType = 'ColumnDistribution';
@@ -1209,7 +1201,7 @@ export default (): ReactElement => {
                 displayEmpty={true}
                 value={
                   testSelection[props.materializationId].sensitivity !==
-                    undefined
+                  undefined
                     ? testSelection[props.materializationId].sensitivity
                     : ''
                 }
@@ -1230,7 +1222,7 @@ export default (): ReactElement => {
                 variant="contained"
                 color={
                   columnFreshnessSummary.activationCount &&
-                    columnFreshnessSummary.activationCount ===
+                  columnFreshnessSummary.activationCount ===
                     columnFreshnessSummary.totalCount
                     ? 'primary'
                     : 'info'
@@ -1260,7 +1252,7 @@ export default (): ReactElement => {
                 variant="contained"
                 color={
                   columnCardinalitySummary.activationCount &&
-                    columnCardinalitySummary.activationCount ===
+                  columnCardinalitySummary.activationCount ===
                     columnCardinalitySummary.totalCount
                     ? 'primary'
                     : 'info'
@@ -1292,7 +1284,7 @@ export default (): ReactElement => {
                 variant="contained"
                 color={
                   columnNullnessSummary.activationCount &&
-                    columnNullnessSummary.activationCount ===
+                  columnNullnessSummary.activationCount ===
                     columnNullnessSummary.totalCount
                     ? 'primary'
                     : 'info'
@@ -1322,7 +1314,7 @@ export default (): ReactElement => {
                 variant="contained"
                 color={
                   columnUniquenessSummary.activationCount &&
-                    columnUniquenessSummary.activationCount ===
+                  columnUniquenessSummary.activationCount ===
                     columnUniquenessSummary.totalCount
                     ? 'primary'
                     : 'info'
@@ -1354,7 +1346,7 @@ export default (): ReactElement => {
                 variant="contained"
                 color={
                   columnDistributionSummary.activationCount &&
-                    columnDistributionSummary.activationCount ===
+                  columnDistributionSummary.activationCount ===
                     columnDistributionSummary.totalCount
                     ? 'primary'
                     : 'info'
@@ -1613,9 +1605,7 @@ export default (): ReactElement => {
   }, [testSelection]);
 
   useEffect(() => {
-
     handleMatFrequencyChange({ target: { value: -1 } });
-
   }, [cron]);
 
   return (
@@ -1789,15 +1779,13 @@ export default (): ReactElement => {
               onPageChange={handleChangePage}
               onRowsPerPageChange={handleChangeRowsPerPage}
             />
-
           </Paper>
-          
+
           <CustomPopup
             popupOpen={popupOpen}
             handlePopupClose={handlePopupClose}
             saveCron={saveCron}
           />
-
         </>
         <Snackbar
           open={snackbarOpen}

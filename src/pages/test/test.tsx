@@ -44,7 +44,10 @@ import ObservabilityApiRepo, {
   UpdateTestSuiteObject,
 } from '../../infrastructure/observability-api/observability-api-repo';
 import { Alert, Snackbar } from '@mui/material';
-import { TestSuiteDto } from '../../infrastructure/observability-api/test-suite-dto';
+import {
+  NominalTestSuiteDto,
+  TestSuiteDto,
+} from '../../infrastructure/observability-api/test-suite-dto';
 import AccountDto from '../../infrastructure/account-api/account-dto';
 
 const showRealData = true;
@@ -214,6 +217,9 @@ export default (): ReactElement => {
   >([]);
   const [columns, setColumns] = useState<ColumnDto[]>([]);
   const [testSuites, setTestSuites] = useState<TestSuiteDto[]>([]);
+  const [nominalTestSuites, setNominalTestSuites] = useState<
+    NominalTestSuiteDto[]
+  >([]);
   const [readyToBuild, setReadyToBuild] = useState(false);
   const [testSelection, setTestSelection] = useState<{
     [key: string]: MaterializationTestsConfig;
@@ -602,20 +608,30 @@ export default (): ReactElement => {
     ].materializationTestConfigs.findIndex((el) => el.type === type);
 
     if (testIndex === -1) throw new Error('Mat test config not found');
- 
-    const invertedValueActivated = !testSelectionLocal[props[1]].materializationTestConfigs[testIndex].activated;
+
+    const invertedValueActivated =
+      !testSelectionLocal[props[1]].materializationTestConfigs[testIndex]
+        .activated;
 
     testSelectionLocal[props[1]].materializationTestConfigs[
       testIndex
     ].activated = invertedValueActivated;
 
-    const testSuiteId = testSelectionLocal[props[1]].materializationTestConfigs[testIndex].testSuiteId;
+    const testSuiteId =
+      testSelectionLocal[props[1]].materializationTestConfigs[testIndex]
+        .testSuiteId;
     if (testSuiteId) {
-      ObservabilityApiRepo.updateTestSuites(
-        [{ id: testSuiteId, activated: invertedValueActivated }],
-        jwt
-      );
-      
+      if (type == 'MaterializationSchemaChange')
+        ObservabilityApiRepo.updateNominalTestSuites(
+          [{ id: testSuiteId, activated: invertedValueActivated }],
+          jwt
+        );
+      else
+        ObservabilityApiRepo.updateTestSuites(
+          [{ id: testSuiteId, activated: invertedValueActivated }],
+          jwt
+        );
+
       setTestSelection({ ...testSelectionLocal });
       return;
     }
@@ -624,26 +640,48 @@ export default (): ReactElement => {
 
     if (!materalization) throw new Error('Materialization not found');
 
-    const testSuite = (
-      await ObservabilityApiRepo.postTestSuites(
-        [
-          {
-            activated: invertedValueActivated,
-            databaseName: materalization.databaseName,
-            schemaName: materalization.schemaName,
-            materializationName: materalization.name,
-            materializationType: parseMaterializationType(
-              materalization.materializationType
-            ),
-            targetResourceId: materalization.id,
-            type,
-            executionFrequency: testSelectionLocal[props[1]].frequency || 1,
-            threshold: testSelectionLocal[props[1]].sensitivity || 0,
-          },
-        ],
-        jwt
-      )
-    )[0];
+    let testSuite: TestSuiteDto | NominalTestSuiteDto;
+    if (type === 'MaterializationSchemaChange')
+      testSuite = (
+        await ObservabilityApiRepo.postNominalTestSuites(
+          [
+            {
+              activated: invertedValueActivated,
+              databaseName: materalization.databaseName,
+              schemaName: materalization.schemaName,
+              materializationName: materalization.name,
+              materializationType: parseMaterializationType(
+                materalization.materializationType
+              ),
+              targetResourceId: materalization.id,
+              type,
+              executionFrequency: testSelectionLocal[props[1]].frequency || 1,
+            },
+          ],
+          jwt
+        )
+      )[0];
+    else
+      testSuite = (
+        await ObservabilityApiRepo.postTestSuites(
+          [
+            {
+              activated: invertedValueActivated,
+              databaseName: materalization.databaseName,
+              schemaName: materalization.schemaName,
+              materializationName: materalization.name,
+              materializationType: parseMaterializationType(
+                materalization.materializationType
+              ),
+              targetResourceId: materalization.id,
+              type,
+              executionFrequency: testSelectionLocal[props[1]].frequency || 1,
+              threshold: testSelectionLocal[props[1]].sensitivity || 0,
+            },
+          ],
+          jwt
+        )
+      )[0];
 
     testSelectionLocal[props[1]].materializationTestConfigs[
       testIndex
@@ -1112,6 +1150,8 @@ export default (): ReactElement => {
         (el) => el.target.targetResourceId === materialization.id
       );
 
+      const matNominalTestSuites = nominalTestSuites.filter(el => el.target.targetResourceId === materialization.id);
+
       const matchCountError = (testType: TestType) => {
         throw new Error(
           `Multiple mat test suites for ${testType} test type in place`
@@ -1123,22 +1163,25 @@ export default (): ReactElement => {
       );
       if (matColumnCountMatches.length > 1)
         matchCountError('MaterializationColumnCount');
+
       const matRowCountMatches = materializationSuites.filter(
         (el) => el.type === 'MaterializationRowCount'
       );
       if (matRowCountMatches.length > 1)
         matchCountError('MaterializationRowCount');
+
       const matFreshnessMatches = materializationSuites.filter(
         (el) => el.type === 'MaterializationFreshness'
       );
       if (matFreshnessMatches.length > 1)
         matchCountError('MaterializationFreshness');
-      const matSchemaChangeMatches = materializationSuites.filter(
+
+      const matSchemaChangeMatches = matNominalTestSuites.filter(
         (el) => el.type === 'MaterializationSchemaChange'
       );
       if (matSchemaChangeMatches.length > 1)
         matchCountError('MaterializationSchemaChange');
-    
+
       const tableTestSelectionStructure: MaterializationTestsConfig = {
         label: materializationLabel,
         navExpanded: false,
@@ -1726,6 +1769,10 @@ export default (): ReactElement => {
         .then((columnDtos) => {
           setColumns(columnDtos);
 
+          return ObservabilityApiRepo.getNominalTestSuites(jwt);
+        })
+        .then((nominalTestSuiteDtos) => {
+          setNominalTestSuites(nominalTestSuiteDtos);
           return ObservabilityApiRepo.getTestSuites(jwt);
         })
         .then((testSuiteDtos) => {
@@ -1910,7 +1957,7 @@ export default (): ReactElement => {
                       Table Freshness
                     </TableCell>
                     <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                      Schema Changes
+                      Schema Change
                     </TableCell>
                   </TableRow>
                 </TableHead>

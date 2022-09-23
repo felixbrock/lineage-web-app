@@ -2,32 +2,46 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { mode } from '../../config';
 import { MaterializationType, TestType } from '../../pages/test/test';
 import getRoot from '../shared/api-root-builder';
-import { TestSuiteDto } from './test-suite-dto';
+import { NominalTestSuiteDto, TestSuiteDto } from './test-suite-dto';
 
 interface UpdateTestHistoryEntryDto {
   alertId: string;
   userFeedbackIsAnomaly: string;
 }
 
-export interface TestSuiteProps {
-  activated: boolean;
-  type: TestType;
-  threshold: number;
-  executionFrequency: number;
-  databaseName: string;
-  schemaName: string;
-  materializationName: string;
-  materializationType: MaterializationType;
-  columnName: string;
-  targetResourceId: string;
+interface BaseTestSuiteProps {
+  activated: boolean,
+  type: TestType,
+  executionFrequency: number,
+  databaseName: string,
+  schemaName: string,
+  materializationName: string, 
+  materializationType: MaterializationType,
+  columnName?: string, 
+  targetResourceId: string
+  cron?: string
 }
 
-export interface UpdateTestSuiteObject {
+export interface TestSuiteProps extends BaseTestSuiteProps{
+  threshold: number,
+}
+
+export type NominalTestSuiteProps = BaseTestSuiteProps
+
+interface BaseUpdateTestSuiteObject {
   id: string;
   activated?: boolean;
-  threshold?: number;
   frequency?: number;
+  cron?: string;
 }
+
+export interface UpdateTestSuiteObject extends BaseUpdateTestSuiteObject {
+  threshold?: number;
+}
+
+export type UpdateNominalTestSuiteObject = BaseUpdateTestSuiteObject
+
+
 
 // TODO - Implement Interface regarding clean architecture
 export default class ObservabilityApiRepo {
@@ -69,6 +83,32 @@ export default class ObservabilityApiRepo {
     }
   };
 
+  public static postNominalTestSuites = async (
+    postTestSuiteObjects: NominalTestSuiteProps[],
+    jwt: string
+  ): Promise<NominalTestSuiteDto[]> => {
+    try {
+      const apiRoot = await ObservabilityApiRepo.root;
+
+      const payload = { createObjects: postTestSuiteObjects };
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.post(
+        `${apiRoot}/nominal-test-suites`,
+        payload,
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status === 201) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
   public static updateTestSuites = async (
     updateObjects: UpdateTestSuiteObject[],
     jwt: string
@@ -95,6 +135,32 @@ export default class ObservabilityApiRepo {
     }
   };
 
+  public static updateNominalTestSuites = async (
+    updateObjects: UpdateNominalTestSuiteObject[],
+    jwt: string
+  ): Promise<void> => {
+    try {
+      const apiRoot = await ObservabilityApiRepo.root;
+
+      const payload = { updateObjects };
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.patch(
+        `${apiRoot}/nominal-test-suites`,
+        payload,
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
   public static getTestSuites = async (
     jwt: string
   ): Promise<TestSuiteDto[]> => {
@@ -106,6 +172,25 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.get(`${apiRoot}/test-suites`, config);
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
+  public static getNominalTestSuites = async (
+    jwt: string
+  ): Promise<NominalTestSuiteDto[]> => {
+    try {
+      const apiRoot = await ObservabilityApiRepo.root;
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.get(`${apiRoot}/nominal-test-suites`, config);
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);

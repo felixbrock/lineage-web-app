@@ -1,6 +1,5 @@
-import { isNaN } from 'lodash';
 
-const numericalFieldHandler = callback => (event) => {
+const numericalFieldHandler = (callback:any) => (event: any) => {
   // Convert input from a string to a number
   const inputNumber = +event.target.value;
   // Check if is a number and is less than 1000

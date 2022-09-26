@@ -1,4 +1,6 @@
 import english from './english';
 import german from './german';
 
-export default { english, german };
+const translations = { english, german } as const;
+
+export default translations;

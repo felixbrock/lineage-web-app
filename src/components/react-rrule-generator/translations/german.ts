@@ -1,4 +1,4 @@
-export default {
+const german = {
   locale: 'de',
   invalid_rrule: "Sie haben eine ungültige RRule an die Komponente übergeben. '%{value}' ist keine gültige RRule.",
   months: {
@@ -86,4 +86,6 @@ export default {
     on_date: 'Am',
     executions: 'Ausführungen.',
   },
-};
+} as const;
+
+export default german;

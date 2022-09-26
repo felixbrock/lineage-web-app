@@ -1,4 +1,4 @@
-export default {
+const english = {
   locale: 'en-gb',
   invalid_rrule:
     "You provided an invalid RRule value to component. '%{value}' is not a correct RRule string.",
@@ -87,4 +87,6 @@ export default {
     on_date: 'On date',
     executions: 'executions.',
   },
-};
+} as const;
+
+export default english; 

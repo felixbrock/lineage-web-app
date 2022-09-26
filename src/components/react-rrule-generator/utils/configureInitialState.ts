@@ -1,16 +1,22 @@
 import moment from 'moment';
-import { isEmpty, uniqueId } from 'lodash';
 
 import computeRRuleToString from './computeRRule/toString/computeRRule';
 import { DATE_TIME_FORMAT } from '../constants/index';
+import { randomUUID } from 'crypto';
 
-const configureState = (config = {}, calendarComponent, id) => {
-  const configureFrequency = () => (config.repeat ? config.repeat[0] : 'Yearly');
-  const configureYearly = () => (config.yearly || 'on');
-  const configureMonthly = () => (config.monthly || 'on');
+const configureState = (
+  calendarComponent: any,
+  id: string,
+  config: { [key: string]: any } = {}
+) => {
+  const configureFrequency = () =>
+    config.repeat ? config.repeat[0] : 'Yearly';
+  const configureYearly = () => config.yearly || 'on';
+  const configureMonthly = () => config.monthly || 'on';
   const configureEnd = () => (config.end ? config.end[0] : 'Never');
-  const configureHideStart = () => (typeof config.hideStart === 'undefined' ? true : config.hideStart);
-  const uniqueRruleId = isEmpty(id) ? uniqueId('rrule-') : id;
+  const configureHideStart = () =>
+    typeof config.hideStart === 'undefined' ? true : config.hideStart;
+  const uniqueRruleId: string = id || `'rrule-'${randomUUID()}`;
 
   const data = {
     start: {

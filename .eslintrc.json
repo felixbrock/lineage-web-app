@@ -1,6 +1,5 @@
 {
   "root": true,
-  "extends": ["react-app", "react-app/jest", "eslint:recommended", "prettier"],
   "rules": {
     "import/no-anonymous-default-export": [2, { "allowArrowFunction": true }],
     "semi": [2, "always"]
@@ -14,7 +13,14 @@
       // As mentioned in the comments, you should extend TypeScript plugins here,
       // instead of extending them outside the `overrides`.
       // If you don't want to extend any rules, you don't need an `extends` attribute.
-      "extends": ["plugin:@typescript-eslint/recommended", "airbnb-typescript"],
+      "extends": [
+        "react-app",
+        "react-app/jest",
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "airbnb-typescript",
+        "prettier"
+      ],
 
       "parserOptions": {
         "project": ["./tsconfig.json"] // Specify it only for TypeScript files

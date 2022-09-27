@@ -9,7 +9,6 @@ import {
 import './App.scss';
 import Lineage from './pages/lineage/lineage';
 import Test from './pages/test/test';
-import Playground from './pages/playground';
 import { authEnvConfig, oAuthEnvConfig } from './config';
 import GithubRedirect from './pages/github-redirect';
 import SlackRedirect from './pages/slack-redirect';
@@ -64,7 +63,6 @@ export default (): ReactElement => {
               <Routes>
                 <Route path="/lineage" element={<Lineage />} />
                 <Route path="/test" element={<Test />} />
-                <Route path="/playground" element={<Playground />} />
                 <Route
                   path="/oauth/github/:code/:installationId/:state"
                   element={<GithubRedirect />}

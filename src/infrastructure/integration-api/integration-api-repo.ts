@@ -18,19 +18,43 @@ interface UpdateSlackProfileDto {
   channelName?: string;
 }
 
+interface PostSnowflakeProfileDto {
+  accountId: string;
+  username: string;
+  password: string;
+  warehouseName: string;
+}
+
 interface UpdateSnowflakeProfileDto {
   accountId?: string;
   username?: string;
   password?: string;
+  warehouseName?: string;
+}
+
+interface PostGithubProfileDto {
+  installationId: string;
+  organizationId: string;
+  repositoryNames: string[];
+}
+
+interface UpdateGithubProfileDto {
+  installationId?: string;
 }
 
 // TODO - Implement Interface regarding clean architecture
 export default class IntegrationApiRepo {
-  private static gateway =  mode === 'production' ? 'wej7xjkvug.execute-api.eu-central-1.amazonaws.com/production' : 'localhost:3002';
+  private static gateway =
+    mode === 'production'
+      ? 'wej7xjkvug.execute-api.eu-central-1.amazonaws.com/production'
+      : 'localhost:3002';
 
   private static path = 'api/v1';
 
-  private static root = getRoot(IntegrationApiRepo.gateway, IntegrationApiRepo.path);
+  private static root = getRoot(
+    IntegrationApiRepo.gateway,
+    IntegrationApiRepo.path
+  );
 
   public static getSlackProfile = async (
     jwt: string
@@ -54,7 +78,7 @@ export default class IntegrationApiRepo {
   public static postSlackProfile = async (
     postSlackProfileDto: PostSlackProfileDto,
     jwt: string
-  ): Promise<unknown> => {
+  ): Promise<SlackProfileDto | undefined> => {
     try {
       const apiRoot = await IntegrationApiRepo.root;
 
@@ -64,7 +88,11 @@ export default class IntegrationApiRepo {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
-      const response = await axios.post(`${apiRoot}/slack/profile`, data, config);
+      const response = await axios.post(
+        `${apiRoot}/slack/profile`,
+        data,
+        config
+      );
       const jsonResponse = response.data;
       if (response.status === 201) return jsonResponse;
       throw new Error(jsonResponse);
@@ -86,7 +114,11 @@ export default class IntegrationApiRepo {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
-      const response = await axios.patch(`${apiRoot}/slack/profile`, data, config);
+      const response = await axios.patch(
+        `${apiRoot}/slack/profile`,
+        data,
+        config
+      );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);
@@ -96,6 +128,7 @@ export default class IntegrationApiRepo {
   };
 
   public static getSlackConversations = async (
+    params: URLSearchParams,
     jwt: string
   ): Promise<SlackConversationInfoDto[]> => {
     try {
@@ -103,8 +136,9 @@ export default class IntegrationApiRepo {
 
       const config: AxiosRequestConfig = {
         headers: {
-          Authorization: `Bearer ${jwt}`
-        }
+          Authorization: `Bearer ${jwt}`,
+        },
+        params,
       };
 
       const response = await axios.get(
@@ -113,8 +147,7 @@ export default class IntegrationApiRepo {
       );
       const jsonResponse = response.data;
       if (response.status !== 200) throw new Error(jsonResponse.message);
-      if (!jsonResponse)
-        throw new Error('Did not receive slack conversations');
+      if (!jsonResponse) throw new Error('Did not receive slack conversations');
       return jsonResponse;
     } catch (error: unknown) {
       if (typeof error === 'string') return Promise.reject(error);
@@ -124,25 +157,27 @@ export default class IntegrationApiRepo {
   };
 
   public static joinSlackConversation = async (
+    oldChannelId: string,
+    newChannelId: string,
+    accessToken: string,
     jwt: string
-  ): Promise<SlackConversationInfoDto[]> => {
+  ): Promise<undefined> => {
     try {
       const apiRoot = await IntegrationApiRepo.root;
 
       const config: AxiosRequestConfig = {
         headers: {
-          Authorization: `Bearer ${jwt}`
-        }
+          Authorization: `Bearer ${jwt}`,
+        },
       };
 
       const response = await axios.post(
-        `${apiRoot}/slack/conversation/join`, undefined,
+        `${apiRoot}/slack/conversation/join`,
+        { oldChannelId, newChannelId, accessToken },
         config
       );
       const jsonResponse = response.data;
       if (response.status !== 201) throw new Error(jsonResponse.message);
-      if (!jsonResponse)
-        throw new Error('Slack conversation join failed');
       return jsonResponse;
     } catch (error: unknown) {
       if (typeof error === 'string') return Promise.reject(error);
@@ -151,10 +186,8 @@ export default class IntegrationApiRepo {
     }
   };
 
-  public static createGithubProfile = async (
-    installationId: string,
-    organizationId: string,
-    repositoryNames: string[],
+  public static postGithubProfile = async (
+    postGithubProfileDto: PostGithubProfileDto,
     jwt: string
   ): Promise<string> => {
     try {
@@ -162,23 +195,18 @@ export default class IntegrationApiRepo {
 
       const config: AxiosRequestConfig = {
         headers: {
-          Authorization: `Bearer ${jwt}`
-        }
+          Authorization: `Bearer ${jwt}`,
+        },
       };
 
       const response = await axios.post(
-        `${apiRoot}/github/profile`, 
-        {
-          installationId,
-          organizationId,
-          repositoryNames
-        },
+        `${apiRoot}/github/profile`,
+        postGithubProfileDto,
         config
       );
       const jsonResponse = response.data;
       if (response.status !== 201) throw new Error(jsonResponse.message);
-      if (!jsonResponse)
-        throw new Error('Github profile creation failed');
+      if (!jsonResponse) throw new Error('Github profile creation failed');
       return jsonResponse;
     } catch (error: unknown) {
       if (typeof error === 'string') return Promise.reject(error);
@@ -187,23 +215,45 @@ export default class IntegrationApiRepo {
     }
   };
 
-
-  public static readGithubProfile = async (
-    installationId: string,
+  public static updateGithubProfile = async (
+    updateGithubProfileDto: UpdateGithubProfileDto,
     jwt: string
-  ): Promise<GithubProfileDto> => {
+  ): Promise<unknown> => {
     try {
+      const apiRoot = await IntegrationApiRepo.root;
 
+      const data = updateGithubProfileDto;
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.patch(
+        `${apiRoot}/github/profile`,
+        data,
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
+  public static getGithubProfile = async (
+    params: URLSearchParams,
+    jwt: string
+  ): Promise<GithubProfileDto | undefined> => {
+    try {
       const apiRoot = await IntegrationApiRepo.root;
 
       const configuration: AxiosRequestConfig = {
         headers: {
           Authorization: `Bearer ${jwt}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        params: {
-          installationId
-        }
+        params,
       };
 
       const response = await axios.get(
@@ -212,10 +262,37 @@ export default class IntegrationApiRepo {
       );
 
       const jsonResponse = response.data;
-      console.log(jsonResponse);
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse.message);
+    } catch (error: unknown) {
+      if (typeof error === 'string') return Promise.reject(error);
+      if (error instanceof Error) return Promise.reject(error.message);
+      return Promise.reject(new Error('Unknown error occured'));
+    }
+  };
 
+  public static getAccessToken = async (
+    code: string,
+    jwt: string
+  ): Promise<string> => {
+    try {
+      const apiRoot = await IntegrationApiRepo.root;
+
+      const config: AxiosRequestConfig = {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      };
+
+      const response = await axios.post(
+        `${apiRoot}/github/token`,
+        {code},
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status !== 201) throw new Error(jsonResponse.message);
+      if (!jsonResponse) throw new Error('Github access token retrieval failed');
+      return jsonResponse;
     } catch (error: unknown) {
       if (typeof error === 'string') return Promise.reject(error);
       if (error instanceof Error) return Promise.reject(error.message);
@@ -225,31 +302,29 @@ export default class IntegrationApiRepo {
 
   public static querySnowflake = async (
     query: string,
-    targetOrganizationId: string,  
+    targetOrganizationId: string,
     jwt: string
   ): Promise<any> => {
-
     try {
       const apiRoot = await IntegrationApiRepo.root;
 
       const config: AxiosRequestConfig = {
         headers: {
-          Authorization: `Bearer ${jwt}`
-        }
+          Authorization: `Bearer ${jwt}`,
+        },
       };
 
       const response = await axios.post(
-        `${apiRoot}/snowflake/query`, 
+        `${apiRoot}/snowflake/query`,
         {
-         query,
-         targetOrganizationId
+          query,
+          targetOrganizationId,
         },
         config
       );
       const jsonResponse = response.data;
       if (response.status !== 200) throw new Error(jsonResponse.message);
-      if (!jsonResponse)
-        throw new Error('Querying snowflake failed');
+      if (!jsonResponse) throw new Error('Querying snowflake failed');
       return jsonResponse;
     } catch (error: unknown) {
       if (typeof error === 'string') return Promise.reject(error);
@@ -258,11 +333,10 @@ export default class IntegrationApiRepo {
     }
   };
 
-
-public static getSnowflakeProfile = async (
+  public static getSnowflakeProfile = async (
     jwt: string
   ): Promise<SnowflakeProfileDto | null> => {
-try {
+    try {
       const apiRoot = await IntegrationApiRepo.root;
 
       const config: AxiosRequestConfig = {
@@ -291,9 +365,62 @@ try {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
-      const response = await axios.patch(`${apiRoot}/snowflake/profile`, data, config);
+      const response = await axios.patch(
+        `${apiRoot}/snowflake/profile`,
+        data,
+        config
+      );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
+  public static postSnowflakeProfile = async (
+    postSnowflakeProfileDto: PostSnowflakeProfileDto,
+    jwt: string
+  ): Promise<unknown> => {
+    try {
+      const apiRoot = await IntegrationApiRepo.root;
+
+      const data = postSnowflakeProfileDto;
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.post(
+        `${apiRoot}/snowflake/profile`,
+        data,
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status === 201) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
+  public static postSnowflakeEnvironment = async (
+    jwt: string
+  ): Promise<unknown> => {
+    try {
+      const apiRoot = await IntegrationApiRepo.root;
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.post(
+        `${apiRoot}/snowflake/init`,
+        undefined,
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status === 201) return jsonResponse;
       throw new Error(jsonResponse);
     } catch (error: any) {
       return Promise.reject(new Error(error.response.data.message));

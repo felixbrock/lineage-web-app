@@ -48,8 +48,8 @@ const getOAuthEnvConfig = (): any => {
       break;
     case 'production':
       oAuthEnvConfig.domain = 'auth.citodata.com';
-      oAuthEnvConfig.redirectSignIn = 'https://app.citodata.com';
-      oAuthEnvConfig.redirectSignOut = 'https://app.citodata.com';
+      oAuthEnvConfig.redirectSignIn = 'https://www.app.citodata.com';
+      oAuthEnvConfig.redirectSignOut = 'https://www.app.citodata.com';
       break;
     default:
       break;
@@ -114,3 +114,5 @@ const getGithubConfig = (): GithubConfig  => {
 };
 
 export const githubConfig = getGithubConfig();
+
+export const showRealData = !process.env.REACT_APP_SHOW_REAL_DATA? true : process.env.REACT_APP_SHOW_REAL_DATA === 'true';

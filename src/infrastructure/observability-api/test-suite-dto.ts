@@ -1,14 +1,22 @@
-export interface TestSuiteDto {
+interface BaseTestSuiteDto {
   id: string;
   organizationId: string;
-  targetResourceId: string;
+  target: {
+    databaseName: string;
+    targetResourceId: string;
+    schemaName: string;
+    materializationType: string;
+    columnName?: string;
+    materializationName: string;
+  };
   activated: boolean;
   type: string;
-  threshold: number;
   executionFrequency: number;
-  databaseName: string;
-  schemaName: string;
-  materializationName: string;
-  columnName?: string;
-  materializationType: string;
+  cron?: string;
 }
+
+export interface TestSuiteDto extends BaseTestSuiteDto {
+  threshold: number;
+}
+
+export type NominalTestSuiteDto = BaseTestSuiteDto;

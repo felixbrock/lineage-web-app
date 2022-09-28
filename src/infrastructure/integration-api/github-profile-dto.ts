@@ -3,4 +3,5 @@ export default interface GithubProfileDto {
   organizationId: string;
   repositoryNames: string[];
   firstLineageCreated: boolean;
+// eslint-disable-next-line semi
 };

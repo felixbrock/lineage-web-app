@@ -292,17 +292,17 @@ export default (): ReactElement => {
         'No activated tests found. Sensitivity change not allowed'
       );
 
-    const updateObjects = testsToUpdate.map((test): UpdateTestSuiteObject => {
-      if (!test.testSuiteId)
-        throw new Error('Test with status activated found that does not exist');
+    // const updateObjects = testsToUpdate.map((test): UpdateTestSuiteObject => {
+    //   if (!test.testSuiteId)
+    //     throw new Error('Test with status activated found that does not exist');
 
-      return {
-        id: test.testSuiteId,
-        frequency: value,
-      };
-    });
+    //   return {
+    //     id: test.testSuiteId,
+    //     frequency: value,
+    //   };
+    // });
 
-    ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
+    // ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     testSelectionLocal[props[1]].columnTestConfigs[
       columnTestConfigIndex

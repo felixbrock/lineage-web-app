@@ -1150,7 +1150,9 @@ export default (): ReactElement => {
         (el) => el.target.targetResourceId === materialization.id
       );
 
-      const matNominalTestSuites = nominalTestSuites.filter(el => el.target.targetResourceId === materialization.id);
+      const matNominalTestSuites = nominalTestSuites.filter(
+        (el) => el.target.targetResourceId === materialization.id
+      );
 
       const matchCountError = (testType: TestType) => {
         throw new Error(
@@ -1918,46 +1920,111 @@ export default (): ReactElement => {
               <Table stickyHeader={true} aria-label="collapsible table">
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={tableNameSx} width={350}>
-                      {' '}
+                    <TableCell
+                      sx={tableNameSx}
+                      width={350}
+                      style={{ verticalAlign: 'top' }}
+                    >
                       Table Name
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={90} align="center">
-                      Frequency
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={90}
+                      align="center"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Frequency</p>
+                      <p></p>
                     </TableCell>
                     <TableCell
                       sx={tableHeaderCellSx}
                       width={135}
                       align="center"
+                      style={{ verticalAlign: 'top' }}
                     >
-                      Sensitivity
+                      <p>Sensitivity</p>
+                      <p></p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                      Column Freshness
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Column</p>
+                      <p>Freshness</p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                      Cardinality
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Cardinality</p>
+                      <p></p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                      Nullness
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Nullness</p>
+                      <p></p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                      Uniqueness
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Uniqueness</p>
+                      <p></p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                      Distribution
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Distribution</p>
+                      <p></p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                      Row Count
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Row</p>
+                      <p>Count</p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                      Column Count
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Column</p>
+                      <p>Count</p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                      Table Freshness
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Table</p>
+                      <p>Freshness</p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left">
-                      Schema Change
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Schema</p>
+                      <p>Change</p>
                     </TableCell>
                   </TableRow>
                 </TableHead>

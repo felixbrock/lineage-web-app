@@ -19,7 +19,6 @@ import { MdChevronRight, MdExpandMore } from 'react-icons/md';
 
 import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
 import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
-import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
 import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
 import LineageDto from '../../infrastructure/lineage-api/lineage/lineage-dto';
 import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
@@ -382,17 +381,17 @@ export default (): ReactElement => {
         'No activated tests found. Sensitivity change not allowed'
       );
 
-    const updateObjects = testsToUpdate.map((test): UpdateTestSuiteObject => {
-      if (!test.testSuiteId)
-        throw new Error('Test with status activated found that does not exist');
+    // const updateObjects = testsToUpdate.map((test): UpdateTestSuiteObject => {
+    //   if (!test.testSuiteId)
+    //     throw new Error('Test with status activated found that does not exist');
 
-      return {
-        id: test.testSuiteId,
-        threshold: value,
-      };
-    });
+    //   return {
+    //     id: test.testSuiteId,
+    //     threshold: value,
+    //   };
+    // });
 
-    ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
+    // ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     testSelectionLocal[props[1]].columnTestConfigs[
       columnTestConfigIndex
@@ -623,16 +622,16 @@ export default (): ReactElement => {
       testSelectionLocal[props[1]].materializationTestConfigs[testIndex]
         .testSuiteId;
     if (testSuiteId) {
-      if (type == 'MaterializationSchemaChange')
-        ObservabilityApiRepo.updateNominalTestSuites(
-          [{ id: testSuiteId, activated: invertedValueActivated }],
-          jwt
-        );
-      else
-        ObservabilityApiRepo.updateTestSuites(
-          [{ id: testSuiteId, activated: invertedValueActivated }],
-          jwt
-        );
+      // if (type == 'MaterializationSchemaChange')
+      //   ObservabilityApiRepo.updateNominalTestSuites(
+      //     [{ id: testSuiteId, activated: invertedValueActivated }],
+      //     jwt
+      //   );
+      // else
+      //   ObservabilityApiRepo.updateTestSuites(
+      //     [{ id: testSuiteId, activated: invertedValueActivated }],
+      //     jwt
+      //   );
 
       setTestSelection({ ...testSelectionLocal });
       return;
@@ -642,52 +641,52 @@ export default (): ReactElement => {
 
     if (!materalization) throw new Error('Materialization not found');
 
-    let testSuite: TestSuiteDto | NominalTestSuiteDto;
-    if (type === 'MaterializationSchemaChange')
-      testSuite = (
-        await ObservabilityApiRepo.postNominalTestSuites(
-          [
-            {
-              activated: invertedValueActivated,
-              databaseName: materalization.databaseName,
-              schemaName: materalization.schemaName,
-              materializationName: materalization.name,
-              materializationType: parseMaterializationType(
-                materalization.materializationType
-              ),
-              targetResourceId: materalization.id,
-              type,
-              executionFrequency: testSelectionLocal[props[1]].frequency || 1,
-            },
-          ],
-          jwt
-        )
-      )[0];
-    else
-      testSuite = (
-        await ObservabilityApiRepo.postTestSuites(
-          [
-            {
-              activated: invertedValueActivated,
-              databaseName: materalization.databaseName,
-              schemaName: materalization.schemaName,
-              materializationName: materalization.name,
-              materializationType: parseMaterializationType(
-                materalization.materializationType
-              ),
-              targetResourceId: materalization.id,
-              type,
-              executionFrequency: testSelectionLocal[props[1]].frequency || 1,
-              threshold: testSelectionLocal[props[1]].sensitivity || 0,
-            },
-          ],
-          jwt
-        )
-      )[0];
+    // let testSuite: TestSuiteDto | NominalTestSuiteDto;
+    // if (type === 'MaterializationSchemaChange')
+    //   testSuite = (
+    //     await ObservabilityApiRepo.postNominalTestSuites(
+    //       [
+    //         {
+    //           activated: invertedValueActivated,
+    //           databaseName: materalization.databaseName,
+    //           schemaName: materalization.schemaName,
+    //           materializationName: materalization.name,
+    //           materializationType: parseMaterializationType(
+    //             materalization.materializationType
+    //           ),
+    //           targetResourceId: materalization.id,
+    //           type,
+    //           executionFrequency: testSelectionLocal[props[1]].frequency || 1,
+    //         },
+    //       ],
+    //       jwt
+    //     )
+    //   )[0];
+    // else
+    //   testSuite = (
+    //     await ObservabilityApiRepo.postTestSuites(
+    //       [
+    //         {
+    //           activated: invertedValueActivated,
+    //           databaseName: materalization.databaseName,
+    //           schemaName: materalization.schemaName,
+    //           materializationName: materalization.name,
+    //           materializationType: parseMaterializationType(
+    //             materalization.materializationType
+    //           ),
+    //           targetResourceId: materalization.id,
+    //           type,
+    //           executionFrequency: testSelectionLocal[props[1]].frequency || 1,
+    //           threshold: testSelectionLocal[props[1]].sensitivity || 0,
+    //         },
+    //       ],
+    //       jwt
+    //     )
+    //   )[0];
 
     testSelectionLocal[props[1]].materializationTestConfigs[
       testIndex
-    ].testSuiteId = testSuite.id;
+    ].testSuiteId = 'testSuite.id';
 
     setTestSelection({ ...testSelectionLocal });
   };
@@ -1695,28 +1694,29 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!user) return;
 
-    Auth.currentSession()
-      .then((session) => {
-        const accessToken = session.getAccessToken();
+    // Auth.currentSession()
+    //   .then((session) => {
+    //     const accessToken = session.getAccessToken();
 
-        const token = accessToken.getJwtToken();
-        setJwt(token);
+    //     const token = accessToken.getJwtToken();
+    //     setJwt(token);
 
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
-      })
-      .then((accounts) => {
-        if (!accounts.length) throw new Error(`No accounts found for user`);
+    //     return AccountApiRepository.getBy(new URLSearchParams({}), token);
+    //   })
+    //   .then((accounts) => {
+    //     if (!accounts.length) throw new Error(`No accounts found for user`);
 
-        if (accounts.length > 1)
-          throw new Error(`Multiple accounts found for user`);
+    //     if (accounts.length > 1)
+    //       throw new Error(`Multiple accounts found for user`);
 
-        setAccount(accounts[0]);
-      })
-      .catch((error) => {
-        console.trace(typeof error === 'string' ? error : error.message);
+    //     setAccount(accounts[0]);
+    //   })
+    //   .catch((error) => {
+    //     console.trace(typeof error === 'string' ? error : error.message);
 
-        // Auth.signOut();
-      });
+    //     // Auth.signOut();
+    //   });
+    setAccount({id: '', organizationId: '', userId: ''});
   }, [user]);
 
   const handleUserFeedback = () => {
@@ -1791,6 +1791,7 @@ export default (): ReactElement => {
       setColumns(defaultColumns);
       setTestSuites(defaultTestSuites);
       setLineage({ id: 'todo', createdAt: 1 });
+      setInitialLoadCompleted(true);
     }
   }, [account]);
 
@@ -1802,6 +1803,9 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (!readyToBuild) return;
+
+    console.log('hello'.repeat(10));
+    
 
     if (!materializations.length) throw new Error('Materializations missing');
     if (!columns.length) throw new Error('Columns missing');

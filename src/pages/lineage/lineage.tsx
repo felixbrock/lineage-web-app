@@ -34,7 +34,6 @@ import MetricsGraph, {
 } from '../../components/metrics-graph';
 
 import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
-import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
 import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
 import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
 import DependenciesApiRepository from '../../infrastructure/lineage-api/dependencies/dependencies-api-repository';
@@ -752,30 +751,31 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (!user) return;
-    let token: string;
-    Auth.currentSession()
-      .then((session) => {
-        const accessToken = session.getAccessToken();
+    // let token: string;
+    // Auth.currentSession()
+    //   .then((session) => {
+    //     const accessToken = session.getAccessToken();
 
-        token = accessToken.getJwtToken();
+    //     token = accessToken.getJwtToken();
 
-        setJwt(token);
+    //     setJwt(token);
 
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
-      })
-      .then((accounts) => {
-        if (!accounts.length) throw new Error(`No accounts found for user`);
+    //     return AccountApiRepository.getBy(new URLSearchParams({}), token);
+    //   })
+    //   .then((accounts) => {
+    //     if (!accounts.length) throw new Error(`No accounts found for user`);
 
-        if (accounts.length > 1)
-          throw new Error(`Multiple accounts found for user`);
+    //     if (accounts.length > 1)
+    //       throw new Error(`Multiple accounts found for user`);
 
-        setAccount(accounts[0]);
-      })
-      .catch((error) => {
-        console.trace(typeof error === 'string' ? error : error.message);
+    //     setAccount(accounts[0]);
+    //   })
+    //   .catch((error) => {
+    //     console.trace(typeof error === 'string' ? error : error.message);
 
-        Auth.signOut();
-      });
+    //     Auth.signOut();
+    //   });
+    setAccount({id: '', organizationId: '', userId: ''})
   }, [user]);
 
   const handleSlackRedirect = (organizationId: string) => {
@@ -851,7 +851,7 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!account) return;
 
-    if (!jwt) throw new Error('No user authorization found');
+    // if (!jwt) throw new Error('No user authorization found');
 
     if (lineage) return;
 
@@ -917,13 +917,13 @@ export default (): ReactElement => {
 
           setReadyToBuild(true);
         });
+
+        handleSlackRedirect(account.organizationId);
+        handleGithubRedirect(account.organizationId);
     } else {
       setLineage({ id: 'todo', createdAt: 1 });
       setReadyToBuild(true);
     }
-
-    handleSlackRedirect(account.organizationId);
-    handleGithubRedirect(account.organizationId);
   }, [account]);
 
   useEffect(() => {

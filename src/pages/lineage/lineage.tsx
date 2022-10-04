@@ -870,7 +870,7 @@ export default (): ReactElement => {
       let lineageId: string;
 
       LineageApiRepository.getByOrgId(account.organizationId, jwt)
-        // LineageApiRepository.getOne(lineageId, jwt)
+        // LineageApiRepository.getOne('633c127e187e8bcf31eae862', jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
@@ -1389,7 +1389,7 @@ export default (): ReactElement => {
           );
 
         if (showRealData) {
-          if ('logicId' in combo) {
+          if ('logicId' in combo && combo.logicId) {
             LogicApiRepository.getOne(combo.logicId, jwt).then(
               (logicDto) => {
                 if (!logicDto)
@@ -1402,7 +1402,7 @@ export default (): ReactElement => {
         } else {
           const checkedCombo = combo;
 
-          if ('logicId' in checkedCombo && checkedCombo.logicId.length !== 0) {
+          if ('logicId' in checkedCombo && checkedCombo.logicId) {
             const logic = defaultLogics.find(
               (element) => element.id === checkedCombo.logicId
             );

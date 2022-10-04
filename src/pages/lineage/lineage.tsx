@@ -1425,7 +1425,7 @@ export default (): ReactElement => {
     });
 
     const defaultNodeId =
-      showRealData && data.nodes
+      showRealData && data.nodes && data.nodes.length
         ? data.nodes[0].id
         : '62715f907e3d8066494d409f';
 

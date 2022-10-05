@@ -76,6 +76,7 @@ import Snowflake from '../../components/integration/snowflake/snowflake';
 import { showRealData } from '../../config';
 import AccountDto from '../../infrastructure/account-api/account-dto';
 import { deafultErrorDashboards, defaultErrorColumns, defaultErrorDependencies, defaultErrorLineage, defaultErrorMaterializations } from './error-handling-data';
+import { ButtonSmall } from './components/buttons';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -716,6 +717,7 @@ export default (): ReactElement => {
       );
 
       return (
+      <>
         <TreeItem
           nodeId={combo.id}
           label={combo.label}
@@ -724,11 +726,12 @@ export default (): ReactElement => {
         >
           {columnElements}
         </TreeItem>
+    </>
       );
     });
 
-    return materializationElements;
-  };
+        return materializationElements;
+      };
 
   const renderLineage = () => {
     setUser(undefined);
@@ -1571,24 +1574,18 @@ export default (): ReactElement => {
               fullWidth={true}
             />
           </div>
-          <div id="control">
-            <button
-              className="control-button"
-              onClick={handleTreeViewExpandClick}
-            >
-              {expandedTreeViewElementIds.length === 0
-                ? 'Expand all'
-                : 'Collapse all'}
-            </button>
-            {/* <button className="control-button" onClick={handleShowAll}>
-              Show all
-            </button> */}
-            <button
-              className={anomalyFilterOn ? 'filter-button' : 'control-button'}
+          <div className='flex gap-x-6 justify-center mb-4'>
+            <ButtonSmall
+                buttonText={expandedTreeViewElementIds.length === 0
+                ? 'Expand All'
+                : 'Collapse All'}
+                onClick={handleTreeViewExpandClick}
+            />
+            <ButtonSmall
+              buttonText='Filter Anomalies'
               onClick={handleFilterAnomalies}
-            >
-              Filter Anomalies
-            </button>
+                className='text-white bg-red-500 hover:bg-red-600'
+            />
           </div>
           <div id="content">
             <TreeView

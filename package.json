@@ -7,6 +7,8 @@
     "@aws-amplify/auth": "^4.5.6",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
+    "@headlessui/react": "^1.7.3",
+    "@heroicons/react": "^2.0.11",
     "@mui/icons-material": "^5.8.4",
     "@mui/lab": "^5.0.0-alpha.80",
     "@mui/material": "^5.6.4",
@@ -51,6 +53,7 @@
     ]
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.3",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-syntax-highlighter": "^15.5.1",
     "@typescript-eslint/eslint-plugin": "^5.14.0",

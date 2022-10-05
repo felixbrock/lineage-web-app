@@ -1749,7 +1749,7 @@ export default (): ReactElement => {
     if (showRealData) {
       let lineageId: string;
 
-      LineageApiRepository.getByOrgId(account.organizationId, jwt)
+      LineageApiRepository.getLatest(jwt)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
           if (!lineageDto)

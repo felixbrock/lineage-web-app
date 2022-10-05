@@ -872,7 +872,7 @@ export default (): ReactElement => {
 
       let lineageId: string;
 
-      LineageApiRepository.getByOrgId(account.organizationId, jwt)
+      LineageApiRepository.getLatest(jwt)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
           if (!lineageDto)
@@ -971,13 +971,13 @@ export default (): ReactElement => {
     const definedTests: any[] = [];
     const alertList: any[] = [];
 
-    const testSuiteQuery = `select distinct test_type, id from cito.public.test_suites
+    const testSuiteQuery = `select distinct test_type, id from cito.observability.test_suites
      where target_resource_id = '${selectedNodeId}' and activated = true`;
 
     IntegrationApiRepo.querySnowflake(testSuiteQuery, account.organizationId, jwt)
       .then((results) => {
         results.forEach((entry: { TEST_TYPE: string; ID: string }) => {
-          const testHistoryQuery = `select value from cito.public.test_history
+          const testHistoryQuery = `select value from cito.observability.test_history
           where test_suite_id = '${entry.ID}' and test_type = '${entry.TEST_TYPE}'`;
 
           IntegrationApiRepo.querySnowflake(
@@ -997,9 +997,9 @@ export default (): ReactElement => {
           });
 
           const alertQuery = `select deviation, executed_on from 
-          (cito.public.alerts join cito.public.test_results 
-            on cito.public.alerts.test_suite_id = cito.public.test_results.test_suite_id) 
-            join cito.public.executions on cito.public.alerts.test_suite_id = cito.public.executions.test_suite_id
+          (cito.observability.alerts join cito.observability.test_results 
+            on cito.observability.alerts.test_suite_id = cito.observability.test_results.test_suite_id) 
+            join cito.observability.executions on cito.observability.alerts.test_suite_id = cito.observability.executions.test_suite_id
           where test_suite_id = '${entry.ID}'`;
 
           IntegrationApiRepo.querySnowflake(

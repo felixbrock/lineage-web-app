@@ -717,7 +717,6 @@ export default (): ReactElement => {
       );
 
       return (
-      <>
         <TreeItem
           nodeId={combo.id}
           label={combo.label}
@@ -726,7 +725,6 @@ export default (): ReactElement => {
         >
           {columnElements}
         </TreeItem>
-    </>
       );
     });
 

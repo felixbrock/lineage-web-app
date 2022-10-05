@@ -34,8 +34,7 @@ export default class LineageApiRepository {
     }
   };
 
-  public static getByOrgId = async (
-    organizationId: string,
+  public static getLatest = async (
     jwt: string
   ): Promise<LineageDto | null> => {
     try {
@@ -46,7 +45,7 @@ export default class LineageApiRepository {
       };
 
       const response = await axios.get(
-        `${apiRoot}/lineage/org/${organizationId}`,
+        `${apiRoot}/lineage/`,
         config
       );
       const jsonResponse = response.data;

@@ -49,7 +49,6 @@ import {
   defaultAnomalyStates,
 } from './test-data';
 
-
 import TreeView from '@mui/lab/TreeView';
 // import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 // import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -75,7 +74,13 @@ import Slack from '../../components/integration/slack/slack';
 import Snowflake from '../../components/integration/snowflake/snowflake';
 import { showRealData } from '../../config';
 import AccountDto from '../../infrastructure/account-api/account-dto';
-import { deafultErrorDashboards, defaultErrorColumns, defaultErrorDependencies, defaultErrorLineage, defaultErrorMaterializations } from './error-handling-data';
+import {
+  deafultErrorDashboards,
+  defaultErrorColumns,
+  defaultErrorDependencies,
+  defaultErrorLineage,
+  defaultErrorMaterializations,
+} from './error-handling-data';
 import { ButtonSmall } from './components/buttons';
 
 //'62e7b2bcaa9205236c323795';
@@ -728,8 +733,8 @@ export default (): ReactElement => {
       );
     });
 
-        return materializationElements;
-      };
+    return materializationElements;
+  };
 
   const renderLineage = () => {
     setUser(undefined);
@@ -972,7 +977,11 @@ export default (): ReactElement => {
     const testSuiteQuery = `select distinct test_type, id from cito.observability.test_suites
      where target_resource_id = '${selectedNodeId}' and activated = true`;
 
-    IntegrationApiRepo.querySnowflake(testSuiteQuery, account.organizationId, jwt)
+    IntegrationApiRepo.querySnowflake(
+      testSuiteQuery,
+      account.organizationId,
+      jwt
+    )
       .then((results) => {
         results.forEach((entry: { TEST_TYPE: string; ID: string }) => {
           const testHistoryQuery = `select value from cito.observability.test_history
@@ -1391,14 +1400,12 @@ export default (): ReactElement => {
 
         if (showRealData) {
           if ('logicId' in combo && combo.logicId) {
-            LogicApiRepository.getOne(combo.logicId, jwt).then(
-              (logicDto) => {
-                if (!logicDto)
-                  throw new ReferenceError('Not able to retrieve logic object');
+            LogicApiRepository.getOne(combo.logicId, jwt).then((logicDto) => {
+              if (!logicDto)
+                throw new ReferenceError('Not able to retrieve logic object');
 
-                setSQL(logicDto.sql);
-              }
-            );
+              setSQL(logicDto.sql);
+            });
           }
         } else {
           const checkedCombo = combo;
@@ -1572,17 +1579,19 @@ export default (): ReactElement => {
               fullWidth={true}
             />
           </div>
-          <div className='flex gap-x-6 justify-center mb-4'>
+          <div className="flex gap-x-6 justify-center mb-4">
             <ButtonSmall
-                buttonText={expandedTreeViewElementIds.length === 0
-                ? 'Expand All'
-                : 'Collapse All'}
-                onClick={handleTreeViewExpandClick}
+              buttonText={
+                expandedTreeViewElementIds.length === 0
+                  ? 'Expand All'
+                  : 'Collapse All'
+              }
+              onClick={handleTreeViewExpandClick}
             />
             <ButtonSmall
-              buttonText='Filter Anomalies'
+              buttonText="Filter Anomalies"
               onClick={handleFilterAnomalies}
-                className='text-white bg-red-500 hover:bg-red-600'
+              className="text-gray-50 bg-red-400 hover:bg-red-500"
             />
           </div>
           <div id="content">

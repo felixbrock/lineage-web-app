@@ -8,6 +8,9 @@ module.exports = {
       fontFamily: {
         sans: ['Inter var', ...defaultTheme.fontFamily.sans],
       },
+      colors: {
+        'cito': '#6f47ef',
+      },
     },
   },
   plugins: [require('@tailwindcss/forms')],

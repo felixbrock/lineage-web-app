@@ -54,7 +54,6 @@ import TreeView from '@mui/lab/TreeView';
 // import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TreeItem from '@mui/lab/TreeItem';
 
-import TextField from '@mui/material/TextField';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Button from '@mui/material/Button';
@@ -82,6 +81,7 @@ import {
   defaultErrorMaterializations,
 } from './error-handling-data';
 import { ButtonSmall } from './components/buttons';
+import SearchBox from './components/search-box';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -1571,14 +1571,13 @@ export default (): ReactElement => {
         </div>
         <div id="lineage" />
         <div id="sidenav" className="sidenav">
-          <div id="search">
-            <TextField
-              label="Search"
-              onChange={handleSearchChange}
-              size="small"
-              fullWidth={true}
+            <div className='mx-4'>
+            <SearchBox
+            placeholder='Search...'
+            label='leftsearchbox'
+            onChange={handleSearchChange}
             />
-          </div>
+            </div>
           <div className="flex gap-x-6 justify-center mb-4">
             <ButtonSmall
               buttonText={
@@ -1591,7 +1590,7 @@ export default (): ReactElement => {
             <ButtonSmall
               buttonText="Filter Anomalies"
               onClick={handleFilterAnomalies}
-              className="text-gray-50 bg-red-400 hover:bg-red-500"
+              className="text-white bg-red-400 hover:bg-red-500"
             />
           </div>
           <div id="content">

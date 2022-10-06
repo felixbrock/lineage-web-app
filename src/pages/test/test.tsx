@@ -24,8 +24,6 @@ import LineageDto from '../../infrastructure/lineage-api/lineage/lineage-dto';
 import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
 import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
 
-import TextField from '@mui/material/TextField';
-
 import Button from '@mui/material/Button';
 
 import MenuItem from '@mui/material/MenuItem';
@@ -48,7 +46,11 @@ import {
   TestSuiteDto,
 } from '../../infrastructure/observability-api/test-suite-dto';
 import AccountDto from '../../infrastructure/account-api/account-dto';
+
 import { defaultColumns, defaultMaterializations, defaultTestSuites } from '../lineage/test-data';
+
+import SearchBox from '../lineage/components/search-box';
+
 
 const showRealData = false;
 // const lineageId = '62f90bec34a8584bd1f6534a';
@@ -1153,7 +1155,9 @@ export default (): ReactElement => {
         (el) => el.target.targetResourceId === materialization.id
       );
 
-      const matNominalTestSuites = nominalTestSuites.filter(el => el.target.targetResourceId === materialization.id);
+      const matNominalTestSuites = nominalTestSuites.filter(
+        (el) => el.target.targetResourceId === materialization.id
+      );
 
       const matchCountError = (testType: TestType) => {
         throw new Error(
@@ -1751,8 +1755,8 @@ export default (): ReactElement => {
       handleUserFeedback();
       let localLineageId: string;
 
-      LineageApiRepository.getByOrgId(account.organizationId, jwt)
-        // LineageApiRepository.getOne(lineageId, jwt)
+      LineageApiRepository.getLatest(jwt)
+        // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
@@ -1831,8 +1835,7 @@ export default (): ReactElement => {
         <div className="navbar">
           <div id="menu-container">
             <img
-              height="40"
-              width="150"
+            className='w-20'
               src={Logo}
               alt="logo"
               onClick={() =>
@@ -1914,14 +1917,13 @@ export default (): ReactElement => {
           </div>
         </div>
         <>
-          <div id="search-nav-container">
-            <div id="search">
-              <TextField
-                label="Search"
-                onChange={handleSearchChange}
-                fullWidth={true}
-                size="small"
-              />
+            <div className='relative h-20 flex justify-center items-top'>
+            <div className='w-1/4 mt-2 relative'>
+            <SearchBox
+            placeholder='Search...'
+            label='testsearchbox'
+            onChange={handleSearchChange}
+            />
             </div>
           </div>
           <Paper sx={{ width: '100%', overflow: 'hidden' }}>
@@ -1929,10 +1931,19 @@ export default (): ReactElement => {
               <Table stickyHeader={true} aria-label="collapsible table">
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={tableNameSx} width={350} style={{ verticalAlign: 'top' }}>
+                    <TableCell
+                      sx={tableNameSx}
+                      width={350}
+                      style={{ verticalAlign: 'top' }}
+                    >
                       Table Name
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={90} align="center" style={{ verticalAlign: 'top' }}>
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={90}
+                      align="center"
+                      style={{ verticalAlign: 'top' }}
+                    >
                       <p>Frequency</p>
                       <p></p>
                     </TableCell>
@@ -1945,40 +1956,85 @@ export default (): ReactElement => {
                       <p>Sensitivity</p>
                       <p></p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left" style={{ verticalAlign: 'top' }}>
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
                       <p>Column</p>
                       <p>Freshness</p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left" style={{ verticalAlign: 'top' }}>
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
                       <p>Cardinality</p>
                       <p></p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left" style={{ verticalAlign: 'top' }}>
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
                       <p>Nullness</p>
                       <p></p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left" style={{ verticalAlign: 'top' }}>
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
                       <p>Uniqueness</p>
                       <p></p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left" style={{ verticalAlign: 'top' }}>
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
                       <p>Distribution</p>
                       <p></p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left" style={{ verticalAlign: 'top' }}>
-                    <p>Row</p>
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Row</p>
                       <p>Count</p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left" style={{ verticalAlign: 'top' }}>
-                    <p>Column</p>
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Column</p>
                       <p>Count</p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left" style={{ verticalAlign: 'top' }}>
-                    <p>Table</p>
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Table</p>
                       <p>Freshness</p>
                     </TableCell>
-                    <TableCell sx={tableHeaderCellSx} width={135} align="left" style={{ verticalAlign: 'top' }}>
-                    <p>Schema</p>
+                    <TableCell
+                      sx={tableHeaderCellSx}
+                      width={135}
+                      align="left"
+                      style={{ verticalAlign: 'top' }}
+                    >
+                      <p>Schema</p>
                       <p>Change</p>
                     </TableCell>
                   </TableRow>

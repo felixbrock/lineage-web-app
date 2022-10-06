@@ -49,13 +49,11 @@ import {
   defaultAnomalyStates,
 } from './test-data';
 
-
 import TreeView from '@mui/lab/TreeView';
 // import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 // import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TreeItem from '@mui/lab/TreeItem';
 
-import TextField from '@mui/material/TextField';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Button from '@mui/material/Button';
@@ -74,7 +72,18 @@ import Slack from '../../components/integration/slack/slack';
 import Snowflake from '../../components/integration/snowflake/snowflake';
 import { mode, showRealData } from '../../config';
 import AccountDto from '../../infrastructure/account-api/account-dto';
-import { deafultErrorDashboards, defaultErrorColumns, defaultErrorDependencies, defaultErrorLineage, defaultErrorMaterializations } from './error-handling-data';
+import {
+  deafultErrorDashboards,
+  defaultErrorColumns,
+  defaultErrorDependencies,
+  defaultErrorLineage,
+  defaultErrorMaterializations,
+} from './error-handling-data';
+import { ButtonSmall } from './components/buttons';
+import SearchBox from './components/search-box';
+import { EmptyStateIntegrations, EmptyStateDottedLine } from './components/empty-state';
+import { SectionHeading } from './components/headings';
+import { Table } from './components/table';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -420,6 +429,7 @@ export default (): ReactElement => {
   const [availableTests, setAvailableTests] = useState<any[]>([]);
   const [alertHistory, setAlertHistory] = useState<any[]>([]);
   // const [info, setInfo] = useState('');
+  const [isDataAvailable, setIsDataAvailable] = useState<boolean>(true);
   const [lineage, setLineage] = useState<LineageDto>();
   const [materializations, setMaterializations] = useState<
     MaterializationDto[]
@@ -869,8 +879,8 @@ export default (): ReactElement => {
 
       let lineageId: string;
 
-      LineageApiRepository.getByOrgId(account.organizationId, jwt)
-        // LineageApiRepository.getOne(lineageId, jwt)
+      LineageApiRepository.getLatest(jwt)
+        // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
@@ -915,6 +925,7 @@ export default (): ReactElement => {
           setDependencies(defaultErrorDependencies);
           setDashboards(deafultErrorDashboards);
 
+            setIsDataAvailable(false);
           setReadyToBuild(true);
         });
 
@@ -970,13 +981,17 @@ export default (): ReactElement => {
       const definedTests: any[] = [];
       const alertList: any[] = [];
 
-    const testSuiteQuery = `select distinct test_type, id from cito.public.test_suites
+    const testSuiteQuery = `select distinct test_type, id from cito.observability.test_suites
      where target_resource_id = '${selectedNodeId}' and activated = true`;
 
-    IntegrationApiRepo.querySnowflake(testSuiteQuery, account.organizationId, jwt)
+    IntegrationApiRepo.querySnowflake(
+      testSuiteQuery,
+      account.organizationId,
+      jwt
+    )
       .then((results) => {
         results.forEach((entry: { TEST_TYPE: string; ID: string }) => {
-          const testHistoryQuery = `select value from cito.public.test_history
+          const testHistoryQuery = `select value from cito.observability.test_history
           where test_suite_id = '${entry.ID}' and test_type = '${entry.TEST_TYPE}'`;
 
           IntegrationApiRepo.querySnowflake(
@@ -996,9 +1011,9 @@ export default (): ReactElement => {
           });
 
           const alertQuery = `select deviation, executed_on from 
-          (cito.public.alerts join cito.public.test_results 
-            on cito.public.alerts.test_suite_id = cito.public.test_results.test_suite_id) 
-            join cito.public.executions on cito.public.alerts.test_suite_id = cito.public.executions.test_suite_id
+          (cito.observability.alerts join cito.observability.test_results 
+            on cito.observability.alerts.test_suite_id = cito.observability.test_results.test_suite_id) 
+            join cito.observability.executions on cito.observability.alerts.test_suite_id = cito.observability.executions.test_suite_id
           where test_suite_id = '${entry.ID}'`;
 
           IntegrationApiRepo.querySnowflake(
@@ -1130,6 +1145,7 @@ export default (): ReactElement => {
           stroke: '#ababab',
           fill: '#fafaff',
           radius: 5,
+          opacity: isDataAvailable ? 1 : 0,
         },
         labelCfg: {
           style: {
@@ -1176,11 +1192,16 @@ export default (): ReactElement => {
       defaultCombo: {
         // type: 'cRect',
         type: 'rect',
-        padding: [30, 20, 10, 20],
+        padding: [40, 20, 10, 20],
         fixCollapseSize: [80, 10],
+        style: {
+            fill: '#112227',
+          radius: 5,
+        },
         labelCfg: {
           style: {
             fontSize: 18,
+              fill: '#ffffff',
           },
         },
       },
@@ -1392,20 +1413,18 @@ export default (): ReactElement => {
           );
 
         if (showRealData) {
-          if ('logicId' in combo) {
-            LogicApiRepository.getOne(combo.logicId, jwt).then(
-              (logicDto) => {
-                if (!logicDto)
-                  throw new ReferenceError('Not able to retrieve logic object');
+          if ('logicId' in combo && combo.logicId) {
+            LogicApiRepository.getOne(combo.logicId, jwt).then((logicDto) => {
+              if (!logicDto)
+                throw new ReferenceError('Not able to retrieve logic object');
 
-                setSQL(logicDto.sql);
-              }
-            );
+              setSQL(logicDto.sql);
+            });
           }
         } else {
           const checkedCombo = combo;
 
-          if ('logicId' in checkedCombo && checkedCombo.logicId.length !== 0) {
+          if ('logicId' in checkedCombo && checkedCombo.logicId) {
             const logic = defaultLogics.find(
               (element) => element.id === checkedCombo.logicId
             );
@@ -1428,7 +1447,7 @@ export default (): ReactElement => {
     });
 
     const defaultNodeId =
-      showRealData && data.nodes
+      showRealData && data.nodes && data.nodes.length
         ? data.nodes[0].id
         : '62715f907e3d8066494d409f';
 
@@ -1468,6 +1487,7 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
+        {!isDataAvailable && <EmptyStateIntegrations />}
         <div className="navbar">
           <div id="menu-container">
             <button id="menu-button" onClick={toggleShowSideNav}>
@@ -1475,8 +1495,7 @@ export default (): ReactElement => {
             </button>
 
             <img
-              height="40"
-              width="150"
+              className='w-20'
               src={Logo}
               alt="logo"
               onClick={() =>
@@ -1566,34 +1585,30 @@ export default (): ReactElement => {
         </div>
         <div id="lineage" />
         <div id="sidenav" className="sidenav">
-          <div id="search">
-            <TextField
-              label="Search"
-              onChange={handleSearchChange}
-              size="small"
-              fullWidth={true}
+            <div className='mx-4'>
+            <SearchBox
+            placeholder='Search...'
+            label='leftsearchbox'
+            onChange={handleSearchChange}
+            />
+            </div>
+          <div className="flex gap-x-6 justify-center mb-4">
+            <ButtonSmall
+              buttonText={
+                expandedTreeViewElementIds.length === 0
+                  ? 'Expand All'
+                  : 'Collapse All'
+              }
+              onClick={handleTreeViewExpandClick}
+            />
+            <ButtonSmall
+              buttonText="Filter Anomalies"
+              onClick={handleFilterAnomalies}
+              className="text-white bg-red-400 hover:bg-red-500"
             />
           </div>
-          <div id="control">
-            <button
-              className="control-button"
-              onClick={handleTreeViewExpandClick}
-            >
-              {expandedTreeViewElementIds.length === 0
-                ? 'Expand all'
-                : 'Collapse all'}
-            </button>
-            {/* <button className="control-button" onClick={handleShowAll}>
-              Show all
-            </button> */}
-            <button
-              className={anomalyFilterOn ? 'filter-button' : 'control-button'}
-              onClick={handleFilterAnomalies}
-            >
-              Filter Anomalies
-            </button>
-          </div>
           <div id="content">
+          {isDataAvailable ?
             <TreeView
               aria-label="controlled"
               defaultCollapseIcon={<MdExpandMore />}
@@ -1604,16 +1619,16 @@ export default (): ReactElement => {
             >
               {data ? treeViewElements : <></>}
             </TreeView>
+            :
+              <EmptyStateDottedLine />
+          }
           </div>
         </div>
         <div id="materializationSidePanel" className="sidepanel">
           <div className="header">
-            <p className="title">SQL Model Logic</p>
-            <button className="closebtn" onClick={closeMatSidePanel}>
-              &times;
-            </button>
+            <SectionHeading title='SQL Model Logic' onClick={closeMatSidePanel} />
           </div>
-          <div id="editor" className="content">
+          <div id="editor" className="content mt-10">
             <SyntaxHighlighter
               language="sql"
               style={dracula}
@@ -1626,12 +1641,9 @@ export default (): ReactElement => {
         </div>
         <div id="columnSidePanel" className="sidepanel">
           <div className="header">
-            <p className="title">Insights</p>
-            <button className="closebtn" onClick={closeColSidePanel}>
-              &times;
-            </button>
+            <SectionHeading title='Insights' onClick={closeColSidePanel} />
           </div>
-          <div className="content">
+          <div className="content mt-10">
             <Tabs
               value={columnPanelTabIndex}
               onChange={handleColumnPanelTabIndexChange}
@@ -1729,19 +1741,19 @@ export default (): ReactElement => {
                 <br></br>
               </>
             ) : (
-              <>{BasicTable(alertHistory)}</>
+              <>
+              <div className='hidden'>{BasicTable(alertHistory)}</div>
+              <Table />
+              </>
             )}
           </div>
         </div>
 
         <div id="integrationsSidePanel" className="sidepanel">
           <div className="header">
-            <p className="title">Integrations</p>
-            <button className="closebtn" onClick={closeIntegrationSidePanel}>
-              &times;
-            </button>
+            <SectionHeading title='Integrations' onClick={closeIntegrationSidePanel} />
           </div>
-          <div className="content">
+          <div className="content mt-10">
             <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
               <Tab icon={<FaGithub />} label="GitHub" />
               <Tab icon={<SiSnowflake />} label="Snowflake" />

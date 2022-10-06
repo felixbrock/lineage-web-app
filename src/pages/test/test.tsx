@@ -25,8 +25,6 @@ import MaterializationDto from '../../infrastructure/lineage-api/materialization
 import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
 import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
 
-import TextField from '@mui/material/TextField';
-
 import Button from '@mui/material/Button';
 
 import MenuItem from '@mui/material/MenuItem';
@@ -49,6 +47,7 @@ import {
   TestSuiteDto,
 } from '../../infrastructure/observability-api/test-suite-dto';
 import AccountDto from '../../infrastructure/account-api/account-dto';
+import SearchBox from '../lineage/components/search-box';
 
 const showRealData = true;
 // const lineageId = '62f90bec34a8584bd1f6534a';
@@ -1822,8 +1821,7 @@ export default (): ReactElement => {
         <div className="navbar">
           <div id="menu-container">
             <img
-              height="40"
-              width="150"
+            className='w-20'
               src={Logo}
               alt="logo"
               onClick={() =>
@@ -1905,14 +1903,13 @@ export default (): ReactElement => {
           </div>
         </div>
         <>
-          <div id="search-nav-container">
-            <div id="search">
-              <TextField
-                label="Search"
-                onChange={handleSearchChange}
-                fullWidth={true}
-                size="small"
-              />
+            <div className='relative h-20 flex justify-center items-top'>
+            <div className='w-1/4 mt-2 relative'>
+            <SearchBox
+            placeholder='Search...'
+            label='testsearchbox'
+            onChange={handleSearchChange}
+            />
             </div>
           </div>
           <Paper sx={{ width: '100%', overflow: 'hidden' }}>

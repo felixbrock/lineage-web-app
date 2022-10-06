@@ -83,6 +83,8 @@ import {
 import { ButtonSmall } from './components/buttons';
 import SearchBox from './components/search-box';
 import { EmptyStateIntegrations, EmptyStateDottedLine } from './components/empty-state';
+import { SectionHeading } from './components/headings';
+import { Table } from './components/table';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -1187,11 +1189,16 @@ export default (): ReactElement => {
       defaultCombo: {
         // type: 'cRect',
         type: 'rect',
-        padding: [30, 20, 10, 20],
+        padding: [40, 20, 10, 20],
         fixCollapseSize: [80, 10],
+        style: {
+            fill: '#112227',
+          radius: 5,
+        },
         labelCfg: {
           style: {
             fontSize: 18,
+              fill: '#ffffff',
           },
         },
       },
@@ -1485,8 +1492,7 @@ export default (): ReactElement => {
             </button>
 
             <img
-              height="40"
-              width="150"
+              className='w-20'
               src={Logo}
               alt="logo"
               onClick={() =>
@@ -1617,12 +1623,9 @@ export default (): ReactElement => {
         </div>
         <div id="materializationSidePanel" className="sidepanel">
           <div className="header">
-            <p className="title">SQL Model Logic</p>
-            <button className="closebtn" onClick={closeMatSidePanel}>
-              &times;
-            </button>
+            <SectionHeading title='SQL Model Logic' onClick={closeMatSidePanel} />
           </div>
-          <div id="editor" className="content">
+          <div id="editor" className="content mt-10">
             <SyntaxHighlighter
               language="sql"
               style={dracula}
@@ -1635,12 +1638,9 @@ export default (): ReactElement => {
         </div>
         <div id="columnSidePanel" className="sidepanel">
           <div className="header">
-            <p className="title">Insights</p>
-            <button className="closebtn" onClick={closeColSidePanel}>
-              &times;
-            </button>
+            <SectionHeading title='Insights' onClick={closeColSidePanel} />
           </div>
-          <div className="content">
+          <div className="content mt-10">
             <Tabs
               value={columnPanelTabIndex}
               onChange={handleColumnPanelTabIndexChange}
@@ -1731,19 +1731,19 @@ export default (): ReactElement => {
                 <br></br>
               </>
             ) : (
-              <>{BasicTable(alertHistory)}</>
+              <>
+              <div className='hidden'>{BasicTable(alertHistory)}</div>
+              <Table />
+              </>
             )}
           </div>
         </div>
 
         <div id="integrationsSidePanel" className="sidepanel">
           <div className="header">
-            <p className="title">Integrations</p>
-            <button className="closebtn" onClick={closeIntegrationSidePanel}>
-              &times;
-            </button>
+            <SectionHeading title='Integrations' onClick={closeIntegrationSidePanel} />
           </div>
-          <div className="content">
+          <div className="content mt-10">
             <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
               <Tab icon={<FaGithub />} label="GitHub" />
               <Tab icon={<SiSnowflake />} label="Snowflake" />

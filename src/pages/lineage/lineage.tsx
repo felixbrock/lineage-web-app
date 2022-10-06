@@ -82,6 +82,7 @@ import {
 } from './error-handling-data';
 import { ButtonSmall } from './components/buttons';
 import SearchBox from './components/search-box';
+import { EmptyStateIntegrations, EmptyStateDottedLine } from './components/empty-state';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -427,6 +428,7 @@ export default (): ReactElement => {
   const [availableTests, setAvailableTests] = useState<any[]>([]);
   const [alertHistory, setAlertHistory] = useState<any[]>([]);
   // const [info, setInfo] = useState('');
+  const [isDataAvailable, setIsDataAvailable] = useState<boolean>(true);
   const [lineage, setLineage] = useState<LineageDto>();
   const [materializations, setMaterializations] = useState<
     MaterializationDto[]
@@ -921,6 +923,7 @@ export default (): ReactElement => {
           setDependencies(defaultErrorDependencies);
           setDashboards(deafultErrorDashboards);
 
+            setIsDataAvailable(false);
           setReadyToBuild(true);
         });
     } else {
@@ -1137,6 +1140,7 @@ export default (): ReactElement => {
           stroke: '#ababab',
           fill: '#fafaff',
           radius: 5,
+          opacity: isDataAvailable ? 1 : 0,
         },
         labelCfg: {
           style: {
@@ -1473,6 +1477,7 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
+        {!isDataAvailable && <EmptyStateIntegrations />}
         <div className="navbar">
           <div id="menu-container">
             <button id="menu-button" onClick={toggleShowSideNav}>
@@ -1594,6 +1599,7 @@ export default (): ReactElement => {
             />
           </div>
           <div id="content">
+          {isDataAvailable ?
             <TreeView
               aria-label="controlled"
               defaultCollapseIcon={<MdExpandMore />}
@@ -1604,6 +1610,9 @@ export default (): ReactElement => {
             >
               {data ? treeViewElements : <></>}
             </TreeView>
+            :
+              <EmptyStateDottedLine />
+          }
           </div>
         </div>
         <div id="materializationSidePanel" className="sidepanel">

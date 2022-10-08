@@ -1,13 +1,4 @@
-const people = [
-  {
-    name: '',
-    title: '',
-    email: '',
-  },
-  // More people...
-];
-
-export function Table() {
+export function Table({ alertHistory }: any) {
   return (
     <div className="px-4">
       <div className="mt-8 flex flex-col">
@@ -38,16 +29,16 @@ export function Table() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {people.map((person) => (
-                    <tr key={person.email}>
+                  {alertHistory.map((row: any) => (
+                    <tr key={row.date}>
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                        {person.name}
+                        {row.date}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {person.title}
+                        {row.type}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {person.email}
+                        {row.deviation}
                       </td>
                     </tr>
                   ))}

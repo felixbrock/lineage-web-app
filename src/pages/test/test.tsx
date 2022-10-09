@@ -1825,7 +1825,7 @@ export default (): ReactElement => {
             </div>
           </div>
           <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-            <TableContainer sx={{ height: window.innerHeight - 50 - 67 - 52 }}>
+            <TableContainer sx={{ height: window.innerHeight - 50 - 67 - 52 - 20 }}>
               <Table stickyHeader={true} aria-label="collapsible table">
                 <TableHead>
                   <TableRow>

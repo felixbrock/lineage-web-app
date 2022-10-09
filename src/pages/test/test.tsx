@@ -1,7 +1,4 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-import LogoutIcon from '@mui/icons-material/Logout';
-import AppsIcon from '@mui/icons-material/Apps';
-import TableChartIcon from '@mui/icons-material/TableChart';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
@@ -13,7 +10,6 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
-import Logo from '../../components/top-nav/cito-header.png';
 import './test.scss';
 import { MdChevronRight, MdExpandMore } from 'react-icons/md';
 
@@ -33,7 +29,7 @@ import Select from '@mui/material/Select';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
 
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import Chip from '@mui/material/Chip';
 import TablePagination from '@mui/material/TablePagination';
 import ObservabilityApiRepo, {
@@ -46,10 +42,11 @@ import {
   TestSuiteDto,
 } from '../../infrastructure/observability-api/test-suite-dto';
 import AccountDto from '../../infrastructure/account-api/account-dto';
+import SearchBox from '../lineage/components/search-box';
+import Navbar from '../../components/navbar';
 
 import { defaultColumns, defaultMaterializations, defaultTestSuites } from '../lineage/test-data';
 
-import SearchBox from '../lineage/components/search-box';
 
 
 const showRealData = false;
@@ -207,8 +204,6 @@ const tableHeaderCellSx = {
 const tableNameSx = { mt: '0px', mb: '0px', mr: '2px', ml: '2px' };
 
 export default (): ReactElement => {
-  const navigate = useNavigate();
-
   const [account, setAccount] = useState<AccountDto>();
   const [user, setUser] = useState<any>();
   const [jwt, setJwt] = useState('');
@@ -1832,90 +1827,7 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        <div className="navbar">
-          <div id="menu-container">
-            <img
-            className='w-20'
-              src={Logo}
-              alt="logo"
-              onClick={() =>
-                navigate(`/lineage`, {
-                  state: {},
-                })
-              }
-            />
-          </div>
-          <div id="sign-out-container">
-            <Box m={0.5}>
-              <Button
-                startIcon={<TableChartIcon />}
-                onClick={() =>
-                  navigate(`/lineage`, {
-                    state: {},
-                  })
-                }
-                color="secondary"
-                size="medium"
-                variant="contained"
-                style={{
-                  borderRadius: 30,
-                  backgroundColor: '#674BCE',
-                  fontSize: '12px',
-                }}
-              >
-                Lineage
-              </Button>
-            </Box>
-            <Box m={0.5}>
-              <Button
-                startIcon={<AppsIcon />}
-                onClick={() => navigate(`/test`)}
-                color="secondary"
-                size="medium"
-                variant="contained"
-                style={{
-                  borderRadius: 30,
-                  backgroundColor: '#4EC4C4',
-                  fontSize: '12px',
-                }}
-              >
-                Tests
-              </Button>
-            </Box>
-            {/* <Box m={0.5}>
-              <Button
-                startIcon={<IntegrationInstructionsIcon />}
-                onClick={() => console.log('todo-integration screen')}
-                color="secondary"
-                size="medium"
-                variant="contained"
-                style={{
-                  borderRadius: 30,
-                  backgroundColor: '#674BCE',
-                  fontSize: '12px',
-                }}
-              >
-                Integrations
-              </Button>
-            </Box> */}
-            <Box m={0.5}>
-              <Button
-                startIcon={<LogoutIcon />}
-                onClick={() => Auth.signOut()}
-                color="secondary"
-                size="medium"
-                variant="contained"
-                style={{
-                  borderRadius: 30,
-                  backgroundColor: '#A5A0A0',
-                  fontSize: '12px',
-                }}
-              >
-                Sign Out
-              </Button>
-            </Box>
-          </div>
-        </div>
+        <Navbar current='tests' /> 
         <>
             <div className='relative h-20 flex justify-center items-top'>
             <div className='w-1/4 mt-2 relative'>
@@ -1927,7 +1839,7 @@ export default (): ReactElement => {
             </div>
           </div>
           <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-            <TableContainer sx={{ height: window.innerHeight - 50 - 67 - 52 }}>
+            <TableContainer sx={{ height: window.innerHeight - 50 - 67 - 52 - 20 }}>
               <Table stickyHeader={true} aria-label="collapsible table">
                 <TableHead>
                   <TableRow>

@@ -1,31 +1,34 @@
 import { FaGithub, FaSlack } from 'react-icons/fa';
 import { SiSnowflake } from 'react-icons/si';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
+import { MouseEventHandler } from 'react';
 
 // Temporary hard coded due to time issues
 const items = [
   {
     name: 'GitHub',
     description: 'Get your DBT projects directly from Github.',
-    href: '#',
     icon: FaGithub,
   },
   {
     name: 'Snowflake',
     description:
       'Connect to your Snowflake account to access your internal Snowflake data.',
-    href: '#',
     icon: SiSnowflake,
   },
   {
     name: 'Slack',
-    description: 'Connect to Slack to integrate alerts about your data to your Slack infrastructure.',
-    href: '#',
+    description:
+      'Connect to Slack to integrate alerts about your data to your Slack infrastructure.',
     icon: FaSlack,
   },
 ];
 
-export function EmptyStateIntegrations() {
+export function EmptyStateIntegrations({
+  onClick,
+}: {
+  onClick: any; // temporary
+}) {
   return (
     <div className="absolute inset-0 flex items-center justify-center">
       <div className="mx-auto max-w-lg bg-white p-4 shadow-xl">
@@ -52,10 +55,14 @@ export function EmptyStateIntegrations() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium text-gray-900">
-                    <a href={item.href}>
+                    <button
+                      onClick={(e) => {
+                        onClick(e, itemIdx);
+                      }}
+                    >
                       <span className="absolute inset-0" aria-hidden="true" />
                       {item.name}
-                    </a>
+                    </button>
                   </div>
                   <p className="text-sm text-gray-500">{item.description}</p>
                 </div>
@@ -73,11 +80,16 @@ export function EmptyStateIntegrations() {
     </div>
   );
 }
-export function EmptyStateDottedLine() {
+export function EmptyStateDottedLine({
+  onClick,
+}: {
+  onClick: MouseEventHandler<HTMLButtonElement>;
+}) {
   return (
     <button
+      onClick={onClick}
       type="button"
-      className="relative block w-full h-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+      className="relative block h-full w-full rounded-lg border-2 border-dashed border-gray-300 p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
     >
       <svg
         className="mx-auto h-12 w-12 text-gray-400"
@@ -94,8 +106,9 @@ export function EmptyStateDottedLine() {
           d="M8 14v20c0 4.418 7.163 8 16 8 1.381 0 2.721-.087 4-.252M8 14c0 4.418 7.163 8 16 8s16-3.582 16-8M8 14c0-4.418 7.163-8 16-8s16 3.582 16 8m0 0v14m0-4c0 4.418-7.163 8-16 8S8 28.418 8 24m32 10v6m0 0v6m0-6h6m-6 0h-6"
         />
       </svg>
-      <span className="mt-2 block text-sm font-medium text-gray-900">No compatible data</span>
+      <span className="mt-2 block text-sm font-medium text-gray-900">
+        No compatible data
+      </span>
     </button>
-  )
+  );
 }
-

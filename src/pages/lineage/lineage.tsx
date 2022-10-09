@@ -1,10 +1,5 @@
-import React, { ReactElement, useEffect, useState } from 'react';
-import AppsIcon from '@mui/icons-material/Apps';
-import IntegrationInstructionsIcon from '@mui/icons-material/IntegrationInstructions';
+import React, { ReactElement, SyntheticEvent, useEffect, useState } from 'react';
 import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
-import TableChartIcon from '@mui/icons-material/TableChart';
-import LogoutIcon from '@mui/icons-material/Logout';
-import Logo from '../../components/top-nav/cito-header.png';
 import { FaGithub, FaSlack } from 'react-icons/fa';
 import { SiSnowflake } from 'react-icons/si';
 import G6, {
@@ -20,7 +15,7 @@ import G6, {
 import './lineage.scss';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { MdMenu, MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
+import { MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
 import MetricsGraph, {
   defaultDistributionData,
   defaultFreshnessData,
@@ -56,16 +51,14 @@ import TreeItem from '@mui/lab/TreeItem';
 
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import Button from '@mui/material/Button';
 import BasicCard from '../../components/card';
 import BasicTable from '../../components/table';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
-import Box from '@mui/material/Box';
 import IntegrationApiRepo from '../../infrastructure/integration-api/integration-api-repo';
 import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
@@ -84,6 +77,7 @@ import SearchBox from './components/search-box';
 import { EmptyStateIntegrations, EmptyStateDottedLine } from './components/empty-state';
 import { SectionHeading } from './components/headings';
 import { Table } from './components/table';
+import Navbar from '../../components/navbar';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -417,8 +411,6 @@ export default (): ReactElement => {
 
   const [searchParams] = useSearchParams();
 
-  const navigate = useNavigate();
-
   const [account, setAccount] = useState<AccountDto>();
   const [user, setUser] = useState<any>();
   const [jwt, setJwt] = useState('');
@@ -467,9 +459,11 @@ export default (): ReactElement => {
     useState<ReactElement>();
 
   const handleTabIndexChange = (
-    event: React.SyntheticEvent,
+    event: SyntheticEvent,
     newValue: number
   ) => {
+    // Make sure the integration side panel is open when tab is set
+    setShowIntegrationSidePanel(true);
     setTabIndex(newValue);
   };
 
@@ -976,7 +970,6 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!account) return;
 
-    if (showRealData) {
 
       const definedTests: any[] = [];
       const alertList: any[] = [];
@@ -1041,7 +1034,6 @@ export default (): ReactElement => {
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
       });
-    }
   }, [selectedNodeId]);
 
   useEffect(() => {
@@ -1487,102 +1479,8 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        {!isDataAvailable && <EmptyStateIntegrations />}
-        <div className="navbar">
-          <div id="menu-container">
-            <button id="menu-button" onClick={toggleShowSideNav}>
-              <MdMenu />
-            </button>
-
-            <img
-              className='w-20'
-              src={Logo}
-              alt="logo"
-              onClick={() =>
-                navigate(`/lineage`, {
-                  state: {},
-                })
-              }
-            />
-          </div>
-          <div id="sign-out-container">
-            <Box m={0.5}>
-              <Button
-                startIcon={<TableChartIcon />}
-                onClick={() =>
-                  navigate(`/lineage`, {
-                    state: {},
-                  })
-                }
-                color="secondary"
-                size="medium"
-                variant="contained"
-                style={{
-                  borderRadius: 30,
-                  backgroundColor: '#4EC4C4',
-                  fontSize: '12px',
-                }}
-              >
-                Lineage
-              </Button>
-            </Box>
-            <Box m={0.5}>
-              <Button
-                startIcon={<AppsIcon />}
-                onClick={() =>
-                  navigate(`/test`, {
-                    state: {
-                      foo: 'bar',
-                      data,
-                    },
-                  })
-                }
-                color="secondary"
-                size="medium"
-                variant="contained"
-                style={{
-                  borderRadius: 30,
-                  backgroundColor: '#674BCE',
-                  fontSize: '12px',
-                }}
-              >
-                Tests
-              </Button>
-            </Box>
-            <Box m={0.5}>
-              <Button
-                startIcon={<IntegrationInstructionsIcon />}
-                onClick={() => setShowIntegrationSidePanel(true)}
-                color="secondary"
-                size="medium"
-                variant="contained"
-                style={{
-                  borderRadius: 30,
-                  backgroundColor: '#674BCE',
-                  fontSize: '12px',
-                }}
-              >
-                Integrations
-              </Button>
-            </Box>
-            <Box m={0.5}>
-              <Button
-                startIcon={<LogoutIcon />}
-                onClick={() => Auth.signOut()}
-                color="secondary"
-                size="medium"
-                variant="contained"
-                style={{
-                  borderRadius: 30,
-                  backgroundColor: '#A5A0A0',
-                  fontSize: '12px',
-                }}
-              >
-                Sign Out
-              </Button>
-            </Box>
-          </div>
-        </div>
+        <Navbar current='lineage' toggleLeftPanel={toggleShowSideNav} toggleRightPanelFunctions={{open: () => setShowIntegrationSidePanel(true), close: closeIntegrationSidePanel}}/>
+        {!isDataAvailable && <EmptyStateIntegrations onClick={handleTabIndexChange}/>}
         <div id="lineage" />
         <div id="sidenav" className="sidenav">
             <div className='mx-4'>
@@ -1604,7 +1502,6 @@ export default (): ReactElement => {
             <ButtonSmall
               buttonText="Filter Anomalies"
               onClick={handleFilterAnomalies}
-              className="text-white bg-red-400 hover:bg-red-500"
             />
           </div>
           <div id="content">
@@ -1620,7 +1517,9 @@ export default (): ReactElement => {
               {data ? treeViewElements : <></>}
             </TreeView>
             :
-              <EmptyStateDottedLine />
+              <EmptyStateDottedLine
+                onClick={() => setShowIntegrationSidePanel(true)}
+                />
           }
           </div>
         </div>
@@ -1743,7 +1642,7 @@ export default (): ReactElement => {
             ) : (
               <>
               <div className='hidden'>{BasicTable(alertHistory)}</div>
-              <Table />
+              <Table alertHistory={alertHistory}/>
               </>
             )}
           </div>
@@ -1754,7 +1653,7 @@ export default (): ReactElement => {
             <SectionHeading title='Integrations' onClick={closeIntegrationSidePanel} />
           </div>
           <div className="content mt-10">
-            <Tabs value={tabIndex} onChange={handleTabIndexChange} centered>
+            <Tabs className='mb-12' value={tabIndex} onChange={handleTabIndexChange} centered>
               <Tab icon={<FaGithub />} label="GitHub" />
               <Tab icon={<SiSnowflake />} label="Snowflake" />
               <Tab icon={<FaSlack />} label="Slack" />

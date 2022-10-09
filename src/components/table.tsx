@@ -52,17 +52,23 @@ import Paper from '@mui/material/Paper';
 //   date: getSampleDate(-63).toISOString().split('T')[0],
 //   type: "Nullness",
 //   deviation: "653%"
-// }]; 
+// }];
 
-export default function BasicTable(alertHistory:any[]) {
+export default function BasicTable(alertHistory: any[]) {
   return (
-    <TableContainer component={Paper} sx={{
-      backgroundColor: "#f3eefe"}
-    }>
+    <TableContainer
+      component={Paper}
+      sx={{
+        backgroundColor: '#f3eefe',
+      }}
+    >
       <Table aria-label="simple table">
         <TableHead>
-          <TableRow sx={{
-            backgroundColor: "#ddd7f5"}}>
+          <TableRow
+            sx={{
+              backgroundColor: '#ddd7f5',
+            }}
+          >
             <TableCell>Date</TableCell>
             <TableCell align="left">Type</TableCell>
             <TableCell align="right">Severity</TableCell>

@@ -6,20 +6,20 @@ import { MouseEventHandler } from 'react';
 // Temporary hard coded due to time issues
 const items = [
   {
-    name: 'GitHub',
-    description: 'Get your DBT projects directly from Github.',
-    icon: FaGithub,
-  },
-  {
     name: 'Snowflake',
     description:
-      'Connect to your Snowflake account to access your internal Snowflake data.',
+      'Connect to your Snowflake for data access and storage.',
     icon: SiSnowflake,
+  },
+  {
+    name: 'GitHub',
+    description: 'Get your dbt metadata directly from your GitHub repositories.',
+    icon: FaGithub,
   },
   {
     name: 'Slack',
     description:
-      'Connect to Slack to integrate alerts about your data to your Slack infrastructure.',
+      'Connect to Slack to seamlessly receive anomaly alerts.',
     icon: FaSlack,
   },
 ];
@@ -33,10 +33,10 @@ export function EmptyStateIntegrations({
     <div className="absolute inset-0 flex items-center justify-center">
       <div className="mx-auto max-w-lg bg-white p-4 shadow-xl">
         <h2 className="text-lg font-medium text-gray-900">
-          Create your first project
+          Truly Actionable in Less Than 20 Minutes
         </h2>
         <p className="mt-1 text-sm text-gray-500">
-          Get started by selecting a template or start from an empty project.
+          Setup your automated data observability and column level lineage now.
         </p>
         <ul
           role="list"

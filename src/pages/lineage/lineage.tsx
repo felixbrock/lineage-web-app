@@ -1202,6 +1202,7 @@ export default (): ReactElement => {
           stroke: hivediveBlue,
           lineWidth: 1,
           shadowBlur: 5,
+          fill: '#000000',
         },
       },
       plugins: [grid],

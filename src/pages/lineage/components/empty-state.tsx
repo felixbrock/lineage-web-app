@@ -33,10 +33,10 @@ export function EmptyStateIntegrations({
     <div className="absolute inset-0 flex items-center justify-center">
       <div className="mx-auto max-w-lg bg-white p-4 shadow-xl">
         <h2 className="text-lg font-medium text-gray-900">
-          Truly Actionable in Less Than 20 Minutes
+          Actionable Data Observability in Less Than 20 Minutes
         </h2>
         <p className="mt-1 text-sm text-gray-500">
-          Setup your automated data observability and column level lineage now.
+          Set up your integrations and get started with data observability powered by column-level lineage now.
         </p>
         <ul
           role="list"

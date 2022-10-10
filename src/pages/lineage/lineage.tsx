@@ -861,16 +861,12 @@ export default (): ReactElement => {
 
     toggleShowSideNav();
 
-    if (showRealData) {
-      setIntegrationComponent(
-        <Github
-          installationId={githubInstallationId}
-          accessToken={githubAccessToken}
-          organizationId={account.organizationId}
-          jwt={jwt}
-        ></Github>
-      );
+    setIntegrationComponent(
+      <Snowflake jwt={jwt}></Snowflake>
+    );
 
+    if (showRealData) {
+      
       let lineageId: string;
 
       LineageApiRepository.getLatest(jwt)
@@ -936,15 +932,17 @@ export default (): ReactElement => {
 
     if (tabIndex === 0)
       setIntegrationComponent(
-        <Github
-          installationId={githubInstallationId}
-          accessToken={githubAccessToken}
-          organizationId={account.organizationId}
-          jwt={jwt}
-        ></Github>
+        <Snowflake jwt={jwt}></Snowflake>
       );
     else if (tabIndex === 1)
-      setIntegrationComponent(<Snowflake jwt={jwt}></Snowflake>);
+      setIntegrationComponent(
+        <Github
+        installationId={githubInstallationId}
+        accessToken={githubAccessToken}
+        organizationId={account.organizationId}
+        jwt={jwt}
+      ></Github>
+      );
     else if (tabIndex === 2)
       setIntegrationComponent(
         <Slack
@@ -1646,8 +1644,8 @@ export default (): ReactElement => {
           </div>
           <div className="content mt-10">
             <Tabs className='mb-12' value={tabIndex} onChange={handleTabIndexChange} centered>
-              <Tab icon={<FaGithub />} label="GitHub" />
               <Tab icon={<SiSnowflake />} label="Snowflake" />
+              <Tab icon={<FaGithub />} label="GitHub" />
               <Tab icon={<FaSlack />} label="Slack" />
             </Tabs>
             {integrationComponent}

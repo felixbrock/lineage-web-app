@@ -78,7 +78,7 @@ export default () => {
             githubInstallId: installationId,
             githubToken: accessToken,
             showIntegrationPanel: true,
-            sidePanelTabIndex: 0,
+            sidePanelTabIndex: 1,
           },
           replace: true,
         });

@@ -458,6 +458,7 @@ export default (): ReactElement => {
   const [githubAccessToken, setGithubAccessToken] = useState<string>('');
   const [integrationComponent, setIntegrationComponent] =
     useState<ReactElement>();
+  const [isRightPanelShown, setIsRightPanelShown] = useState(false);
 
   const handleTabIndexChange = (
     event: SyntheticEvent,
@@ -1334,6 +1335,7 @@ export default (): ReactElement => {
         closeMatSidePanel();
         closeColSidePanel();
         closeIntegrationSidePanel();
+        setIsRightPanelShown(false);
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         const selectedAnomalyEdges = graphObj.findAllByState(
           'edge',
@@ -1348,6 +1350,7 @@ export default (): ReactElement => {
       else if (event.target.get('type') === 'node') {
         closeMatSidePanel();
         closeIntegrationSidePanel();
+        setIsRightPanelShown(false);
         const isNode = (object: any): object is INode => 'getEdges' in object;
 
         if (!isNode(event.target))
@@ -1478,7 +1481,7 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        <Navbar current='lineage' toggleLeftPanel={toggleShowSideNav} toggleRightPanelFunctions={{open: () => setShowIntegrationSidePanel(true), close: closeIntegrationSidePanel}}/>
+        <Navbar current='lineage' toggleLeftPanel={toggleShowSideNav} toggleRightPanelFunctions={{open: () => setShowIntegrationSidePanel(true), close: closeIntegrationSidePanel}} isRightPanelShown={isRightPanelShown} setIsRightPanelShown={setIsRightPanelShown}/>
         {!isDataAvailable && <EmptyStateIntegrations onClick={handleTabIndexChange}/>}
         <div id="lineage" />
         <div id="sidenav" className="sidenav">

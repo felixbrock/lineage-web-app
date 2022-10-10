@@ -63,7 +63,7 @@ import IntegrationApiRepo from '../../infrastructure/integration-api/integration
 import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
 import Snowflake from '../../components/integration/snowflake/snowflake';
-import { mode, showRealData } from '../../config';
+import { showRealData } from '../../config';
 import AccountDto from '../../infrastructure/account-api/account-dto';
 import {
   deafultErrorDashboards,
@@ -457,6 +457,7 @@ export default (): ReactElement => {
   const [githubAccessToken, setGithubAccessToken] = useState<string>('');
   const [integrationComponent, setIntegrationComponent] =
     useState<ReactElement>();
+  const [isRightPanelShown, setIsRightPanelShown] = useState(false);
 
   const handleTabIndexChange = (
     event: SyntheticEvent,
@@ -861,16 +862,12 @@ export default (): ReactElement => {
 
     toggleShowSideNav();
 
-    if (showRealData) {
-      setIntegrationComponent(
-        <Github
-          installationId={githubInstallationId}
-          accessToken={githubAccessToken}
-          organizationId={account.organizationId}
-          jwt={jwt}
-        ></Github>
-      );
+    setIntegrationComponent(
+      <Snowflake jwt={jwt}></Snowflake>
+    );
 
+    if (showRealData) {
+      
       let lineageId: string;
 
       LineageApiRepository.getLatest(jwt)
@@ -935,18 +932,20 @@ export default (): ReactElement => {
     if (!account) return;
 
     if (tabIndex === 0)
-      setIntegrationComponent(mode === 'demo' || mode === 'development'?  <>Install Github</> :
-        <Github
-          installationId={githubInstallationId}
-          accessToken={githubAccessToken}
-          organizationId={account.organizationId}
-          jwt={jwt}
-        ></Github>
+      setIntegrationComponent(
+        <Snowflake jwt={jwt}></Snowflake>
       );
     else if (tabIndex === 1)
-      setIntegrationComponent(mode === 'demo' || mode === 'development'?  <>Install Snowflake</> :<Snowflake jwt={jwt}></Snowflake>);
+      setIntegrationComponent(
+        <Github
+        installationId={githubInstallationId}
+        accessToken={githubAccessToken}
+        organizationId={account.organizationId}
+        jwt={jwt}
+      ></Github>
+      );
     else if (tabIndex === 2)
-      setIntegrationComponent(mode === 'demo' || mode === 'development'?  <>Install Slack</> :
+      setIntegrationComponent(
         <Slack
           organizationId={account.organizationId}
           accessToken={slackAccessToken}
@@ -1202,6 +1201,7 @@ export default (): ReactElement => {
           stroke: hivediveBlue,
           lineWidth: 1,
           shadowBlur: 5,
+          fill: '#000000',
         },
       },
       plugins: [grid],
@@ -1335,6 +1335,7 @@ export default (): ReactElement => {
         closeMatSidePanel();
         closeColSidePanel();
         closeIntegrationSidePanel();
+        setIsRightPanelShown(false);
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         const selectedAnomalyEdges = graphObj.findAllByState(
           'edge',
@@ -1349,6 +1350,7 @@ export default (): ReactElement => {
       else if (event.target.get('type') === 'node') {
         closeMatSidePanel();
         closeIntegrationSidePanel();
+        setIsRightPanelShown(false);
         const isNode = (object: any): object is INode => 'getEdges' in object;
 
         if (!isNode(event.target))
@@ -1479,7 +1481,7 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        <Navbar current='lineage' toggleLeftPanel={toggleShowSideNav} toggleRightPanelFunctions={{open: () => setShowIntegrationSidePanel(true), close: closeIntegrationSidePanel}}/>
+        <Navbar current='lineage' toggleLeftPanel={toggleShowSideNav} toggleRightPanelFunctions={{open: () => setShowIntegrationSidePanel(true), close: closeIntegrationSidePanel}} isRightPanelShown={isRightPanelShown} setIsRightPanelShown={setIsRightPanelShown}/>
         {!isDataAvailable && <EmptyStateIntegrations onClick={handleTabIndexChange}/>}
         <div id="lineage" />
         <div id="sidenav" className="sidenav">
@@ -1654,8 +1656,8 @@ export default (): ReactElement => {
           </div>
           <div className="content mt-10">
             <Tabs className='mb-12' value={tabIndex} onChange={handleTabIndexChange} centered>
-              <Tab icon={<FaGithub />} label="GitHub" />
               <Tab icon={<SiSnowflake />} label="Snowflake" />
+              <Tab icon={<FaGithub />} label="GitHub" />
               <Tab icon={<FaSlack />} label="Slack" />
             </Tabs>
             {integrationComponent}

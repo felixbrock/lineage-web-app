@@ -22,9 +22,10 @@ export default function Navbar({
   current,
   toggleLeftPanel,
   toggleRightPanelFunctions,
+  isRightPanelShown,
+  setIsRightPanelShown,
 }: any) {
   const [isLeftPanelShown, setIsLeftPanelShown] = useState(true);
-  const [isRightPanelShown, setIsRightPanelShown] = useState(false);
 
   // temp code because of launch
   if (current === 'lineage') {

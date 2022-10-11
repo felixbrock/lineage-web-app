@@ -33,7 +33,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "set PORT=3006 && react-scripts start",
+    "start": "export PORT=3006 && react-scripts start",
     "start-deps": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./start-dependencies.ps1 -serviceDependencyNames @('account', 'data-observability', 'integration-service', 'lineage-analysis')",
     "lint": "npx eslint . --ext .js,.jsx,.ts,.tsx",
     "build": "react-scripts build",

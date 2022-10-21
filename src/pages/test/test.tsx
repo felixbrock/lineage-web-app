@@ -1715,12 +1715,21 @@ export default (): ReactElement => {
     if (!searchParams) return;
 
     const alertId = searchParams.get('alertId');
-    if (!alertId) return;
+    if (!alertId) {
+      console.warn('User feedback callback is missing alertId');
+      return;
+    }
+
+    const testType = searchParams.get('testType');
+    if (!testType) {
+      console.warn('User feedback callback is missing test type');
+      return;
+    }
 
     const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
     if (!userFeedbackIsAnomaly) return;
     ObservabilityApiRepo.updateTestHistoryEntry(
-      { alertId, userFeedbackIsAnomaly },
+      { alertId, userFeedbackIsAnomaly, testType },
       jwt
     )
       .then(() => {
@@ -1813,19 +1822,21 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        <Navbar current='tests' /> 
+        <Navbar current="tests" />
         <>
-            <div className='relative h-20 flex justify-center items-top'>
-            <div className='w-1/4 mt-2 relative'>
-            <SearchBox
-            placeholder='Search...'
-            label='testsearchbox'
-            onChange={handleSearchChange}
-            />
+          <div className="items-top relative flex h-20 justify-center">
+            <div className="relative mt-2 w-1/4">
+              <SearchBox
+                placeholder="Search..."
+                label="testsearchbox"
+                onChange={handleSearchChange}
+              />
             </div>
           </div>
           <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-            <TableContainer sx={{ height: window.innerHeight - 50 - 67 - 52 - 20 }}>
+            <TableContainer
+              sx={{ height: window.innerHeight - 50 - 67 - 52 - 20 }}
+            >
               <Table stickyHeader={true} aria-label="collapsible table">
                 <TableHead>
                   <TableRow>

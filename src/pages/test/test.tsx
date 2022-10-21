@@ -1715,16 +1715,12 @@ export default (): ReactElement => {
     if (!searchParams) return;
 
     const alertId = searchParams.get('alertId');
-    if (!alertId) {
-      console.warn('User feedback callback is missing alertId');
-      return;
-    }
-
     const testType = searchParams.get('testType');
-    if (!testType) {
-      console.warn('User feedback callback is missing test type');
-      return;
-    }
+    
+    if (!!alertId !== !!testType)
+    throw new Error('User feedback callback is missing query param(s)');
+    
+    if (!alertId || !testType) return;
 
     const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
     if (!userFeedbackIsAnomaly) return;

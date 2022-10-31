@@ -25,7 +25,7 @@ import Button from '@mui/material/Button';
 
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
@@ -139,6 +139,17 @@ export const parseMaterializationType = (
   throw new Error('Provision of invalid type');
 };
 
+export const executionTypes = ['individual', 'automatic', 'frequency'] as const;
+export type ExecutionType = typeof executionTypes[number];
+
+export const parseExecutionType = (executionType: unknown): ExecutionType => {
+  const identifiedElement = executionTypes.find(
+    (element) => element === executionType
+  );
+  if (identifiedElement) return identifiedElement;
+  throw new Error('Provision of invalid type');
+};
+
 interface TestConfig {
   type: TestType;
   activated: boolean;
@@ -150,6 +161,8 @@ interface ColumnTestConfig {
   label: string;
   type: string;
   frequency: number;
+  cron?: string;
+  executionType: ExecutionType;
   sensitivity: number;
   testConfigs: TestConfig[];
   testsActivated: boolean;
@@ -166,6 +179,7 @@ interface MaterializationTestsConfig {
   navExpanded: boolean;
   label: string;
   frequency?: number;
+  executionType?: ExecutionType;
   sensitivity?: number;
   testDefinitionSummary: TestDefinitionSummary[];
   testsActivated: boolean;
@@ -260,14 +274,39 @@ export default (): ReactElement => {
         )
       : 0;
 
-  const handleColumnFrequencyChange = (event: any) => {
-    const name = event.target.name as string;
-    const value = event.target.value as number;
+  const getColumnUpdateObject = (
+    value: string,
+    testSuiteId: string
+  ): UpdateTestSuiteObject => {
+    if (!isNaN(Number(value))) {
+      const numValue = Number(value);
+      return {
+        id: testSuiteId,
+        frequency: numValue,
+        executionType: 'frequency',
+      };
+    }
+
+    const executionType = parseExecutionType(value);
+    if (executionType === 'automatic')
+      return {
+        id: testSuiteId,
+        executionType: 'automatic',
+      };
+    if (executionType === 'individual')
+      throw new Error('todo - not implemented');
+    throw new Error(`Undhandled frequency value detected ${value}`);
+  };
+
+  const handleColumnFrequencyChange = (event: SelectChangeEvent<string>) => {
+    const name = event.target.name;
+    const value = event.target.value;
     const props = name.split('-');
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].frequency = undefined;
+    const matTestConfig = testSelectionLocal[props[1]];
+    matTestConfig.executionType = undefined;
 
     const columnTestConfigIndex = testSelectionLocal[
       props[1]
@@ -289,29 +328,52 @@ export default (): ReactElement => {
       if (!test.testSuiteId)
         throw new Error('Test with status activated found that does not exist');
 
-      return {
-        id: test.testSuiteId,
-        frequency: value,
-      };
+      return getColumnUpdateObject(value, test.testSuiteId);
     });
 
     ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
-    testSelectionLocal[props[1]].columnTestConfigs[
-      columnTestConfigIndex
-    ].frequency = value;
+    if (!isNaN(Number(value))) {
+      const numValue = Number(value);
+
+      testSelectionLocal[props[1]].columnTestConfigs[
+        columnTestConfigIndex
+      ].frequency = numValue;
+
+      setTestSelection({ ...testSelectionLocal });
+      return;
+    }
+
+    const executionType = parseExecutionType(value);
+    if (executionType === 'automatic')
+      testSelectionLocal[props[1]].columnTestConfigs[
+        columnTestConfigIndex
+      ].executionType = executionType;
+    else if (executionType === 'individual')
+      throw new Error('todo - not implemented');
 
     setTestSelection({ ...testSelectionLocal });
   };
 
-  const handleMatFrequencyChange = (event: any) => {
-    const name = event.target.name as string;
-    const value = event.target.value as number;
+  const handleMatFrequencyChange = (event: SelectChangeEvent<string>) => {
+    const name = event.target.name;
+    const value = event.target.value;
     const props = name.split('-');
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].frequency = event.target.value;
+    if (!isNaN(Number(value))) {
+      const numValue = Number(value);
+
+      testSelectionLocal[props[1]].frequency = numValue;
+      testSelectionLocal[props[1]].executionType = 'frequency';
+    }
+
+    const executionType = parseExecutionType(value);
+    if (executionType === 'automatic')
+      testSelectionLocal[props[1]].executionType = executionType;
+    else if (executionType === 'individual')
+      throw new Error('todo - not implemented');
 
     const isUpdateObject = (
       updateObject: UpdateTestSuiteObject | undefined
@@ -331,14 +393,17 @@ export default (): ReactElement => {
           if (!testSuiteId)
             throw new Error('Activated test without test suite id');
 
-          return {
-            id: testSuiteId,
-            frequency: value,
-          };
+          return getColumnUpdateObject(value, testSuiteId);
         });
 
-        testSelectionLocal[props[1]].columnTestConfigs[index].frequency =
-          event.target.value;
+        if (!isNaN(Number(value))) {
+          const numValue = Number(value);
+
+          testSelectionLocal[props[1]].columnTestConfigs[index].frequency =
+            numValue;
+        } else if (executionType === 'automatic')
+          testSelectionLocal[props[1]].columnTestConfigs[index].executionType =
+            executionType;
 
         return objects;
       })
@@ -571,6 +636,7 @@ export default (): ReactElement => {
             targetResourceId: column.id,
             type,
             executionFrequency: columnTestConfigs.frequency,
+            executionType: columnTestConfigs.executionType,
             threshold: columnTestConfigs.sensitivity,
           },
         ],
@@ -650,6 +716,7 @@ export default (): ReactElement => {
               targetResourceId: materalization.id,
               type,
               executionFrequency: testSelectionLocal[props[1]].frequency || 1,
+              executionType: testSelectionLocal[props[1]].executionType || 'automatic'
             },
           ],
           jwt
@@ -671,6 +738,7 @@ export default (): ReactElement => {
               type,
               executionFrequency: testSelectionLocal[props[1]].frequency || 1,
               threshold: testSelectionLocal[props[1]].sensitivity || 0,
+              executionType: testSelectionLocal[props[1]].executionType || 'automatic'
             },
           ],
           jwt
@@ -765,6 +833,7 @@ export default (): ReactElement => {
           type,
           executionFrequency: config.frequency,
           threshold: config.sensitivity,
+          executionType: config.executionType
         });
       } else
         updateObjects.push({ id: testSuiteId, activated: newActivatedValue });
@@ -860,14 +929,19 @@ export default (): ReactElement => {
               name={`frequency-${materializationId}-${columnId}`}
               disabled={!columnTestConfig.testsActivated}
               displayEmpty={true}
-              value={columnTestConfig.frequency || ''}
+              value={
+                columnTestConfig.executionType === 'frequency'
+                  ? columnTestConfig.frequency.toString()
+                  : columnTestConfig.executionType
+              }
               onChange={handleColumnFrequencyChange}
             >
-              <MenuItem value={1}>1h</MenuItem>
-              <MenuItem value={3}>3h</MenuItem>
-              <MenuItem value={6}>6h</MenuItem>
-              <MenuItem value={12}>12h</MenuItem>
-              <MenuItem value={24}>1d</MenuItem>
+              <MenuItem value={'automatic'}>Automatic</MenuItem>
+              <MenuItem value={'1'}>1h</MenuItem>
+              <MenuItem value={'3'}>3h</MenuItem>
+              <MenuItem value={'6'}>6h</MenuItem>
+              <MenuItem value={'12'}>12h</MenuItem>
+              <MenuItem value={'24'}>1d</MenuItem>
             </Select>
           </FormControl>
         </TableCell>
@@ -1026,6 +1100,7 @@ export default (): ReactElement => {
           type: column.type,
           label: columnLabel,
           frequency: suites.length ? suites[0].executionFrequency : 1,
+          executionType: suites.length ? suites[0].executionType : 'automatic',
           sensitivity: suites.length ? suites[0].threshold : 0,
           testConfigs: allowedTests.map((element) => {
             const typeSpecificSuite = suites.find((el) => el.type === element);
@@ -1324,6 +1399,14 @@ export default (): ReactElement => {
       materializationSchemaChangeType
     );
 
+    const executionType = testSelection[props.materializationId].executionType;
+    const frequency = testSelection[props.materializationId].frequency;
+
+    if (executionType === 'frequency' && frequency === undefined)
+      throw new Error(
+        'Materialization has executionType "frequency" selected but is missing frequency'
+      );
+
     return (
       <React.Fragment>
         <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
@@ -1340,14 +1423,19 @@ export default (): ReactElement => {
                   ].columnTestConfigs.some((el) => el.testsActivated)
                 }
                 displayEmpty={true}
-                value={testSelection[props.materializationId].frequency || ''}
+                value={
+                  executionType === 'frequency' && frequency
+                    ? frequency.toString()
+                    : testSelection[props.materializationId].executionType
+                }
                 onChange={handleMatFrequencyChange}
               >
-                <MenuItem value={1}>1h</MenuItem>
-                <MenuItem value={3}>3h</MenuItem>
-                <MenuItem value={6}>6h</MenuItem>
-                <MenuItem value={12}>12h</MenuItem>
-                <MenuItem value={24}>1d</MenuItem>
+                <MenuItem value={'automatic'}>Automatic</MenuItem>
+                <MenuItem value={'1'}>1h</MenuItem>
+                <MenuItem value={'3'}>3h</MenuItem>
+                <MenuItem value={'6'}>6h</MenuItem>
+                <MenuItem value={'12'}>12h</MenuItem>
+                <MenuItem value={'24'}>1d</MenuItem>
               </Select>
             </FormControl>
           </TableCell>
@@ -1716,10 +1804,10 @@ export default (): ReactElement => {
 
     const alertId = searchParams.get('alertId');
     const testType = searchParams.get('testType');
-    
+
     if (!!alertId !== !!testType)
-    throw new Error('User feedback callback is missing query param(s)');
-    
+      throw new Error('User feedback callback is missing query param(s)');
+
     if (!alertId || !testType) return;
 
     const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');

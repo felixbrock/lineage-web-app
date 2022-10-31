@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { mode } from '../../config';
-import { MaterializationType, TestType } from '../../pages/test/test';
+import { ExecutionType, MaterializationType, TestType } from '../../pages/test/test';
 import getRoot from '../shared/api-root-builder';
 import { NominalTestSuiteDto, TestSuiteDto } from './test-suite-dto';
 
@@ -21,6 +21,7 @@ interface BaseTestSuiteProps {
   columnName?: string;
   targetResourceId: string;
   cron?: string;
+  executionType: ExecutionType;
 }
 
 export interface TestSuiteProps extends BaseTestSuiteProps {
@@ -34,6 +35,7 @@ interface BaseUpdateTestSuiteObject {
   activated?: boolean;
   frequency?: number;
   cron?: string;
+  executionType?: ExecutionType
 }
 
 export interface UpdateTestSuiteObject extends BaseUpdateTestSuiteObject {

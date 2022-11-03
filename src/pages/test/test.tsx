@@ -339,6 +339,9 @@ export default (): ReactElement => {
       testSelectionLocal[props[1]].columnTestConfigs[
         columnTestConfigIndex
       ].frequency = numValue;
+      testSelectionLocal[props[1]].columnTestConfigs[
+        columnTestConfigIndex
+      ].executionType = 'frequency';
 
       setTestSelection({ ...testSelectionLocal });
       return;
@@ -362,18 +365,27 @@ export default (): ReactElement => {
 
     const testSelectionLocal = testSelection;
 
+    let executionType: ExecutionType;
     if (!isNaN(Number(value))) {
       const numValue = Number(value);
 
       testSelectionLocal[props[1]].frequency = numValue;
       testSelectionLocal[props[1]].executionType = 'frequency';
-    }
+    } else {
+      executionType = parseExecutionType(value);
 
-    const executionType = parseExecutionType(value);
-    if (executionType === 'automatic')
-      testSelectionLocal[props[1]].executionType = executionType;
-    else if (executionType === 'individual')
-      throw new Error('todo - not implemented');
+      switch (executionType) {
+        case 'automatic':
+          testSelectionLocal[props[1]].executionType = executionType;
+          break;
+        case 'individual':
+          throw new Error('todo - not implemented');
+        default:
+          throw new Error(
+            'Unhandled execution type while handling mat frequency change'
+          );
+      }
+    }
 
     const isUpdateObject = (
       updateObject: UpdateTestSuiteObject | undefined
@@ -401,6 +413,8 @@ export default (): ReactElement => {
 
           testSelectionLocal[props[1]].columnTestConfigs[index].frequency =
             numValue;
+          testSelectionLocal[props[1]].columnTestConfigs[index].executionType =
+            'frequency';
         } else if (executionType === 'automatic')
           testSelectionLocal[props[1]].columnTestConfigs[index].executionType =
             executionType;
@@ -716,7 +730,8 @@ export default (): ReactElement => {
               targetResourceId: materalization.id,
               type,
               executionFrequency: testSelectionLocal[props[1]].frequency || 1,
-              executionType: testSelectionLocal[props[1]].executionType || 'automatic'
+              executionType:
+                testSelectionLocal[props[1]].executionType || 'automatic',
             },
           ],
           jwt
@@ -738,7 +753,8 @@ export default (): ReactElement => {
               type,
               executionFrequency: testSelectionLocal[props[1]].frequency || 1,
               threshold: testSelectionLocal[props[1]].sensitivity || 0,
-              executionType: testSelectionLocal[props[1]].executionType || 'automatic'
+              executionType:
+                testSelectionLocal[props[1]].executionType || 'automatic',
             },
           ],
           jwt
@@ -833,7 +849,7 @@ export default (): ReactElement => {
           type,
           executionFrequency: config.frequency,
           threshold: config.sensitivity,
-          executionType: config.executionType
+          executionType: config.executionType,
         });
       } else
         updateObjects.push({ id: testSuiteId, activated: newActivatedValue });
@@ -910,8 +926,6 @@ export default (): ReactElement => {
   ): ReactElement => {
     const allowedTestTypes = getAllowedTestTypes(columnType);
 
-    const columnTestConfig = getColumnTestConfig(materializationId, columnId);
-
     const columnFreshnessType: TestType = 'ColumnFreshness';
     const columnCardinalityType: TestType = 'ColumnCardinality';
     const columnUniquenessType: TestType = 'ColumnUniqueness';
@@ -921,22 +935,31 @@ export default (): ReactElement => {
     return (
       <TableRow>
         <TableCell sx={tableCellSx} align="left">
-          {columnTestConfig.label}
+          {getColumnTestConfig(materializationId, columnId).label}
         </TableCell>
         <TableCell sx={tableCellSx} align="center">
           <FormControl sx={{ m: 1, maxwidth: 100 }} size="small">
             <Select
+              autoWidth={true}
               name={`frequency-${materializationId}-${columnId}`}
-              disabled={!columnTestConfig.testsActivated}
+              disabled={
+                !getColumnTestConfig(materializationId, columnId).testsActivated
+              }
               displayEmpty={true}
               value={
-                columnTestConfig.executionType === 'frequency'
-                  ? columnTestConfig.frequency.toString()
-                  : columnTestConfig.executionType
+                getColumnTestConfig(materializationId, columnId)
+                  .executionType === 'frequency'
+                  ? getColumnTestConfig(
+                      materializationId,
+                      columnId
+                    ).frequency.toString()
+                  : getColumnTestConfig(materializationId, columnId)
+                      .executionType
               }
               onChange={handleColumnFrequencyChange}
+              sx={{ width: 100 }}
             >
-              <MenuItem value={'automatic'}>Automatic</MenuItem>
+              <MenuItem value={'automatic'}>Auto</MenuItem>
               <MenuItem value={'1'}>1h</MenuItem>
               <MenuItem value={'3'}>3h</MenuItem>
               <MenuItem value={'6'}>6h</MenuItem>
@@ -948,12 +971,16 @@ export default (): ReactElement => {
         <TableCell sx={tableCellSx} align="center">
           <FormControl sx={{ m: 1 }} size="small">
             <Select
+              autoWidth={true}
               name={`sensitivity-${materializationId}-${columnId}`}
-              disabled={!columnTestConfig.testsActivated}
+              disabled={
+                !getColumnTestConfig(materializationId, columnId).testsActivated
+              }
               displayEmpty={true}
               value={
-                columnTestConfig.sensitivity !== undefined
-                  ? columnTestConfig.sensitivity
+                getColumnTestConfig(materializationId, columnId).sensitivity !==
+                undefined
+                  ? getColumnTestConfig(materializationId, columnId).sensitivity
                   : ''
               }
               onChange={handleColumnSensitivityChange}
@@ -973,7 +1000,10 @@ export default (): ReactElement => {
               size="large"
               variant="contained"
               color={
-                getTestConfig(columnTestConfig, columnFreshnessType).activated
+                getTestConfig(
+                  getColumnTestConfig(materializationId, columnId),
+                  columnFreshnessType
+                ).activated
                   ? 'primary'
                   : 'info'
               }
@@ -991,7 +1021,10 @@ export default (): ReactElement => {
               size="large"
               variant="contained"
               color={
-                getTestConfig(columnTestConfig, columnCardinalityType).activated
+                getTestConfig(
+                  getColumnTestConfig(materializationId, columnId),
+                  columnCardinalityType
+                ).activated
                   ? 'primary'
                   : 'info'
               }
@@ -1009,7 +1042,10 @@ export default (): ReactElement => {
               size="large"
               variant="contained"
               color={
-                getTestConfig(columnTestConfig, columnNullnessType).activated
+                getTestConfig(
+                  getColumnTestConfig(materializationId, columnId),
+                  columnNullnessType
+                ).activated
                   ? 'primary'
                   : 'info'
               }
@@ -1027,7 +1063,10 @@ export default (): ReactElement => {
               size="large"
               variant="contained"
               color={
-                getTestConfig(columnTestConfig, columnUniquenessType).activated
+                getTestConfig(
+                  getColumnTestConfig(materializationId, columnId),
+                  columnUniquenessType
+                ).activated
                   ? 'primary'
                   : 'info'
               }
@@ -1045,8 +1084,10 @@ export default (): ReactElement => {
               size="large"
               variant="contained"
               color={
-                getTestConfig(columnTestConfig, columnDistributionType)
-                  .activated
+                getTestConfig(
+                  getColumnTestConfig(materializationId, columnId),
+                  columnDistributionType
+                ).activated
                   ? 'primary'
                   : 'info'
               }
@@ -1424,13 +1465,19 @@ export default (): ReactElement => {
                 }
                 displayEmpty={true}
                 value={
-                  executionType === 'frequency' && frequency
-                    ? frequency.toString()
-                    : testSelection[props.materializationId].executionType
+                  (testSelection[props.materializationId].executionType ===
+                    'frequency' &&
+                  testSelection[props.materializationId].frequency
+                    ? testSelection[
+                        props.materializationId
+                      ].frequency?.toString()
+                    : testSelection[props.materializationId].executionType) ||
+                  ''
                 }
                 onChange={handleMatFrequencyChange}
+                sx={{ width: 100 }}
               >
-                <MenuItem value={'automatic'}>Automatic</MenuItem>
+                <MenuItem value={'automatic'}>Auto</MenuItem>
                 <MenuItem value={'1'}>1h</MenuItem>
                 <MenuItem value={'3'}>3h</MenuItem>
                 <MenuItem value={'6'}>6h</MenuItem>
@@ -1442,6 +1489,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="center">
             <FormControl sx={{ m: 1 }} size="small">
               <Select
+                autoWidth={true}
                 name={`sensitivity-${props.materializationId}`}
                 disabled={
                   !testSelection[

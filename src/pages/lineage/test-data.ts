@@ -25603,6 +25603,7 @@ export const defaultTestSuites: TestSuiteDto[] = [
     threshold: 10,
     executionFrequency: 24,
     cron: undefined,
+    executionType: 'automatic'
   },
   {
     id: 'testSuite2',
@@ -25619,7 +25620,8 @@ export const defaultTestSuites: TestSuiteDto[] = [
     type: 'ColumnNullness',
     threshold: 15,
     executionFrequency: 12,
-    cron: undefined
+    cron: undefined,
+    executionType: 'automatic'
   },
   {
     id: 'testSuite3',
@@ -25636,7 +25638,8 @@ export const defaultTestSuites: TestSuiteDto[] = [
     type: 'ColumnDistribution',
     threshold: 5,
     executionFrequency: 3,
-    cron: undefined
+    cron: undefined,
+    executionType: 'automatic'
   },
 
   //'ColumnFreshness',

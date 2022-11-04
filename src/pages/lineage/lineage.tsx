@@ -1542,6 +1542,10 @@ export default (): ReactElement => {
               onClick={closeMatSidePanel}
             />
           </div>
+          <h5>
+            Last altered at {'2022-10-31 13:12:24'} by {'felix-brockmeier'}
+          </h5>
+
           <div id="editor" className="content mt-10">
             <SyntaxHighlighter
               language="sql"

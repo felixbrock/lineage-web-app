@@ -24,7 +24,7 @@ import Button from '@mui/material/Button';
 
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
@@ -142,6 +142,17 @@ export const parseMaterializationType = (
   throw new Error('Provision of invalid type');
 };
 
+export const executionTypes = ['individual', 'automatic', 'frequency'] as const;
+export type ExecutionType = typeof executionTypes[number];
+
+export const parseExecutionType = (executionType: unknown): ExecutionType => {
+  const identifiedElement = executionTypes.find(
+    (element) => element === executionType
+  );
+  if (identifiedElement) return identifiedElement;
+  throw new Error('Provision of invalid type');
+};
+
 interface TestConfig {
   type: TestType;
   activated: boolean;
@@ -153,6 +164,8 @@ interface ColumnTestConfig {
   label: string;
   type: string;
   frequency: number;
+  cron?: string;
+  executionType: ExecutionType;
   sensitivity: number;
   testConfigs: TestConfig[];
   testsActivated: boolean;
@@ -169,6 +182,7 @@ interface MaterializationTestsConfig {
   navExpanded: boolean;
   label: string;
   frequency?: number;
+  executionType?: ExecutionType;
   sensitivity?: number;
   testDefinitionSummary: TestDefinitionSummary[];
   testsActivated: boolean;
@@ -263,14 +277,39 @@ export default (): ReactElement => {
         )
       : 0;
 
-  const handleColumnFrequencyChange = (event: any) => {
-    const name = event.target.name as string;
-    const value = event.target.value as number;
+  const getColumnUpdateObject = (
+    value: string,
+    testSuiteId: string
+  ): UpdateTestSuiteObject => {
+    if (!isNaN(Number(value))) {
+      const numValue = Number(value);
+      return {
+        id: testSuiteId,
+        frequency: numValue,
+        executionType: 'frequency',
+      };
+    }
+
+    const executionType = parseExecutionType(value);
+    if (executionType === 'automatic')
+      return {
+        id: testSuiteId,
+        executionType: 'automatic',
+      };
+    if (executionType === 'individual')
+      throw new Error('todo - not implemented');
+    throw new Error(`Undhandled frequency value detected ${value}`);
+  };
+
+  const handleColumnFrequencyChange = (event: SelectChangeEvent<string>) => {
+    const name = event.target.name;
+    const value = event.target.value;
     const props = name.split('-');
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].frequency = undefined;
+    const matTestConfig = testSelectionLocal[props[1]];
+    matTestConfig.executionType = undefined;
 
     const columnTestConfigIndex = testSelectionLocal[
       props[1]
@@ -300,21 +339,59 @@ export default (): ReactElement => {
 
     // ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
-    testSelectionLocal[props[1]].columnTestConfigs[
-      columnTestConfigIndex
-    ].frequency = value;
+    if (!isNaN(Number(value))) {
+      const numValue = Number(value);
+
+      testSelectionLocal[props[1]].columnTestConfigs[
+        columnTestConfigIndex
+      ].frequency = numValue;
+      testSelectionLocal[props[1]].columnTestConfigs[
+        columnTestConfigIndex
+      ].executionType = 'frequency';
+
+      setTestSelection({ ...testSelectionLocal });
+      return;
+    }
+
+    const executionType = parseExecutionType(value);
+    if (executionType === 'automatic')
+      testSelectionLocal[props[1]].columnTestConfigs[
+        columnTestConfigIndex
+      ].executionType = executionType;
+    else if (executionType === 'individual')
+      throw new Error('todo - not implemented');
 
     setTestSelection({ ...testSelectionLocal });
   };
 
-  const handleMatFrequencyChange = (event: any) => {
-    const name = event.target.name as string;
-    const value = event.target.value as number;
+  const handleMatFrequencyChange = (event: SelectChangeEvent<string>) => {
+    const name = event.target.name;
+    const value = event.target.value;
     const props = name.split('-');
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].frequency = event.target.value;
+    let executionType: ExecutionType;
+    if (!isNaN(Number(value))) {
+      const numValue = Number(value);
+
+      testSelectionLocal[props[1]].frequency = numValue;
+      testSelectionLocal[props[1]].executionType = 'frequency';
+    } else {
+      executionType = parseExecutionType(value);
+
+      switch (executionType) {
+        case 'automatic':
+          testSelectionLocal[props[1]].executionType = executionType;
+          break;
+        case 'individual':
+          throw new Error('todo - not implemented');
+        default:
+          throw new Error(
+            'Unhandled execution type while handling mat frequency change'
+          );
+      }
+    }
 
     const isUpdateObject = (
       updateObject: UpdateTestSuiteObject | undefined
@@ -334,14 +411,19 @@ export default (): ReactElement => {
           if (!testSuiteId)
             throw new Error('Activated test without test suite id');
 
-          return {
-            id: testSuiteId,
-            frequency: value,
-          };
+          return getColumnUpdateObject(value, testSuiteId);
         });
 
-        testSelectionLocal[props[1]].columnTestConfigs[index].frequency =
-          event.target.value;
+        if (!isNaN(Number(value))) {
+          const numValue = Number(value);
+
+          testSelectionLocal[props[1]].columnTestConfigs[index].frequency =
+            numValue;
+          testSelectionLocal[props[1]].columnTestConfigs[index].executionType =
+            'frequency';
+        } else if (executionType === 'automatic')
+          testSelectionLocal[props[1]].columnTestConfigs[index].executionType =
+            executionType;
 
         return objects;
       })
@@ -769,6 +851,7 @@ export default (): ReactElement => {
           type,
           executionFrequency: config.frequency,
           threshold: config.sensitivity,
+          executionType: config.executionType,
         });
       } else
         updateObjects.push({ id: testSuiteId, activated: newActivatedValue });
@@ -847,8 +930,6 @@ export default (): ReactElement => {
   ): ReactElement => {
     const allowedTestTypes = getAllowedTestTypes(columnType);
 
-    const columnTestConfig = getColumnTestConfig(materializationId, columnId);
-
     const columnFreshnessType: TestType = 'ColumnFreshness';
     const columnCardinalityType: TestType = 'ColumnCardinality';
     const columnUniquenessType: TestType = 'ColumnUniqueness';
@@ -858,34 +939,52 @@ export default (): ReactElement => {
     return (
       <TableRow>
         <TableCell sx={tableCellSx} align="left">
-          {columnTestConfig.label}
+          {getColumnTestConfig(materializationId, columnId).label}
         </TableCell>
         <TableCell sx={tableCellSx} align="center">
           <FormControl sx={{ m: 1, maxwidth: 100 }} size="small">
             <Select
+              autoWidth={true}
               name={`frequency-${materializationId}-${columnId}`}
-              disabled={!columnTestConfig.testsActivated}
+              disabled={
+                !getColumnTestConfig(materializationId, columnId).testsActivated
+              }
               displayEmpty={true}
-              value={columnTestConfig.frequency || ''}
+              value={
+                getColumnTestConfig(materializationId, columnId)
+                  .executionType === 'frequency'
+                  ? getColumnTestConfig(
+                      materializationId,
+                      columnId
+                    ).frequency.toString()
+                  : getColumnTestConfig(materializationId, columnId)
+                      .executionType
+              }
               onChange={handleColumnFrequencyChange}
+              sx={{ width: 100 }}
             >
-              <MenuItem value={1}>1h</MenuItem>
-              <MenuItem value={3}>3h</MenuItem>
-              <MenuItem value={6}>6h</MenuItem>
-              <MenuItem value={12}>12h</MenuItem>
-              <MenuItem value={24}>1d</MenuItem>
+              <MenuItem value={'automatic'}>Auto</MenuItem>
+              <MenuItem value={'1'}>1h</MenuItem>
+              <MenuItem value={'3'}>3h</MenuItem>
+              <MenuItem value={'6'}>6h</MenuItem>
+              <MenuItem value={'12'}>12h</MenuItem>
+              <MenuItem value={'24'}>1d</MenuItem>
             </Select>
           </FormControl>
         </TableCell>
         <TableCell sx={tableCellSx} align="center">
           <FormControl sx={{ m: 1 }} size="small">
             <Select
+              autoWidth={true}
               name={`sensitivity-${materializationId}-${columnId}`}
-              disabled={!columnTestConfig.testsActivated}
+              disabled={
+                !getColumnTestConfig(materializationId, columnId).testsActivated
+              }
               displayEmpty={true}
               value={
-                columnTestConfig.sensitivity !== undefined
-                  ? columnTestConfig.sensitivity
+                getColumnTestConfig(materializationId, columnId).sensitivity !==
+                undefined
+                  ? getColumnTestConfig(materializationId, columnId).sensitivity
                   : ''
               }
               onChange={handleColumnSensitivityChange}
@@ -905,7 +1004,10 @@ export default (): ReactElement => {
               size="large"
               variant="contained"
               color={
-                getTestConfig(columnTestConfig, columnFreshnessType).activated
+                getTestConfig(
+                  getColumnTestConfig(materializationId, columnId),
+                  columnFreshnessType
+                ).activated
                   ? 'primary'
                   : 'info'
               }
@@ -923,7 +1025,10 @@ export default (): ReactElement => {
               size="large"
               variant="contained"
               color={
-                getTestConfig(columnTestConfig, columnCardinalityType).activated
+                getTestConfig(
+                  getColumnTestConfig(materializationId, columnId),
+                  columnCardinalityType
+                ).activated
                   ? 'primary'
                   : 'info'
               }
@@ -941,7 +1046,10 @@ export default (): ReactElement => {
               size="large"
               variant="contained"
               color={
-                getTestConfig(columnTestConfig, columnNullnessType).activated
+                getTestConfig(
+                  getColumnTestConfig(materializationId, columnId),
+                  columnNullnessType
+                ).activated
                   ? 'primary'
                   : 'info'
               }
@@ -959,7 +1067,10 @@ export default (): ReactElement => {
               size="large"
               variant="contained"
               color={
-                getTestConfig(columnTestConfig, columnUniquenessType).activated
+                getTestConfig(
+                  getColumnTestConfig(materializationId, columnId),
+                  columnUniquenessType
+                ).activated
                   ? 'primary'
                   : 'info'
               }
@@ -977,8 +1088,10 @@ export default (): ReactElement => {
               size="large"
               variant="contained"
               color={
-                getTestConfig(columnTestConfig, columnDistributionType)
-                  .activated
+                getTestConfig(
+                  getColumnTestConfig(materializationId, columnId),
+                  columnDistributionType
+                ).activated
                   ? 'primary'
                   : 'info'
               }
@@ -1032,6 +1145,7 @@ export default (): ReactElement => {
           type: column.type,
           label: columnLabel,
           frequency: suites.length ? suites[0].executionFrequency : 1,
+          executionType: suites.length ? suites[0].executionType : 'automatic',
           sensitivity: suites.length ? suites[0].threshold : 0,
           testConfigs: allowedTests.map((element) => {
             const typeSpecificSuite = suites.find((el) => el.type === element);
@@ -1330,6 +1444,14 @@ export default (): ReactElement => {
       materializationSchemaChangeType
     );
 
+    const executionType = testSelection[props.materializationId].executionType;
+    const frequency = testSelection[props.materializationId].frequency;
+
+    if (executionType === 'frequency' && frequency === undefined)
+      throw new Error(
+        'Materialization has executionType "frequency" selected but is missing frequency'
+      );
+
     return (
       <React.Fragment>
         <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
@@ -1346,20 +1468,32 @@ export default (): ReactElement => {
                   ].columnTestConfigs.some((el) => el.testsActivated)
                 }
                 displayEmpty={true}
-                value={testSelection[props.materializationId].frequency || ''}
+                value={
+                  (testSelection[props.materializationId].executionType ===
+                    'frequency' &&
+                  testSelection[props.materializationId].frequency
+                    ? testSelection[
+                        props.materializationId
+                      ].frequency?.toString()
+                    : testSelection[props.materializationId].executionType) ||
+                  ''
+                }
                 onChange={handleMatFrequencyChange}
+                sx={{ width: 100 }}
               >
-                <MenuItem value={1}>1h</MenuItem>
-                <MenuItem value={3}>3h</MenuItem>
-                <MenuItem value={6}>6h</MenuItem>
-                <MenuItem value={12}>12h</MenuItem>
-                <MenuItem value={24}>1d</MenuItem>
+                <MenuItem value={'automatic'}>Auto</MenuItem>
+                <MenuItem value={'1'}>1h</MenuItem>
+                <MenuItem value={'3'}>3h</MenuItem>
+                <MenuItem value={'6'}>6h</MenuItem>
+                <MenuItem value={'12'}>12h</MenuItem>
+                <MenuItem value={'24'}>1d</MenuItem>
               </Select>
             </FormControl>
           </TableCell>
           <TableCell sx={tableCellSx} align="center">
             <FormControl sx={{ m: 1 }} size="small">
               <Select
+                autoWidth={true}
                 name={`sensitivity-${props.materializationId}`}
                 disabled={
                   !testSelection[
@@ -1722,7 +1856,12 @@ export default (): ReactElement => {
     if (!searchParams) return;
 
     const alertId = searchParams.get('alertId');
-    if (!alertId) return;
+    const testType = searchParams.get('testType');
+
+    if (!!alertId !== !!testType)
+      throw new Error('User feedback callback is missing query param(s)');
+
+    if (!alertId || !testType) return;
 
     const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
     if (!userFeedbackIsAnomaly) return;
@@ -1827,19 +1966,21 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        <Navbar current='tests' /> 
+        <Navbar current="tests" />
         <>
-            <div className='relative h-20 flex justify-center items-top'>
-            <div className='w-1/4 mt-2 relative'>
-            <SearchBox
-            placeholder='Search...'
-            label='testsearchbox'
-            onChange={handleSearchChange}
-            />
+          <div className="items-top relative flex h-20 justify-center">
+            <div className="relative mt-2 w-1/4">
+              <SearchBox
+                placeholder="Search..."
+                label="testsearchbox"
+                onChange={handleSearchChange}
+              />
             </div>
           </div>
           <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-            <TableContainer sx={{ height: window.innerHeight - 50 - 67 - 52 - 20 }}>
+            <TableContainer
+              sx={{ height: window.innerHeight - 50 - 67 - 52 - 20 }}
+            >
               <Table stickyHeader={true} aria-label="collapsible table">
                 <TableHead>
                   <TableRow>

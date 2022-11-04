@@ -1,3 +1,5 @@
+import { ExecutionType } from '../../pages/test/test';
+
 interface BaseTestSuiteDto {
   id: string;
   organizationId: string;
@@ -13,6 +15,7 @@ interface BaseTestSuiteDto {
   type: string;
   executionFrequency: number;
   cron?: string;
+  executionType: ExecutionType;
 }
 
 export interface TestSuiteDto extends BaseTestSuiteDto {

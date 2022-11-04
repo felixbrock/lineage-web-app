@@ -1,47 +1,48 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { mode } from '../../config';
-import { MaterializationType, TestType } from '../../pages/test/test';
+import { ExecutionType, MaterializationType, TestType } from '../../pages/test/test';
 import getRoot from '../shared/api-root-builder';
 import { NominalTestSuiteDto, TestSuiteDto } from './test-suite-dto';
 
 interface UpdateTestHistoryEntryDto {
   alertId: string;
+  testType: string;
   userFeedbackIsAnomaly: string;
 }
 
 interface BaseTestSuiteProps {
-  activated: boolean,
-  type: TestType,
-  executionFrequency: number,
-  databaseName: string,
-  schemaName: string,
-  materializationName: string, 
-  materializationType: MaterializationType,
-  columnName?: string, 
-  targetResourceId: string
-  cron?: string
+  activated: boolean;
+  type: TestType;
+  executionFrequency: number;
+  databaseName: string;
+  schemaName: string;
+  materializationName: string;
+  materializationType: MaterializationType;
+  columnName?: string;
+  targetResourceId: string;
+  cron?: string;
+  executionType: ExecutionType;
 }
 
-export interface TestSuiteProps extends BaseTestSuiteProps{
-  threshold: number,
+export interface TestSuiteProps extends BaseTestSuiteProps {
+  threshold: number;
 }
 
-export type NominalTestSuiteProps = BaseTestSuiteProps
+export type NominalTestSuiteProps = BaseTestSuiteProps;
 
 interface BaseUpdateTestSuiteObject {
   id: string;
   activated?: boolean;
   frequency?: number;
   cron?: string;
+  executionType?: ExecutionType
 }
 
 export interface UpdateTestSuiteObject extends BaseUpdateTestSuiteObject {
   threshold?: number;
 }
 
-export type UpdateNominalTestSuiteObject = BaseUpdateTestSuiteObject
-
-
+export type UpdateNominalTestSuiteObject = BaseUpdateTestSuiteObject;
 
 // TODO - Implement Interface regarding clean architecture
 export default class ObservabilityApiRepo {
@@ -190,7 +191,10 @@ export default class ObservabilityApiRepo {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
-      const response = await axios.get(`${apiRoot}/nominal-test-suites`, config);
+      const response = await axios.get(
+        `${apiRoot}/nominal-test-suites`,
+        config
+      );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);
@@ -208,6 +212,7 @@ export default class ObservabilityApiRepo {
 
       const data = {
         userFeedbackIsAnomaly: updateTestHistoryEntryDto.userFeedbackIsAnomaly,
+        testType: updateTestHistoryEntryDto.testType,
       };
 
       const config: AxiosRequestConfig = {

@@ -457,7 +457,6 @@ export default (): ReactElement => {
   >([]);
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
   const [tabIndex, setTabIndex] = React.useState<number>(0);
-  const [columnPanelTabIndex, setColumnPanelTabIndex] = React.useState(0);
   const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
@@ -474,13 +473,6 @@ export default (): ReactElement => {
     // Make sure the integration side panel is open when tab is set
     setShowIntegrationSidePanel(true);
     setTabIndex(newValue);
-  };
-
-  const handleColumnPanelTabIndexChange = (
-    event: React.SyntheticEvent,
-    newValue: number
-  ) => {
-    setColumnPanelTabIndex(newValue);
   };
 
   const handleSelect = (nodeId: string) => {
@@ -790,7 +782,7 @@ export default (): ReactElement => {
       });
   }, [user]);
 
-  const handleSlackRedirect = (organizationId: string) => {
+  const handleSlackRedirect = () => {
     const state = location.state;
 
     if (!state) return;
@@ -810,12 +802,14 @@ export default (): ReactElement => {
         .catch(() => console.trace('Slack profile retrieval failed'));
     }
 
+    setTabIndex(2);
+
     if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
 
     window.history.replaceState({}, document.title);
   };
 
-  const handleGithubRedirect = (organizationId: string) => {
+  const handleGithubRedirect = () => {
     const state = location.state;
 
     if (!state) return;
@@ -839,6 +833,8 @@ export default (): ReactElement => {
 
     if (githubInstallId) setGithubInstallationId(githubInstallId);
     if (githubToken) setGithubAccessToken(githubToken);
+
+    setTabIndex(1);
 
     if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
 
@@ -911,8 +907,8 @@ export default (): ReactElement => {
       setReadyToBuild(true);
     }
 
-    handleSlackRedirect(account.organizationId);
-    handleGithubRedirect(account.organizationId);
+    handleSlackRedirect();
+    handleGithubRedirect();
   }, [account]);
 
   useEffect(() => {
@@ -1641,7 +1637,7 @@ export default (): ReactElement => {
             />
           </div>
           <Tab.Group selectedIndex={tabIndex} onChange={setTabIndex}>
-            <Tab.List className="flex mx-6 space-x-1 rounded-xl bg-cito p-1 mt-10">
+            <Tab.List className="mx-6 mt-10 flex space-x-1 rounded-xl bg-cito p-1">
               {Object.values(integrations).map((integration: any) => (
                 <Tab
                   key={integration.name}

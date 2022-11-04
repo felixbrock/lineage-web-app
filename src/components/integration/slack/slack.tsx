@@ -14,7 +14,6 @@ import { mode, slackConfig } from '../../../config';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 import SlackConversationInfoDto from '../../../infrastructure/integration-api/slack-channel-info-dto';
 import SlackProfileDto from '../../../infrastructure/integration-api/slack-profile-dto';
-import './slack.scss';
 
 const buildOAuthUrl = (organizationId: string) => {
   const clientId = encodeURIComponent(slackConfig.slackClientId);

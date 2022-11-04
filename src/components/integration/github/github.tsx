@@ -2,7 +2,6 @@ import { List, ListItem, ListItemText, ListItemIcon } from '@mui/material';
 import { ReactElement, useEffect, useState } from 'react';
 import GithubApiRepo from '../../../infrastructure/github-api/github-api-repo';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
-import './github.scss';
 import { BiGitBranch } from 'react-icons/bi';
 import { mode } from '../../../config';
 import {

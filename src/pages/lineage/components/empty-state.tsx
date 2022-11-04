@@ -7,19 +7,18 @@ import { MouseEventHandler } from 'react';
 const items = [
   {
     name: 'Snowflake',
-    description:
-      'Connect to your Snowflake for data access and storage.',
+    description: 'Connect to your Snowflake for data access and storage.',
     icon: SiSnowflake,
   },
   {
     name: 'GitHub',
-    description: 'Get your dbt metadata directly from your GitHub repositories.',
+    description:
+      'Get your dbt metadata directly from your GitHub repositories.',
     icon: FaGithub,
   },
   {
     name: 'Slack',
-    description:
-      'Connect to Slack to seamlessly receive anomaly alerts.',
+    description: 'Connect to Slack to seamlessly receive anomaly alerts.',
     icon: FaSlack,
   },
 ];
@@ -36,7 +35,8 @@ export function EmptyStateIntegrations({
           Actionable Data Observability in Less Than 15 Minutes
         </h2>
         <p className="mt-1 text-sm text-gray-500">
-          Set up your integrations and get started with data observability powered by column-level lineage now.
+          Set up your integrations and get started with data observability
+          powered by column-level lineage now.
         </p>
         <ul
           role="list"
@@ -55,11 +55,7 @@ export function EmptyStateIntegrations({
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium text-gray-900">
-                    <button
-                      onClick={(e) => {
-                        onClick(e, itemIdx);
-                      }}
-                    >
+                    <button onClick={() => onClick(itemIdx)}>
                       <span className="absolute inset-0" aria-hidden="true" />
                       {item.name}
                     </button>

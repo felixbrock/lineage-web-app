@@ -1,49 +1,8 @@
 $hivediveBlue: #6f47ef;
 $hivediveGrey: #dfdfdf;
 
-/* div */
-#lineageContainer {
-    position: relative;
-}
 
 $navbarHeight: 130px;
-
-/* div */
-.navbar {
-  position: relative;
-  height: $navbarHeight;
-  border-bottom: 2px solid $hivediveBlue;
-}
-
-.navbar #menu-container {
-  position: absolute;
-  left: 0%;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-.navbar #sign-out-container {
-  position: absolute;
-  right: 0%;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.navbar #menu-container:after {
-  content: '';
-  display: inline-block;
-  width: 100%;
-}
-.navbar #menu-container:before {
-  content: '';
-  display: block;
-  margin-top: -1.25em;
-}
 
 #border-glow {
   border: 1px solid;
@@ -65,82 +24,11 @@ button.hivedive:hover {
   color: $hivediveBlue;
   border-color: $hivediveBlue;
 }
-
-#menu-button {
-  @extend button, .hivedive;
-  font-size: 20px;
-  width: 30px;
-  height: 20px;
-}
-
 /* div */
-#lineage {
-  height: calc(100% - $navbarHeight);
-  width: 100%;
-}
-
 $headerMargin: 10px;
 
-#sidenav {
-  height: calc(100% - $navbarHeight);
-  width: 400px;
-  position: fixed;
-  z-index: 1;
-  left: 0;
-  overflow-x: hidden;
-  visibility: hidden;
-  background-color: white;
-  border: 2px solid $hivediveGrey;
-  opacity: 1;
-  transition: visibility 0.3s linear, opacity 0.3s linear;
-  padding-top: 70px;
-  overflow-y: hidden;
-}
-
-#sidenav .control-button {
-  @extend button, .hivedive;
-  font-size: 12px;
-  border: 2px solid black;
-  border-radius: 3px;
-  margin: 7px 3px 7px 3px;
-}
-
-#sidenav .filter-button {
-  @extend button, .hivedive;
-  font-size: 12px;
-  border: 2px solid $hivediveBlue;
-  color: $hivediveBlue;
-  border-radius: 3px;
-  margin: 7px 3px 7px 3px;
-}
-
-#sidenav .filter-button:hover {
-  color: black;
-  border-color: black;
-}
-
-#sidenav #search {
-  position: absolute;
-  width: calc(100% - 2 * $headerMargin);
-  top: 0;
-  margin: $headerMargin $headerMargin 0 $headerMargin;
-  background-color: whitesmoke;
-}
 
 $controlHeight: 40px;
-
-#sidenav #control {
-  height: $controlHeight;
-  display: flex;
-  margin: 0 10px 10px 10px;
-}
-
-#sidenav #content {
-  height: calc(100% - $controlHeight);
-  padding: 0 10px 10px 10px;
-  margin: 0 10px 10px 10px;
-  overflow-y: scroll;
-}
 
 $sidePanelMargin: 5px;
 
@@ -172,23 +60,6 @@ $sidePanelMargin: 5px;
   border-style: solid;
   border-color: #6f47ef;
   border-width: 2px;
-}
-
-.sidepanel {
-  height: calc(100% - $navbarHeight - $sidePanelMargin - $sidePanelMargin);
-  width: 33%;
-  position: fixed;
-  z-index: 1;
-  right: $sidePanelMargin;
-  overflow-x: hidden;
-  visibility: hidden;
-  // background-color: linear-gradient(to bottom right, $hivediveGrey, White);
-  border: 2px solid $hivediveGrey;
-  opacity: 1;
-  transition: visibility 0.3s linear, opacity 0.3s linear;
-  padding-top: 50px;
-  margin: $sidePanelMargin 0 $sidePanelMargin $sidePanelMargin;
-  background-color: white;
 }
 
 .sidepanel .header {

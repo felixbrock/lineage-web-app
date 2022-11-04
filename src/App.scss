@@ -4,30 +4,3 @@
   font-family: 'Inter', sans-serif;
   box-sizing: border-box;
 }
-
-/* div */
-#app {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr auto;
-  grid-template-areas:
-    'header'
-    'content'
-    'footer';
-}
-
-/* div */
-#headerContainer {
-  grid-area: header;
-}
-
-/* div */
-#contentContainer {
-  margin: 10px;
-  grid-area: content;
-}
-
-/* div */
-#footerContainer {
-  grid-area: footer;
-}

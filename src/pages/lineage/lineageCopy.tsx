@@ -1,4 +1,10 @@
-import React, { ReactElement, SyntheticEvent, useEffect, useState } from 'react';
+import React, {
+  ReactElement,
+  SyntheticEvent,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
 import { FaGithub, FaSlack } from 'react-icons/fa';
 import { SiSnowflake } from 'react-icons/si';
@@ -42,12 +48,10 @@ import TreeView from '@mui/lab/TreeView';
 // import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TreeItem from '@mui/lab/TreeItem';
 
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
+import { Tab } from '@headlessui/react';
 import BasicCard from '../../components/card';
 import BasicTable from '../../components/table';
 
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
@@ -68,10 +72,16 @@ import {
 } from './error-handling-data';
 import { ButtonSmall } from './components/buttons';
 import SearchBox from './components/search-box';
-import { EmptyStateIntegrations, EmptyStateDottedLine } from './components/empty-state';
+import {
+  EmptyStateIntegrations,
+  EmptyStateDottedLine,
+} from './components/empty-state';
 import { SectionHeading } from './components/headings';
 import { Table } from './components/table';
-import Navbar from '../../components/navbar';
+import {
+  LeftPanelContext,
+  RightPanelContext,
+} from '../../components/panelContext';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -80,22 +90,15 @@ import Navbar from '../../components/navbar';
 // 62e2a8e9aef38b28f49d9c8f
 // '62e25e01b611c320fffbecc2';
 
+function classNames(...classes: any) {
+  return classes.filter(Boolean).join(' ');
+}
+
 enum DataLoadNodeType {
   Self = 'SELF',
   Parent = 'PARENT',
   Child = 'CHILD',
 }
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#6f47ef',
-    },
-    secondary: {
-      main: '#000000',
-    },
-  },
-});
 
 const getNodeIdsToExplore = (
   edgesToExplore: EdgeConfig[],
@@ -453,10 +456,10 @@ export default (): ReactElement => {
     useState<ReactElement>();
   const [isRightPanelShown, setIsRightPanelShown] = useState(false);
 
-  const handleTabIndexChange = (
-    event: SyntheticEvent,
-    newValue: number
-  ) => {
+  const leftPanelContext = useContext(LeftPanelContext);
+  const rightPanelContext = useContext(RightPanelContext);
+
+  const handleTabIndexChange = (event: SyntheticEvent, newValue: number) => {
     // Make sure the integration side panel is open when tab is set
     setShowIntegrationSidePanel(true);
     setTabIndex(newValue);
@@ -616,43 +619,6 @@ export default (): ReactElement => {
     setExpandedTreeViewElementIds((oldExpanded) =>
       oldExpanded.length === 0 ? comboIds : []
     );
-  };
-
-  const toggleShowSideNav = () => {
-    const sidenav = document.getElementById('sidenav');
-    if (!sidenav) throw new ReferenceError('Sidenav does not exist');
-
-    const visible = sidenav.style.visibility === 'visible';
-    sidenav.style.visibility = visible ? 'hidden' : 'visible';
-    sidenav.style.opacity = visible ? '0' : '1';
-  };
-
-  const closeMatSidePanel = () => {
-    setSQL('');
-
-    const panel = document.getElementById('materializationSidePanel');
-    if (!panel)
-      throw new ReferenceError('Materialization Panel does not exist');
-    panel.style.visibility = 'hidden';
-    panel.style.opacity = '0';
-  };
-
-  const closeColSidePanel = () => {
-    setColumnTest('');
-
-    const panel = document.getElementById('columnSidePanel');
-    if (!panel) throw new ReferenceError('Column Panel does not exist');
-    panel.style.visibility = 'hidden';
-    panel.style.opacity = '0';
-  };
-
-  const closeIntegrationSidePanel = () => {
-    setShowIntegrationSidePanel(false);
-
-    const panel = document.getElementById('integrationsSidePanel');
-    if (!panel) throw new ReferenceError('Integrations panel does not exist');
-    panel.style.visibility = 'hidden';
-    panel.style.opacity = '0';
   };
 
   const buildTreeViewColumn = (
@@ -842,14 +808,9 @@ export default (): ReactElement => {
 
     if (lineage) return;
 
-    toggleShowSideNav();
-
-    setIntegrationComponent(
-      <Snowflake jwt={jwt}></Snowflake>
-    );
+    setIntegrationComponent(<Snowflake jwt={jwt}></Snowflake>);
 
     if (showRealData) {
-      
       let lineageId: string;
 
       LineageApiRepository.getLatest(jwt)
@@ -898,7 +859,7 @@ export default (): ReactElement => {
           setDependencies(defaultErrorDependencies);
           setDashboards(deafultErrorDashboards);
 
-            setIsDataAvailable(false);
+          setIsDataAvailable(false);
           setReadyToBuild(true);
         });
     } else {
@@ -914,17 +875,15 @@ export default (): ReactElement => {
     if (!account) return;
 
     if (tabIndex === 0)
-      setIntegrationComponent(
-        <Snowflake jwt={jwt}></Snowflake>
-      );
+      setIntegrationComponent(<Snowflake jwt={jwt}></Snowflake>);
     else if (tabIndex === 1)
       setIntegrationComponent(
         <Github
-        installationId={githubInstallationId}
-        accessToken={githubAccessToken}
-        organizationId={account.organizationId}
-        jwt={jwt}
-      ></Github>
+          installationId={githubInstallationId}
+          accessToken={githubAccessToken}
+          organizationId={account.organizationId}
+          jwt={jwt}
+        ></Github>
       );
     else if (tabIndex === 2)
       setIntegrationComponent(
@@ -938,9 +897,6 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (!showIntegrationSidePanel) return;
-
-    closeColSidePanel();
-    closeMatSidePanel();
 
     const panel = document.getElementById('integrationsSidePanel');
     if (!panel) throw new ReferenceError('Integrations Panel does not exist');
@@ -1059,20 +1015,9 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!sql) return;
 
-    const panel = document.getElementById('materializationSidePanel');
-    if (!panel) throw new ReferenceError('SQL Panel does not exist');
-    panel.style.visibility = 'visible';
-    panel.style.opacity = '1';
+    rightPanelContext.setOpen(true);
+    rightPanelContext.setActiveTab(0);
   }, [sql]);
-
-  useEffect(() => {
-    if (!columnTest) return;
-
-    const panel = document.getElementById('columnSidePanel');
-    if (!panel) throw new ReferenceError('Column Panel does not exist');
-    panel.style.visibility = 'visible';
-    panel.style.opacity = '1';
-  }, [columnTest]);
 
   useEffect(() => {
     if (!data) return;
@@ -1167,13 +1112,13 @@ export default (): ReactElement => {
         padding: [40, 20, 10, 20],
         fixCollapseSize: [80, 10],
         style: {
-            fill: '#112227',
+          fill: '#112227',
           radius: 5,
         },
         labelCfg: {
           style: {
             fontSize: 18,
-              fill: '#ffffff',
+            fill: '#ffffff',
           },
         },
       },
@@ -1313,9 +1258,6 @@ export default (): ReactElement => {
 
     graphObj.on('nodeselectchange', (event) => {
       const clearStates = () => {
-        closeMatSidePanel();
-        closeColSidePanel();
-        closeIntegrationSidePanel();
         setIsRightPanelShown(false);
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         const selectedAnomalyEdges = graphObj.findAllByState(
@@ -1329,8 +1271,6 @@ export default (): ReactElement => {
       if (!event.target) clearStates();
       else if (!event.select) clearStates();
       else if (event.target.get('type') === 'node') {
-        closeMatSidePanel();
-        closeIntegrationSidePanel();
         setIsRightPanelShown(false);
         const isNode = (object: any): object is INode => 'getEdges' in object;
 
@@ -1356,8 +1296,6 @@ export default (): ReactElement => {
 
         graphObj.render();
       } else if (event.target.get('type') === 'combo') {
-        closeColSidePanel();
-
         const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
         const selectedAnomalyEdges = graphObj.findAllByState(
           'edge',
@@ -1459,36 +1397,32 @@ export default (): ReactElement => {
     if (targetResourceId) handleSelect(targetResourceId);
   }, [graph]);
 
-  return (
-    <ThemeProvider theme={theme}>
-      <div id="lineageContainer" className='relative'>
-        <Navbar current='lineage' toggleLeftPanel={toggleShowSideNav} toggleRightPanelFunctions={{open: () => setShowIntegrationSidePanel(true), close: closeIntegrationSidePanel}} isRightPanelShown={isRightPanelShown} setIsRightPanelShown={setIsRightPanelShown}/>
-        {!isDataAvailable && <EmptyStateIntegrations onClick={handleTabIndexChange}/>}
-        <div id="lineage" />
-        <div id="sidenav" className="sidenav">
-            <div className='mx-4'>
-            <SearchBox
-            placeholder='Search...'
-            label='leftsearchbox'
+  function LeftPanelComp(): any {
+    return (
+      <div id="sidenav" className="flex h-full w-full flex-col">
+        <div className="">
+          <SearchBox
+            placeholder="Search..."
+            label="leftsearchbox"
             onChange={handleSearchChange}
-            />
-            </div>
-          <div className="flex gap-x-6 justify-center mb-4">
-            <ButtonSmall
-              buttonText={
-                expandedTreeViewElementIds.length === 0
-                  ? 'Expand All'
-                  : 'Collapse All'
-              }
-              onClick={handleTreeViewExpandClick}
-            />
-            <ButtonSmall
-              buttonText="Filter Anomalies"
-              onClick={handleFilterAnomalies}
-            />
-          </div>
-          <div id="content">
-          {isDataAvailable ?
+          />
+        </div>
+        <div className="mb-4 mt-4 flex justify-center gap-x-6">
+          <ButtonSmall
+            buttonText={
+              expandedTreeViewElementIds.length === 0
+                ? 'Expand All'
+                : 'Collapse All'
+            }
+            onClick={handleTreeViewExpandClick}
+          />
+          <ButtonSmall
+            buttonText="Filter Anomalies"
+            onClick={handleFilterAnomalies}
+          />
+        </div>
+        <div className="h-full w-full">
+          {data ? (
             <TreeView
               aria-label="controlled"
               defaultCollapseIcon={<MdExpandMore />}
@@ -1499,90 +1433,258 @@ export default (): ReactElement => {
             >
               {data ? treeViewElements : <></>}
             </TreeView>
-            :
-              <EmptyStateDottedLine
-                onClick={() => setShowIntegrationSidePanel(true)}
-                />
-          }
-          </div>
-        </div>
-        <div id="materializationSidePanel" className="sidepanel">
-          <div className="header">
-            <SectionHeading title='SQL Model Logic' />
-          </div>
-          <div id="editor" className="content mt-10">
-            <SyntaxHighlighter
-              language="sql"
-              style={dracula}
-              showLineNumbers={true}
-              wrapLongLines={false}
-            >
-              {sql}
-            </SyntaxHighlighter>
-          </div>
-        </div>
-        <div id="columnSidePanel" className="sidepanel">
-          <div className="header">
-            <SectionHeading title='Insights' />
-          </div>
-          <div className="content mt-10">
-            <Tabs
-              value={columnPanelTabIndex}
-              onChange={handleColumnPanelTabIndexChange}
-              centered
-            >
-              <Tab label="Overview" />
-              <Tab />
-              <Tab label="Alert History" />
-            </Tabs>
-            <br></br>
-            {columnPanelTabIndex === 0 ? (
-              <>
-                <div className="card">
-                  {selectedNodeId === '627160717e3d8066494d41ff' ? (
-                    BasicCard(20.6, 448, 3.4, 5.6)
-                  ) : (
-                    // : BasicCard(47011, 448, 4129, 17521)}
-                    <></>
-                  )}
-                </div>
-                {availableTests.map((entry) => {
-                  const history: number[] = entry.HISTORY;
-
-                  return (
-                    <div className={entry.TEST_TYPE}>
-                      <h4>{entry.TEST_TYPE}</h4>
-                      <MetricsGraph
-                        option={defaultOption(defaultYAxis, history, 7, 8)}
-                      ></MetricsGraph>
-                    </div>
-                  );
-                })}
-                <br></br>
-              </>
-            ) : (
-              <>
-              <div className='hidden'>{BasicTable(alertHistory)}</div>
-              <Table alertHistory={alertHistory}/>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div id="integrationsSidePanel" className="sidepanel">
-          <div className="header">
-            <SectionHeading title='Integrations' />
-          </div>
-          <div className="content mt-10">
-            <Tabs className='mb-12' value={tabIndex} onChange={handleTabIndexChange} centered>
-              <Tab icon={<SiSnowflake />} label="Snowflake" />
-              <Tab icon={<FaGithub />} label="GitHub" />
-              <Tab icon={<FaSlack />} label="Slack" />
-            </Tabs>
-            {integrationComponent}
-          </div>
+          ) : (
+            <EmptyStateDottedLine
+              onClick={() => {
+                leftPanelContext.setActiveTab(1);
+                leftPanelContext.setOpen(true);
+              }}
+            />
+          )}
         </div>
       </div>
-    </ThemeProvider>
+    );
+  }
+
+  function IntegrationPanel({
+    activeIntegrationTab,
+    setActiveIntegrationTab,
+    account,
+  }: any) {
+    const integrations = [
+      {
+        name: 'Snowflake',
+        icon: SiSnowflake,
+        tabContentJsx: <Snowflake jwt={jwt}></Snowflake>,
+      },
+      {
+        name: 'GitHub',
+        icon: FaGithub,
+        tabContentJsx: (
+          <Github
+            installationId={githubInstallationId}
+            accessToken={githubAccessToken}
+            organizationId={account.organizationId}
+            jwt={jwt}
+          ></Github>
+        ),
+      },
+      {
+        name: 'Slack',
+        icon: FaSlack,
+        tabContentJsx: (
+          <Slack
+            organizationId={account.organizationId}
+            accessToken={slackAccessToken}
+            jwt={jwt}
+          ></Slack>
+        ),
+      },
+    ];
+
+    return (
+      <div className="w-full">
+        <Tab.Group
+          selectedIndex={activeIntegrationTab}
+          onChange={setActiveIntegrationTab}
+        >
+          <Tab.List className="flex space-x-1 rounded-xl bg-cito p-1">
+            {Object.values(integrations).map((integration) => (
+              <Tab
+                key={integration.name}
+                className={({ selected }) =>
+                  classNames(
+                    'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                    'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
+                    selected
+                      ? 'bg-white text-cito shadow'
+                      : 'hover:bg-white/[0.12] hover:text-white'
+                  )
+                }
+              >
+                <integration.icon className="h-6 w-6" />
+                {integration.name}
+              </Tab>
+            ))}
+          </Tab.List>
+          <Tab.Panels className="mt-2">
+            {Object.values(integrations).map((integration, idx) => (
+              <Tab.Panel
+                key={idx}
+                className={classNames(
+                  'rounded-xl bg-white p-3',
+                  'ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2'
+                )}
+              >
+                {integration.tabContentJsx}
+              </Tab.Panel>
+            ))}
+          </Tab.Panels>
+        </Tab.Group>
+      </div>
+    );
+  }
+
+  function MaterializationPanel() {
+    return (
+      <div id="materializationSidePanel" className="sidepanel">
+        <div className="header">
+          <SectionHeading title="SQL Model Logic" />
+        </div>
+        <div id="editor" className="content mt-10">
+          <SyntaxHighlighter
+            language="sql"
+            style={dracula}
+            showLineNumbers={true}
+            wrapLongLines={false}
+          >
+            {sql}
+          </SyntaxHighlighter>
+        </div>
+      </div>
+    );
+  }
+
+  function InsightsPanel() {
+    function OverviewJsx() {
+      return (
+        <>
+          <div className="card">
+            {selectedNodeId === '627160717e3d8066494d41ff' ? (
+              BasicCard(20.6, 448, 3.4, 5.6)
+            ) : (
+              // : BasicCard(47011, 448, 4129, 17521)}
+              <></>
+            )}
+          </div>
+          {availableTests.map((entry) => {
+            const history: number[] = entry.HISTORY;
+
+            return (
+              <div className={entry.TEST_TYPE}>
+                <h4>{entry.TEST_TYPE}</h4>
+                <MetricsGraph
+                  option={defaultOption(defaultYAxis, history, 7, 8)}
+                ></MetricsGraph>
+              </div>
+            );
+          })}
+          <br></br>
+        </>
+      );
+    }
+
+    function AlertJsx() {
+      return (
+        <>
+          <div className="hidden">{BasicTable(alertHistory)}</div>
+          <Table alertHistory={alertHistory} />
+        </>
+      );
+    }
+
+    const insightContent = [
+      {
+        name: 'Overview',
+        jsx: <OverviewJsx />,
+      },
+      {
+        name: 'Alert History',
+        jsx: <AlertJsx />,
+      },
+    ];
+
+    return (
+      <>
+        <div className="w-full">
+          <Tab.Group>
+            <Tab.List className="flex space-x-1 rounded-xl bg-cito p-1">
+              {Object.values(insightContent).map((insight) => (
+                <Tab
+                  key={insight.name}
+                  className={({ selected }) =>
+                    classNames(
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
+                      selected
+                        ? 'bg-white text-cito shadow'
+                        : 'hover:bg-white/[0.12] hover:text-white'
+                    )
+                  }
+                >
+                  {insight.name}
+                </Tab>
+              ))}
+            </Tab.List>
+            <Tab.Panels className="mt-2">
+              {Object.values(insightContent).map((insight, idx) => (
+                <Tab.Panel
+                  key={idx}
+                  className={classNames(
+                    'rounded-xl bg-white p-3',
+                    'ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2'
+                  )}
+                >
+                  {insight.jsx}
+                </Tab.Panel>
+              ))}
+            </Tab.Panels>
+          </Tab.Group>
+        </div>
+      </>
+    );
+  }
+
+  const [activeIntegrationTab, setActiveIntegrationTab] = useState(0);
+
+  function openIntegrationTab(integrationTabIndex: any) {
+    leftPanelContext.setOpen(true);
+    leftPanelContext.setActiveTab(1);
+    setActiveIntegrationTab(integrationTabIndex);
+  }
+
+  useEffect(() => {
+    if (!account) return;
+
+    rightPanelContext.setContent([
+      {
+        name: 'Materialization',
+        jsx: <MaterializationPanel />,
+      },
+      {
+        name: 'Insights',
+        jsx: <InsightsPanel />,
+      },
+      {
+        name: 'Insights2',
+        jsx: <h1> halle </h1>,
+      },
+    ]);
+
+    leftPanelContext.setContent([
+      {
+        name: 'Test',
+        jsx: <LeftPanelComp />,
+      },
+      {
+        name: 'Integrations',
+        jsx: (
+          <IntegrationPanel
+            activeIntegrationTab={activeIntegrationTab}
+            setActiveIntegrationTab={setActiveIntegrationTab}
+            account={account}
+          />
+        ),
+      },
+    ]);
+  }, [account, activeIntegrationTab, setActiveIntegrationTab, sql, selectedNodeId, availableTests, data]);
+
+  return (
+    <div id="lineageContainer" className="relative">
+      {!isDataAvailable && (
+        <EmptyStateIntegrations onClick={openIntegrationTab} />
+      )}
+      <div id="lineage" className='h-full w-full'/>
+    </div>
   );
 };

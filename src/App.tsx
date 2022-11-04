@@ -12,6 +12,8 @@ import Test from './pages/test/test';
 import { authEnvConfig, oAuthEnvConfig } from './config';
 import GithubRedirect from './pages/github-redirect';
 import SlackRedirect from './pages/slack-redirect';
+import Layout from './pages/layout';
+import { LeftPanelContextProvider, RightPanelContextProvider } from './components/panelContext';
 
 export default (): ReactElement => {
   Auth.configure({
@@ -58,10 +60,13 @@ export default (): ReactElement => {
     setApp(
       <div className="App">
         <div id="app">
+          <LeftPanelContextProvider>
+          <RightPanelContextProvider>
           <Router>
             <div id="ContentContainer">
               <Routes>
                 <Route path="/lineage" element={<Lineage />} />
+                <Route path="/layout" element={<Layout />} />
                 <Route path="/test" element={<Test />} />
                 {/* in development copy query params and manually call Github redirect: https://smee.io/XeUBYbnaoGxxxcf */}
                 <Route path="/oauth/github/:code/:installationId/:state" element={<GithubRedirect/>}/>
@@ -70,6 +75,8 @@ export default (): ReactElement => {
               </Routes>
             </div>
           </Router>
+          </RightPanelContextProvider>
+          </LeftPanelContextProvider>
         </div>
       </div>
     );

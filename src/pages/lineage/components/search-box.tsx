@@ -13,7 +13,7 @@ export default function SearchBox({
   onChange,
 }: SearchBoxProps) {
   return (
-    <div className='absolute top-0 right-0 left-0 mx-4 mt-2'>
+    <div className="mx-4 mt-2">
       <label htmlFor={label} className="sr-only">
         {label}
       </label>

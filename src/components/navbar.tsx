@@ -150,28 +150,6 @@ export default function Navbar({
               </div>
             </div>
 
-            {navigation[0].current && (
-              <div
-                className="flex justify-between space-x-8 py-4"
-                aria-label="Global"
-              >
-                {subNavigation.map((item) => (
-                  <button
-                    key={item.name}
-                    onClick={item.toggle}
-                    className={classNames(
-                      item.isShown
-                        ? 'bg-gray-900 text-white'
-                        : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                      'inline-flex items-center rounded-md py-2 px-3 text-sm font-medium'
-                    )}
-                    aria-current={item.isShown ? 'page' : undefined}
-                  >
-                    {item.isShown ? 'Close' : 'Open'} {item.name}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
           <Disclosure.Panel className="sm:hidden">
             <div className="space-y-1 px-2 pt-2 pb-3">

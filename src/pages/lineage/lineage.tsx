@@ -1,4 +1,9 @@
-import React, { ReactElement, SyntheticEvent, useEffect, useState } from 'react';
+import React, {
+  ReactElement,
+  SyntheticEvent,
+  useEffect,
+  useState,
+} from 'react';
 import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
 import { FaGithub, FaSlack } from 'react-icons/fa';
 import { SiSnowflake } from 'react-icons/si';
@@ -74,7 +79,10 @@ import {
 } from './error-handling-data';
 import { ButtonSmall } from './components/buttons';
 import SearchBox from './components/search-box';
-import { EmptyStateIntegrations, EmptyStateDottedLine } from './components/empty-state';
+import {
+  EmptyStateIntegrations,
+  EmptyStateDottedLine,
+} from './components/empty-state';
 import { SectionHeading } from './components/headings';
 import { Table } from './components/table';
 import Navbar from '../../components/navbar';
@@ -459,10 +467,7 @@ export default (): ReactElement => {
     useState<ReactElement>();
   const [isRightPanelShown, setIsRightPanelShown] = useState(false);
 
-  const handleTabIndexChange = (
-    event: SyntheticEvent,
-    newValue: number
-  ) => {
+  const handleTabIndexChange = (event: SyntheticEvent, newValue: number) => {
     // Make sure the integration side panel is open when tab is set
     setShowIntegrationSidePanel(true);
     setTabIndex(newValue);
@@ -780,7 +785,7 @@ export default (): ReactElement => {
 
     //     Auth.signOut();
     //   });
-    setAccount({id: '', organizationId: '', userId: ''})
+    setAccount({ id: '', organizationId: '', userId: '' });
   }, [user]);
 
   const handleSlackRedirect = (organizationId: string) => {
@@ -862,12 +867,9 @@ export default (): ReactElement => {
 
     toggleShowSideNav();
 
-    setIntegrationComponent(
-      <Snowflake jwt={jwt}></Snowflake>
-    );
+    setIntegrationComponent(<Snowflake jwt={jwt}></Snowflake>);
 
     if (showRealData) {
-      
       let lineageId: string;
 
       LineageApiRepository.getLatest(jwt)
@@ -916,12 +918,12 @@ export default (): ReactElement => {
           setDependencies(defaultErrorDependencies);
           setDashboards(deafultErrorDashboards);
 
-            setIsDataAvailable(false);
+          setIsDataAvailable(false);
           setReadyToBuild(true);
         });
 
-        handleSlackRedirect(account.organizationId);
-        handleGithubRedirect(account.organizationId);
+      handleSlackRedirect(account.organizationId);
+      handleGithubRedirect(account.organizationId);
     } else {
       setLineage({ id: 'todo', createdAt: 1 });
       setReadyToBuild(true);
@@ -932,17 +934,15 @@ export default (): ReactElement => {
     if (!account) return;
 
     if (tabIndex === 0)
-      setIntegrationComponent(
-        <Snowflake jwt={jwt}></Snowflake>
-      );
+      setIntegrationComponent(<Snowflake jwt={jwt}></Snowflake>);
     else if (tabIndex === 1)
       setIntegrationComponent(
         <Github
-        installationId={githubInstallationId}
-        accessToken={githubAccessToken}
-        organizationId={account.organizationId}
-        jwt={jwt}
-      ></Github>
+          installationId={githubInstallationId}
+          accessToken={githubAccessToken}
+          organizationId={account.organizationId}
+          jwt={jwt}
+        ></Github>
       );
     else if (tabIndex === 2)
       setIntegrationComponent(
@@ -969,9 +969,8 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!account) return;
 
-
-      const definedTests: any[] = [];
-      const alertList: any[] = [];
+    const definedTests: any[] = [];
+    const alertList: any[] = [];
 
     const testSuiteQuery = `select distinct test_type, id from cito.observability.test_suites
      where target_resource_id = '${selectedNodeId}' and activated = true`;
@@ -1186,13 +1185,13 @@ export default (): ReactElement => {
         padding: [40, 20, 10, 20],
         fixCollapseSize: [80, 10],
         style: {
-            fill: '#112227',
+          fill: '#112227',
           radius: 5,
         },
         labelCfg: {
           style: {
             fontSize: 18,
-              fill: '#ffffff',
+            fill: '#ffffff',
           },
         },
       },
@@ -1481,18 +1480,29 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        <Navbar current='lineage' toggleLeftPanel={toggleShowSideNav} toggleRightPanelFunctions={{open: () => setShowIntegrationSidePanel(true), close: closeIntegrationSidePanel}} isRightPanelShown={isRightPanelShown} setIsRightPanelShown={setIsRightPanelShown}/>
-        {!isDataAvailable && <EmptyStateIntegrations onClick={handleTabIndexChange}/>}
+        <Navbar
+          current="lineage"
+          toggleLeftPanel={toggleShowSideNav}
+          toggleRightPanelFunctions={{
+            open: () => setShowIntegrationSidePanel(true),
+            close: closeIntegrationSidePanel,
+          }}
+          isRightPanelShown={isRightPanelShown}
+          setIsRightPanelShown={setIsRightPanelShown}
+        />
+        {!isDataAvailable && (
+          <EmptyStateIntegrations onClick={handleTabIndexChange} />
+        )}
         <div id="lineage" />
         <div id="sidenav" className="sidenav">
-            <div className='mx-4'>
+          <div className="mx-4">
             <SearchBox
-            placeholder='Search...'
-            label='leftsearchbox'
-            onChange={handleSearchChange}
+              placeholder="Search..."
+              label="leftsearchbox"
+              onChange={handleSearchChange}
             />
-            </div>
-          <div className="flex gap-x-6 justify-center mb-4">
+          </div>
+          <div className="mb-4 flex justify-center gap-x-6">
             <ButtonSmall
               buttonText={
                 expandedTreeViewElementIds.length === 0
@@ -1507,27 +1517,30 @@ export default (): ReactElement => {
             />
           </div>
           <div id="content">
-          {isDataAvailable ?
-            <TreeView
-              aria-label="controlled"
-              defaultCollapseIcon={<MdExpandMore />}
-              defaultExpandIcon={<MdChevronRight />}
-              expanded={expandedTreeViewElementIds}
-              onNodeToggle={toggleSideNavTreeView}
-              onNodeSelect={handleSelectEvent}
-            >
-              {data ? treeViewElements : <></>}
-            </TreeView>
-            :
+            {isDataAvailable ? (
+              <TreeView
+                aria-label="controlled"
+                defaultCollapseIcon={<MdExpandMore />}
+                defaultExpandIcon={<MdChevronRight />}
+                expanded={expandedTreeViewElementIds}
+                onNodeToggle={toggleSideNavTreeView}
+                onNodeSelect={handleSelectEvent}
+              >
+                {data ? treeViewElements : <></>}
+              </TreeView>
+            ) : (
               <EmptyStateDottedLine
                 onClick={() => setShowIntegrationSidePanel(true)}
-                />
-          }
+              />
+            )}
           </div>
         </div>
         <div id="materializationSidePanel" className="sidepanel">
           <div className="header">
-            <SectionHeading title='SQL Model Logic' onClick={closeMatSidePanel} />
+            <SectionHeading
+              title="SQL Model Logic"
+              onClick={closeMatSidePanel}
+            />
           </div>
           <div id="editor" className="content mt-10">
             <SyntaxHighlighter
@@ -1542,7 +1555,7 @@ export default (): ReactElement => {
         </div>
         <div id="columnSidePanel" className="sidepanel">
           <div className="header">
-            <SectionHeading title='Insights' onClick={closeColSidePanel} />
+            <SectionHeading title="Insights" onClick={closeColSidePanel} />
           </div>
           <div className="content mt-10">
             <Tabs
@@ -1560,17 +1573,13 @@ export default (): ReactElement => {
                 <div className="card">
                   {selectedNodeId === '627160717e3d8066494d41ff' ? (
                     BasicCard(20.6, 448, 3.4, 5.6, 'distribution')
-                  ) : 
-                   selectedNodeId === '6271607e7e3d8066494d42d7' ? (
+                  ) : selectedNodeId === '6271607e7e3d8066494d42d7' ? (
                     BasicCard(92, 195, 28, 33, 'distribution')
-                    
-                  ) :
-                   selectedNodeId === '62715f917e3d8066494d40f7' ? (
+                  ) : selectedNodeId === '62715f917e3d8066494d40f7' ? (
                     BasicCard(2561, 380, 425, 641, 'nullness')
-
-                  ) :
-                    (<></>)
-                  }
+                  ) : (
+                    <></>
+                  )}
                 </div>
                 {availableTests.map((entry) => {
                   const history: number[] = entry.HISTORY;
@@ -1584,23 +1593,23 @@ export default (): ReactElement => {
                     </div>
                   );
                 })}
-<div className="Distribution">
+                <div className="Distribution">
                   <h4>Distribution</h4>
                   <MetricsGraph
                     option={
                       selectedNodeId === '627160717e3d8066494d41ff'
                         ? defaultOption(
-                          defaultYAxis,
-                          effectiveRateSampleDistributionData,
-                          7,
-                          8
-                        )
+                            defaultYAxis,
+                            effectiveRateSampleDistributionData,
+                            7,
+                            8
+                          )
                         : defaultOption(
-                          defaultYAxis,
-                          defaultDistributionData,
-                          7,
-                          8
-                        )
+                            defaultYAxis,
+                            defaultDistributionData,
+                            7,
+                            8
+                          )
                     }
                   ></MetricsGraph>
                 </div>
@@ -1610,17 +1619,17 @@ export default (): ReactElement => {
                     option={
                       selectedNodeId === '627160717e3d8066494d41ff'
                         ? defaultOption(
-                          defaultYAxis,
-                          effectiveRateSampleFreshnessData,
-                          5,
-                          7
-                        )
+                            defaultYAxis,
+                            effectiveRateSampleFreshnessData,
+                            5,
+                            7
+                          )
                         : defaultOption(
-                          defaultYAxisTime,
-                          defaultFreshnessData,
-                          3,
-                          5
-                        )
+                            defaultYAxisTime,
+                            defaultFreshnessData,
+                            3,
+                            5
+                          )
                     }
                   ></MetricsGraph>
                 </div>
@@ -1630,11 +1639,11 @@ export default (): ReactElement => {
                     option={
                       selectedNodeId === '627160717e3d8066494d41ff'
                         ? defaultOption(
-                          defaultYAxis,
-                          effectiveRateSampleNullnessData,
-                          1,
-                          3
-                        )
+                            defaultYAxis,
+                            effectiveRateSampleNullnessData,
+                            1,
+                            3
+                          )
                         : defaultOption(defaultYAxis, defaultNullnessData, 4, 6)
                     }
                   ></MetricsGraph>
@@ -1643,8 +1652,8 @@ export default (): ReactElement => {
               </>
             ) : (
               <>
-              <div className='hidden'>{BasicTable(alertHistory)}</div>
-              <Table alertHistory={alertHistory}/>
+                <div className="hidden">{BasicTable(alertHistory)}</div>
+                <Table alertHistory={alertHistory} />
               </>
             )}
           </div>
@@ -1652,10 +1661,18 @@ export default (): ReactElement => {
 
         <div id="integrationsSidePanel" className="sidepanel">
           <div className="header">
-            <SectionHeading title='Integrations' onClick={closeIntegrationSidePanel} />
+            <SectionHeading
+              title="Integrations"
+              onClick={closeIntegrationSidePanel}
+            />
           </div>
           <div className="content mt-10">
-            <Tabs className='mb-12' value={tabIndex} onChange={handleTabIndexChange} centered>
+            <Tabs
+              className="mb-12"
+              value={tabIndex}
+              onChange={handleTabIndexChange}
+              centered
+            >
               <Tab icon={<SiSnowflake />} label="Snowflake" />
               <Tab icon={<FaGithub />} label="GitHub" />
               <Tab icon={<FaSlack />} label="Slack" />

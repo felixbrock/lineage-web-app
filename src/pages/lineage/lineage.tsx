@@ -1,4 +1,9 @@
-import React, { ReactElement, SyntheticEvent, useEffect, useState } from 'react';
+import React, {
+  ReactElement,
+  SyntheticEvent,
+  useEffect,
+  useState,
+} from 'react';
 import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
 import { FaGithub, FaSlack } from 'react-icons/fa';
 import { SiSnowflake } from 'react-icons/si';
@@ -49,8 +54,7 @@ import TreeView from '@mui/lab/TreeView';
 // import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TreeItem from '@mui/lab/TreeItem';
 
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
+import { Tab } from '@headlessui/react';
 import BasicCard from '../../components/card';
 import BasicTable from '../../components/table';
 
@@ -74,7 +78,10 @@ import {
 } from './error-handling-data';
 import { ButtonSmall } from './components/buttons';
 import SearchBox from './components/search-box';
-import { EmptyStateIntegrations, EmptyStateDottedLine } from './components/empty-state';
+import {
+  EmptyStateIntegrations,
+  EmptyStateDottedLine,
+} from './components/empty-state';
 import { SectionHeading } from './components/headings';
 import { Table } from './components/table';
 import Navbar from '../../components/navbar';
@@ -85,6 +92,10 @@ import Navbar from '../../components/navbar';
 
 // 62e2a8e9aef38b28f49d9c8f
 // '62e25e01b611c320fffbecc2';
+
+function classNames(...classes: any) {
+  return classes.filter(Boolean).join(' ');
+}
 
 enum DataLoadNodeType {
   Self = 'SELF',
@@ -445,7 +456,6 @@ export default (): ReactElement => {
   >([]);
   const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
   const [tabIndex, setTabIndex] = React.useState<number>(0);
-  const [columnPanelTabIndex, setColumnPanelTabIndex] = React.useState(0);
   const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
@@ -453,26 +463,17 @@ export default (): ReactElement => {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [slackAccessToken, setSlackAccessToken] = useState<string>('');
-  const [githubInstallationId, setGithubInstallationId] = useState<string>('');
-  const [githubAccessToken, setGithubAccessToken] = useState<string>('');
-  const [integrationComponent, setIntegrationComponent] =
-    useState<ReactElement>();
+  // const [githubInstallationId, setGithubInstallationId] = useState<string>('');
+  // const [githubAccessToken, setGithubAccessToken] = useState<string>('');
+  const [githubInstallationId] = useState<string>('');
+  const [githubAccessToken] = useState<string>('');
   const [isRightPanelShown, setIsRightPanelShown] = useState(false);
+  const [integrations, setIntegrations] = useState<any>([]);
 
-  const handleTabIndexChange = (
-    event: SyntheticEvent,
-    newValue: number
-  ) => {
+  const handleTabIndexChange = (event: SyntheticEvent, newValue: number) => {
     // Make sure the integration side panel is open when tab is set
     setShowIntegrationSidePanel(true);
     setTabIndex(newValue);
-  };
-
-  const handleColumnPanelTabIndexChange = (
-    event: React.SyntheticEvent,
-    newValue: number
-  ) => {
-    setColumnPanelTabIndex(newValue);
   };
 
   const handleSelect = (nodeId: string) => {
@@ -780,78 +781,65 @@ export default (): ReactElement => {
 
     //     Auth.signOut();
     //   });
-    setAccount({id: '', organizationId: '', userId: ''})
+    setAccount({ id: '', organizationId: '', userId: '' });
   }, [user]);
 
-  const handleSlackRedirect = (organizationId: string) => {
-    const state = location.state;
+  // const handleSlackRedirect = () => {
+  //   const state = location.state;
 
-    if (!state) return;
-    if (typeof state !== 'object')
-      throw new Error('Unexpected navigation state type');
+  //   if (!state) return;
+  //   if (typeof state !== 'object')
+  //     throw new Error('Unexpected navigation state type');
 
-    const { slackToken, showIntegrationPanel, sidePanelTabIndex } =
-      state as any;
+  //   const { slackToken, showIntegrationPanel, sidePanelTabIndex } =
+  //     state as any;
 
-    if (!slackToken || !showIntegrationPanel || sidePanelTabIndex === undefined)
-      return;
+  //   if (!slackToken || !showIntegrationPanel || sidePanelTabIndex === undefined)
+  //     return;
 
-    if (slackToken) setSlackAccessToken(slackToken);
-    else {
-      IntegrationApiRepo.getSlackProfile(jwt)
-        .then((res) => setSlackAccessToken(res ? res.accessToken : ''))
-        .catch(() => console.trace('Slack profile retrieval failed'));
-    }
+  //   if (slackToken) setSlackAccessToken(slackToken);
+  //   else {
+  //     IntegrationApiRepo.getSlackProfile(jwt)
+  //       .then((res) => setSlackAccessToken(res ? res.accessToken : ''))
+  //       .catch(() => console.trace('Slack profile retrieval failed'));
+  //   }
 
-    setIntegrationComponent(
-      <Slack
-        organizationId={organizationId}
-        accessToken={slackToken}
-        jwt={jwt}
-      ></Slack>
-    );
-    if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
+  //   setTabIndex(sidePanelTabIndex);
+  //   if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
 
-    window.history.replaceState({}, document.title);
-  };
+  //   window.history.replaceState({}, document.title);
+  // };
 
-  const handleGithubRedirect = (organizationId: string) => {
-    const state = location.state;
+  // const handleGithubRedirect = () => {
+  //   const state = location.state;
 
-    if (!state) return;
-    if (typeof state !== 'object')
-      throw new Error('Unexpected navigation state type');
+  //   if (!state) return;
+  //   if (typeof state !== 'object')
+  //     throw new Error('Unexpected navigation state type');
 
-    const {
-      githubInstallId,
-      githubToken,
-      showIntegrationPanel,
-      sidePanelTabIndex,
-    } = state as any;
+  //   const {
+  //     githubInstallId,
+  //     githubToken,
+  //     showIntegrationPanel,
+  //     sidePanelTabIndex,
+  //   } = state as any;
 
-    if (
-      !githubInstallId ||
-      !githubToken ||
-      !showIntegrationPanel ||
-      sidePanelTabIndex === undefined
-    )
-      return;
+  //   if (
+  //     !githubInstallId ||
+  //     !githubToken ||
+  //     !showIntegrationPanel ||
+  //     sidePanelTabIndex === undefined
+  //   )
+  //     return;
 
-    if (githubInstallId) setGithubInstallationId(githubInstallId);
-    if (githubToken) setGithubAccessToken(githubToken);
+  //   if (githubInstallId) setGithubInstallationId(githubInstallId);
+  //   if (githubToken) setGithubAccessToken(githubToken);
 
-    setIntegrationComponent(
-      <Github
-        installationId={githubInstallId}
-        accessToken={githubToken}
-        organizationId={organizationId}
-        jwt={jwt}
-      ></Github>
-    );
-    if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
+  //   setTabIndex(sidePanelTabIndex);
+  //   if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
 
-    window.history.replaceState({}, document.title);
-  };
+  //   window.history.replaceState({}, document.title);
+  // };
 
   useEffect(() => {
     if (!account) return;
@@ -862,12 +850,7 @@ export default (): ReactElement => {
 
     toggleShowSideNav();
 
-    setIntegrationComponent(
-      <Snowflake jwt={jwt}></Snowflake>
-    );
-
     if (showRealData) {
-      
       let lineageId: string;
 
       LineageApiRepository.getLatest(jwt)
@@ -916,12 +899,12 @@ export default (): ReactElement => {
           setDependencies(defaultErrorDependencies);
           setDashboards(deafultErrorDashboards);
 
-            setIsDataAvailable(false);
+          setIsDataAvailable(false);
           setReadyToBuild(true);
         });
 
-        handleSlackRedirect(account.organizationId);
-        handleGithubRedirect(account.organizationId);
+      // handleSlackRedirect(account.organizationId);
+      // handleGithubRedirect(account.organizationId);
     } else {
       setLineage({ id: 'todo', createdAt: 1 });
       setReadyToBuild(true);
@@ -929,36 +912,41 @@ export default (): ReactElement => {
   }, [account]);
 
   useEffect(() => {
-    if (!account) return;
-
-    if (tabIndex === 0)
-      setIntegrationComponent(
-        <Snowflake jwt={jwt}></Snowflake>
-      );
-    else if (tabIndex === 1)
-      setIntegrationComponent(
-        <Github
-        installationId={githubInstallationId}
-        accessToken={githubAccessToken}
-        organizationId={account.organizationId}
-        jwt={jwt}
-      ></Github>
-      );
-    else if (tabIndex === 2)
-      setIntegrationComponent(
-        <Slack
-          organizationId={account.organizationId}
-          accessToken={slackAccessToken}
-          jwt={jwt}
-        ></Slack>
-      );
-  }, [tabIndex]);
-
-  useEffect(() => {
-    if (!showIntegrationSidePanel) return;
+    if (!showIntegrationSidePanel || !account) return;
 
     closeColSidePanel();
     closeMatSidePanel();
+
+    setIntegrations([
+      {
+        name: 'Snowflake',
+        icon: SiSnowflake,
+        tabContentJsx: <Snowflake jwt={jwt}></Snowflake>,
+      },
+      {
+        name: 'GitHub',
+        icon: FaGithub,
+        tabContentJsx: (
+          <Github
+            installationId={githubInstallationId}
+            accessToken={githubAccessToken}
+            organizationId={account.organizationId}
+            jwt={jwt}
+          ></Github>
+        ),
+      },
+      {
+        name: 'Slack',
+        icon: FaSlack,
+        tabContentJsx: (
+          <Slack
+            organizationId={account.organizationId}
+            accessToken={slackAccessToken}
+            jwt={jwt}
+          ></Slack>
+        ),
+      },
+    ]);
 
     const panel = document.getElementById('integrationsSidePanel');
     if (!panel) throw new ReferenceError('Integrations Panel does not exist');
@@ -969,9 +957,8 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!account) return;
 
-
-      const definedTests: any[] = [];
-      const alertList: any[] = [];
+    const definedTests: any[] = [];
+    const alertList: any[] = [];
 
     const testSuiteQuery = `select distinct test_type, id from cito.observability.test_suites
      where target_resource_id = '${selectedNodeId}' and activated = true`;
@@ -1186,13 +1173,13 @@ export default (): ReactElement => {
         padding: [40, 20, 10, 20],
         fixCollapseSize: [80, 10],
         style: {
-            fill: '#112227',
+          fill: '#112227',
           radius: 5,
         },
         labelCfg: {
           style: {
             fontSize: 18,
-              fill: '#ffffff',
+            fill: '#ffffff',
           },
         },
       },
@@ -1481,18 +1468,29 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        <Navbar current='lineage' toggleLeftPanel={toggleShowSideNav} toggleRightPanelFunctions={{open: () => setShowIntegrationSidePanel(true), close: closeIntegrationSidePanel}} isRightPanelShown={isRightPanelShown} setIsRightPanelShown={setIsRightPanelShown}/>
-        {!isDataAvailable && <EmptyStateIntegrations onClick={handleTabIndexChange}/>}
+        <Navbar
+          current="lineage"
+          toggleLeftPanel={toggleShowSideNav}
+          toggleRightPanelFunctions={{
+            open: () => setShowIntegrationSidePanel(true),
+            close: closeIntegrationSidePanel,
+          }}
+          isRightPanelShown={isRightPanelShown}
+          setIsRightPanelShown={setIsRightPanelShown}
+        />
+        {!isDataAvailable && (
+          <EmptyStateIntegrations onClick={handleTabIndexChange} />
+        )}
         <div id="lineage" />
         <div id="sidenav" className="sidenav">
-            <div className='mx-4'>
+          <div className="mx-4">
             <SearchBox
-            placeholder='Search...'
-            label='leftsearchbox'
-            onChange={handleSearchChange}
+              placeholder="Search..."
+              label="leftsearchbox"
+              onChange={handleSearchChange}
             />
-            </div>
-          <div className="flex gap-x-6 justify-center mb-4">
+          </div>
+          <div className="mb-4 flex justify-center gap-x-6">
             <ButtonSmall
               buttonText={
                 expandedTreeViewElementIds.length === 0
@@ -1507,27 +1505,30 @@ export default (): ReactElement => {
             />
           </div>
           <div id="content">
-          {isDataAvailable ?
-            <TreeView
-              aria-label="controlled"
-              defaultCollapseIcon={<MdExpandMore />}
-              defaultExpandIcon={<MdChevronRight />}
-              expanded={expandedTreeViewElementIds}
-              onNodeToggle={toggleSideNavTreeView}
-              onNodeSelect={handleSelectEvent}
-            >
-              {data ? treeViewElements : <></>}
-            </TreeView>
-            :
+            {isDataAvailable ? (
+              <TreeView
+                aria-label="controlled"
+                defaultCollapseIcon={<MdExpandMore />}
+                defaultExpandIcon={<MdChevronRight />}
+                expanded={expandedTreeViewElementIds}
+                onNodeToggle={toggleSideNavTreeView}
+                onNodeSelect={handleSelectEvent}
+              >
+                {data ? treeViewElements : <></>}
+              </TreeView>
+            ) : (
               <EmptyStateDottedLine
                 onClick={() => setShowIntegrationSidePanel(true)}
-                />
-          }
+              />
+            )}
           </div>
         </div>
         <div id="materializationSidePanel" className="sidepanel">
           <div className="header">
-            <SectionHeading title='SQL Model Logic' onClick={closeMatSidePanel} />
+            <SectionHeading
+              title="SQL Model Logic"
+              onClick={closeMatSidePanel}
+            />
           </div>
           <div id="editor" className="content mt-10">
             <SyntaxHighlighter
@@ -1542,126 +1543,195 @@ export default (): ReactElement => {
         </div>
         <div id="columnSidePanel" className="sidepanel">
           <div className="header">
-            <SectionHeading title='Insights' onClick={closeColSidePanel} />
+            <SectionHeading title="Insights" onClick={closeColSidePanel} />
           </div>
           <div className="content mt-10">
-            <Tabs
-              value={columnPanelTabIndex}
-              onChange={handleColumnPanelTabIndexChange}
-              centered
-            >
-              <Tab label="Overview" />
-              <Tab />
-              <Tab label="Alert History" />
-            </Tabs>
-            <br></br>
-            {columnPanelTabIndex === 0 ? (
-              <>
-                <div className="card">
-                  {selectedNodeId === '627160717e3d8066494d41ff' ? (
-                    BasicCard(20.6, 448, 3.4, 5.6, 'distribution')
-                  ) : 
-                   selectedNodeId === '6271607e7e3d8066494d42d7' ? (
-                    BasicCard(92, 195, 28, 33, 'distribution')
-                    
-                  ) :
-                   selectedNodeId === '62715f917e3d8066494d40f7' ? (
-                    BasicCard(2561, 380, 425, 641, 'nullness')
-
-                  ) :
-                    (<></>)
+            <Tab.Group>
+              <Tab.List className="flex space-x-1 rounded-xl bg-cito p-1">
+                <Tab
+                  key="Overview"
+                  className={({ selected }) =>
+                    classNames(
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
+                      selected
+                        ? 'bg-white text-cito shadow'
+                        : 'hover:bg-white/[0.12] hover:text-white'
+                    )
                   }
-                </div>
-                {availableTests.map((entry) => {
-                  const history: number[] = entry.HISTORY;
+                >
+                  Overview
+                </Tab>
+                <Tab
+                  key="Alerts"
+                  className={({ selected }) =>
+                    classNames(
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
+                      selected
+                        ? 'bg-white text-cito shadow'
+                        : 'hover:bg-white/[0.12] hover:text-white'
+                    )
+                  }
+                >
+                  Alerts
+                </Tab>
+              </Tab.List>
+              <Tab.Panels className="mt-2">
+                <Tab.Panel
+                  key={0}
+                  className={classNames(
+                    'rounded-xl bg-white p-3',
+                    'ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2'
+                  )}
+                >
+                  <br></br>
 
-                  return (
-                    <div className={entry.TEST_TYPE}>
-                      <h4>{entry.TEST_TYPE}</h4>
+                  <>
+                    <div className="card">
+                      {selectedNodeId === '627160717e3d8066494d41ff' ? (
+                        BasicCard(20.6, 448, 3.4, 5.6, 'distribution')
+                      ) : selectedNodeId === '6271607e7e3d8066494d42d7' ? (
+                        BasicCard(92, 195, 28, 33, 'distribution')
+                      ) : selectedNodeId === '62715f917e3d8066494d40f7' ? (
+                        BasicCard(2561, 380, 425, 641, 'nullness')
+                      ) : (
+                        <></>
+                      )}
+                    </div>
+                    {availableTests.map((entry) => {
+                      const history: number[] = entry.HISTORY;
+
+                      return (
+                        <div className={entry.TEST_TYPE}>
+                          <h4>{entry.TEST_TYPE}</h4>
+                          <MetricsGraph
+                            option={defaultOption(defaultYAxis, history, 7, 8)}
+                          ></MetricsGraph>
+                        </div>
+                      );
+                    })}
+                    <div className="Distribution">
+                      <h4>Distribution</h4>
                       <MetricsGraph
-                        option={defaultOption(defaultYAxis, history, 7, 8)}
+                        option={
+                          selectedNodeId === '627160717e3d8066494d41ff'
+                            ? defaultOption(
+                                defaultYAxis,
+                                effectiveRateSampleDistributionData,
+                                7,
+                                8
+                              )
+                            : defaultOption(
+                                defaultYAxis,
+                                defaultDistributionData,
+                                7,
+                                8
+                              )
+                        }
                       ></MetricsGraph>
                     </div>
-                  );
-                })}
-<div className="Distribution">
-                  <h4>Distribution</h4>
-                  <MetricsGraph
-                    option={
-                      selectedNodeId === '627160717e3d8066494d41ff'
-                        ? defaultOption(
-                          defaultYAxis,
-                          effectiveRateSampleDistributionData,
-                          7,
-                          8
-                        )
-                        : defaultOption(
-                          defaultYAxis,
-                          defaultDistributionData,
-                          7,
-                          8
-                        )
-                    }
-                  ></MetricsGraph>
-                </div>
-                <div className="Freshness">
-                  <h4>Freshness</h4>
-                  <MetricsGraph
-                    option={
-                      selectedNodeId === '627160717e3d8066494d41ff'
-                        ? defaultOption(
-                          defaultYAxis,
-                          effectiveRateSampleFreshnessData,
-                          5,
-                          7
-                        )
-                        : defaultOption(
-                          defaultYAxisTime,
-                          defaultFreshnessData,
-                          3,
-                          5
-                        )
-                    }
-                  ></MetricsGraph>
-                </div>
-                <div className="Nullness">
-                  <h4>Nullness</h4>
-                  <MetricsGraph
-                    option={
-                      selectedNodeId === '627160717e3d8066494d41ff'
-                        ? defaultOption(
-                          defaultYAxis,
-                          effectiveRateSampleNullnessData,
-                          1,
-                          3
-                        )
-                        : defaultOption(defaultYAxis, defaultNullnessData, 4, 6)
-                    }
-                  ></MetricsGraph>
-                </div>
-                <br></br>
-              </>
-            ) : (
-              <>
-              <div className='hidden'>{BasicTable(alertHistory)}</div>
-              <Table alertHistory={alertHistory}/>
-              </>
-            )}
+                    <div className="Freshness">
+                      <h4>Freshness</h4>
+                      <MetricsGraph
+                        option={
+                          selectedNodeId === '627160717e3d8066494d41ff'
+                            ? defaultOption(
+                                defaultYAxis,
+                                effectiveRateSampleFreshnessData,
+                                5,
+                                7
+                              )
+                            : defaultOption(
+                                defaultYAxisTime,
+                                defaultFreshnessData,
+                                3,
+                                5
+                              )
+                        }
+                      ></MetricsGraph>
+                    </div>
+                    <div className="Nullness">
+                      <h4>Nullness</h4>
+                      <MetricsGraph
+                        option={
+                          selectedNodeId === '627160717e3d8066494d41ff'
+                            ? defaultOption(
+                                defaultYAxis,
+                                effectiveRateSampleNullnessData,
+                                1,
+                                3
+                              )
+                            : defaultOption(
+                                defaultYAxis,
+                                defaultNullnessData,
+                                4,
+                                6
+                              )
+                        }
+                      ></MetricsGraph>
+                    </div>
+                    <br></br>
+                  </>
+                </Tab.Panel>
+                <Tab.Panel
+                  key={1}
+                  className={classNames(
+                    'rounded-xl bg-white p-3',
+                    'ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2'
+                  )}
+                >
+                  <>
+                    <div className="hidden">{BasicTable(alertHistory)}</div>
+                    <Table alertHistory={alertHistory} />
+                  </>
+                </Tab.Panel>
+              </Tab.Panels>
+            </Tab.Group>
           </div>
         </div>
 
         <div id="integrationsSidePanel" className="sidepanel">
           <div className="header">
-            <SectionHeading title='Integrations' onClick={closeIntegrationSidePanel} />
+            <SectionHeading
+              title="Integrations"
+              onClick={closeIntegrationSidePanel}
+            />
           </div>
-          <div className="content mt-10">
-            <Tabs className='mb-12' value={tabIndex} onChange={handleTabIndexChange} centered>
-              <Tab icon={<SiSnowflake />} label="Snowflake" />
-              <Tab icon={<FaGithub />} label="GitHub" />
-              <Tab icon={<FaSlack />} label="Slack" />
-            </Tabs>
-            {integrationComponent}
-          </div>
+          <Tab.Group selectedIndex={tabIndex} onChange={setTabIndex}>
+            <Tab.List className="mx-6 mt-10 flex space-x-1 rounded-xl bg-cito p-1">
+              {Object.values(integrations).map((integration: any) => (
+                <Tab
+                  key={integration.name}
+                  className={({ selected }) =>
+                    classNames(
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
+                      selected
+                        ? 'bg-white text-cito shadow'
+                        : 'hover:bg-white/[0.12] hover:text-white'
+                    )
+                  }
+                >
+                  <integration.icon className="h-6 w-6" />
+                  {integration.name}
+                </Tab>
+              ))}
+            </Tab.List>
+            <Tab.Panels className="mt-2">
+              {Object.values(integrations).map((integration: any, idx) => (
+                <Tab.Panel
+                  key={idx}
+                  className={classNames(
+                    'rounded-xl bg-white p-3',
+                    'ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2'
+                  )}
+                >
+                  {integration.tabContentJsx}
+                </Tab.Panel>
+              ))}
+            </Tab.Panels>
+          </Tab.Group>
         </div>
         {/* <div id="snackbar">{info}</div> */}
       </div>

@@ -92,6 +92,8 @@ import ModelVisualizer from '../../components/model-visualizer';
 // 62e2a8e9aef38b28f49d9c8f
 // '62e25e01b611c320fffbecc2';
 
+const lastModifiedInfos = ['Oliver Morana, 12 Minutes ago'];
+
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ');
 }
@@ -1530,14 +1532,7 @@ export default (): ReactElement => {
             />
           </div>
           <div id="editor" className="content mt-10">
-            {/* <SyntaxHighlighter
-              language="sql"
-              style={dracula}
-              showLineNumbers={true}
-              wrapLongLines={false}
-            >
-              {sql}
-            </SyntaxHighlighter> */}
+            <i>Last Modified: {lastModifiedInfos[Math.floor(Math.random()*lastModifiedInfos.length)]}</i>
             <ModelVisualizer sql={sql}/>
           </div>
         </div>

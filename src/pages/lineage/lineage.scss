@@ -176,7 +176,7 @@ $sidePanelMargin: 5px;
 
 .sidepanel {
   height: calc(100% - $navbarHeight - $sidePanelMargin - $sidePanelMargin);
-  width: 33%;
+  width: 45%;
   position: fixed;
   z-index: 1;
   right: $sidePanelMargin;

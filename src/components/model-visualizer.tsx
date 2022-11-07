@@ -1,16 +1,33 @@
-import { ReactElement, useEffect, useState } from 'react';
+import { ReactElement, 
+  useEffect, 
+  useState 
+} from 'react';
 import SyntaxHighlighter from 'react-syntax-highlighter';
-import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import gradientDark from 'react-syntax-highlighter/dist/esm/styles/hljs/gradient-dark';
 
-const gitBlameExamples = ['-- Oliver Morana, 12 Minutes Ago - updated according to new schema of payment gateway service', '-- Anaru Sharif , 2 days ago - removed akb-03 data lake references', '-- Ada Sawsan , 3 hours ago - Distribution anomaly - fixed revenue calculation', ]
+const gitBlameExamples = [
+  '-- Oliver Morana, 12 Minutes ago - payment gateway service schema adjustments',
+  '-- Anaru Sharif , 2 days ago - removed akb-03 data lake references',
+  '-- Ada Sawsan , 3 hours ago - anomaly - fixed revenue calculation',
+];
 
-export default ({sql}: {sql: string}): ReactElement => {
+export default ({ sql }: { sql: string }): ReactElement => {
   const [infoLineIndex, setInfoLineIndex] = useState<number>(-1);
   const [lines, setLines] = useState<string[]>([]);
 
-  useEffect(() => {
+  const replaceContent = () => {
+    setInfoLineIndex(-1);
     setLines(sql.split('\n'));
+  };
+
+  useEffect(() => {
+    replaceContent();
   }, []);
+
+  useEffect(() => {
+    replaceContent();
+  }, [sql]);
+
 
   const handleLineClick = (lineNum: number) => {
     if (lineNum < 1) throw new Error('Unhandled');
@@ -33,7 +50,7 @@ export default ({sql}: {sql: string}): ReactElement => {
     linesLocal.splice(
       infoLineIndexLocal,
       0,
-      gitBlameExamples[Math.floor(Math.random()*gitBlameExamples.length)]
+      gitBlameExamples[Math.floor(Math.random() * gitBlameExamples.length)]
     );
     setLines(linesLocal);
   };
@@ -41,18 +58,13 @@ export default ({sql}: {sql: string}): ReactElement => {
   return (
     <SyntaxHighlighter
       language="sql"
-      style={dracula}
+      style={gradientDark}
       showLineNumbers={true}
       wrapLines={true}
       wrapLongLines={true}
-      lineProps={(lineNumber) => {
-        const style: {
-          display: string;
-          cursor: string;
-          backgroundColor?: string;
-          [key: string]: unknown;
-        } = { display: 'block', cursor: 'pointer' };
-        if (lineNumber === infoLineIndex + 1) style.backgroundColor = '#6f47ef';
+      lineProps={(lineNumber): React.HTMLProps<HTMLElement> => {
+        const style: React.CSSProperties = { display: 'block', cursor: 'pointer' };
+        if (lineNumber === infoLineIndex + 1) {style.backgroundColor = '#000000'};
         return { style, onClick: () => handleLineClick(lineNumber) };
       }}
     >

@@ -802,10 +802,10 @@ export default (): ReactElement => {
         .catch(() => console.trace('Slack profile retrieval failed'));
     }
 
-    setTabIndex(2);
-
+    
+    setTabIndex(sidePanelTabIndex);
     if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
-
+    
     window.history.replaceState({}, document.title);
   };
 
@@ -834,8 +834,7 @@ export default (): ReactElement => {
     if (githubInstallId) setGithubInstallationId(githubInstallId);
     if (githubToken) setGithubAccessToken(githubToken);
 
-    setTabIndex(1);
-
+    setTabIndex(sidePanelTabIndex);
     if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
 
     window.history.replaceState({}, document.title);
@@ -912,7 +911,11 @@ export default (): ReactElement => {
   }, [account]);
 
   useEffect(() => {
-    if (!account) return;
+    if (!showIntegrationSidePanel || !account) return;
+
+    closeColSidePanel();
+    closeMatSidePanel();
+
     setIntegrations([
       {
         name: 'Snowflake',
@@ -943,13 +946,6 @@ export default (): ReactElement => {
         ),
       },
     ]);
-  }, [account]);
-
-  useEffect(() => {
-    if (!showIntegrationSidePanel) return;
-
-    closeColSidePanel();
-    closeMatSidePanel();
 
     const panel = document.getElementById('integrationsSidePanel');
     if (!panel) throw new ReferenceError('Integrations Panel does not exist');

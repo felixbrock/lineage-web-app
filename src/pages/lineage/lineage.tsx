@@ -18,8 +18,6 @@ import G6, {
   NodeConfig,
 } from '@antv/g6';
 import './lineage.scss';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
 import MetricsGraph, {
   defaultDistributionData,
@@ -85,6 +83,7 @@ import {
 import { SectionHeading } from './components/headings';
 import { Table } from './components/table';
 import Navbar from '../../components/navbar';
+import ModelVisualizer from '../../components/model-visualizer';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -1531,14 +1530,15 @@ export default (): ReactElement => {
             />
           </div>
           <div id="editor" className="content mt-10">
-            <SyntaxHighlighter
+            {/* <SyntaxHighlighter
               language="sql"
               style={dracula}
               showLineNumbers={true}
               wrapLongLines={false}
             >
               {sql}
-            </SyntaxHighlighter>
+            </SyntaxHighlighter> */}
+            <ModelVisualizer sql={sql}/>
           </div>
         </div>
         <div id="columnSidePanel" className="sidepanel">

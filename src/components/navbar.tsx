@@ -129,7 +129,7 @@ export default function Navbar({
                 <i
                   className="relative ml-3 text-xs"
                 >
-                  latest snapshot: {lineageCreatedAt ? new Date(lineageCreatedAt).toLocaleString(): 'loading...'}
+                  Latest Snapshot: {lineageCreatedAt ? new Date(lineageCreatedAt).toLocaleString(): 'Not available'}
                 </i>
                 <button
                   type="button"

@@ -1920,7 +1920,7 @@ export default (): ReactElement => {
           console.log(error);
         });
     } else {
-      setLineage({ id: 'todo', createdAt: '1', completed: true });
+      setLineage({ id: 'todo', createdAt: '', completed: true });
     }
   }, [account]);
 

@@ -902,7 +902,7 @@ export default (): ReactElement => {
           setReadyToBuild(true);
         });
     } else {
-      setLineage({ id: 'todo', createdAt: '1', completed: true });
+      setLineage({ id: 'todo', createdAt: '', completed: true });
       setReadyToBuild(true);
     }
 

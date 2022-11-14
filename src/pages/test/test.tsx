@@ -301,7 +301,7 @@ export default (): ReactElement => {
   const handleColumnFrequencyChange = (event: SelectChangeEvent<string>) => {
     const name = event.target.name;
     const value = event.target.value;
-    const props = name.split('-');
+    const props = name.split('--');
 
     const testSelectionLocal = testSelection;
 
@@ -361,7 +361,7 @@ export default (): ReactElement => {
   const handleMatFrequencyChange = (event: SelectChangeEvent<string>) => {
     const name = event.target.name;
     const value = event.target.value;
-    const props = name.split('-');
+    const props = name.split('--');
 
     const testSelectionLocal = testSelection;
 
@@ -432,7 +432,7 @@ export default (): ReactElement => {
   const handleColumnSensitivityChange = (event: any) => {
     const name = event.target.name as string;
     const value = event.target.value as number;
-    const props = name.split('-');
+    const props = name.split('--');
 
     const testSelectionLocal = testSelection;
 
@@ -476,7 +476,7 @@ export default (): ReactElement => {
   const handleMatSensitivityChange = (event: any) => {
     const name = event.target.name as string;
     const value = event.target.value as number;
-    const props = name.split('-');
+    const props = name.split('--');
 
     const testSelectionLocal = testSelection;
 
@@ -553,7 +553,7 @@ export default (): ReactElement => {
 
   const handleTestSelectButtonClick = async (event: any) => {
     const id = event.target.id as string;
-    const props = id.split('-');
+    const props = id.split('--');
 
     const type = parseTestType(props[0]);
 
@@ -645,7 +645,7 @@ export default (): ReactElement => {
             schemaName: materalization.schemaName,
             materializationName: materalization.name,
             materializationType: parseMaterializationType(
-              materalization.materializationType
+              materalization.type
             ),
             targetResourceId: column.id,
             type,
@@ -671,7 +671,7 @@ export default (): ReactElement => {
 
   const handleMatTestButtonClick = async (event: any) => {
     const id = event.target.id as string;
-    const props = id.split('-');
+    const props = id.split('--');
 
     const type = parseTestType(props[0]);
 
@@ -725,7 +725,7 @@ export default (): ReactElement => {
               schemaName: materalization.schemaName,
               materializationName: materalization.name,
               materializationType: parseMaterializationType(
-                materalization.materializationType
+                materalization.type
               ),
               targetResourceId: materalization.id,
               type,
@@ -747,7 +747,7 @@ export default (): ReactElement => {
               schemaName: materalization.schemaName,
               materializationName: materalization.name,
               materializationType: parseMaterializationType(
-                materalization.materializationType
+                materalization.type
               ),
               targetResourceId: materalization.id,
               type,
@@ -770,7 +770,7 @@ export default (): ReactElement => {
 
   const handleMatLevelColumnTestButtonClick = async (event: any) => {
     const id = event.target.id as string;
-    const props = id.split('-');
+    const props = id.split('--');
 
     const type = parseTestType(props[0]);
 
@@ -843,7 +843,7 @@ export default (): ReactElement => {
           schemaName: materalization.schemaName,
           materializationName: materalization.name,
           materializationType: parseMaterializationType(
-            materalization.materializationType
+            materalization.type
           ),
           targetResourceId: column.id,
           type,
@@ -941,7 +941,7 @@ export default (): ReactElement => {
           <FormControl sx={{ m: 1, maxwidth: 100 }} size="small">
             <Select
               autoWidth={true}
-              name={`frequency-${materializationId}-${columnId}`}
+              name={`frequency--${materializationId}--${columnId}`}
               disabled={
                 !getColumnTestConfig(materializationId, columnId).testsActivated
               }
@@ -972,7 +972,7 @@ export default (): ReactElement => {
           <FormControl sx={{ m: 1 }} size="small">
             <Select
               autoWidth={true}
-              name={`sensitivity-${materializationId}-${columnId}`}
+              name={`sensitivity--${materializationId}--${columnId}`}
               disabled={
                 !getColumnTestConfig(materializationId, columnId).testsActivated
               }
@@ -996,7 +996,7 @@ export default (): ReactElement => {
         <TableCell sx={tableCellSx} align="left">
           {allowedTestTypes.includes('ColumnFreshness') ? (
             <Button
-              id={`${columnFreshnessType}-${materializationId}-${columnId}`}
+              id={`${columnFreshnessType}--${materializationId}--${columnId}`}
               size="large"
               variant="contained"
               color={
@@ -1017,7 +1017,7 @@ export default (): ReactElement => {
         <TableCell sx={tableCellSx} align="left">
           {allowedTestTypes.includes('ColumnCardinality') ? (
             <Button
-              id={`${columnCardinalityType}-${materializationId}-${columnId}`}
+              id={`${columnCardinalityType}--${materializationId}--${columnId}`}
               size="large"
               variant="contained"
               color={
@@ -1038,7 +1038,7 @@ export default (): ReactElement => {
         <TableCell sx={tableCellSx} align="left">
           {allowedTestTypes.includes('ColumnNullness') ? (
             <Button
-              id={`${columnNullnessType}-${materializationId}-${columnId}`}
+              id={`${columnNullnessType}--${materializationId}--${columnId}`}
               size="large"
               variant="contained"
               color={
@@ -1059,7 +1059,7 @@ export default (): ReactElement => {
         <TableCell sx={tableCellSx} align="left">
           {allowedTestTypes.includes('ColumnUniqueness') ? (
             <Button
-              id={`${columnUniquenessType}-${materializationId}-${columnId}`}
+              id={`${columnUniquenessType}--${materializationId}--${columnId}`}
               size="large"
               variant="contained"
               color={
@@ -1080,7 +1080,7 @@ export default (): ReactElement => {
         <TableCell sx={tableCellSx} align="left">
           {allowedTestTypes.includes('ColumnDistribution') ? (
             <Button
-              id={`${columnDistributionType}-${materializationId}-${columnId}`}
+              id={`${columnDistributionType}--${materializationId}--${columnId}`}
               size="large"
               variant="contained"
               color={
@@ -1128,7 +1128,7 @@ export default (): ReactElement => {
         if (typeof columnLabel !== 'string')
           throw new Error('Column label not of type string');
 
-        const allowedTests = getAllowedTestTypes(column.type);
+        const allowedTests = getAllowedTestTypes(column.dataType);
 
         const suites = testSuites.filter(
           (el) => el.target.targetResourceId === column.id
@@ -1138,7 +1138,7 @@ export default (): ReactElement => {
 
         columnTestConfigs.push({
           id: column.id,
-          type: column.type,
+          type: column.dataType,
           label: columnLabel,
           frequency: suites.length ? suites[0].executionFrequency : 1,
           executionType: suites.length ? suites[0].executionType : 'automatic',
@@ -1457,7 +1457,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="center">
             <FormControl sx={{ m: 1 }} size="small">
               <Select
-                name={`frequency-${props.materializationId}`}
+                name={`frequency--${props.materializationId}`}
                 disabled={
                   !testSelection[
                     props.materializationId
@@ -1490,7 +1490,7 @@ export default (): ReactElement => {
             <FormControl sx={{ m: 1 }} size="small">
               <Select
                 autoWidth={true}
-                name={`sensitivity-${props.materializationId}`}
+                name={`sensitivity--${props.materializationId}`}
                 disabled={
                   !testSelection[
                     props.materializationId
@@ -1515,7 +1515,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="left">
             {columnFreshnessSummary.totalCount ? (
               <Button
-                id={`${columnFreshnessType}-${props.materializationId}`}
+                id={`${columnFreshnessType}--${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
@@ -1545,7 +1545,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="left">
             {columnCardinalitySummary.totalCount ? (
               <Button
-                id={`${columnCardinalityType}-${props.materializationId}`}
+                id={`${columnCardinalityType}--${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
@@ -1577,7 +1577,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="left">
             {columnNullnessSummary.totalCount ? (
               <Button
-                id={`${columnNullnessType}-${props.materializationId}`}
+                id={`${columnNullnessType}--${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
@@ -1607,7 +1607,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="left">
             {columnUniquenessSummary.totalCount ? (
               <Button
-                id={`${columnUniquenessType}-${props.materializationId}`}
+                id={`${columnUniquenessType}--${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
@@ -1639,7 +1639,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="left">
             {columnDistributionSummary.totalCount ? (
               <Button
-                id={`${columnDistributionType}-${props.materializationId}`}
+                id={`${columnDistributionType}--${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
@@ -1672,7 +1672,7 @@ export default (): ReactElement => {
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
             <Button
-              id={`${materializationRowCountType}-${props.materializationId}`}
+              id={`${materializationRowCountType}--${props.materializationId}`}
               size="large"
               variant="contained"
               color={
@@ -1683,7 +1683,7 @@ export default (): ReactElement => {
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
             <Button
-              id={`${materializationColumnCountType}-${props.materializationId}`}
+              id={`${materializationColumnCountType}--${props.materializationId}`}
               size="large"
               variant="contained"
               color={
@@ -1694,7 +1694,7 @@ export default (): ReactElement => {
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
             <Button
-              id={`${materializationFreshnessType}-${props.materializationId}`}
+              id={`${materializationFreshnessType}--${props.materializationId}`}
               size="large"
               variant="contained"
               color={
@@ -1705,7 +1705,7 @@ export default (): ReactElement => {
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
             <Button
-              id={`${materializationSchemaChangeType}-${props.materializationId}`}
+              id={`${materializationSchemaChangeType}--${props.materializationId}`}
               size="large"
               variant="contained"
               color={
@@ -1920,7 +1920,7 @@ export default (): ReactElement => {
           console.log(error);
         });
     } else {
-      setLineage({ id: 'todo', createdAt: 1 });
+      setLineage({ id: 'todo', createdAt: '1', completed: true });
     }
   }, [account]);
 
@@ -1954,7 +1954,7 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        <Navbar current="tests" />
+        <Navbar current="tests" jwt={jwt} lineageCreatedAt={lineage? lineage.createdAt: undefined}  />
         <>
           <div className="items-top relative flex h-20 justify-center">
             <div className="relative mt-2 w-1/4">

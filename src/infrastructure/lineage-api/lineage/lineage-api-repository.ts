@@ -55,4 +55,26 @@ export default class LineageApiRepository {
       return Promise.reject(new Error(error.response.data.message));
     }
   };
+
+  static create = async (jwt: string) => {
+    try {
+      const apiRoot = await LineageApiRepository.root;
+
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.post(
+        `${apiRoot}/lineage/`,
+        undefined,
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status === 201) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  
+  } 
 }

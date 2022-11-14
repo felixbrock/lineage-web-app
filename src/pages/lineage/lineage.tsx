@@ -397,7 +397,7 @@ const buildData = (
   const dashNodes = dashboards.map(
     (dashboard): NodeConfig => ({
       id: dashboard.id,
-      label: dashboard.column.toLowerCase(),
+      label: dashboard.columnName.toLowerCase(),
       comboId: dashboard.url,
     })
   );
@@ -902,7 +902,7 @@ export default (): ReactElement => {
           setReadyToBuild(true);
         });
     } else {
-      setLineage({ id: 'todo', createdAt: 1 });
+      setLineage({ id: 'todo', createdAt: '1', completed: true });
       setReadyToBuild(true);
     }
 
@@ -1378,7 +1378,7 @@ export default (): ReactElement => {
           : defaultMaterializations;
 
         const matCombo = materializationsToSearch.find(
-          (materialization) => materialization.id === comboId
+          (el) => el.id === comboId
         );
 
         const dashCombo = dashboards.find(
@@ -1476,6 +1476,8 @@ export default (): ReactElement => {
           }}
           isRightPanelShown={isRightPanelShown}
           setIsRightPanelShown={setIsRightPanelShown}
+          lineageCreatedAt={lineage ? lineage.createdAt: undefined}
+          jwt={jwt}
         />
         {!isDataAvailable && (
           <EmptyStateIntegrations onClick={handleTabIndexChange} />

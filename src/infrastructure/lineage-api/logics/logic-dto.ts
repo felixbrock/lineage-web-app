@@ -1,9 +1,10 @@
 export default interface LogicDto {
   id: string;
-  dbtModelId: string;
+  relationName: string;
   sql: string;
+  dependentOn: any;
   parsedLogic: string;
-  statementRefs: any[];
-  lineageId: string;
+  statementRefs: any;
+  lineageIds: string[];
   // eslint-disable-next-line semi
 }

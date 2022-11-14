@@ -3,6 +3,6 @@ export default interface DependencyDto {
   type: string;
   headId: string;
   tailId: string;
-  lineageId: string;
+  lineageIds: string[];
   // eslint-disable-next-line semi
 }

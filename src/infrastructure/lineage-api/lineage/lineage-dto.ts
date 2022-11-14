@@ -1,5 +1,6 @@
 export default interface LineageDto {
   id: string;
-  createdAt: number;
+  createdAt: string;
+  completed: boolean;
   // eslint-disable-next-line semi
 }

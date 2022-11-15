@@ -75,29 +75,53 @@ export default function Navbar({
   };
   subNavigation[1].isShown = isRightPanelShown;
 
+  const getSnapshotInfo = (state: SnapshotState, createdAt?: string) => {
+    switch (state) {
+      case 'loading':
+        return 'Loading...';
+      case 'creating':
+        return 'Creating new snapshot...';
+      case 'available':
+        if (!createdAt) throw new Error('CreatedAt param needs to be provided');
+        return new Date(createdAt).toLocaleString();
+      case 'not available':
+        return 'Not available';
+      default:
+        throw new Error('Unhandled snapshot state');
+    }
+  };
+
   useEffect(() => {
     if (!jwt) return;
 
     LineageApiRepository.getLatest(jwt, true)
       .then((snapshot) => {
+        let state: SnapshotState = 'not available';
         if (!snapshot) {
-          setSnapshotState('not available');
-          setSnapshotInfo('Not available');
+          setSnapshotState(state);
+          setSnapshotInfo(getSnapshotInfo(state));
           return;
         }
 
         if (snapshot.completed === false) {
-          setSnapshotState('creating');
-          setSnapshotInfo('Creating new snapshot...');
+          state = 'creating';
+          setSnapshotState(state);
+          setSnapshotInfo(getSnapshotInfo(state));
         } else if (snapshot.completed === true) {
-          setSnapshotState('available');
-          setSnapshotInfo(new Date(snapshot.createdAt).toLocaleString());
+          state = 'available';
+          setSnapshotState(state);
+          setSnapshotInfo(getSnapshotInfo(state, snapshot.createdAt));
         } else {
-          setSnapshotState('not available');
-          setSnapshotInfo('Not available');
+          setSnapshotState(state);
+          setSnapshotInfo(getSnapshotInfo(state));
         }
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        const state: SnapshotState = 'not available';
+        setSnapshotInfo(state);
+        setSnapshotInfo(getSnapshotInfo(state));
+        console.error(err);
+      });
   }, [jwt]);
 
   return (

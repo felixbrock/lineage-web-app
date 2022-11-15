@@ -45,6 +45,22 @@ export default function Navbar({
     navigation[1].current = true;
   }
 
+  const getSnapshotInfo = (state: SnapshotState, createdAt?: string) => {
+    switch (state) {
+      case 'loading':
+        return 'Loading...';
+      case 'creating':
+        return 'Creating new snapshot...';
+      case 'available':
+        if (!createdAt) throw new Error('CreatedAt param needs to be provided');
+        return new Date(createdAt).toLocaleString();
+      case 'not available':
+        return 'Not available';
+      default:
+        throw new Error('Unhandled snapshot state');
+    }
+  };
+
   const handleLineageSnapshotRefresh = () => {
     if (!jwt) {
       console.error('jwt missing. Cannot create new lineage snapshot');
@@ -53,7 +69,9 @@ export default function Navbar({
 
     if (snapshotState === 'loading' || snapshotState === 'creating') return;
 
-    setSnapshotInfo('Creating new snapshot...');
+    const state: SnapshotState = 'creating'
+    setSnapshotState(state)
+    setSnapshotInfo(getSnapshotInfo(state));
     LineageApiRepository.create(jwt);
   };
 
@@ -74,22 +92,6 @@ export default function Navbar({
     toggleRightPanel();
   };
   subNavigation[1].isShown = isRightPanelShown;
-
-  const getSnapshotInfo = (state: SnapshotState, createdAt?: string) => {
-    switch (state) {
-      case 'loading':
-        return 'Loading...';
-      case 'creating':
-        return 'Creating new snapshot...';
-      case 'available':
-        if (!createdAt) throw new Error('CreatedAt param needs to be provided');
-        return new Date(createdAt).toLocaleString();
-      case 'not available':
-        return 'Not available';
-      default:
-        throw new Error('Unhandled snapshot state');
-    }
-  };
 
   useEffect(() => {
     if (!jwt) return;

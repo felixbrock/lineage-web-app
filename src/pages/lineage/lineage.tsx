@@ -87,6 +87,7 @@ import { SectionHeading } from './components/headings';
 import { Table } from './components/table';
 import Navbar from '../../components/navbar';
 import { Snackbar, Alert } from '@mui/material';
+import LoadingScreen from '../../components/loading-screen';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -470,6 +471,7 @@ export default (): ReactElement => {
   const [isRightPanelShown, setIsRightPanelShown] = useState(false);
   const [integrations, setIntegrations] = useState<any>([]);
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleSnackbarClose = (
     event?: React.SyntheticEvent | Event,
@@ -900,6 +902,7 @@ export default (): ReactElement => {
         .then((dependencyDtos) => {
           setDependencies(dependencyDtos);
           setReadyToBuild(true);
+          setIsLoading(false);
         })
         .catch((error) => {
           console.log(error);
@@ -912,10 +915,12 @@ export default (): ReactElement => {
 
           setIsDataAvailable(false);
           setReadyToBuild(true);
+          setIsLoading(false);
         });
     } else {
       setLineage({ id: 'todo', createdAt: '', completed: true });
       setReadyToBuild(true);
+      setIsLoading(false);
     }
 
     handleSlackRedirect();
@@ -1498,6 +1503,9 @@ export default (): ReactElement => {
         {!isDataAvailable && (
           <EmptyStateIntegrations onClick={handleTabIndexChange} />
         )}
+        {isLoading ? (
+                <LoadingScreen tailwindCss='fixed flex w-full h-full items-center justify-center' />
+              ) : (<></>)}
         <div id="lineage" />
         <div id="sidenav" className="sidenav">
           <div className="mx-4">

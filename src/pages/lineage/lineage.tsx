@@ -802,10 +802,9 @@ export default (): ReactElement => {
         .catch(() => console.trace('Slack profile retrieval failed'));
     }
 
-    
     setTabIndex(sidePanelTabIndex);
     if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
-    
+
     window.history.replaceState({}, document.title);
   };
 
@@ -852,7 +851,7 @@ export default (): ReactElement => {
     if (showRealData) {
       let lineageId: string;
 
-      LineageApiRepository.getLatest(jwt)
+      LineageApiRepository.getLatest(jwt, false)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
           if (!lineageDto)
@@ -1476,7 +1475,6 @@ export default (): ReactElement => {
           }}
           isRightPanelShown={isRightPanelShown}
           setIsRightPanelShown={setIsRightPanelShown}
-          lineageCreatedAt={lineage ? lineage.createdAt: undefined}
           jwt={jwt}
         />
         {!isDataAvailable && (

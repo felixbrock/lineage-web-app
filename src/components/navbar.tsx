@@ -1,11 +1,13 @@
 import { Auth } from 'aws-amplify';
 import Logo from './top-nav/cito-header-purple.png';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { BiRefresh } from 'react-icons/bi';
 import LineageApiRepository from '../infrastructure/lineage-api/lineage/lineage-api-repository';
+
+type SnapshotState = 'loading' | 'creating' | 'available' | 'not available';
 
 const navigation = [
   { name: 'Lineage', href: '/lineage', current: true },
@@ -26,10 +28,13 @@ export default function Navbar({
   toggleRightPanelFunctions,
   isRightPanelShown,
   setIsRightPanelShown,
-  lineageCreatedAt,
-  jwt
+  jwt,
 }: any) {
   const [isLeftPanelShown, setIsLeftPanelShown] = useState(true);
+
+  const [snapshotState, setSnapshotState] = useState<SnapshotState>('loading');
+
+  const [snapshotInfo, setSnapshotInfo] = useState<string>('Loading...');
 
   // temp code because of launch
   if (current === 'lineage') {
@@ -41,12 +46,15 @@ export default function Navbar({
   }
 
   const handleLineageSnapshotRefresh = () => {
-    if(!jwt) {
-      console.error('jwt missing. Cannot create new lineage snapshot')
+    if (!jwt) {
+      console.error('jwt missing. Cannot create new lineage snapshot');
       return;
-    };
+    }
 
-    LineageApiRepository.create(jwt)
+    if (snapshotState === 'loading' || snapshotState === 'creating') return;
+
+    setSnapshotInfo('Creating new snapshot...');
+    LineageApiRepository.create(jwt);
   };
 
   function toggleRightPanel() {
@@ -66,6 +74,31 @@ export default function Navbar({
     toggleRightPanel();
   };
   subNavigation[1].isShown = isRightPanelShown;
+
+  useEffect(() => {
+    if (!jwt) return;
+
+    LineageApiRepository.getLatest(jwt, true)
+      .then((snapshot) => {
+        if (!snapshot) {
+          setSnapshotState('not available');
+          setSnapshotInfo('Not available');
+          return;
+        }
+
+        if (snapshot.completed === false) {
+          setSnapshotState('creating');
+          setSnapshotInfo('Creating new snapshot...');
+        } else if (snapshot.completed === true) {
+          setSnapshotState('available');
+          setSnapshotInfo(new Date(snapshot.createdAt).toLocaleString());
+        } else {
+          setSnapshotState('not available');
+          setSnapshotInfo('Not available');
+        }
+      })
+      .catch((err) => console.error(err));
+  }, [jwt]);
 
   return (
     <Disclosure as="nav" className="relative z-50 bg-gray-800">
@@ -126,10 +159,8 @@ export default function Navbar({
                   <span className="sr-only">Create new snapshot</span>
                   <BiRefresh className="h-6 w-6" aria-hidden="true" />
                 </button>
-                <i
-                  className="relative ml-3 text-xs"
-                >
-                  Latest Snapshot: {lineageCreatedAt ? new Date(lineageCreatedAt).toLocaleString(): 'Not available'}
+                <i className="relative ml-3 text-xs text-gray-300">
+                  Latest Snapshot: {snapshotInfo}
                 </i>
                 <button
                   type="button"

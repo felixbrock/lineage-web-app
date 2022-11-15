@@ -1884,7 +1884,7 @@ export default (): ReactElement => {
     if (showRealData) {
       let lineageId: string;
 
-      LineageApiRepository.getLatest(jwt)
+      LineageApiRepository.getLatest(jwt, false)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
           if (!lineageDto)
@@ -1954,7 +1954,7 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        <Navbar current="tests" jwt={jwt} lineageCreatedAt={lineage? lineage.createdAt: undefined}  />
+        <Navbar current="tests" jwt={jwt}/>
         <>
           <div className="items-top relative flex h-20 justify-center">
             <div className="relative mt-2 w-1/4">

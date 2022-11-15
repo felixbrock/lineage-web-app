@@ -120,7 +120,7 @@ export default function Navbar({
       })
       .catch((err) => {
         const state: SnapshotState = 'not available';
-        setSnapshotInfo(state);
+        setSnapshotState(state);
         setSnapshotInfo(getSnapshotInfo(state));
         console.error(err);
       });

@@ -5,9 +5,10 @@ import IntegrationApiRepo from '../../../infrastructure/integration-api/integrat
 
 interface SnowflakeProps {
   jwt: string;
+  parentHandleSaveClick: ()=> unknown
 }
 
-export default ({ jwt }: SnowflakeProps): ReactElement => {
+export default ({ jwt, parentHandleSaveClick }: SnowflakeProps): ReactElement => {
   const [buttonText, setButtonText] = useState('Save');
   const [form, setForm] = useState({
     accountId: '',
@@ -24,6 +25,8 @@ export default ({ jwt }: SnowflakeProps): ReactElement => {
     else await IntegrationApiRepo.updateSnowflakeProfile(form, jwt);
 
     setButtonText('Saved');
+
+    parentHandleSaveClick();
 
     await IntegrationApiRepo.postSnowflakeEnvironment(jwt);
   };

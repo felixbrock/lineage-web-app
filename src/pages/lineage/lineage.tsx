@@ -86,6 +86,7 @@ import {
 import { SectionHeading } from './components/headings';
 import { Table } from './components/table';
 import Navbar from '../../components/navbar';
+import { Snackbar, Alert } from '@mui/material';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -468,6 +469,18 @@ export default (): ReactElement => {
   const [githubAccessToken, setGithubAccessToken] = useState<string>('');
   const [isRightPanelShown, setIsRightPanelShown] = useState(false);
   const [integrations, setIntegrations] = useState<any>([]);
+  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+
+  const handleSnackbarClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
 
   const handleTabIndexChange = (event: SyntheticEvent, newValue: number) => {
     // Make sure the integration side panel is open when tab is set
@@ -919,7 +932,12 @@ export default (): ReactElement => {
       {
         name: 'Snowflake',
         icon: SiSnowflake,
-        tabContentJsx: <Snowflake jwt={jwt}></Snowflake>,
+        tabContentJsx: (
+          <Snowflake
+            jwt={jwt}
+            parentHandleSaveClick={() => setSnackbarOpen(true)}
+          ></Snowflake>
+        ),
       },
       {
         name: 'GitHub',
@@ -1667,7 +1685,20 @@ export default (): ReactElement => {
             </Tab.Panels>
           </Tab.Group>
         </div>
-        {/* <div id="snackbar">{info}</div> */}
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={3000}
+          onClose={handleSnackbarClose}
+          message="Saved"
+        >
+          <Alert
+            onClose={handleSnackbarClose}
+            severity="success"
+            sx={{ width: '100%' }}
+          >
+            Saved
+          </Alert>
+        </Snackbar>
       </div>
     </ThemeProvider>
   );

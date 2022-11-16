@@ -302,7 +302,7 @@ export default class IntegrationApiRepo {
 
   public static querySnowflake = async (
     query: string,
-    targetOrganizationId: string,
+    targetOrgId: string,
     jwt: string
   ): Promise<any> => {
     try {
@@ -318,7 +318,7 @@ export default class IntegrationApiRepo {
         `${apiRoot}/snowflake/query`,
         {
           query,
-          targetOrganizationId,
+          targetOrgId,
         },
         config
       );

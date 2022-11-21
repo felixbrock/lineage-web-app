@@ -431,96 +431,6 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
-  const handleColumnSensitivityChange = (event: any) => {
-    const name = event.target.name as string;
-    const value = event.target.value as number;
-    const props = name.split('--');
-
-    const testSelectionLocal = testSelection;
-
-    testSelectionLocal[props[1]].sensitivity = undefined;
-
-    const columnTestConfigIndex = testSelectionLocal[
-      props[1]
-    ].columnTestConfigs.findIndex((el) => el.id === props[2]);
-
-    if (columnTestConfigIndex === -1)
-      throw new Error('Column Test Config not found');
-
-    const testsToUpdate = testSelectionLocal[props[1]].columnTestConfigs[
-      columnTestConfigIndex
-    ].testConfigs.filter((el) => el.testSuiteId);
-
-    if (!testsToUpdate.length)
-      throw new Error(
-        'No activated tests found. Sensitivity change not allowed'
-      );
-
-    const updateObjects = testsToUpdate.map((test): UpdateTestSuiteObject => {
-      if (!test.testSuiteId)
-        throw new Error('Test with status activated found that does not exist');
-
-      return {
-        id: test.testSuiteId,
-        threshold: value,
-      };
-    });
-
-    ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
-
-    testSelectionLocal[props[1]].columnTestConfigs[
-      columnTestConfigIndex
-    ].sensitivity = value;
-
-    setTestSelection({ ...testSelectionLocal });
-  };
-
-  const handleMatSensitivityChange = (event: any) => {
-    const name = event.target.name as string;
-    const value = event.target.value as number;
-    const props = name.split('--');
-
-    const testSelectionLocal = testSelection;
-
-    testSelectionLocal[props[1]].sensitivity = value;
-
-    const isUpdateObject = (
-      updateObject: UpdateTestSuiteObject | undefined
-    ): updateObject is UpdateTestSuiteObject => !!updateObject;
-
-    const updateObjects = testSelectionLocal[props[1]].columnTestConfigs
-      .map((el, index) => {
-        const existingTests = el.testConfigs.filter(
-          (config) => config.testSuiteId
-        );
-
-        if (!existingTests.length) return;
-
-        const objects = existingTests.map((test): UpdateTestSuiteObject => {
-          const testSuiteId = test.testSuiteId;
-
-          if (!testSuiteId)
-            throw new Error('Activated test without test suite id');
-
-          return {
-            id: testSuiteId,
-            threshold: value,
-          };
-        });
-
-        testSelectionLocal[props[1]].columnTestConfigs[index].sensitivity =
-          value;
-
-        return objects;
-      })
-      .flat()
-      .filter(isUpdateObject);
-
-    ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
-
-    setTestSelection({ ...testSelectionLocal });
-  };
-
   const handleSearchChange = (event: any) => {
     const testSelectionKeys = Object.keys(testSelection);
     if (!testSelectionKeys.length) return;
@@ -966,30 +876,7 @@ export default (): ReactElement => {
             </Select>
           </FormControl>
         </TableCell>
-        <TableCell sx={tableCellSx} align="center">
-          <FormControl sx={{ m: 1 }} size="small">
-            <Select
-              autoWidth={true}
-              name={`sensitivity--${materializationId}--${columnId}`}
-              disabled={
-                !getColumnTestConfig(materializationId, columnId).testsActivated
-              }
-              displayEmpty={true}
-              value={
-                getColumnTestConfig(materializationId, columnId).sensitivity !==
-                undefined
-                  ? getColumnTestConfig(materializationId, columnId).sensitivity
-                  : ''
-              }
-              onChange={handleColumnSensitivityChange}
-            >
-              <MenuItem value={0}>0</MenuItem>
-              <MenuItem value={1}>1</MenuItem>
-              <MenuItem value={2}>2</MenuItem>
-              <MenuItem value={3}>3</MenuItem>
-            </Select>
-          </FormControl>
-        </TableCell>
+        
 
         <TableCell sx={tableCellSx} align="left">
           {allowedTestTypes.includes('ColumnFreshness') ? (
@@ -1484,32 +1371,7 @@ export default (): ReactElement => {
               </Select>
             </FormControl>
           </TableCell>
-          <TableCell sx={tableCellSx} align="center">
-            <FormControl sx={{ m: 1 }} size="small">
-              <Select
-                autoWidth={true}
-                name={`sensitivity--${props.materializationId}`}
-                disabled={
-                  !testSelection[
-                    props.materializationId
-                  ].columnTestConfigs.some((el) => el.testsActivated)
-                }
-                displayEmpty={true}
-                value={
-                  testSelection[props.materializationId].sensitivity !==
-                  undefined
-                    ? testSelection[props.materializationId].sensitivity
-                    : ''
-                }
-                onChange={handleMatSensitivityChange}
-              >
-                <MenuItem value={0}>0</MenuItem>
-                <MenuItem value={1}>1</MenuItem>
-                <MenuItem value={2}>2</MenuItem>
-                <MenuItem value={3}>3</MenuItem>
-              </Select>
-            </FormControl>
-          </TableCell>
+          
           <TableCell sx={tableCellSx} align="left">
             {columnFreshnessSummary.totalCount ? (
               <Button
@@ -1992,15 +1854,7 @@ export default (): ReactElement => {
                         <p>Frequency</p>
                         <p></p>
                       </TableCell>
-                      <TableCell
-                        sx={tableHeaderCellSx}
-                        width={135}
-                        align="center"
-                        style={{ verticalAlign: 'top' }}
-                      >
-                        <p>Sensitivity</p>
-                        <p></p>
-                      </TableCell>
+                      
                       <TableCell
                         sx={tableHeaderCellSx}
                         width={135}
@@ -2080,6 +1934,7 @@ export default (): ReactElement => {
                         style={{ verticalAlign: 'top' }}
                       >
                         <p>Schema</p>
+
                         <p>Change</p>
                       </TableCell>
                     </TableRow>

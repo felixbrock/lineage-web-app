@@ -237,7 +237,7 @@ export default (): ReactElement => {
     [key: string]: MaterializationTestsConfig;
   }>({});
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(25);
   const [searchParams] = useSearchParams();
 
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
@@ -1968,7 +1968,7 @@ export default (): ReactElement => {
               )}
             </TableContainer>
             <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
+              rowsPerPageOptions={[25, 50, 100]}
               component="div"
               count={Object.keys(searchedTestSelection).length}
               rowsPerPage={rowsPerPage}

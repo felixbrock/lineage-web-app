@@ -1580,7 +1580,7 @@ export default (): ReactElement => {
                       'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
-                        ? 'bg-white text-cito shadow'
+                        ? 'bg-gray-800 text-cito shadow'
                         : 'hover:bg-white/[0.12] hover:text-white'
                     )
                   }
@@ -1594,7 +1594,7 @@ export default (): ReactElement => {
                       'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
-                        ? 'bg-white text-cito shadow'
+                        ? 'bg-gray-800 text-cito shadow'
                         : 'hover:bg-white/[0.12] hover:text-white'
                     )
                   }
@@ -1668,7 +1668,7 @@ export default (): ReactElement => {
                       'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
-                        ? 'bg-white text-cito shadow'
+                        ? 'bg-gray-800 text-cito shadow'
                         : 'hover:bg-white/[0.12] hover:text-white'
                     )
                   }

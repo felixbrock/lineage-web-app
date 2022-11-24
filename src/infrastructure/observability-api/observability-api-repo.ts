@@ -1,6 +1,10 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { mode } from '../../config';
-import { ExecutionType, MaterializationType, TestType } from '../../pages/test/test';
+import {
+  ExecutionType,
+  MaterializationType,
+  TestType,
+} from '../../pages/test/test';
 import getRoot from '../shared/api-root-builder';
 import { NominalTestSuiteDto, TestSuiteDto } from './test-suite-dto';
 
@@ -30,16 +34,25 @@ export interface TestSuiteProps extends BaseTestSuiteProps {
 
 export type NominalTestSuiteProps = BaseTestSuiteProps;
 
-interface BaseUpdateTestSuiteObject {
-  id: string;
+interface BaseUpdateTestSuiteObjProps {
   activated?: boolean;
   frequency?: number;
   cron?: string;
-  executionType?: ExecutionType
+  executionType?: ExecutionType;
 }
 
-export interface UpdateTestSuiteObject extends BaseUpdateTestSuiteObject {
+interface UpdateTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
   threshold?: number;
+}
+
+interface BaseUpdateTestSuiteObject {
+  id: string;
+  props: BaseUpdateTestSuiteObjProps;
+}
+
+export interface UpdateTestSuiteObject
+  extends Omit<BaseUpdateTestSuiteObject, 'props'> {
+  props: UpdateTestSuiteObjProps;
 }
 
 export type UpdateNominalTestSuiteObject = BaseUpdateTestSuiteObject;

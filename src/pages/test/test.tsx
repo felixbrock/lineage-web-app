@@ -284,8 +284,8 @@ export default (): ReactElement => {
       const numValue = Number(value);
       return {
         id: testSuiteId,
-        frequency: numValue,
-        executionType: 'frequency',
+        props: {frequency: numValue,
+        executionType: 'frequency',}
       };
     }
 
@@ -293,7 +293,7 @@ export default (): ReactElement => {
     if (executionType === 'automatic')
       return {
         id: testSuiteId,
-        executionType: 'automatic',
+        props: {executionType: 'automatic',}
       };
     if (executionType === 'individual')
       throw new Error('todo - not implemented');
@@ -532,6 +532,7 @@ export default (): ReactElement => {
       summaryIndex
     ].activationCount = activatedCounter;
 
+    // provides instant feedback to user about interaction
     setTestSelection({ ...testSelectionLocal });
 
     const columnTestConfigs =
@@ -574,7 +575,7 @@ export default (): ReactElement => {
       setTestSelection({ ...testSelectionLocal });
     } else
       ObservabilityApiRepo.updateTestSuites(
-        [{ id: testSuiteId, activated: newActivatedValue }],
+        [{ id: testSuiteId, props: {activated: newActivatedValue} }],
         jwt
       );
   };
@@ -601,18 +602,21 @@ export default (): ReactElement => {
       testIndex
     ].activated = invertedValueActivated;
 
+    // to give instant feedback to user that test was activated/deactivated
+    setTestSelection({ ...testSelectionLocal });
+
     const testSuiteId =
       testSelectionLocal[props[1]].materializationTestConfigs[testIndex]
         .testSuiteId;
     if (testSuiteId) {
-      if (type == 'MaterializationSchemaChange')
+      if (type === 'MaterializationSchemaChange')
         ObservabilityApiRepo.updateNominalTestSuites(
-          [{ id: testSuiteId, activated: invertedValueActivated }],
+          [{ id: testSuiteId, props: {activated: invertedValueActivated} }],
           jwt
         );
       else
         ObservabilityApiRepo.updateTestSuites(
-          [{ id: testSuiteId, activated: invertedValueActivated }],
+          [{ id: testSuiteId, props: {activated: invertedValueActivated} }],
           jwt
         );
 
@@ -730,6 +734,9 @@ export default (): ReactElement => {
 
       const testSuiteId = config.testConfigs[testConfigIndex].testSuiteId;
 
+      // to provide feedback to user about instant interaction
+      setTestSelection({ ...testSelectionLocal });
+
       if (!testSuiteId) {
         const materalization = materializations.find(
           (el) => el.id === props[1]
@@ -760,7 +767,7 @@ export default (): ReactElement => {
           executionType: config.executionType,
         });
       } else
-        updateObjects.push({ id: testSuiteId, activated: newActivatedValue });
+        updateObjects.push({ id: testSuiteId, props: {activated: newActivatedValue} });
     });
 
     if (testSuiteProps.length) {

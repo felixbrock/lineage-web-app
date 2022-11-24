@@ -61,7 +61,6 @@ export default ({ sql }: { sql: string }): ReactElement => {
       style={gradientDark}
       showLineNumbers={true}
       wrapLines={true}
-      wrapLongLines={true}
       lineProps={(lineNumber): React.HTMLProps<HTMLElement> => {
         const style: React.CSSProperties = { display: 'block', cursor: 'pointer' };
         if (lineNumber === infoLineIndex + 1) {style.backgroundColor = '#000000'};

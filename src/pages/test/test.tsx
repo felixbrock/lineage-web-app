@@ -239,7 +239,7 @@ export default (): ReactElement => {
     [key: string]: MaterializationTestsConfig;
   }>({});
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(25);
   const [searchParams] = useSearchParams();
 
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
@@ -938,7 +938,7 @@ export default (): ReactElement => {
 
     return (
       <TableRow>
-        <TableCell sx={tableCellSx} align="left">
+        <TableCell sx={{...tableCellSx}} align="left">
           {getColumnTestConfig(materializationId, columnId).label}
         </TableCell>
         <TableCell sx={tableCellSx} align="center">
@@ -972,8 +972,8 @@ export default (): ReactElement => {
             </Select>
           </FormControl>
         </TableCell>
-        <TableCell sx={tableCellSx} align="center">
-          <FormControl sx={{ m: 1 }} size="small">
+        <TableCell sx={{...tableCellSx, display: 'none'}} align="center">
+          <FormControl sx={{ m: 1}} size="small">
             <Select
               autoWidth={true}
               name={`sensitivity-${materializationId}-${columnId}`}
@@ -1490,7 +1490,7 @@ export default (): ReactElement => {
               </Select>
             </FormControl>
           </TableCell>
-          <TableCell sx={tableCellSx} align="center">
+          <TableCell sx={{...tableCellSx, display: 'none'}} align="center">
             <FormControl sx={{ m: 1 }} size="small">
               <Select
                 autoWidth={true}
@@ -2001,7 +2001,7 @@ export default (): ReactElement => {
                       <p></p>
                     </TableCell>
                     <TableCell
-                      sx={tableHeaderCellSx}
+                      sx={{...tableHeaderCellSx, display: 'none'}}
                       width={135}
                       align="center"
                       style={{ verticalAlign: 'top' }}
@@ -2120,7 +2120,7 @@ export default (): ReactElement => {
               </Table>
             </TableContainer>
             <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
+              rowsPerPageOptions={[25, 50, 100]}
               component="div"
               count={Object.keys(searchedTestSelection).length}
               rowsPerPage={rowsPerPage}

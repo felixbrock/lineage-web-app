@@ -864,7 +864,6 @@ export default (): ReactElement => {
     toggleShowSideNav();
 
     if (showRealData) {
-      let lineageId: string;
 
       LineageApiRepository.getLatest(jwt, false)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
@@ -872,30 +871,29 @@ export default (): ReactElement => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
           setLineage(lineageDto);
-          lineageId = lineageDto.id;
           return MaterializationsApiRepository.getBy(
-            new URLSearchParams({ lineageId }),
+            new URLSearchParams({}),
             jwt
           );
         })
         .then((materializationDtos) => {
           setMaterializations(materializationDtos);
           return DashboardsApiRepository.getBy(
-            new URLSearchParams({ lineageId }),
+            new URLSearchParams({}),
             jwt
           );
         })
         .then((dashboardDtos) => {
           setDashboards(dashboardDtos);
           return ColumnsApiRepository.getBy(
-            new URLSearchParams({ lineageId }),
+            new URLSearchParams({}),
             jwt
           );
         })
         .then((columnDtos) => {
           setColumns(columnDtos);
           return DependenciesApiRepository.getBy(
-            new URLSearchParams({ lineageId }),
+            new URLSearchParams({}),
             jwt
           );
         })
@@ -918,7 +916,7 @@ export default (): ReactElement => {
           setIsLoading(false);
         });
     } else {
-      setLineage({ id: 'todo', createdAt: '', completed: true });
+      setLineage({ id: 'todo', createdAt: '', completed: true, dbCoveredNames: [], diff: '' });
       setReadyToBuild(true);
       setIsLoading(false);
     }

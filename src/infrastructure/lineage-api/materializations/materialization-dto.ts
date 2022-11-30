@@ -5,7 +5,6 @@ export default interface MaterializationDto {
   schemaName: string;
   databaseName: string;
   type: string;
-  lineageIds: string[];
   logicId?: string ;
   ownerId?: string ;
   isTransient?: boolean ;

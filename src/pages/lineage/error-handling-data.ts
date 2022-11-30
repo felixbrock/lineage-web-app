@@ -1,26 +1,27 @@
-import ColumnDto from "../../infrastructure/lineage-api/columns/column-dto";
-import DashboardDto from "../../infrastructure/lineage-api/dashboards/dashboard-dto";
-import DependencyDto from "../../infrastructure/lineage-api/dependencies/dependency-dto";
-import LineageDto from "../../infrastructure/lineage-api/lineage/lineage-dto";
-import MaterializationDto from "../../infrastructure/lineage-api/materializations/materialization-dto";
+import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
+import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
+import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
+import LineageDto from '../../infrastructure/lineage-api/lineage/lineage-dto';
+import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
 
 export const defaultErrorLineage: LineageDto = {
   id: '62715f897e3d8066494d3f9e',
   createdAt: '',
-  completed: true
+  completed: true,
+  dbCoveredNames: [],
+  diff: '',
 };
 
 export const defaultErrorMaterializations: MaterializationDto[] = [
-    {
-      id: '',
-      relationName: '',
-      type: '',
-      name: '',
-      schemaName: '',
-      databaseName: '',
-      logicId: '',
-      lineageIds: [''],
-    },
+  {
+    id: '',
+    relationName: '',
+    type: '',
+    name: '',
+    schemaName: '',
+    databaseName: '',
+    logicId: '',
+  },
 ];
 
 export const defaultErrorColumns: ColumnDto[] = [
@@ -31,7 +32,6 @@ export const defaultErrorColumns: ColumnDto[] = [
     index: '',
     dataType: '',
     materializationId: '',
-    lineageIds: [''],
   },
 ];
 
@@ -41,7 +41,6 @@ export const defaultErrorDependencies: DependencyDto[] = [
     type: '',
     tailId: '',
     headId: '',
-    lineageIds: ['62715f897e3d8066494d3f9e'],
   },
 ];
 

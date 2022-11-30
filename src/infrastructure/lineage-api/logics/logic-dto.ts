@@ -5,6 +5,5 @@ export default interface LogicDto {
   dependentOn: any;
   parsedLogic: string;
   statementRefs: any;
-  lineageIds: string[];
   // eslint-disable-next-line semi
 }

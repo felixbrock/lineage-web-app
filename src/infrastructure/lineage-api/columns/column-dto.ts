@@ -5,7 +5,6 @@ export default interface ColumnDto {
   index: string;
   dataType: string;
   materializationId: string;
-  lineageIds: string[];
   isIdentity?: boolean;
   isNullable?: boolean;
   comment?: string;

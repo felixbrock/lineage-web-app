@@ -178,20 +178,20 @@ export default function Navbar({
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
                 {snapshotState === 'loading' || snapshotState === 'creating' ? (
-                  <div className="relative ml-3 animate-spin rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 invisible">
+                  <div className="relative ml-3 animate-spin rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                     <RiRefreshLine className="h-6 w-6" aria-hidden="true" />
                   </div>
                 ) : (
                   <button
                     type="button"
-                    className="relative ml-3 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 invisible"
+                    className="relative ml-3 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                     onClick={handleLineageSnapshotRefresh}
                   >
                     <span className="sr-only">Create new snapshot</span>
                     <RiRefreshLine className="h-6 w-6" aria-hidden="true" />
                   </button>
                 )}
-                <i className="relative ml-3 text-xs text-gray-300 invisible">
+                <i className="relative ml-3 text-xs text-gray-300">
                   Latest Snapshot: {snapshotInfo}
                 </i>
                 <button

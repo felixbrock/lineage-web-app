@@ -115,6 +115,12 @@ const getBaseUrlConfig = (): BaseUrlConfig => {
       throw new Error('Unexpected mode');
   }
 
+  console.log(accountService);
+  console.log(observabilityService);
+  console.log(integrationService);
+  console.log(lineageService);
+  
+
   if (
     !accountService ||
     !observabilityService ||

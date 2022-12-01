@@ -68,7 +68,6 @@ import IntegrationApiRepo from '../../infrastructure/integration-api/integration
 import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
 import Snowflake from '../../components/integration/snowflake/snowflake';
-import { showRealData } from '../../config';
 import AccountDto from '../../infrastructure/account-api/account-dto';
 import {
   deafultErrorDashboards,
@@ -88,6 +87,7 @@ import { Table } from './components/table';
 import Navbar from '../../components/navbar';
 import { Snackbar, Alert } from '@mui/material';
 import LoadingScreen from '../../components/loading-screen';
+import appConfig from '../../config';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -420,7 +420,25 @@ const determineType = (id: string, data: GraphData): TreeViewElementType => {
   else return 'node';
 };
 
-export default (): ReactElement => {
+export default ({
+  matApiRepo,
+  colApiRepo,
+  dashboardApiRepo,
+  dependencyApiRepo,
+  lineageApiRepo,
+  logicApiRepo,
+  accountApiRepo,
+  integrationApiRepo,
+}: {
+  matApiRepo: MaterializationsApiRepository;
+  colApiRepo: ColumnsApiRepository;
+  dashboardApiRepo: DashboardsApiRepository;
+  dependencyApiRepo: DependenciesApiRepository;
+  lineageApiRepo: LineageApiRepository;
+  logicApiRepo: LogicApiRepository;
+  accountApiRepo: AccountApiRepository;
+  integrationApiRepo: IntegrationApiRepo;
+}): ReactElement => {
   const location = useLocation();
 
   const [searchParams] = useSearchParams();
@@ -693,7 +711,7 @@ export default (): ReactElement => {
     anomalyColor: string
   ): ReactElement => {
     let hasNewAnomaly: { id: string; hasNewAnomaly: boolean } | undefined;
-    if (!showRealData) {
+    if (!appConfig.react.showRealData) {
       hasNewAnomaly = defaultAnomalyStates.find(
         (element) => element.id === column.id
       );
@@ -780,7 +798,7 @@ export default (): ReactElement => {
 
         setJwt(token);
 
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
+        return accountApiRepo.getBy(new URLSearchParams({}), token);
       })
       .then((accounts) => {
         if (!accounts.length) throw new Error(`No accounts found for user`);
@@ -812,7 +830,8 @@ export default (): ReactElement => {
 
     if (slackToken) setSlackAccessToken(slackToken);
     else {
-      IntegrationApiRepo.getSlackProfile(jwt)
+      integrationApiRepo
+        .getSlackProfile(jwt)
         .then((res) => setSlackAccessToken(res ? res.accessToken : ''))
         .catch(() => console.trace('Slack profile retrieval failed'));
     }
@@ -863,39 +882,27 @@ export default (): ReactElement => {
 
     toggleShowSideNav();
 
-    if (showRealData) {
-
-      LineageApiRepository.getLatest(jwt, false)
+    if (appConfig.react.showRealData) {
+      lineageApiRepo
+        .getLatest(jwt, false)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
           setLineage(lineageDto);
-          return MaterializationsApiRepository.getBy(
-            new URLSearchParams({}),
-            jwt
-          );
+          return matApiRepo.getBy(new URLSearchParams({}), jwt);
         })
         .then((materializationDtos) => {
           setMaterializations(materializationDtos);
-          return DashboardsApiRepository.getBy(
-            new URLSearchParams({}),
-            jwt
-          );
+          return dashboardApiRepo.getBy(new URLSearchParams({}), jwt);
         })
         .then((dashboardDtos) => {
           setDashboards(dashboardDtos);
-          return ColumnsApiRepository.getBy(
-            new URLSearchParams({}),
-            jwt
-          );
+          return colApiRepo.getBy(new URLSearchParams({}), jwt);
         })
         .then((columnDtos) => {
           setColumns(columnDtos);
-          return DependenciesApiRepository.getBy(
-            new URLSearchParams({}),
-            jwt
-          );
+          return dependencyApiRepo.getBy(new URLSearchParams({}), jwt);
         })
         .then((dependencyDtos) => {
           setDependencies(dependencyDtos);
@@ -916,7 +923,13 @@ export default (): ReactElement => {
           setIsLoading(false);
         });
     } else {
-      setLineage({ id: 'todo', createdAt: '', completed: true, dbCoveredNames: [], diff: '' });
+      setLineage({
+        id: 'todo',
+        createdAt: '',
+        completed: true,
+        dbCoveredNames: [],
+        diff: '',
+      });
       setReadyToBuild(true);
       setIsLoading(false);
     }
@@ -939,6 +952,7 @@ export default (): ReactElement => {
           <Snowflake
             jwt={jwt}
             parentHandleSaveClick={() => setSnackbarOpen(true)}
+            integrationApiRepo={integrationApiRepo}
           ></Snowflake>
         ),
       },
@@ -951,6 +965,7 @@ export default (): ReactElement => {
             accessToken={githubAccessToken}
             organizationId={account.organizationId}
             jwt={jwt}
+            integrationApiRepo={integrationApiRepo}
           ></Github>
         ),
       },
@@ -962,6 +977,7 @@ export default (): ReactElement => {
             organizationId={account.organizationId}
             accessToken={slackAccessToken}
             jwt={jwt}
+            integrationApiRepo={integrationApiRepo}
           ></Slack>
         ),
       },
@@ -982,31 +998,26 @@ export default (): ReactElement => {
     const testSuiteQuery = `select distinct test_type, id from cito.observability.test_suites
      where target_resource_id = '${selectedNodeId}' and activated = true`;
 
-    IntegrationApiRepo.querySnowflake(
-      testSuiteQuery,
-      account.organizationId,
-      jwt
-    )
+    integrationApiRepo
+      .querySnowflake(testSuiteQuery, account.organizationId, jwt)
       .then((results) => {
         results.forEach((entry: { TEST_TYPE: string; ID: string }) => {
           const testHistoryQuery = `select value from cito.observability.test_history
           where test_suite_id = '${entry.ID}' and test_type = '${entry.TEST_TYPE}'`;
 
-          IntegrationApiRepo.querySnowflake(
-            testHistoryQuery,
-            account.organizationId,
-            jwt
-          ).then((history) => {
-            const valueList: string[] = Object.values(history);
-            const numList = valueList.map((val: string) => parseFloat(val));
+          integrationApiRepo
+            .querySnowflake(testHistoryQuery, account.organizationId, jwt)
+            .then((history) => {
+              const valueList: string[] = Object.values(history);
+              const numList = valueList.map((val: string) => parseFloat(val));
 
-            const newTest = {
-              TEST_TYPE: entry.TEST_TYPE,
-              TEST_SUITE_ID: entry.ID,
-              HISTORY: numList,
-            };
-            definedTests.push(newTest);
-          });
+              const newTest = {
+                TEST_TYPE: entry.TEST_TYPE,
+                TEST_SUITE_ID: entry.ID,
+                HISTORY: numList,
+              };
+              definedTests.push(newTest);
+            });
 
           const alertQuery = `select deviation, executed_on from 
           (cito.observability.alerts join cito.observability.test_results 
@@ -1014,23 +1025,21 @@ export default (): ReactElement => {
             join cito.observability.executions on cito.observability.alerts.test_suite_id = cito.observability.executions.test_suite_id
           where test_suite_id = '${entry.ID}'`;
 
-          IntegrationApiRepo.querySnowflake(
-            alertQuery,
-            account.organizationId,
-            jwt
-          ).then((alerts) => {
-            const valueList: any[] = Object.values(alerts);
-            const alertsForEntry = valueList.map(
-              (value: { DEVIATION: string; EXECUTED_ON: string }) => {
-                return {
-                  date: value.EXECUTED_ON,
-                  type: entry.TEST_TYPE,
-                  deviation: value.DEVIATION,
-                };
-              }
-            );
-            alertList.push(...alertsForEntry);
-          });
+          integrationApiRepo
+            .querySnowflake(alertQuery, account.organizationId, jwt)
+            .then((alerts) => {
+              const valueList: any[] = Object.values(alerts);
+              const alertsForEntry = valueList.map(
+                (value: { DEVIATION: string; EXECUTED_ON: string }) => {
+                  return {
+                    date: value.EXECUTED_ON,
+                    type: entry.TEST_TYPE,
+                    deviation: value.DEVIATION,
+                  };
+                }
+              );
+              alertList.push(...alertsForEntry);
+            });
         });
 
         setAvailableTests(definedTests);
@@ -1062,7 +1071,7 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!readyToBuild) return;
 
-    if (showRealData)
+    if (appConfig.react.showRealData)
       setData(buildData(materializations, columns, dependencies, dashboards));
     else {
       defaultData.nodes.sort(compare);
@@ -1273,7 +1282,7 @@ export default (): ReactElement => {
               hasNewAnomaly: boolean;
             }
           | undefined;
-        if (!showRealData) {
+        if (!appConfig.react.showRealData) {
           anomalyState = defaultAnomalyStates.find(
             (state) => state.id === selectedElementId
           );
@@ -1296,7 +1305,7 @@ export default (): ReactElement => {
                 hasNewAnomaly: boolean;
               }
             | undefined;
-          if (!showRealData) {
+          if (!appConfig.react.showRealData) {
             sourceAnomalyState = defaultAnomalyStates.find(
               (state) => state.id === sourceId
             );
@@ -1393,7 +1402,7 @@ export default (): ReactElement => {
 
         const comboId = event.target.get('id');
 
-        const materializationsToSearch = showRealData
+        const materializationsToSearch = appConfig.react.showRealData
           ? materializations
           : defaultMaterializations;
 
@@ -1412,9 +1421,9 @@ export default (): ReactElement => {
             'Materialization object for selected combo not found'
           );
 
-        if (showRealData) {
+        if (appConfig.react.showRealData) {
           if ('logicId' in combo && combo.logicId) {
-            LogicApiRepository.getOne(combo.logicId, jwt).then((logicDto) => {
+            logicApiRepo.getOne(combo.logicId, jwt).then((logicDto) => {
               if (!logicDto)
                 throw new ReferenceError('Not able to retrieve logic object');
 
@@ -1447,7 +1456,7 @@ export default (): ReactElement => {
     });
 
     const defaultNodeId =
-      showRealData && data.nodes && data.nodes.length
+      appConfig.react.showRealData && data.nodes && data.nodes.length
         ? data.nodes[0].id
         : '62715f907e3d8066494d409f';
 
@@ -1497,13 +1506,16 @@ export default (): ReactElement => {
           isRightPanelShown={isRightPanelShown}
           setIsRightPanelShown={setIsRightPanelShown}
           jwt={jwt}
+          lineageApiRepo={lineageApiRepo}
         />
         {!isDataAvailable && (
           <EmptyStateIntegrations onClick={handleTabIndexChange} />
         )}
         {isLoading ? (
-                <LoadingScreen tailwindCss='fixed flex w-full h-full items-center justify-center' />
-              ) : (<></>)}
+          <LoadingScreen tailwindCss="fixed flex w-full h-full items-center justify-center" />
+        ) : (
+          <></>
+        )}
         <div id="lineage" />
         <div id="sidenav" className="sidenav">
           <div className="mx-4">

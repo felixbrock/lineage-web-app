@@ -1,118 +1,149 @@
-export const serviceDiscoveryNamespace = 'cito';
+const getMode = (): string => {
+  const mode = process.env.REACT_APP_STAGE;
 
-export const mode = process.env.REACT_APP_STAGE;
+  if (!mode) throw new Error('Config error - Mode missing');
 
-const getAuthEnvConfig = (): any => {
-  const authEnvConfig: any = {};
-
-  switch (mode) {
-      case 'development':
-        authEnvConfig.userPoolId = 'eu-central-1_0Z8JhFj8z';
-        authEnvConfig.userPoolWebClientId = '2kt5cdpsbfc53sokgii4l5lecc';
-        authEnvConfig.tokenUrl =
-          '';
-        break;
-      case 'test':
-        authEnvConfig.userPoolId = '';
-        authEnvConfig.userPoolWebClientId = '';
-        authEnvConfig.tokenUrl = '';
-        break;
-      case 'production':
-        authEnvConfig.userPoolId = 'eu-central-1_0muGtKMk3';
-        authEnvConfig.userPoolWebClientId = '90hkfejkd81bp3ta5gd80hanp';
-        authEnvConfig.tokenUrl = '';
-        break;
-      default:
-        break;
-  }
-
-  return authEnvConfig;
+  return mode;
 };
 
-export const authEnvConfig = getAuthEnvConfig();
+interface UserPoolConfig {
+  userPoolId: string;
+  userPoolWebClientId: string;
+  tokenUrl: string;
+}
 
-const getOAuthEnvConfig = (): any => {
-  const oAuthEnvConfig: any = {};
-
-  switch (mode) {
+const getUserPoolConfig = (): UserPoolConfig => {
+  let userPoolId: string, userPoolWebClientId: string, tokenUrl: string;
+  switch (process.env.REACT_APP_STAGE) {
     case 'development':
-      oAuthEnvConfig.domain =
-        'auth-cito-dev.auth.eu-central-1.amazoncognito.com';
-      oAuthEnvConfig.redirectSignIn = 'http://localhost:3006';
-      oAuthEnvConfig.redirectSignOut = 'http://localhost:3006';
-      break;
-    case 'test':
-      oAuthEnvConfig.domain = 'auth-cito-staging.auth.eu-central-1.amazoncognito.com';
-      oAuthEnvConfig.redirectSignIn = 'https://www.app-staging.citodata.com';
-      oAuthEnvConfig.redirectSignOut = 'https://www.app-staging.citodata.com';
+      userPoolId = 'eu-central-1_0Z8JhFj8z';
+      userPoolWebClientId = '2kt5cdpsbfc53sokgii4l5lecc';
+      tokenUrl = '';
       break;
     case 'production':
-      oAuthEnvConfig.domain = 'auth.citodata.com';
-      oAuthEnvConfig.redirectSignIn = 'https://www.app.citodata.com';
-      oAuthEnvConfig.redirectSignOut = 'https://www.app.citodata.com';
+      userPoolId = 'eu-central-1_0muGtKMk3';
+      userPoolWebClientId = '90hkfejkd81bp3ta5gd80hanp';
+      tokenUrl = '';
       break;
     default:
-      break;
+      throw new Error('Unexpected mode');
   }
 
-  return oAuthEnvConfig;
+  return { userPoolId, userPoolWebClientId, tokenUrl };
 };
 
-export const oAuthEnvConfig = getOAuthEnvConfig();
+interface OAuthEnvConfig {
+  domain: string;
+  redirectSignIn: string;
+  redirectSignOut: string;
+}
 
-interface SlackConfig {slackClientId: string, slackClientSecret:string}; 
-
-const getSlackConfig = (): SlackConfig  => {
-  const slackConfig : any = {};
-
-
-  switch (mode) {
+const getOAuthEnvConfig = (): OAuthEnvConfig => {
+  let domain: string, redirectSignIn: string, redirectSignOut: string;
+  switch (process.env.REACT_APP_STAGE) {
     case 'development':
-      slackConfig.slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID_DEV || '';
-      slackConfig.slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET_DEV || '';
-      break;
-    case 'test':
-      slackConfig.slackClientId = '';
-      slackConfig.slackClientSecret = '';
+      domain = 'auth-cito-dev.auth.eu-central-1.amazoncognito.com';
+      redirectSignIn = 'http://localhost:3006';
+      redirectSignOut = 'http://localhost:3006';
       break;
     case 'production':
-      slackConfig.slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID || '';
-      slackConfig.slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET || '';
+      domain = 'auth.citodata.com';
+      redirectSignIn = 'https://www.app.citodata.com';
+      redirectSignOut = 'https://www.app.citodata.com';
       break;
     default:
-      throw new Error('app stage not found');
+      throw new Error('Unexpected mode');
   }
 
-  return slackConfig;
+  return { domain, redirectSignIn, redirectSignOut };
 };
 
-export const slackConfig = getSlackConfig();
+interface SlackConfig {
+  slackClientId: string;
+  slackClientSecret: string;
+}
 
-interface GithubConfig {githubClientId: string, githubClientSecret:string}; 
-
-const getGithubConfig = (): GithubConfig  => {
-  const githubConfig : any = {};
-
-  switch (mode) {
+const getSlackConfig = (): SlackConfig => {
+  let slackClientId: string | undefined, slackClientSecret: string | undefined;
+  switch (process.env.REACT_APP_STAGE) {
     case 'development':
-      githubConfig.githubClientId = process.env.REACT_APP_GITHUB_CLIENT_ID || '';
-      githubConfig.githubClientSecret = process.env.REACT_APP_GITHUB_CLIENT_SECRET || '';
-      break;
-    case 'test':
-      githubConfig.githubClientId = '';
-      githubConfig.githubClientSecret = '';
+      slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID_DEV;
+      slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET_DEV;
       break;
     case 'production':
-      githubConfig.githubClientId = process.env.REACT_APP_GITHUB_CLIENT_ID || '';
-      githubConfig.githubClientSecret = process.env.REACT_APP_GITHUB_CLIENT_SECRET || '';
+      slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID;
+      slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET;
       break;
     default:
-      throw new Error('app stage not found');
+      throw new Error('Unexpected mode');
   }
 
-  return githubConfig;
+  if (!slackClientId || !slackClientSecret)
+    throw new Error('Missing Slack config');
+
+  return { slackClientId, slackClientSecret };
 };
 
-export const githubConfig = getGithubConfig();
+interface BaseUrlConfig {
+  accountService: string;
+  observabilityService: string;
+  integrationService: string;
+  lineageService: string;
+}
 
-export const showRealData = !process.env.REACT_APP_SHOW_REAL_DATA? true : process.env.REACT_APP_SHOW_REAL_DATA === 'true';
+const getBaseUrlConfig = (): BaseUrlConfig => {
+  let accountService: string | undefined,
+    observabilityService: string | undefined,
+    integrationService: string | undefined,
+    lineageService: string | undefined;
+  switch (process.env.REACT_APP_STAGE) {
+    case 'development':
+      accountService = process.env.REACT_APP_BASE_URL_ACCOUNT;
+      observabilityService =
+        process.env.REACT_APP_BASE_URL_DATA_OBSERVABILITY_DEV;
+      integrationService =
+        process.env.REACT_APP_BASE_URL_INTEGRATION_SERVICE_DEV;
+      lineageService = process.env.REACT_APP_BASE_URL_LINEAGE_ANALYSIS_DEV;
+      break;
+    case 'production':
+      accountService = process.env.REACT_APP_BASE_URL_ACCOUNT;
+      observabilityService = process.env.REACT_APP_BASE_URL_DATA_OBSERVABILITY;
+      integrationService = process.env.REACT_APP_BASE_URL_INTEGRATION_SERVICE;
+      lineageService = process.env.REACT_APP_BASE_URL_LINEAGE_ANALYSIS;
+      break;
+    default:
+      throw new Error('Unexpected mode');
+  }
+
+  if (
+    !accountService ||
+    !observabilityService ||
+    !integrationService ||
+    !lineageService
+  )
+    throw new Error('Missing base url config');
+
+  return {
+    accountService,
+    observabilityService,
+    integrationService,
+    lineageService,
+  };
+};
+
+const appConfig = {
+  react: {
+    mode: getMode(),
+    showRealData: !process.env.REACT_APP_SHOW_REAL_DATA
+      ? true
+      : process.env.REACT_APP_SHOW_REAL_DATA === 'true',
+  },
+  cloud: {
+    userPoolConfig: getUserPoolConfig(),
+  },
+  oauth: getOAuthEnvConfig(),
+  slack: getSlackConfig(),
+  baseUrl: getBaseUrlConfig(),
+};
+
+export default appConfig;

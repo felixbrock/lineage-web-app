@@ -10,14 +10,14 @@ import {
   FormControl,
   Divider,
 } from '@mui/material';
-import { mode, slackConfig } from '../../../config';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 import SlackConversationInfoDto from '../../../infrastructure/integration-api/slack-channel-info-dto';
 import SlackProfileDto from '../../../infrastructure/integration-api/slack-profile-dto';
 import './slack.scss';
+import appConfig from '../../../config';
 
 const buildOAuthUrl = (organizationId: string) => {
-  const clientId = encodeURIComponent(slackConfig.slackClientId);
+  const clientId = encodeURIComponent(appConfig.slack.slackClientId);
   const scopes = encodeURIComponent(
     'channels:read,channels:join,channels:manage,chat:write,groups:read,groups:write,im:read,im:write,mpim:read,mpim:write'
   );
@@ -29,12 +29,14 @@ interface SlackProps {
   organizationId: string;
   accessToken?: string;
   jwt: string;
+  integrationApiRepo: IntegrationApiRepo;
 }
 
 export default ({
   accessToken,
   organizationId,
   jwt,
+  integrationApiRepo
 }: SlackProps): ReactElement => {
   const [channels, setChannels] = useState<SlackConversationInfoDto[]>([]);
   const [selectedChannelId, setSelectedChannelId] = useState('');
@@ -54,7 +56,7 @@ export default ({
     const slackAccessToken = accessToken || profile?.accessToken;
 
     if (slackAccessToken)
-      await IntegrationApiRepo.joinSlackConversation(
+      await integrationApiRepo.joinSlackConversation(
         oldChannelId,
         channelId,
         slackAccessToken,
@@ -62,13 +64,13 @@ export default ({
       );
 
     if (profile) {
-      await IntegrationApiRepo.updateSlackProfile(
+      await integrationApiRepo.updateSlackProfile(
         { channelId, channelName },
         jwt
       );
       setProfile({ ...profile, channelId, channelName });
     } else if (accessToken) {
-      const slackProfile = await IntegrationApiRepo.postSlackProfile(
+      const slackProfile = await integrationApiRepo.postSlackProfile(
         { accessToken, channelId, channelName },
         jwt
       );
@@ -81,14 +83,14 @@ export default ({
   };
 
   useEffect(() => {
-    IntegrationApiRepo.getSlackConversations(
+    integrationApiRepo.getSlackConversations(
       new URLSearchParams(accessToken ? { accessToken } : {}),
       jwt
     )
       .then((res) => {
         setChannels(res);
 
-        return IntegrationApiRepo.getSlackProfile(jwt);
+        return integrationApiRepo.getSlackProfile(jwt);
       })
       .then((res) => {
         if (res) {
@@ -117,7 +119,7 @@ export default ({
 
       <Divider />
 
-      {mode === 'production' ? (
+      {appConfig.react.mode === 'production' ? (
         <div className="integration-button">
           <a href={buildOAuthUrl(organizationId)}>
             <img

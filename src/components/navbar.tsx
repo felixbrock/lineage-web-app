@@ -29,7 +29,8 @@ export default function Navbar({
   isRightPanelShown,
   setIsRightPanelShown,
   jwt,
-}: any) {
+  lineageApiRepo
+}: {lineageApiRepo: LineageApiRepository, [key:string]: any}) {
   const [isLeftPanelShown, setIsLeftPanelShown] = useState(true);
 
   const [snapshotState, setSnapshotState] = useState<SnapshotState>('loading');
@@ -72,7 +73,7 @@ export default function Navbar({
     const state: SnapshotState = 'creating';
     setSnapshotState(state);
     setSnapshotInfo(getSnapshotInfo(state));
-    LineageApiRepository.create(jwt);
+    lineageApiRepo.create(jwt);
   };
 
   function toggleRightPanel() {
@@ -96,7 +97,7 @@ export default function Navbar({
   useEffect(() => {
     if (!jwt) return;
 
-    LineageApiRepository.getLatest(jwt, true)
+    lineageApiRepo.getLatest(jwt, true)
       .then((snapshot) => {
         let state: SnapshotState = 'not available';
         if (!snapshot) {

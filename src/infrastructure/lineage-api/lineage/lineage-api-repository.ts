@@ -1,34 +1,27 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { mode } from '../../../config';
-import getRoot from '../../shared/api-root-builder';
+import appConfig from '../../../config';
 import LineageDto from './lineage-dto';
 
 // TODO - Implement Interface regarding clean architecture
 export default class LineageApiRepository {
-  private static gateway =
-    mode === 'production'
-      ? 'kga7x5r9la.execute-api.eu-central-1.amazonaws.com/production'
-      : 'localhost:3000';
+  private version = 'v1';
+  
+  private apiRoot =  'api';
 
-  private static path = 'api/v1';
+  private baseUrl = appConfig.baseUrl.lineageService;
 
-  private static root = getRoot(
-    LineageApiRepository.gateway,
-    LineageApiRepository.path
-  );
-
-  public static getOne = async (
+  getOne = async (
     id: string,
     jwt: string
   ): Promise<LineageDto | null> => {
     try {
-      const apiRoot = await LineageApiRepository.root;
+      
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
-      const response = await axios.get(`${apiRoot}/lineage/${id}`, config);
+      const response = await axios.get(`${this.baseUrl}/${this.apiRoot}/${this.version}/lineage/${id}`, config);
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);
@@ -37,16 +30,16 @@ export default class LineageApiRepository {
     }
   };
 
-  public static getLatest = async (jwt: string, tolerateIncomplete: boolean): Promise<LineageDto | null> => {
+  getLatest = async (jwt: string, tolerateIncomplete: boolean): Promise<LineageDto | null> => {
     try {
-      const apiRoot = await LineageApiRepository.root;
+      
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
         params: new URLSearchParams({ tolerateIncomplete: tolerateIncomplete.toString() }),
       };
 
-      const response = await axios.get(`${apiRoot}/lineage/`, config);
+      const response = await axios.get(`${this.baseUrl}/${this.apiRoot}/${this.version}/lineage/`, config);
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);
@@ -55,16 +48,16 @@ export default class LineageApiRepository {
     }
   };
 
-  static create = async (jwt: string) => {
+  create = async (jwt: string) => {
     try {
-      const apiRoot = await LineageApiRepository.root;
+      
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
       const response = await axios.post(
-        `${apiRoot}/lineage/`,
+        `${this.baseUrl}/${this.apiRoot}/${this.version}/lineage/`,
         undefined,
         config
       );

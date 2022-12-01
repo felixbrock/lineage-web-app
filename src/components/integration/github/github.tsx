@@ -3,18 +3,19 @@ import { ReactElement, useEffect, useState } from 'react';
 import GithubApiRepo from '../../../infrastructure/github-api/github-api-repo';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 import { BiGitBranch } from 'react-icons/bi';
-import { mode } from '../../../config';
 import {
   ButtonBig,
   ButtonSmall,
 } from '../../../pages/lineage/components/buttons';
 import LoadingScreen from '../../loading-screen';
+import appConfig from '../../../config';
 
 interface GithubProps {
   installationId?: string;
   accessToken?: string;
   organizationId: string;
   jwt: string;
+  integrationApiRepo: IntegrationApiRepo;
 }
 
 interface RepoNameResult {
@@ -27,6 +28,7 @@ export default ({
   accessToken,
   organizationId,
   jwt,
+  integrationApiRepo,
 }: GithubProps): ReactElement => {
   const [repoNameResult, setRepoNameResult] = useState<RepoNameResult>({
     repoNames: [],
@@ -48,10 +50,8 @@ export default ({
           console.trace(error);
         });
     } else {
-      IntegrationApiRepo.getGithubProfile(
-        new URLSearchParams({ organizationId }),
-        jwt
-      )
+      integrationApiRepo
+        .getGithubProfile(new URLSearchParams({ organizationId }), jwt)
         .then((profile) => {
           if (profile)
             setRepoNameResult({
@@ -71,17 +71,15 @@ export default ({
     setIsLoading(false);
 
     if (installationId && accessToken)
-      IntegrationApiRepo.getGithubProfile(
-        new URLSearchParams({ organizationId }),
-        jwt
-      )
+      integrationApiRepo
+        .getGithubProfile(new URLSearchParams({ organizationId }), jwt)
         .then((profile) => {
           if (profile)
-            return IntegrationApiRepo.updateGithubProfile(
+            return integrationApiRepo.updateGithubProfile(
               { installationId },
               jwt
             );
-          return IntegrationApiRepo.postGithubProfile(
+          return integrationApiRepo.postGithubProfile(
             {
               installationId,
               organizationId,
@@ -97,12 +95,14 @@ export default ({
 
   return (
     <>
-      {isLoading && <LoadingScreen tailwindCss='flex w-full items-center justify-center'/>}
+      {isLoading && (
+        <LoadingScreen tailwindCss="flex w-full items-center justify-center" />
+      )}
       {!isLoading && repoNameResult.repoNames.length === 0 && (
         <div className="flex w-full items-center justify-center">
           <a
             href={`https://github.com/apps/${
-              mode === 'development' ? 'cito-data-dev' : 'cito-data'
+              appConfig.react.mode === 'development' ? 'cito-data-dev' : 'cito-data'
             }/installations/new?state=${organizationId}`}
           >
             <ButtonBig
@@ -119,7 +119,7 @@ export default ({
             <p className="caption">Installed on Following Repositories:</p>
             <a
               href={`https://github.com/apps/${
-                mode === 'development' ? 'cito-data-dev' : 'cito-data'
+                appConfig.react.mode === 'development' ? 'cito-data-dev' : 'cito-data'
               }/installations/new?state=${organizationId}`}
             >
               <ButtonSmall

@@ -214,7 +214,21 @@ const tableHeaderCellSx = {
 };
 const tableNameSx = { mt: '0px', mb: '0px', mr: '2px', ml: '2px' };
 
-export default (): ReactElement => {
+export default (
+  {
+    observabilityApiRepo,
+    matApiRepo,
+    colApiRepo,
+    lineageApiRepo,
+    accountApiRepo,
+  }: {
+    observabilityApiRepo: ObservabilityApiRepo
+    matApiRepo: MaterializationsApiRepository;
+    colApiRepo: ColumnsApiRepository;
+    lineageApiRepo: LineageApiRepository;
+    accountApiRepo: AccountApiRepository;
+  }
+): ReactElement => {
   const [account, setAccount] = useState<AccountDto>();
   const [user, setUser] = useState<any>();
   const [jwt, setJwt] = useState('');
@@ -332,7 +346,7 @@ export default (): ReactElement => {
       return getColumnUpdateObject(value, test.testSuiteId);
     });
 
-    ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
+    observabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     if (!isNaN(Number(value))) {
       const numValue = Number(value);
@@ -425,7 +439,7 @@ export default (): ReactElement => {
       .flat()
       .filter(isUpdateObject);
 
-    ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
+    observabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     setTestSelection({ ...testSelectionLocal });
   };
@@ -548,7 +562,7 @@ export default (): ReactElement => {
 
       if (!column) throw new Error('Column not found');
 
-      const testSuite = await ObservabilityApiRepo.postTestSuites(
+      const testSuite = await observabilityApiRepo.postTestSuites(
         [
           {
             activated: newActivatedValue,
@@ -573,7 +587,7 @@ export default (): ReactElement => {
 
       setTestSelection({ ...testSelectionLocal });
     } else
-      ObservabilityApiRepo.updateTestSuites(
+      observabilityApiRepo.updateTestSuites(
         [{ id: testSuiteId, props: {activated: newActivatedValue} }],
         jwt
       );
@@ -609,12 +623,12 @@ export default (): ReactElement => {
         .testSuiteId;
     if (testSuiteId) {
       if (type === 'MaterializationSchemaChange')
-        ObservabilityApiRepo.updateNominalTestSuites(
+        observabilityApiRepo.updateNominalTestSuites(
           [{ id: testSuiteId, props: {activated: invertedValueActivated} }],
           jwt
         );
       else
-        ObservabilityApiRepo.updateTestSuites(
+        observabilityApiRepo.updateTestSuites(
           [{ id: testSuiteId, props: {activated: invertedValueActivated} }],
           jwt
         );
@@ -630,7 +644,7 @@ export default (): ReactElement => {
     let testSuite: TestSuiteDto | NominalTestSuiteDto;
     if (type === 'MaterializationSchemaChange')
       testSuite = (
-        await ObservabilityApiRepo.postNominalTestSuites(
+        await observabilityApiRepo.postNominalTestSuites(
           [
             {
               activated: invertedValueActivated,
@@ -652,7 +666,7 @@ export default (): ReactElement => {
       )[0];
     else
       testSuite = (
-        await ObservabilityApiRepo.postTestSuites(
+        await observabilityApiRepo.postTestSuites(
           [
             {
               activated: invertedValueActivated,
@@ -773,7 +787,7 @@ export default (): ReactElement => {
       if (testSuiteProps.length !== postObjects.length)
         throw new Error('Test Suite creation misalignment');
 
-      const suites = await ObservabilityApiRepo.postTestSuites(
+      const suites = await observabilityApiRepo.postTestSuites(
         testSuiteProps,
         jwt
       );
@@ -799,7 +813,7 @@ export default (): ReactElement => {
       setTestSelection({ ...testSelectionLocal });
     }
     if (updateObjects.length)
-      await ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
+      await observabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     const activated = testSelectionLocal[props[1]].testDefinitionSummary.some(
       (el) => !!el.activationCount
@@ -1696,7 +1710,7 @@ export default (): ReactElement => {
         const token = accessToken.getJwtToken();
         setJwt(token);
 
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
+        return accountApiRepo.getBy(new URLSearchParams({}), token);
       })
       .then((accounts) => {
         if (!accounts.length) throw new Error(`No accounts found for user`);
@@ -1726,7 +1740,7 @@ export default (): ReactElement => {
 
     const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
     if (!userFeedbackIsAnomaly) return;
-    ObservabilityApiRepo.updateTestHistoryEntry(
+    observabilityApiRepo.updateTestHistoryEntry(
       { alertId, userFeedbackIsAnomaly, testType },
       jwt
     )
@@ -1749,20 +1763,20 @@ export default (): ReactElement => {
 
     if (showRealData) {
 
-      LineageApiRepository.getLatest(jwt, false)
+      lineageApiRepo.getLatest(jwt, false)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
           setLineage(lineageDto);
-          return MaterializationsApiRepository.getBy(
+          return matApiRepo.getBy(
             new URLSearchParams({}),
             jwt
           );
         })
         .then((materializationDtos) => {
           setMaterializations(materializationDtos);
-          return ColumnsApiRepository.getBy(
+          return colApiRepo.getBy(
             new URLSearchParams({}),
             jwt
           );
@@ -1770,11 +1784,11 @@ export default (): ReactElement => {
         .then((columnDtos) => {
           setColumns(columnDtos);
 
-          return ObservabilityApiRepo.getNominalTestSuites(jwt);
+          return observabilityApiRepo.getNominalTestSuites(jwt);
         })
         .then((nominalTestSuiteDtos) => {
           setNominalTestSuites(nominalTestSuiteDtos);
-          return ObservabilityApiRepo.getTestSuites(jwt);
+          return observabilityApiRepo.getTestSuites(jwt);
         })
         .then((testSuiteDtos) => {
           setInitialLoadCompleted(true);
@@ -1821,7 +1835,7 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        <Navbar current="tests" jwt={jwt} />
+        <Navbar current="tests" jwt={jwt} lineageApiRepo={lineageApiRepo} />
         <>
           <div className="items-top relative flex h-20 justify-center">
             <div className="relative mt-2 w-1/4">

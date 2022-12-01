@@ -1,28 +1,27 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { mode } from '../../../config';
-import getRoot from '../../shared/api-root-builder';
+import appConfig from '../../../config';
 import LogicDto from './logic-dto';
 
 // TODO - Implement Interface regarding clean architecture
 export default class LogicApiRepository {
-  private static gateway =  mode === 'production' ? 'kga7x5r9la.execute-api.eu-central-1.amazonaws.com/production' : 'localhost:3000';
+  private version = 'v1';
+  
+  private apiRoot =  'api';
 
-  private static path = 'api/v1';
+  private baseUrl = appConfig.baseUrl.lineageService;
 
-  private static root = getRoot(LogicApiRepository.gateway, LogicApiRepository.path);
-
-  public static getOne = async (
+  getOne = async (
     id: string,
     jwt: string
   ): Promise<LogicDto | null> => {
     try {
-      const apiRoot = await LogicApiRepository.root;
+      
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
-      const response = await axios.get(`${apiRoot}/logic/${id}`, config);
+      const response = await axios.get(`${this.baseUrl}/${this.apiRoot}/${this.version}/logic/${id}`, config);
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);

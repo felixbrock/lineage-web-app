@@ -10,11 +10,11 @@ import {
   FormControl,
   Divider,
 } from '@mui/material';
-import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 import SlackConversationInfoDto from '../../../infrastructure/integration-api/slack-channel-info-dto';
 import SlackProfileDto from '../../../infrastructure/integration-api/slack-profile-dto';
 import './slack.scss';
 import appConfig from '../../../config';
+import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 
 const buildOAuthUrl = (organizationId: string) => {
   const clientId = encodeURIComponent(appConfig.slack.slackClientId);
@@ -29,14 +29,12 @@ interface SlackProps {
   organizationId: string;
   accessToken?: string;
   jwt: string;
-  integrationApiRepo: IntegrationApiRepo;
 }
 
 export default ({
   accessToken,
   organizationId,
   jwt,
-  integrationApiRepo
 }: SlackProps): ReactElement => {
   const [channels, setChannels] = useState<SlackConversationInfoDto[]>([]);
   const [selectedChannelId, setSelectedChannelId] = useState('');
@@ -56,7 +54,7 @@ export default ({
     const slackAccessToken = accessToken || profile?.accessToken;
 
     if (slackAccessToken)
-      await integrationApiRepo.joinSlackConversation(
+      await IntegrationApiRepo.joinSlackConversation(
         oldChannelId,
         channelId,
         slackAccessToken,
@@ -64,13 +62,13 @@ export default ({
       );
 
     if (profile) {
-      await integrationApiRepo.updateSlackProfile(
+      await IntegrationApiRepo.updateSlackProfile(
         { channelId, channelName },
         jwt
       );
       setProfile({ ...profile, channelId, channelName });
     } else if (accessToken) {
-      const slackProfile = await integrationApiRepo.postSlackProfile(
+      const slackProfile = await IntegrationApiRepo.postSlackProfile(
         { accessToken, channelId, channelName },
         jwt
       );
@@ -83,14 +81,14 @@ export default ({
   };
 
   useEffect(() => {
-    integrationApiRepo.getSlackConversations(
+    IntegrationApiRepo.getSlackConversations(
       new URLSearchParams(accessToken ? { accessToken } : {}),
       jwt
     )
       .then((res) => {
         setChannels(res);
 
-        return integrationApiRepo.getSlackProfile(jwt);
+        return IntegrationApiRepo.getSlackProfile(jwt);
       })
       .then((res) => {
         if (res) {

@@ -4,13 +4,13 @@ import DependencyDto from './dependency-dto';
 
 // TODO - Implement Interface regarding clean architecture
 export default class DependenciesApiRepository {
-  private version = 'v1';
+  private static version = 'v1';
   
-  private apiRoot =  'api';
+  private static apiRoot =  'api';
 
-  private baseUrl = appConfig.baseUrl.lineageService;
+  private static baseUrl = appConfig.baseUrl.lineageService;
 
-  getBy = async (
+  static getBy = async (
     params: URLSearchParams,
     jwt: string
   ): Promise<DependencyDto[]> => {
@@ -22,7 +22,7 @@ export default class DependenciesApiRepository {
         params,
       };
 
-      const response = await axios.get(`${this.baseUrl}/${this.apiRoot}/${this.version}/dependencies`, config);
+      const response = await axios.get(`${DependenciesApiRepository.baseUrl}/${DependenciesApiRepository.apiRoot}/${DependenciesApiRepository.version}/dependencies`, config);
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);

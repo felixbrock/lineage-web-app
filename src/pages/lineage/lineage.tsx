@@ -420,25 +420,7 @@ const determineType = (id: string, data: GraphData): TreeViewElementType => {
   else return 'node';
 };
 
-export default ({
-  matApiRepo,
-  colApiRepo,
-  dashboardApiRepo,
-  dependencyApiRepo,
-  lineageApiRepo,
-  logicApiRepo,
-  accountApiRepo,
-  integrationApiRepo,
-}: {
-  matApiRepo: MaterializationsApiRepository;
-  colApiRepo: ColumnsApiRepository;
-  dashboardApiRepo: DashboardsApiRepository;
-  dependencyApiRepo: DependenciesApiRepository;
-  lineageApiRepo: LineageApiRepository;
-  logicApiRepo: LogicApiRepository;
-  accountApiRepo: AccountApiRepository;
-  integrationApiRepo: IntegrationApiRepo;
-}): ReactElement => {
+export default (): ReactElement => {
   const location = useLocation();
 
   const [searchParams] = useSearchParams();
@@ -798,7 +780,7 @@ export default ({
 
         setJwt(token);
 
-        return accountApiRepo.getBy(new URLSearchParams({}), token);
+        return AccountApiRepository.getBy(new URLSearchParams({}), token);
       })
       .then((accounts) => {
         if (!accounts.length) throw new Error(`No accounts found for user`);
@@ -830,7 +812,7 @@ export default ({
 
     if (slackToken) setSlackAccessToken(slackToken);
     else {
-      integrationApiRepo
+      IntegrationApiRepo
         .getSlackProfile(jwt)
         .then((res) => setSlackAccessToken(res ? res.accessToken : ''))
         .catch(() => console.trace('Slack profile retrieval failed'));
@@ -883,26 +865,26 @@ export default ({
     toggleShowSideNav();
 
     if (appConfig.react.showRealData) {
-      lineageApiRepo
+      LineageApiRepository
         .getLatest(jwt, false)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
           setLineage(lineageDto);
-          return matApiRepo.getBy(new URLSearchParams({}), jwt);
+          return MaterializationsApiRepository.getBy(new URLSearchParams({}), jwt);
         })
         .then((materializationDtos) => {
           setMaterializations(materializationDtos);
-          return dashboardApiRepo.getBy(new URLSearchParams({}), jwt);
+          return DashboardsApiRepository.getBy(new URLSearchParams({}), jwt);
         })
         .then((dashboardDtos) => {
           setDashboards(dashboardDtos);
-          return colApiRepo.getBy(new URLSearchParams({}), jwt);
+          return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
         })
         .then((columnDtos) => {
           setColumns(columnDtos);
-          return dependencyApiRepo.getBy(new URLSearchParams({}), jwt);
+          return DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
         })
         .then((dependencyDtos) => {
           setDependencies(dependencyDtos);
@@ -952,7 +934,6 @@ export default ({
           <Snowflake
             jwt={jwt}
             parentHandleSaveClick={() => setSnackbarOpen(true)}
-            integrationApiRepo={integrationApiRepo}
           ></Snowflake>
         ),
       },
@@ -965,7 +946,6 @@ export default ({
             accessToken={githubAccessToken}
             organizationId={account.organizationId}
             jwt={jwt}
-            integrationApiRepo={integrationApiRepo}
           ></Github>
         ),
       },
@@ -977,7 +957,6 @@ export default ({
             organizationId={account.organizationId}
             accessToken={slackAccessToken}
             jwt={jwt}
-            integrationApiRepo={integrationApiRepo}
           ></Slack>
         ),
       },
@@ -998,14 +977,14 @@ export default ({
     const testSuiteQuery = `select distinct test_type, id from cito.observability.test_suites
      where target_resource_id = '${selectedNodeId}' and activated = true`;
 
-    integrationApiRepo
+    IntegrationApiRepo
       .querySnowflake(testSuiteQuery, account.organizationId, jwt)
       .then((results) => {
         results.forEach((entry: { TEST_TYPE: string; ID: string }) => {
           const testHistoryQuery = `select value from cito.observability.test_history
           where test_suite_id = '${entry.ID}' and test_type = '${entry.TEST_TYPE}'`;
 
-          integrationApiRepo
+          IntegrationApiRepo
             .querySnowflake(testHistoryQuery, account.organizationId, jwt)
             .then((history) => {
               const valueList: string[] = Object.values(history);
@@ -1025,7 +1004,7 @@ export default ({
             join cito.observability.executions on cito.observability.alerts.test_suite_id = cito.observability.executions.test_suite_id
           where test_suite_id = '${entry.ID}'`;
 
-          integrationApiRepo
+          IntegrationApiRepo
             .querySnowflake(alertQuery, account.organizationId, jwt)
             .then((alerts) => {
               const valueList: any[] = Object.values(alerts);
@@ -1423,7 +1402,7 @@ export default ({
 
         if (appConfig.react.showRealData) {
           if ('logicId' in combo && combo.logicId) {
-            logicApiRepo.getOne(combo.logicId, jwt).then((logicDto) => {
+            LogicApiRepository.getOne(combo.logicId, jwt).then((logicDto) => {
               if (!logicDto)
                 throw new ReferenceError('Not able to retrieve logic object');
 
@@ -1506,7 +1485,6 @@ export default ({
           isRightPanelShown={isRightPanelShown}
           setIsRightPanelShown={setIsRightPanelShown}
           jwt={jwt}
-          lineageApiRepo={lineageApiRepo}
         />
         {!isDataAvailable && (
           <EmptyStateIntegrations onClick={handleTabIndexChange} />

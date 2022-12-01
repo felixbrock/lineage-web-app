@@ -58,13 +58,13 @@ export type UpdateNominalTestSuiteObject = BaseUpdateTestSuiteObject;
 
 // TODO - Implement Interface regarding clean architecture
 export default class ObservabilityApiRepo {
-  private version = 'v1';
+  private static version = 'v1';
 
-  private apiRoot = 'api';
+  private static apiRoot = 'api';
 
-  private baseUrl = appConfig.baseUrl.lineageService;
+  private static baseUrl = appConfig.baseUrl.observabilityService;
 
-  postTestSuites = async (
+  static postTestSuites = async (
     postTestSuiteObjects: TestSuiteProps[],
     jwt: string
   ): Promise<TestSuiteDto[]> => {
@@ -76,7 +76,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.post(
-        `${this.baseUrl}/${this.apiRoot}/${this.version}/test-suites`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-suites`,
         payload,
         config
       );
@@ -88,7 +88,7 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  postNominalTestSuites = async (
+  static postNominalTestSuites = async (
     postTestSuiteObjects: NominalTestSuiteProps[],
     jwt: string
   ): Promise<NominalTestSuiteDto[]> => {
@@ -100,7 +100,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.post(
-        `${this.baseUrl}/${this.apiRoot}/${this.version}/nominal-test-suites`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/nominal-test-suites`,
         payload,
         config
       );
@@ -112,7 +112,7 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  updateTestSuites = async (
+  static updateTestSuites = async (
     updateObjects: UpdateTestSuiteObject[],
     jwt: string
   ): Promise<void> => {
@@ -124,7 +124,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.patch(
-        `${this.baseUrl}/${this.apiRoot}/${this.version}/test-suites`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-suites`,
         payload,
         config
       );
@@ -136,7 +136,7 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  updateNominalTestSuites = async (
+  static updateNominalTestSuites = async (
     updateObjects: UpdateNominalTestSuiteObject[],
     jwt: string
   ): Promise<void> => {
@@ -148,7 +148,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.patch(
-        `${this.baseUrl}/${this.apiRoot}/${this.version}/nominal-test-suites`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/nominal-test-suites`,
         payload,
         config
       );
@@ -160,14 +160,14 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  getTestSuites = async (jwt: string): Promise<TestSuiteDto[]> => {
+  static getTestSuites = async (jwt: string): Promise<TestSuiteDto[]> => {
     try {
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
       const response = await axios.get(
-        `${this.baseUrl}/${this.apiRoot}/${this.version}/test-suites`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-suites`,
         config
       );
       const jsonResponse = response.data;
@@ -178,7 +178,7 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  getNominalTestSuites = async (
+  static getNominalTestSuites = async (
     jwt: string
   ): Promise<NominalTestSuiteDto[]> => {
     try {
@@ -187,7 +187,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.get(
-        `${this.baseUrl}/${this.apiRoot}/${this.version}/nominal-test-suites`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/nominal-test-suites`,
         config
       );
       const jsonResponse = response.data;
@@ -198,7 +198,7 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  updateTestHistoryEntry = async (
+  static updateTestHistoryEntry = async (
     updateTestHistoryEntryDto: UpdateTestHistoryEntryDto,
     jwt: string
   ): Promise<unknown> => {
@@ -213,7 +213,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.patch(
-        `${this.baseUrl}/${this.apiRoot}/${this.version}/test-data/history/${updateTestHistoryEntryDto.alertId}`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-data/history/${updateTestHistoryEntryDto.alertId}`,
         data,
         config
       );

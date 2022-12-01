@@ -4,13 +4,13 @@ import ColumnDto from './column-dto';
 
 // TODO - Implement Interface regarding clean architecture
 export default class ColumnsApiRepository {
-  private version = 'v1';
+  private static version = 'v1';
   
-  private apiRoot =  'api';
+  private static apiRoot =  'api';
 
-  private baseUrl = appConfig.baseUrl.lineageService;
+  private static baseUrl = appConfig.baseUrl.lineageService;
 
-  getBy = async (
+  static getBy = async (
     params: URLSearchParams,
     jwt: string
   ): Promise<ColumnDto[]> => {
@@ -22,7 +22,7 @@ export default class ColumnsApiRepository {
         params,
       };
 
-      const response = await axios.get(`${this.baseUrl}/${this.apiRoot}/${this.version}/columns`, config);
+      const response = await axios.get(`${ColumnsApiRepository.baseUrl}/${ColumnsApiRepository.apiRoot}/${ColumnsApiRepository.version}/columns`, config);
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);

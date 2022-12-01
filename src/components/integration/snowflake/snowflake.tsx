@@ -5,12 +5,11 @@ import IntegrationApiRepo from '../../../infrastructure/integration-api/integrat
 
 interface SnowflakeProps {
   jwt: string;
-  integrationApiRepo: IntegrationApiRepo;
   parentHandleSaveClick: ()=> unknown
 }
 
   
-export default ({ jwt, integrationApiRepo,  parentHandleSaveClick }: SnowflakeProps): ReactElement => {
+export default ({ jwt,  parentHandleSaveClick }: SnowflakeProps): ReactElement => {
   const [buttonText, setButtonText] = useState('Save');
   const [form, setForm] = useState({
     accountId: '',
@@ -20,21 +19,21 @@ export default ({ jwt, integrationApiRepo,  parentHandleSaveClick }: SnowflakePr
   });
 
   const handleSaveClick = async (): Promise<void> => {
-    const snowflakeProfile = await integrationApiRepo.getSnowflakeProfile(jwt);
+    const snowflakeProfile = await IntegrationApiRepo.getSnowflakeProfile(jwt);
 
     if (!snowflakeProfile)
-      await integrationApiRepo.postSnowflakeProfile(form, jwt);
-    else await integrationApiRepo.updateSnowflakeProfile(form, jwt);
+      await IntegrationApiRepo.postSnowflakeProfile(form, jwt);
+    else await IntegrationApiRepo.updateSnowflakeProfile(form, jwt);
 
     setButtonText('Saved');
 
     parentHandleSaveClick();
 
-    await integrationApiRepo.postSnowflakeEnvironment(jwt);
+    await IntegrationApiRepo.postSnowflakeEnvironment(jwt);
   };
 
   useEffect(() => {
-    integrationApiRepo.getSnowflakeProfile(jwt)
+    IntegrationApiRepo.getSnowflakeProfile(jwt)
       .then((res) => {
         if (!res) return;
 

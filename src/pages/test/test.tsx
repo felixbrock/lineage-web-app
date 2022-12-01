@@ -215,19 +215,6 @@ const tableHeaderCellSx = {
 const tableNameSx = { mt: '0px', mb: '0px', mr: '2px', ml: '2px' };
 
 export default (
-  {
-    observabilityApiRepo,
-    matApiRepo,
-    colApiRepo,
-    lineageApiRepo,
-    accountApiRepo,
-  }: {
-    observabilityApiRepo: ObservabilityApiRepo
-    matApiRepo: MaterializationsApiRepository;
-    colApiRepo: ColumnsApiRepository;
-    lineageApiRepo: LineageApiRepository;
-    accountApiRepo: AccountApiRepository;
-  }
 ): ReactElement => {
   const [account, setAccount] = useState<AccountDto>();
   const [user, setUser] = useState<any>();
@@ -346,7 +333,7 @@ export default (
       return getColumnUpdateObject(value, test.testSuiteId);
     });
 
-    observabilityApiRepo.updateTestSuites(updateObjects, jwt);
+    ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     if (!isNaN(Number(value))) {
       const numValue = Number(value);
@@ -439,7 +426,7 @@ export default (
       .flat()
       .filter(isUpdateObject);
 
-    observabilityApiRepo.updateTestSuites(updateObjects, jwt);
+    ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     setTestSelection({ ...testSelectionLocal });
   };
@@ -562,7 +549,7 @@ export default (
 
       if (!column) throw new Error('Column not found');
 
-      const testSuite = await observabilityApiRepo.postTestSuites(
+      const testSuite = await ObservabilityApiRepo.postTestSuites(
         [
           {
             activated: newActivatedValue,
@@ -587,7 +574,7 @@ export default (
 
       setTestSelection({ ...testSelectionLocal });
     } else
-      observabilityApiRepo.updateTestSuites(
+      ObservabilityApiRepo.updateTestSuites(
         [{ id: testSuiteId, props: {activated: newActivatedValue} }],
         jwt
       );
@@ -623,12 +610,12 @@ export default (
         .testSuiteId;
     if (testSuiteId) {
       if (type === 'MaterializationSchemaChange')
-        observabilityApiRepo.updateNominalTestSuites(
+        ObservabilityApiRepo.updateNominalTestSuites(
           [{ id: testSuiteId, props: {activated: invertedValueActivated} }],
           jwt
         );
       else
-        observabilityApiRepo.updateTestSuites(
+        ObservabilityApiRepo.updateTestSuites(
           [{ id: testSuiteId, props: {activated: invertedValueActivated} }],
           jwt
         );
@@ -644,7 +631,7 @@ export default (
     let testSuite: TestSuiteDto | NominalTestSuiteDto;
     if (type === 'MaterializationSchemaChange')
       testSuite = (
-        await observabilityApiRepo.postNominalTestSuites(
+        await ObservabilityApiRepo.postNominalTestSuites(
           [
             {
               activated: invertedValueActivated,
@@ -666,7 +653,7 @@ export default (
       )[0];
     else
       testSuite = (
-        await observabilityApiRepo.postTestSuites(
+        await ObservabilityApiRepo.postTestSuites(
           [
             {
               activated: invertedValueActivated,
@@ -787,7 +774,7 @@ export default (
       if (testSuiteProps.length !== postObjects.length)
         throw new Error('Test Suite creation misalignment');
 
-      const suites = await observabilityApiRepo.postTestSuites(
+      const suites = await ObservabilityApiRepo.postTestSuites(
         testSuiteProps,
         jwt
       );
@@ -813,7 +800,7 @@ export default (
       setTestSelection({ ...testSelectionLocal });
     }
     if (updateObjects.length)
-      await observabilityApiRepo.updateTestSuites(updateObjects, jwt);
+      await ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     const activated = testSelectionLocal[props[1]].testDefinitionSummary.some(
       (el) => !!el.activationCount
@@ -1710,7 +1697,7 @@ export default (
         const token = accessToken.getJwtToken();
         setJwt(token);
 
-        return accountApiRepo.getBy(new URLSearchParams({}), token);
+        return AccountApiRepository.getBy(new URLSearchParams({}), token);
       })
       .then((accounts) => {
         if (!accounts.length) throw new Error(`No accounts found for user`);
@@ -1740,7 +1727,7 @@ export default (
 
     const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
     if (!userFeedbackIsAnomaly) return;
-    observabilityApiRepo.updateTestHistoryEntry(
+    ObservabilityApiRepo.updateTestHistoryEntry(
       { alertId, userFeedbackIsAnomaly, testType },
       jwt
     )
@@ -1763,20 +1750,20 @@ export default (
 
     if (showRealData) {
 
-      lineageApiRepo.getLatest(jwt, false)
+      LineageApiRepository.getLatest(jwt, false)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
           setLineage(lineageDto);
-          return matApiRepo.getBy(
+          return MaterializationsApiRepository.getBy(
             new URLSearchParams({}),
             jwt
           );
         })
         .then((materializationDtos) => {
           setMaterializations(materializationDtos);
-          return colApiRepo.getBy(
+          return ColumnsApiRepository.getBy(
             new URLSearchParams({}),
             jwt
           );
@@ -1784,11 +1771,11 @@ export default (
         .then((columnDtos) => {
           setColumns(columnDtos);
 
-          return observabilityApiRepo.getNominalTestSuites(jwt);
+          return ObservabilityApiRepo.getNominalTestSuites(jwt);
         })
         .then((nominalTestSuiteDtos) => {
           setNominalTestSuites(nominalTestSuiteDtos);
-          return observabilityApiRepo.getTestSuites(jwt);
+          return ObservabilityApiRepo.getTestSuites(jwt);
         })
         .then((testSuiteDtos) => {
           setInitialLoadCompleted(true);
@@ -1835,7 +1822,7 @@ export default (
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        <Navbar current="tests" jwt={jwt} lineageApiRepo={lineageApiRepo} />
+        <Navbar current="tests" jwt={jwt} />
         <>
           <div className="items-top relative flex h-20 justify-center">
             <div className="relative mt-2 w-1/4">

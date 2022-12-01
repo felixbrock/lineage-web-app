@@ -4,13 +4,13 @@ import LineageDto from './lineage-dto';
 
 // TODO - Implement Interface regarding clean architecture
 export default class LineageApiRepository {
-  private version = 'v1';
+  private static version = 'v1';
   
-  private apiRoot =  'api';
+  private static apiRoot =  'api';
 
-  private baseUrl = appConfig.baseUrl.lineageService;
+  private static baseUrl = appConfig.baseUrl.lineageService;
 
-  getOne = async (
+  static getOne = async (
     id: string,
     jwt: string
   ): Promise<LineageDto | null> => {
@@ -21,7 +21,7 @@ export default class LineageApiRepository {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
-      const response = await axios.get(`${this.baseUrl}/${this.apiRoot}/${this.version}/lineage/${id}`, config);
+      const response = await axios.get(`${LineageApiRepository.baseUrl}/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/${id}`, config);
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);
@@ -30,7 +30,7 @@ export default class LineageApiRepository {
     }
   };
 
-  getLatest = async (jwt: string, tolerateIncomplete: boolean): Promise<LineageDto | null> => {
+  static getLatest = async (jwt: string, tolerateIncomplete: boolean): Promise<LineageDto | null> => {
     try {
       
 
@@ -39,7 +39,7 @@ export default class LineageApiRepository {
         params: new URLSearchParams({ tolerateIncomplete: tolerateIncomplete.toString() }),
       };
 
-      const response = await axios.get(`${this.baseUrl}/${this.apiRoot}/${this.version}/lineage/`, config);
+      const response = await axios.get(`${LineageApiRepository.baseUrl}/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/`, config);
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);
@@ -48,7 +48,7 @@ export default class LineageApiRepository {
     }
   };
 
-  create = async (jwt: string) => {
+  static create = async (jwt: string) => {
     try {
       
 
@@ -57,7 +57,7 @@ export default class LineageApiRepository {
       };
 
       const response = await axios.post(
-        `${this.baseUrl}/${this.apiRoot}/${this.version}/lineage/`,
+        `${LineageApiRepository.baseUrl}/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/`,
         undefined,
         config
       );

@@ -1,7 +1,6 @@
 import { List, ListItem, ListItemText, ListItemIcon } from '@mui/material';
 import { ReactElement, useEffect, useState } from 'react';
 import GithubApiRepo from '../../../infrastructure/github-api/github-api-repo';
-import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 import { BiGitBranch } from 'react-icons/bi';
 import {
   ButtonBig,
@@ -9,13 +8,13 @@ import {
 } from '../../../pages/lineage/components/buttons';
 import LoadingScreen from '../../loading-screen';
 import appConfig from '../../../config';
+import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 
 interface GithubProps {
   installationId?: string;
   accessToken?: string;
   organizationId: string;
   jwt: string;
-  integrationApiRepo: IntegrationApiRepo;
 }
 
 interface RepoNameResult {
@@ -28,7 +27,6 @@ export default ({
   accessToken,
   organizationId,
   jwt,
-  integrationApiRepo,
 }: GithubProps): ReactElement => {
   const [repoNameResult, setRepoNameResult] = useState<RepoNameResult>({
     repoNames: [],
@@ -50,7 +48,7 @@ export default ({
           console.trace(error);
         });
     } else {
-      integrationApiRepo
+      IntegrationApiRepo
         .getGithubProfile(new URLSearchParams({ organizationId }), jwt)
         .then((profile) => {
           if (profile)
@@ -71,15 +69,15 @@ export default ({
     setIsLoading(false);
 
     if (installationId && accessToken)
-      integrationApiRepo
+      IntegrationApiRepo
         .getGithubProfile(new URLSearchParams({ organizationId }), jwt)
         .then((profile) => {
           if (profile)
-            return integrationApiRepo.updateGithubProfile(
+            return IntegrationApiRepo.updateGithubProfile(
               { installationId },
               jwt
             );
-          return integrationApiRepo.postGithubProfile(
+          return IntegrationApiRepo.postGithubProfile(
             {
               installationId,
               organizationId,

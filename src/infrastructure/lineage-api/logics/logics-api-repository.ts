@@ -4,13 +4,13 @@ import LogicDto from './logic-dto';
 
 // TODO - Implement Interface regarding clean architecture
 export default class LogicApiRepository {
-  private version = 'v1';
+  private static version = 'v1';
   
-  private apiRoot =  'api';
+  private static apiRoot =  'api';
 
-  private baseUrl = appConfig.baseUrl.lineageService;
+  private static baseUrl = appConfig.baseUrl.lineageService;
 
-  getOne = async (
+  static getOne = async (
     id: string,
     jwt: string
   ): Promise<LogicDto | null> => {
@@ -21,7 +21,7 @@ export default class LogicApiRepository {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
-      const response = await axios.get(`${this.baseUrl}/${this.apiRoot}/${this.version}/logic/${id}`, config);
+      const response = await axios.get(`${LogicApiRepository.baseUrl}/${LogicApiRepository.apiRoot}/${LogicApiRepository.version}/logic/${id}`, config);
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);

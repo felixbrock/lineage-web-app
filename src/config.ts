@@ -98,7 +98,7 @@ const getBaseUrlConfig = (): BaseUrlConfig => {
     lineageService: string | undefined;
   switch (process.env.REACT_APP_STAGE) {
     case 'development':
-      accountService = process.env.REACT_APP_BASE_URL_ACCOUNT;
+      accountService = process.env.REACT_APP_BASE_URL_ACCOUNT_DEV;
       observabilityService =
         process.env.REACT_APP_BASE_URL_DATA_OBSERVABILITY_DEV;
       integrationService =

@@ -137,10 +137,10 @@ const getNodeIdsToExplore = (
 
 /* Loads a specific combo when selected from navigation */
 const loadCombo = (comboId: string, data: GraphData): GraphData => {
-  if (!data.nodes) return data;
+  if (!data.nodes || !data.nodes.length) return data;
   const dataNodes = data.nodes;
 
-  if (!data.combos) return data;
+  if (!data.combos|| !data.combos.length) return data;
   const dataCombos = data.combos;
 
   const selfCombo = dataCombos.find((element) => element.id === comboId);
@@ -177,13 +177,13 @@ const loadData = (
   const localCoveredNodeIds = coveredNodeIds;
   const localCoveredComboIds = coveredComboIds;
 
-  if (!data.nodes) return data;
+  if (!data.nodes || !data.nodes.length) return data;
   const dataNodes = data.nodes;
 
-  if (!data.edges) return data;
+  if (!data.edges || !data.edges.length) return data;
   const dataEdges = data.edges;
 
-  if (!data.combos) return data;
+  if (!data.combos|| !data.combos.length) return data;
   const dataCombos = data.combos;
 
   const selfNode = dataNodes.find((element) => element.id === nodeId);

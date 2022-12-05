@@ -371,13 +371,13 @@ const buildData = (
   const matCombo = materializations.map(
     (materialization): ComboConfig => ({
       id: materialization.id,
-      label: materialization.name.toLowerCase(),
+      label: materialization.name,
     })
   );
   const colNodes = columns.map(
     (column): NodeConfig => ({
       id: column.id,
-      label: column.name.toLowerCase(),
+      label: column.name,
       comboId: column.materializationId,
     })
   );
@@ -399,7 +399,7 @@ const buildData = (
   const dashNodes = dashboards.map(
     (dashboard): NodeConfig => ({
       id: dashboard.id,
-      label: dashboard.columnName.toLowerCase(),
+      label: dashboard.columnName,
       comboId: dashboard.url,
     })
   );
@@ -1054,14 +1054,8 @@ export default (): ReactElement => {
       setData(buildData(materializations, columns, dependencies, dashboards));
     else {
       defaultData.nodes.sort(compare);
-      defaultData.nodes.forEach(
-        (element) => (element.label = element.label.toLowerCase())
-      );
 
       defaultData.combos.sort(compare);
-      defaultData.combos.forEach(
-        (element) => (element.label = element.label.toLowerCase())
-      );
 
       setData(defaultData);
     }

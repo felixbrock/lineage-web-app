@@ -2,7 +2,6 @@ import { ExecutionType } from '../../pages/test/test';
 
 interface BaseTestSuiteDto {
   id: string;
-  organizationId: string;
   target: {
     databaseName: string;
     targetResourceId: string;

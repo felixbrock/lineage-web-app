@@ -448,8 +448,8 @@ export default (
     testSelectionKeys.forEach((key) => {
       if (
         testSelection[key].label
-          .toLocaleLowerCase()
-          .includes(value.toLocaleLowerCase())
+          .toLowerCase()
+          .includes(value.toLowerCase())
       )
         newTestSelectionElements[key] = testSelection[key];
     });

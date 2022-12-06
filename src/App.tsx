@@ -12,6 +12,7 @@ import Test from './pages/test/test';
 import GithubRedirect from './pages/github-redirect';
 import SlackRedirect from './pages/slack-redirect';
 import appConfig from './config';
+import SnowflakeApiRepo from './infrastructure/snowflake-api/snowflake-api-repo';
 
 export default (): ReactElement => {
   Auth.configure({
@@ -61,7 +62,7 @@ export default (): ReactElement => {
           <Router>
             <div id="ContentContainer">
               <Routes>
-                <Route path="/lineage" element={<Lineage />} />
+                <Route path="/lineage" element={<Lineage snowflakeApiRepo={new SnowflakeApiRepo()} />} />
                 <Route path="/test" element={<Test />} />
                 {/* in development copy query params and manually call Github redirect: https://smee.io/XeUBYbnaoGxxxcf */}
                 <Route

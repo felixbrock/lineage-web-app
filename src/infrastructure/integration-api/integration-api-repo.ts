@@ -274,37 +274,6 @@ export default class IntegrationApiRepo {
     }
   };
 
-  static querySnowflake = async (
-    query: string,
-    targetOrgId: string,
-    jwt: string
-  ): Promise<any> => {
-    try {
-      const config: AxiosRequestConfig = {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-      };
-
-      const response = await axios.post(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/snowflake/query`,
-        {
-          query,
-          targetOrgId,
-        },
-        config
-      );
-      const jsonResponse = response.data;
-      if (response.status !== 200) throw new Error(jsonResponse.message);
-      if (!jsonResponse) throw new Error('Querying snowflake failed');
-      return jsonResponse;
-    } catch (error: unknown) {
-      if (typeof error === 'string') return Promise.reject(error);
-      if (error instanceof Error) return Promise.reject(error.message);
-      return Promise.reject(new Error('Unknown error occured'));
-    }
-  };
-
   static getSnowflakeProfile = async (
     jwt: string
   ): Promise<SnowflakeProfileDto | null> => {

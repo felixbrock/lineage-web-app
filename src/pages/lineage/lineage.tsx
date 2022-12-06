@@ -88,6 +88,15 @@ import Navbar from '../../components/navbar';
 import { Snackbar, Alert } from '@mui/material';
 import LoadingScreen from '../../components/loading-screen';
 import appConfig from '../../config';
+import {
+  Binds,
+  ISnowflakeApiRepo,
+} from '../../infrastructure/snowflake-api/snowflake-api-repo';
+import {
+  createConnectionPool,
+  IConnectionPool,
+} from '../../infrastructure/snowflake-api/connection-pool';
+import { createPool } from 'snowflake-sdk';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -140,7 +149,7 @@ const loadCombo = (comboId: string, data: GraphData): GraphData => {
   if (!data.nodes || !data.nodes.length) return data;
   const dataNodes = data.nodes;
 
-  if (!data.combos|| !data.combos.length) return data;
+  if (!data.combos || !data.combos.length) return data;
   const dataCombos = data.combos;
 
   const selfCombo = dataCombos.find((element) => element.id === comboId);
@@ -183,7 +192,7 @@ const loadData = (
   if (!data.edges || !data.edges.length) return data;
   const dataEdges = data.edges;
 
-  if (!data.combos|| !data.combos.length) return data;
+  if (!data.combos || !data.combos.length) return data;
   const dataCombos = data.combos;
 
   const selfNode = dataNodes.find((element) => element.id === nodeId);
@@ -420,7 +429,11 @@ const determineType = (id: string, data: GraphData): TreeViewElementType => {
   else return 'node';
 };
 
-export default (): ReactElement => {
+export default ({
+  snowflakeApiRepo,
+}: {
+  snowflakeApiRepo: ISnowflakeApiRepo;
+}): ReactElement => {
   const location = useLocation();
 
   const [searchParams] = useSearchParams();
@@ -428,6 +441,8 @@ export default (): ReactElement => {
   const [account, setAccount] = useState<AccountDto>();
   const [user, setUser] = useState<any>();
   const [jwt, setJwt] = useState('');
+
+  const [connPool, setConnPool] = useState<IConnectionPool>();
 
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');
@@ -703,6 +718,7 @@ export default (): ReactElement => {
     return (
       <TreeItem
         nodeId={column.id}
+        key={column.id}
         label={column.label}
         icon={<CircleTwoToneIcon fontSize="small" sx={{ color: '#674BCE' }} />}
         sx={{
@@ -737,6 +753,7 @@ export default (): ReactElement => {
       return (
         <TreeItem
           nodeId={combo.id}
+          key={combo.id}
           label={combo.label}
           sx={{ color: hasAnomalyChilds ? anomalyColor : defaultColor }}
           endIcon={<MdTag />}
@@ -812,8 +829,7 @@ export default (): ReactElement => {
 
     if (slackToken) setSlackAccessToken(slackToken);
     else {
-      IntegrationApiRepo
-        .getSlackProfile(jwt)
+      IntegrationApiRepo.getSlackProfile(jwt)
         .then((res) => setSlackAccessToken(res ? res.accessToken : ''))
         .catch(() => console.trace('Slack profile retrieval failed'));
     }
@@ -856,7 +872,7 @@ export default (): ReactElement => {
   };
 
   useEffect(() => {
-    if (!account) return;
+    if (!connPool) return;
 
     if (!jwt) throw new Error('No user authorization found');
 
@@ -865,14 +881,16 @@ export default (): ReactElement => {
     toggleShowSideNav();
 
     if (appConfig.react.showRealData) {
-      LineageApiRepository
-        .getLatest(jwt, false)
+      LineageApiRepository.getLatest(jwt, false)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
           setLineage(lineageDto);
-          return MaterializationsApiRepository.getBy(new URLSearchParams({}), jwt);
+          return MaterializationsApiRepository.getBy(
+            new URLSearchParams({}),
+            jwt
+          );
         })
         .then((materializationDtos) => {
           setMaterializations(materializationDtos);
@@ -918,6 +936,17 @@ export default (): ReactElement => {
 
     handleSlackRedirect();
     handleGithubRedirect();
+  }, [connPool]);
+
+  useEffect(() => {
+    if (!account) return;
+    if (!jwt) throw new Error('No user authorization found');
+
+    createConnectionPool(jwt, createPool)
+      .then((res) => {
+        setConnPool(res);
+      })
+      .catch(() => console.error('ConnPool not created'));
   }, [account]);
 
   useEffect(() => {
@@ -970,25 +999,41 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (!account) return;
+    if (!connPool) throw new Error('ConnPool missing');
 
     const definedTests: any[] = [];
     const alertList: any[] = [];
 
-    const testSuiteQuery = `select distinct test_type, id from cito.observability.test_suites
-     where target_resource_id = '${selectedNodeId}' and activated = true`;
+    const binds: Binds = [selectedNodeId, 'true'];
 
-    IntegrationApiRepo
-      .querySnowflake(testSuiteQuery, account.organizationId, jwt)
+    const testSuiteQuery = `select test_type, id from cito.observability.test_suites
+     where target_resource_id = ':1' and activated = :2`;
+
+    snowflakeApiRepo
+      .runQuery(testSuiteQuery, binds, connPool)
       .then((results) => {
-        results.forEach((entry: { TEST_TYPE: string; ID: string }) => {
-          const testHistoryQuery = `select value from cito.observability.test_history
-          where test_suite_id = '${entry.ID}' and test_type = '${entry.TEST_TYPE}'`;
+        results.forEach((entry) => {
+          const { ID: id, TEST_TYPE: testType } = entry;
 
-          IntegrationApiRepo
-            .querySnowflake(testHistoryQuery, account.organizationId, jwt)
+          if (typeof id !== 'string' || typeof testType !== 'string')
+            throw new Error('Receive unexpected types');
+
+          const testHistoryBinds: Binds = [id, testType];
+
+          const testHistoryQuery = `select value from cito.observability.test_history
+          where test_suite_id = ':1' and test_type = ':2'`;
+
+          snowflakeApiRepo
+            .runQuery(testHistoryQuery, testHistoryBinds, connPool)
             .then((history) => {
-              const valueList: string[] = Object.values(history);
-              const numList = valueList.map((val: string) => parseFloat(val));
+              const numList = history.map((el) => {
+                const { VALUE: value } = el;
+
+                if (typeof value !== 'string' || typeof value !== 'number')
+                  throw new Error('Received unexpected types');
+
+                return parseFloat(value);
+              });
 
               const newTest = {
                 TEST_TYPE: entry.TEST_TYPE,
@@ -998,25 +1043,26 @@ export default (): ReactElement => {
               definedTests.push(newTest);
             });
 
+          const alertBinds: Binds = [id];
+
           const alertQuery = `select deviation, executed_on from 
           (cito.observability.alerts join cito.observability.test_results 
             on cito.observability.alerts.test_suite_id = cito.observability.test_results.test_suite_id) 
             join cito.observability.executions on cito.observability.alerts.test_suite_id = cito.observability.executions.test_suite_id
-          where test_suite_id = '${entry.ID}'`;
+          where test_suite_id = ':1'`;
 
-          IntegrationApiRepo
-            .querySnowflake(alertQuery, account.organizationId, jwt)
+          snowflakeApiRepo
+            .runQuery(alertQuery, alertBinds, connPool)
             .then((alerts) => {
-              const valueList: any[] = Object.values(alerts);
-              const alertsForEntry = valueList.map(
-                (value: { DEVIATION: string; EXECUTED_ON: string }) => {
-                  return {
-                    date: value.EXECUTED_ON,
-                    type: entry.TEST_TYPE,
-                    deviation: value.DEVIATION,
-                  };
-                }
-              );
+              const alertsForEntry = alerts.map((alert) => {
+                const { EXECUTED_ON: executedOn, DEVIATION: deviation } = alert;
+
+                return {
+                  date: executedOn,
+                  type: testType,
+                  deviation,
+                };
+              });
               alertList.push(...alertsForEntry);
             });
         });

@@ -22,7 +22,12 @@ export const defaultYAxisTime: YAXisComponentOption = {
   },
 };
 
-export const defaultOption = (yAxis: YAXisComponentOption, data: number[], gt: number, lt: number) : EChartsOption => ({
+export const defaultOption = (
+  yAxis: YAXisComponentOption,
+   data: [string, number][],
+    // gt: number,
+    //  lt: number
+     ) : EChartsOption => ({
   xAxis: {
     type: 'category',
     boundaryGap: false,
@@ -31,14 +36,14 @@ export const defaultOption = (yAxis: YAXisComponentOption, data: number[], gt: n
   visualMap: {
     show: false,
     dimension: 0,
-    pieces: [
-      {
-        gt,
-        lt,
-        color: '#4EC4C4',
-        colorAlpha: 0.2,
-      },
-    ],
+    // pieces: [
+    //   {
+    //     gt,
+    //     lt,
+    //     color: '#4EC4C4',
+    //     colorAlpha: 0.2,
+    //   },
+    // ],
   },
   series: [
     {
@@ -48,13 +53,7 @@ export const defaultOption = (yAxis: YAXisComponentOption, data: number[], gt: n
         // width: 2
       },
       areaStyle: {},
-      data: data
-        .map((element, index) => {
-          const date = new Date();
-          date.setDate(date.getDate() - index);
-          return [date.toISOString().split('T')[0], element];
-        })
-        .reverse(),
+      data: data,
     },
   ],
   tooltip: {

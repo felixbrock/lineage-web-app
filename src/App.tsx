@@ -12,7 +12,6 @@ import Test from './pages/test/test';
 import GithubRedirect from './pages/github-redirect';
 import SlackRedirect from './pages/slack-redirect';
 import appConfig from './config';
-import iocContainer from './ioc-container';
 
 export default (): ReactElement => {
   Auth.configure({
@@ -56,15 +55,13 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!user) return;
 
-    const snowflakeApiRepo = iocContainer.resolve('snowflakeApiRepo')
-
     setApp(
       <div className="App">
         <div id="app">
           <Router>
             <div id="ContentContainer">
               <Routes>
-                <Route path="/lineage" element={<Lineage snowflakeApiRepo={snowflakeApiRepo} />} />
+                <Route path="/lineage" element={<Lineage />} />
                 <Route path="/test" element={<Test />} />
                 {/* in development copy query params and manually call Github redirect: https://smee.io/XeUBYbnaoGxxxcf */}
                 <Route

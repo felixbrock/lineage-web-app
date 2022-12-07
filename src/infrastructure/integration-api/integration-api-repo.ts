@@ -360,4 +360,33 @@ export default class IntegrationApiRepo {
       return Promise.reject(new Error(error.response.data.message));
     }
   };
+
+  static querySnowflake = async (
+    query: string,
+    jwt: string
+  ): Promise<any> => {
+    try {
+      const config: AxiosRequestConfig = {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      };
+
+      const response = await axios.post(
+        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/snowflake/query`,
+        {
+          query,
+        },
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status !== 201) throw new Error(jsonResponse.message);
+      if (!jsonResponse) throw new Error('Querying snowflake failed');
+      return jsonResponse;
+    } catch (error: unknown) {
+      if (typeof error === 'string') return Promise.reject(error);
+      if (error instanceof Error) return Promise.reject(error.message);
+      return Promise.reject(new Error('Unknown error occured'));
+    }
+  };
 }

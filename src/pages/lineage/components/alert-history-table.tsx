@@ -1,4 +1,7 @@
-export function Table({ alertHistory }: any) {
+import { ReactElement } from "react";
+import { AlertHistoryEntry } from "../lineage";
+
+export default ({ alertHistory }: {alertHistory: AlertHistoryEntry[]}): ReactElement => {
   return (
     <div className="px-4">
       <div className="mt-8 flex flex-col">
@@ -18,24 +21,24 @@ export function Table({ alertHistory }: any) {
                       scope="col"
                       className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                     >
-                      Type
+                      Test Type
                     </th>
                     <th
                       scope="col"
                       className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                     >
-                      Severity
+                      Deviation (in %)
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {alertHistory.map((row: any) => (
+                  {alertHistory.map((row) => (
                     <tr key={row.date}>
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                         {row.date}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {row.type}
+                        {row.testType}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {row.deviation}

@@ -83,20 +83,11 @@ import {
   EmptyStateDottedLine,
 } from './components/empty-state';
 import { SectionHeading } from './components/headings';
-import { Table } from './components/table';
+import AlertHistoryTable from './components/alert-history-table';
 import Navbar from '../../components/navbar';
 import { Snackbar, Alert } from '@mui/material';
 import LoadingScreen from '../../components/loading-screen';
 import appConfig from '../../config';
-import {
-  Binds,
-  ISnowflakeApiRepo,
-} from '../../infrastructure/snowflake-api/snowflake-api-repo';
-import {
-  createConnectionPool,
-  IConnectionPool,
-} from '../../infrastructure/snowflake-api/connection-pool';
-import { createPool } from 'snowflake-sdk';
 
 //'62e7b2bcaa9205236c323795';
 
@@ -113,6 +104,18 @@ enum DataLoadNodeType {
   Self = 'SELF',
   Parent = 'PARENT',
   Child = 'CHILD',
+}
+
+export interface AlertHistoryEntry {
+  date: string;
+  testType: string;
+  deviation: number;
+}
+
+interface TestHistoryEntry {
+  testType: string;
+  testSuiteId: string;
+  historyDataSet: [string, number][];
 }
 
 const theme = createTheme({
@@ -429,11 +432,7 @@ const determineType = (id: string, data: GraphData): TreeViewElementType => {
   else return 'node';
 };
 
-export default ({
-  snowflakeApiRepo,
-}: {
-  snowflakeApiRepo: ISnowflakeApiRepo;
-}): ReactElement => {
+export default (): ReactElement => {
   const location = useLocation();
 
   const [searchParams] = useSearchParams();
@@ -442,13 +441,11 @@ export default ({
   const [user, setUser] = useState<any>();
   const [jwt, setJwt] = useState('');
 
-  const [connPool, setConnPool] = useState<IConnectionPool>();
-
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');
   const [columnTest, setColumnTest] = useState('');
-  const [availableTests, setAvailableTests] = useState<any[]>([]);
-  const [alertHistory, setAlertHistory] = useState<any[]>([]);
+  const [availableTests, setAvailableTests] = useState<TestHistoryEntry[]>([]);
+  const [alertHistory, setAlertHistory] = useState<AlertHistoryEntry[]>([]);
   // const [info, setInfo] = useState('');
   const [isDataAvailable, setIsDataAvailable] = useState<boolean>(true);
   const [lineage, setLineage] = useState<LineageDto>();
@@ -872,7 +869,7 @@ export default ({
   };
 
   useEffect(() => {
-    if (!connPool) return;
+    if (!account) return;
 
     if (!jwt) throw new Error('No user authorization found');
 
@@ -936,17 +933,6 @@ export default ({
 
     handleSlackRedirect();
     handleGithubRedirect();
-  }, [connPool]);
-
-  useEffect(() => {
-    if (!account) return;
-    if (!jwt) throw new Error('No user authorization found');
-
-    createConnectionPool(jwt, createPool)
-      .then((res) => {
-        setConnPool(res);
-      })
-      .catch(() => console.error('ConnPool not created'));
   }, [account]);
 
   useEffect(() => {
@@ -999,76 +985,152 @@ export default ({
 
   useEffect(() => {
     if (!account) return;
-    if (!connPool) throw new Error('ConnPool missing');
 
-    const definedTests: any[] = [];
-    const alertList: any[] = [];
+    const binds: (string | number)[] = [selectedNodeId, 'true'];
 
-    const binds: Binds = [selectedNodeId, 'true'];
+    const testSuiteQuery = `select id, test_type from cito.observability.test_suites
+     where target_resource_id = '${binds[0]}' and activated = ${binds[1]}`;
 
-    const testSuiteQuery = `select test_type, id from cito.observability.test_suites
-     where target_resource_id = ':1' and activated = :2`;
-
-    snowflakeApiRepo
-      .runQuery(testSuiteQuery, binds, connPool)
+    let testSuiteRepresentations: { id: string; testType: string }[];
+    IntegrationApiRepo.querySnowflake(testSuiteQuery, jwt)
       .then((results) => {
-        results.forEach((entry) => {
-          const { ID: id, TEST_TYPE: testType } = entry;
+        testSuiteRepresentations = results[account.organizationId].map(
+          (entry: {
+            [key: string]: unknown;
+          }): { id: string; testType: string } => {
+            const { ID: id, TEST_TYPE: testType } = entry;
 
-          if (typeof id !== 'string' || typeof testType !== 'string')
-            throw new Error('Receive unexpected types');
+            if (typeof id !== 'string' || typeof testType !== 'string')
+              throw new Error('Receive unexpected types');
 
-          const testHistoryBinds: Binds = [id, testType];
+            return { id, testType };
+          }
+        );
 
-          const testHistoryQuery = `select value from cito.observability.test_history
-          where test_suite_id = ':1' and test_type = ':2'`;
+        const whereCondition = `array_contains(test_history.test_suite_id::variant, array_construct(${testSuiteRepresentations
+          .map((el) => `'${el.id}'`)
+          .join(', ')}))`;
 
-          snowflakeApiRepo
-            .runQuery(testHistoryQuery, testHistoryBinds, connPool)
-            .then((history) => {
-              const numList = history.map((el) => {
-                const { VALUE: value } = el;
+        const testHistoryQuery = `
+        select test_history.test_suite_id as test_suite_id, test_history.value as value, test_executions.executed_on as executed_on
+        from cito.observability.test_history as test_history
+        join cito.observability.test_executions as test_executions
+          on test_history.execution_id = test_executions.id
+        where ${whereCondition}
+        order by test_executions.executed_on asc;`;
 
-                if (typeof value !== 'string' || typeof value !== 'number')
-                  throw new Error('Received unexpected types');
+        return IntegrationApiRepo.querySnowflake(testHistoryQuery, jwt);
+      })
+      .then((testHistoryResults) => {
+        const results = testHistoryResults[account.organizationId];
 
-                return parseFloat(value);
-              });
+        const resById: { [testSuiteId: string]: TestHistoryEntry } =
+          results.reduce(
+            (
+              accumulation: { [testSuiteId: string]: TestHistoryEntry },
+              el: { [key: string]: unknown }
+            ): { [testSuiteId: string]: TestHistoryEntry } => {
+              const {
+                VALUE: value,
+                TEST_SUITE_ID: testSuiteId,
+                EXECUTED_ON: executedOn,
+              } = el;
 
-              const newTest = {
-                TEST_TYPE: entry.TEST_TYPE,
-                TEST_SUITE_ID: entry.ID,
-                HISTORY: numList,
-              };
-              definedTests.push(newTest);
-            });
+              if (
+                (typeof value !== 'string' && typeof value !== 'number') ||
+                typeof testSuiteId !== 'string' ||
+                typeof executedOn !== 'string'
+              )
+                throw new Error('Received unexpected type');
 
-          const alertBinds: Binds = [id];
+              const localAcc = accumulation;
 
-          const alertQuery = `select deviation, executed_on from 
-          (cito.observability.alerts join cito.observability.test_results 
-            on cito.observability.alerts.test_suite_id = cito.observability.test_results.test_suite_id) 
-            join cito.observability.executions on cito.observability.alerts.test_suite_id = cito.observability.executions.test_suite_id
-          where test_suite_id = ':1'`;
+              const historyValue =
+                typeof value === 'number' ? value : parseFloat(value);
 
-          snowflakeApiRepo
-            .runQuery(alertQuery, alertBinds, connPool)
-            .then((alerts) => {
-              const alertsForEntry = alerts.map((alert) => {
-                const { EXECUTED_ON: executedOn, DEVIATION: deviation } = alert;
+              const repIndex = testSuiteRepresentations.findIndex(
+                (rep) => rep.id === testSuiteId
+              );
 
-                return {
-                  date: executedOn,
-                  type: testType,
-                  deviation,
+              if (repIndex === -1) throw new Error('Test-Type not not found');
+
+              if (testSuiteId in localAcc)
+                localAcc[testSuiteId].historyDataSet.push([
+                  executedOn,
+                  historyValue,
+                ]);
+              else
+                localAcc[testSuiteId] = {
+                  testSuiteId,
+                  testType: testSuiteRepresentations[repIndex].testType,
+                  historyDataSet: [[executedOn, historyValue]],
                 };
-              });
-              alertList.push(...alertsForEntry);
-            });
-        });
 
-        setAvailableTests(definedTests);
-        setAlertHistory(alertList);
+              return localAcc;
+            },
+            {}
+          );
+
+        setAvailableTests(Object.values(resById));
+
+        const whereCondition = `array_contains(test_alerts.test_suite_id::variant, array_construct(${testSuiteRepresentations
+          .map((el) => `'${el.id}'`)
+          .join(', ')}))`;
+
+        const alertQuery = `select test_alerts.test_suite_id as test_suite_id, test_results.deviation as deviation, test_executions.executed_on as executed_on
+        from cito.observability.test_alerts as test_alerts
+        join cito.observability.test_results as test_results
+          on test_alerts.execution_id = test_results.execution_id
+        join cito.observability.test_executions as test_executions
+          on test_alerts.execution_id = test_executions.id
+        where ${whereCondition}
+        order by test_executions.executed_on desc
+        ;`;
+
+        return IntegrationApiRepo.querySnowflake(alertQuery, jwt);
+      })
+      .then((alertHistoryResults) => {
+        const results = alertHistoryResults[account.organizationId];
+
+        const alertHistoryEntries: AlertHistoryEntry[] = results.map(
+          (el: { [key: string]: unknown }): AlertHistoryEntry => {
+            const {
+              TEST_SUITE_ID: testSuiteId,
+              DEVIATION: deviation,
+              EXECUTED_ON: executedOn,
+            } = el;
+
+            if (
+              typeof executedOn !== 'string' ||
+              (typeof deviation !== 'string' &&
+                typeof deviation !== 'number') ||
+              typeof testSuiteId !== 'string'
+            )
+              throw new Error('Received unexpected type');
+
+            const deviationValue =
+              typeof deviation === 'number'
+                ? +((Math.round(deviation * 100) / 100) * 100).toFixed(2)
+                : +(
+                    (Math.round(parseFloat(deviation) * 100) / 100) *
+                    100
+                  ).toFixed(2);
+
+            const repIndex = testSuiteRepresentations.findIndex(
+              (rep) => rep.id === testSuiteId
+            );
+
+            if (repIndex === -1) throw new Error('Test-Type not not found');
+
+            return {
+              date: executedOn,
+              testType: testSuiteRepresentations[repIndex].testType,
+              deviation: deviationValue,
+            };
+          }
+        );
+
+        setAlertHistory(alertHistoryEntries);
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
@@ -1647,18 +1709,17 @@ export default ({
                         <></>
                       )}
                     </div>
-                    {availableTests.map((entry) => {
-                      const history: number[] = entry.HISTORY;
-
-                      return (
-                        <div className={entry.TEST_TYPE}>
-                          <h4>{entry.TEST_TYPE}</h4>
-                          <MetricsGraph
-                            option={defaultOption(defaultYAxis, history, 7, 8)}
-                          ></MetricsGraph>
-                        </div>
-                      );
-                    })}
+                    {availableTests.map((entry) => (
+                      <div className={entry.testType}>
+                        <h4>{entry.testType}</h4>
+                        <MetricsGraph
+                          option={defaultOption(
+                            defaultYAxis,
+                            entry.historyDataSet,
+                          )}
+                        ></MetricsGraph>
+                      </div>
+                    ))}
                     <br></br>
                   </>
                 </Tab.Panel>
@@ -1671,7 +1732,7 @@ export default ({
                 >
                   <>
                     <div className="hidden">{BasicTable(alertHistory)}</div>
-                    <Table alertHistory={alertHistory} />
+                    <AlertHistoryTable alertHistory={alertHistory} />
                   </>
                 </Tab.Panel>
               </Tab.Panels>

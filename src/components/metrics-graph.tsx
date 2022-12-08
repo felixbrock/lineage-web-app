@@ -1,7 +1,13 @@
-import { useRef, useEffect, ReactElement } from 'react';
-import { init, getInstanceByDom, YAXisComponentOption } from 'echarts';
-import type { CSSProperties } from 'react';
-import type { EChartsOption, ECharts, SetOptionOpts } from 'echarts';
+import { useRef, useEffect, ReactElement, CSSProperties } from 'react';
+import {
+  init,
+  getInstanceByDom,
+  YAXisComponentOption,
+  EChartsOption,
+  SetOptionOpts,
+  ECharts,
+} from 'echarts';
+import LoadingScreen from './loading-screen';
 
 export const defaultDistributionData = [
   47011, 10560, 12351, 8680, 6874, 11502, 9534, 11361, 10689,
@@ -17,209 +23,107 @@ export const defaultYAxis: YAXisComponentOption = {
 };
 
 export const defaultYAxisTime: YAXisComponentOption = {
-  ...defaultYAxis,     axisLabel: {
+  ...defaultYAxis,
+  axisLabel: {
     formatter: '{value} min',
   },
 };
 
+// interface MarkAreaBoundary {
+//   name?: string;
+//   xAxis: number;
+// }
+
+interface VisualPiece {
+  gte: number;
+  lte: number;
+  color: string;
+  colorAlpha: number;
+}
+
+const isVisualPiece = (obj: unknown): obj is VisualPiece =>
+  !!obj && typeof obj === 'object' && 'color' in obj;
+// const isMarkArea = (obj: unknown): obj is MarkAreaBoundary[] =>
+//   !!obj &&
+//   typeof obj === 'object' &&
+//   obj.constructor.name === 'Array' &&
+//   (obj as unknown[]).every(
+//     (el) => !!el && typeof el === 'object' && 'xAxis' in obj
+//   );
+
 export const defaultOption = (
   yAxis: YAXisComponentOption,
-   data: [string, number][],
-    // gt: number,
-    //  lt: number
-     ) : EChartsOption => ({
-  xAxis: {
-    type: 'category',
-    boundaryGap: false,
-  },
-  yAxis,
-  visualMap: {
-    show: false,
-    dimension: 0,
-    // pieces: [
-    //   {
-    //     gt,
-    //     lt,
-    //     color: '#4EC4C4',
-    //     colorAlpha: 0.2,
-    //   },
-    // ],
-  },
-  series: [
-    {
-      type: 'line',
-      lineStyle: {
-        color: '#6f47ef',
-        // width: 2
-      },
-      areaStyle: {},
-      data: data,
+  data: {
+    isAnomaly: boolean;
+    userFeedbackIsAnomaly: number;
+    dataSet: [string, number];
+  }[]
+): EChartsOption => {
+  const hasAnomolies = data.some(
+    (el) =>
+      el.isAnomaly &&
+      (el.userFeedbackIsAnomaly === -1 || el.userFeedbackIsAnomaly === 1)
+  );
+
+  return {
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
     },
-  ],
-  tooltip: {
-    trigger: 'axis',
-  },
-});
+    yAxis,
+    visualMap: hasAnomolies
+      ? {
+          show: false,
+          dimension: 0,
+          pieces: data
+            .map((el, index) =>
+              el.isAnomaly &&
+              (el.userFeedbackIsAnomaly === 1 ||
+                el.userFeedbackIsAnomaly === -1)
+                ? {
+                    gte: index === 0 ? index : index - 1,
+                    lte: index + 1,
+                    color: 'red',
+                    colorAlpha: 0.2,
+                  }
+                : undefined
+            )
+            .filter(isVisualPiece),
+        }
+      : undefined,
+    series: [
+      {
+        type: 'line',
+        smooth: true,
+        lineStyle: {
+          color: '#6f47ef',
+          // width: 2
+        },
+        areaStyle: hasAnomolies ? {} : undefined,
+        data: data.map((el) => el.dataSet),
+      },
+    ],
+    tooltip: {
+      trigger: 'axis',
+    },
+  };
+};
 
-
-// export const DistributionDefaultOption: EChartsOption = {
-//   xAxis: {
-//     type: 'category',
-//     boundaryGap: false,
-//   },
-//   yAxis: {
-//     type: 'value',
-//     boundaryGap: [0, '30%'],
-//   },
-//   visualMap: {
-//     show: false,
-//     dimension: 0,
-//     pieces: [
-//       {
-//         gt: 7,
-//         lt: 8,
-//         color: '#db1d33',
-//         colorAlpha: 0.2,
-//       },
-//     ],
-//   },
-//   series: [
-//     {
-//       type: 'line',
-//       lineStyle: {
-//         color: '#6f47ef',
-//         // width: 2
-//       },
-//       areaStyle: {},
-//       data: distributionDefaultData
-//         .map((element, index) => {
-//           const date = new Date();
-//           date.setDate(date.getDate() - index);
-//           return [date.toISOString().split('T')[0], element];
-//         })
-//         .reverse(),
-//     },
-//   ],
-//   tooltip: {
-//     trigger: 'axis',
-//   },
-// };
-
-export const defaultFreshnessData = [132, 131, 130, 132, 540, 129, 127, 120, 128];
-
-export const effectiveRateSampleFreshnessData = [32, 31, 29, 30, 30, 30, 92, 31, 30].reverse();
-
-// export const FreshnessDefaultOption: EChartsOption = {
-//   xAxis: {
-//     type: 'category',
-//     boundaryGap: false,
-//   },
-//   yAxis: {
-//     type: 'value',
-//     axisLabel: {
-//       formatter: '{value} min',
-//     },
-//     boundaryGap: [0, '30%'],
-//   },
-//   visualMap: {
-//     show: false,
-//     dimension: 0,
-//     pieces: [
-//       {
-//         gt: 3,
-//         lt: 5,
-//         color: '#db1d33',
-//         colorAlpha: 0.2,
-//       },
-//     ],
-//   },
-//   series: [
-//     {
-//       type: 'line',
-//       lineStyle: {
-//         color: '#6f47ef',
-//         // width: 2
-//       },
-//       areaStyle: {},
-//       data: freshnessDefaultData
-//       .map((element, index) => {
-//         const date = new Date();
-//         date.setDate(date.getDate() - index);
-//         return [date.toISOString().split('T')[0], element];
-//       })
-//       .reverse(),
-//     },
-//   ],
-//   tooltip: {
-//     trigger: 'axis',
-//   },
-// };
-
-export const defaultNullnessData =  [
-  531,
-  601,
-  598,
-  1561,
-  576,
-  599,
-  564,
-  602,
-  595,
+export const defaultFreshnessData = [
+  132, 131, 130, 132, 540, 129, 127, 120, 128,
 ];
 
-export const effectiveRateSampleNullnessData = [  431,
-  501,
-  498,
-  516,
-  593,
-  524,
-  2561,
-  632,
-  545,];
+export const effectiveRateSampleFreshnessData = [
+  32, 31, 29, 30, 30, 30, 92, 31, 30,
+].reverse();
 
+export const defaultNullnessData = [
+  531, 601, 598, 1561, 576, 599, 564, 602, 595,
+];
 
-// export const NullnessDefaultOption: EChartsOption = {
-//   xAxis: {
-//     type: 'category',
-//     boundaryGap: false,
-//   },
-//   yAxis: {
-//     type: 'value',
-//     boundaryGap: [0, '30%'],
-//   },
-//   visualMap: {
-//     show: false,
-//     dimension: 0,
-//     pieces: [
-//       {
-//         gt: 4,
-//         lt: 6,
-//         color: '#db1d33',
-//         colorAlpha: 0.2,
-//       },
-//     ],
-//   },
-//   series: [
-//     {
-//       type: 'line',
-//       lineStyle: {
-//         color: '#6f47ef',
-//         // width: 2
-//       },
-//       areaStyle: {},
-//       data: nullnessDefaultData
-//       .map((element, index) => {
-//         const date = new Date();
-//         date.setDate(date.getDate() - index);
-//         return [date.toISOString().split('T')[0], element];
-//       })
-//       .reverse(),
-//     },
-//   ],
-//   tooltip: {
-//     trigger: 'axis',
-//   },
-// };
+export const effectiveRateSampleNullnessData = [
+  431, 501, 498, 516, 593, 524, 2561, 632, 545,
+];
 
 export interface ReactEChartsProps {
   option: EChartsOption;
@@ -278,7 +182,11 @@ export default ({
     }
   }, [loading, theme]);
 
-  return (
+  return chartRef ? (
     <div ref={chartRef} style={{ width: '100%', height: '400px', ...style }} />
+  ) : (
+    <div style={{ width: '100%', height: '400px', ...style }}>
+      <LoadingScreen tailwindCss="flex w-full items-center justify-center" />
+    </div>
   );
 };

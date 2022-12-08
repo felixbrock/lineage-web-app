@@ -115,7 +115,11 @@ export interface AlertHistoryEntry {
 interface TestHistoryEntry {
   testType: string;
   testSuiteId: string;
-  historyDataSet: [string, number][];
+  historyDataSet: {
+    isAnomaly: boolean;
+    userFeedbackIsAnomaly: number;
+    dataSet: [string, number];
+  }[];
 }
 
 const theme = createTheme({
@@ -1012,7 +1016,7 @@ export default (): ReactElement => {
           .join(', ')}))`;
 
         const testHistoryQuery = `
-        select test_history.test_suite_id as test_suite_id, test_history.value as value, test_executions.executed_on as executed_on
+        select test_history.test_suite_id as test_suite_id, test_history.value as value, test_executions.executed_on as executed_on, test_history.is_anomaly as is_anomaly, test_history.user_feedback_is_anomaly as user_feedback_is_anomaly
         from cito.observability.test_history as test_history
         join cito.observability.test_executions as test_executions
           on test_history.execution_id = test_executions.id
@@ -1034,19 +1038,20 @@ export default (): ReactElement => {
                 VALUE: value,
                 TEST_SUITE_ID: testSuiteId,
                 EXECUTED_ON: executedOn,
+                IS_ANOMALY: isAnomaly,
+                USER_FEEDBACK_IS_ANOMALY: userFeedbackIsAnomaly,
               } = el;
 
               if (
-                (typeof value !== 'string' && typeof value !== 'number') ||
+                typeof value !== 'number' ||
                 typeof testSuiteId !== 'string' ||
-                typeof executedOn !== 'string'
+                typeof executedOn !== 'string' ||
+                typeof isAnomaly !== 'boolean' ||
+                typeof userFeedbackIsAnomaly !== 'number'
               )
                 throw new Error('Received unexpected type');
 
               const localAcc = accumulation;
-
-              const historyValue =
-                typeof value === 'number' ? value : parseFloat(value);
 
               const repIndex = testSuiteRepresentations.findIndex(
                 (rep) => rep.id === testSuiteId
@@ -1055,15 +1060,22 @@ export default (): ReactElement => {
               if (repIndex === -1) throw new Error('Test-Type not not found');
 
               if (testSuiteId in localAcc)
-                localAcc[testSuiteId].historyDataSet.push([
-                  executedOn,
-                  historyValue,
-                ]);
+                localAcc[testSuiteId].historyDataSet.push({
+                  isAnomaly,
+                  userFeedbackIsAnomaly,
+                  dataSet: [executedOn, value],
+                });
               else
                 localAcc[testSuiteId] = {
                   testSuiteId,
                   testType: testSuiteRepresentations[repIndex].testType,
-                  historyDataSet: [[executedOn, historyValue]],
+                  historyDataSet: [
+                    {
+                      isAnomaly,
+                      userFeedbackIsAnomaly,
+                      dataSet: [executedOn, value],
+                    },
+                  ],
                 };
 
               return localAcc;
@@ -1715,7 +1727,7 @@ export default (): ReactElement => {
                         <MetricsGraph
                           option={defaultOption(
                             defaultYAxis,
-                            entry.historyDataSet,
+                            entry.historyDataSet
                           )}
                         ></MetricsGraph>
                       </div>

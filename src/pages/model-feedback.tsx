@@ -102,7 +102,7 @@ export default (): ReactElement => {
           <LoadingScreen tailwindCss="flex w-full items-center justify-center" />
         ) : (
           <>
-            <h1>{`Thanks a lot, we've adjusted our model accordingly. :)`}</h1>
+            <h1>{`Thanks a lot, we've adjusted your model accordingly :)`}</h1>
           </>
         )}
       </div>

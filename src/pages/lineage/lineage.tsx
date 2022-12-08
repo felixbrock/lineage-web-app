@@ -1021,12 +1021,12 @@ export default (): ReactElement => {
         join cito.observability.test_executions as test_executions
           on test_history.execution_id = test_executions.id
         where ${whereCondition}
-        order by test_executions.executed_on asc;`;
+        order by test_executions.executed_on desc limit 200;`;
 
         return IntegrationApiRepo.querySnowflake(testHistoryQuery, jwt);
       })
       .then((testHistoryResults) => {
-        const results = testHistoryResults[account.organizationId];
+        const results = testHistoryResults[account.organizationId].reverse();
 
         const resById: { [testSuiteId: string]: TestHistoryEntry } =
           results.reduce(
@@ -1097,7 +1097,7 @@ export default (): ReactElement => {
           on test_alerts.execution_id = test_executions.id
         where ${whereCondition}
         order by test_executions.executed_on desc
-        ;`;
+        limit 200;`;
 
         return IntegrationApiRepo.querySnowflake(alertQuery, jwt);
       })

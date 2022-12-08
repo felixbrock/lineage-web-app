@@ -30,14 +30,12 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
 
-import { useSearchParams } from 'react-router-dom';
 import Chip from '@mui/material/Chip';
 import TablePagination from '@mui/material/TablePagination';
 import ObservabilityApiRepo, {
   TestSuiteProps,
   UpdateTestSuiteObject,
 } from '../../infrastructure/observability-api/observability-api-repo';
-import { Alert, Snackbar } from '@mui/material';
 import {
   NominalTestSuiteDto,
   TestSuiteDto,
@@ -238,23 +236,12 @@ export default (
   }>({});
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(25);
-  const [searchParams] = useSearchParams();
 
-  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
 
   const [initialLoadCompleted, setInitialLoadCompleted] = React.useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleSnackbarClose = (
-    event?: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-
-    setSnackbarOpen(false);
-  };
+  
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -1714,39 +1701,13 @@ export default (
       });
   }, [user]);
 
-  const handleUserFeedback = () => {
-    if (!searchParams) return;
 
-    const alertId = searchParams.get('alertId');
-    const testType = searchParams.get('testType');
-
-    if (!!alertId !== !!testType)
-      throw new Error('User feedback callback is missing query param(s)');
-
-    if (!alertId || !testType) return;
-
-    const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
-    if (!userFeedbackIsAnomaly) return;
-    ObservabilityApiRepo.updateTestHistoryEntry(
-      { alertId, userFeedbackIsAnomaly, testType },
-      jwt
-    )
-      .then(() => {
-        setSnackbarOpen(true);
-      })
-      .catch(() => {
-        console.trace(
-          'Something went wrong saving user feedback to persistence'
-        );
-      });
-  };
 
   useEffect(() => {
     if (!account || lineage) return;
 
     if (!jwt) throw new Error('No user authorization found');
 
-    handleUserFeedback();
 
     if (showRealData) {
 
@@ -1983,19 +1944,6 @@ export default (
             />
           </Paper>
         </>
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={6000}
-          onClose={handleSnackbarClose}
-        >
-          <Alert
-            onClose={handleSnackbarClose}
-            severity="success"
-            sx={{ width: '100%' }}
-          >
-            {'We took your feedback into account :)'}
-          </Alert>
-        </Snackbar>
       </div>
     </ThemeProvider>
   );

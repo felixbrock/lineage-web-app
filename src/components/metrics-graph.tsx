@@ -9,6 +9,21 @@ import {
 } from 'echarts';
 import LoadingScreen from './loading-screen';
 
+interface HistoryDataSet {
+  isAnomaly: boolean;
+  userFeedbackIsAnomaly: number;
+  timestamp: string;
+  valueLowerBound: number;
+  valueUpperBound: number;
+  value: number;
+}
+
+export interface TestHistoryEntry {
+  testType: string;
+  testSuiteId: string;
+  historyDataSet: HistoryDataSet[];
+}
+
 export const defaultDistributionData = [
   47011, 10560, 12351, 8680, 6874, 11502, 9534, 11361, 10689,
 ];
@@ -53,11 +68,7 @@ const isVisualPiece = (obj: unknown): obj is VisualPiece =>
 
 export const defaultOption = (
   yAxis: YAXisComponentOption,
-  data: {
-    isAnomaly: boolean;
-    userFeedbackIsAnomaly: number;
-    dataSet: [string, number];
-  }[]
+  data: HistoryDataSet[]
 ): EChartsOption => {
   const hasAnomolies = data.some(
     (el) =>
@@ -65,12 +76,40 @@ export const defaultOption = (
       (el.userFeedbackIsAnomaly === -1 || el.userFeedbackIsAnomaly === 1)
   );
 
+  const { xAxis, values, upperBounds, lowerBounds } = data.reduce(
+    (
+      accumulation: {
+        xAxis: string[];
+        values: number[];
+        upperBounds: number[];
+        lowerBounds: number[];
+      },
+      el: HistoryDataSet
+    ) => {
+      const localAcc = accumulation;
+
+      localAcc.xAxis.push(el.timestamp);
+      localAcc.values.push(el.value);
+      localAcc.upperBounds.push(el.valueUpperBound);
+      localAcc.lowerBounds.push(el.valueLowerBound);
+
+      return localAcc;
+    },
+    { xAxis: [], values: [], upperBounds: [], lowerBounds: [] }
+  );
+
   return {
     xAxis: {
       type: 'category',
       boundaryGap: false,
+      data: xAxis
     },
     yAxis,
+    toolbox: {
+      feature: {
+        saveAsImage: {}
+      }
+    },
     visualMap: hasAnomolies
       ? {
           show: false,
@@ -93,6 +132,7 @@ export const defaultOption = (
       : undefined,
     series: [
       {
+        name: 'Measurements',
         type: 'line',
         smooth: true,
         lineStyle: {
@@ -100,7 +140,29 @@ export const defaultOption = (
           // width: 2
         },
         areaStyle: hasAnomolies ? {} : undefined,
-        data: data.map((el) => el.dataSet),
+        data: values,
+      },
+      {
+        name: 'Upper Threshold',
+        type: 'line',
+        smooth: true,
+        lineStyle: {
+          color: 'grey',
+          type: 'dashed'
+          // width: 2
+        },
+        data: upperBounds,
+      },
+      {
+        name: 'Lower Threshold',
+        type: 'line',
+        smooth: true,
+        lineStyle: {
+          color: 'grey',
+          type: 'dotted'
+          // width: 2
+        },
+        data: lowerBounds,
       },
     ],
     tooltip: {

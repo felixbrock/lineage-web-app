@@ -439,8 +439,10 @@ export default (): ReactElement => {
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');
   const [columnTest, setColumnTest] = useState('');
-  const [nodeTests, setNodeTests] = useState<TestHistoryEntry[]>([]);
-  const [alertHistory, setAlertHistory] = useState<AlertHistoryEntry[]>([]);
+  const [selectionTests, setSelectionTests] = useState<TestHistoryEntry[]>([]);
+  const [selectionAlertHistory, setSelectionAlertHistory] = useState<
+    AlertHistoryEntry[]
+  >([]);
   // const [info, setInfo] = useState('');
   const [isDataAvailable, setIsDataAvailable] = useState<boolean>(true);
   const [lineage, setLineage] = useState<LineageDto>();
@@ -1082,7 +1084,7 @@ export default (): ReactElement => {
           });
         });
 
-        setNodeTests(Object.values(testHistory));
+        setSelectionTests(Object.values(testHistory));
 
         const whereCondition = `array_contains(test_alerts.test_suite_id::variant, array_construct(${Object.values(
           testHistory
@@ -1145,7 +1147,7 @@ export default (): ReactElement => {
           }
         );
 
-        setAlertHistory(alertHistoryEntries);
+        setSelectionAlertHistory(alertHistoryEntries);
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
@@ -1517,6 +1519,8 @@ export default (): ReactElement => {
             'Materialization object for selected combo not found'
           );
 
+        setSelectedNodeId(combo.id);
+
         if (appConfig.react.showRealData) {
           if ('logicId' in combo && combo.logicId) {
             LogicApiRepository.getOne(combo.logicId, jwt).then((logicDto) => {
@@ -1632,6 +1636,7 @@ export default (): ReactElement => {
             <ButtonSmall
               buttonText="Filter Anomalies"
               onClick={handleFilterAnomalies}
+              className="hidden"
             />
           </div>
           <div id="content">
@@ -1656,30 +1661,15 @@ export default (): ReactElement => {
         <div id="materializationSidePanel" className="sidepanel">
           <div className="header">
             <SectionHeading
-              title="SQL Model Logic"
-              onClick={closeMatSidePanel}
+              title="Table Insights"
+              onClick={closeColSidePanel}
             />
-          </div>
-          <div id="editor" className="content mt-10">
-            <SyntaxHighlighter
-              language="sql"
-              style={dracula}
-              showLineNumbers={true}
-              wrapLongLines={false}
-            >
-              {sql}
-            </SyntaxHighlighter>
-          </div>
-        </div>
-        <div id="columnSidePanel" className="sidepanel">
-          <div className="header">
-            <SectionHeading title="Insights" onClick={closeColSidePanel} />
           </div>
           <div className="content mt-10">
             <Tab.Group>
               <Tab.List className="flex space-x-1 rounded-xl bg-cito p-1">
                 <Tab
-                  key="Overview"
+                  key="table-test-history"
                   className={({ selected }) =>
                     classNames(
                       'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
@@ -1690,10 +1680,10 @@ export default (): ReactElement => {
                     )
                   }
                 >
-                  Overview
+                  Test History
                 </Tab>
                 <Tab
-                  key="Alerts"
+                  key="table-alert-history"
                   className={({ selected }) =>
                     classNames(
                       'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
@@ -1704,7 +1694,126 @@ export default (): ReactElement => {
                     )
                   }
                 >
-                  Alerts
+                  Alert History
+                </Tab>
+                <Tab
+                  key="table-sql-model"
+                  className={({ selected }) =>
+                    classNames(
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
+                      selected
+                        ? 'bg-gray-800 text-cito shadow'
+                        : 'hover:bg-white/[0.12] hover:text-white'
+                    )
+                  }
+                >
+                  SQL Model
+                </Tab>
+              </Tab.List>
+              <Tab.Panels className="mt-2">
+                <Tab.Panel
+                  key={0}
+                  className={classNames(
+                    'rounded-xl bg-white p-3',
+                    'ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2'
+                  )}
+                >
+                  <>
+                    {selectionTests.map((entry) => (
+                      <div className={entry.testType}>
+                        <h4>{entry.testType}</h4>
+                        {entry.historyDataSet.length ? (
+                          <MetricsGraph
+                            option={defaultOption(
+                              defaultYAxis,
+                              entry.historyDataSet
+                            )}
+                          ></MetricsGraph>
+                        ) : (
+                          <div className="flex h-96 w-full items-center justify-center bg-gradient-to-r from-white via-purple-50 to-white">
+                            <h4>
+                              Test execution has not been triggered yet 📈
+                            </h4>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <br></br>
+                  </>
+                </Tab.Panel>
+                <Tab.Panel
+                  key={1}
+                  className={classNames(
+                    'rounded-xl bg-white p-3',
+                    'ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2'
+                  )}
+                >
+                  <>
+                    <AlertHistoryTable alertHistory={selectionAlertHistory} />
+                  </>
+                </Tab.Panel>
+                <Tab.Panel
+                  key={2}
+                  className={classNames(
+                    'rounded-xl bg-white p-3',
+                    'ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2'
+                  )}
+                >
+                  <>
+                    <div id="editor" className="content mt-10">
+                      <SyntaxHighlighter
+                        language="sql"
+                        style={dracula}
+                        showLineNumbers={true}
+                        wrapLongLines={false}
+                      >
+                        {sql}
+                      </SyntaxHighlighter>
+                    </div>
+                  </>
+                </Tab.Panel>
+              </Tab.Panels>
+            </Tab.Group>
+          </div>
+        </div>
+        <div id="columnSidePanel" className="sidepanel">
+          <div className="header">
+            <SectionHeading
+              title="Column Insights"
+              onClick={closeColSidePanel}
+            />
+          </div>
+          <div className="content mt-10">
+            <Tab.Group>
+              <Tab.List className="flex space-x-1 rounded-xl bg-cito p-1">
+                <Tab
+                  key="column-test-history"
+                  className={({ selected }) =>
+                    classNames(
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
+                      selected
+                        ? 'bg-gray-800 text-cito shadow'
+                        : 'hover:bg-white/[0.12] hover:text-white'
+                    )
+                  }
+                >
+                  Test History
+                </Tab>
+                <Tab
+                  key="column-alert-history"
+                  className={({ selected }) =>
+                    classNames(
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
+                      selected
+                        ? 'bg-gray-800 text-cito shadow'
+                        : 'hover:bg-white/[0.12] hover:text-white'
+                    )
+                  }
+                >
+                  Alert History
                 </Tab>
               </Tab.List>
               <Tab.Panels className="mt-2">
@@ -1724,7 +1833,7 @@ export default (): ReactElement => {
                         <></>
                       )}
                     </div>
-                    {nodeTests.map((entry) => (
+                    {selectionTests.map((entry) => (
                       <div className={entry.testType}>
                         <h4>{entry.testType}</h4>
                         {entry.historyDataSet.length ? (
@@ -1736,7 +1845,9 @@ export default (): ReactElement => {
                           ></MetricsGraph>
                         ) : (
                           <div className="flex h-96 w-full items-center justify-center bg-gradient-to-r from-white via-purple-50 to-white">
-                            <h4>Test execution has not been triggered yet 📈</h4>
+                            <h4>
+                              Test execution has not been triggered yet 📈
+                            </h4>
                           </div>
                         )}
                       </div>
@@ -1752,8 +1863,10 @@ export default (): ReactElement => {
                   )}
                 >
                   <>
-                    <div className="hidden">{BasicTable(alertHistory)}</div>
-                    <AlertHistoryTable alertHistory={alertHistory} />
+                    <div className="hidden">
+                      {BasicTable(selectionAlertHistory)}
+                    </div>
+                    <AlertHistoryTable alertHistory={selectionAlertHistory} />
                   </>
                 </Tab.Panel>
               </Tab.Panels>

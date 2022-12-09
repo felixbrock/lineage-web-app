@@ -611,11 +611,11 @@ export default (): ReactElement => {
 
     const newTreeViewElements = populationToSearch
       .map((element: ReactElement) => {
-        if (element.props.label.includes(value)) return element;
+        if ((new RegExp(value, 'gi')).test(element.props.label)) return element;
 
         const relevantChildren = element.props.children
           .map((child: ReactElement) => {
-            if (child.props.label.includes(value)) return child;
+            if ((new RegExp(value, 'gi')).test(child.props.label)) return child;
             return null;
           })
           .filter(isReactElement);

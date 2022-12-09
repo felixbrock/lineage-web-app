@@ -128,9 +128,39 @@ export const defaultOption = (
                 : undefined
             )
             .filter(isVisualPiece),
-        }
-      : undefined,
-    series: [
+          }
+          : undefined,
+          series: [
+      {
+        name: 'Lower Threshold',
+        type: 'line',
+        smooth: true,
+        showSymbol: false,
+        lineStyle: {
+          type: 'dotted',
+          color: 'grey',
+          // width: 2
+        },
+        itemStyle:{
+          color: 'grey',
+        },
+        data: lowerBounds,
+      },
+      {
+        name: 'Upper Threshold',
+        type: 'line',
+        smooth: true,
+        showSymbol: false,
+        lineStyle: {
+          type: 'dashed',
+          color: 'grey',
+          // width: 2
+        },
+        itemStyle:{
+          color: 'grey',
+        }, 
+        data: upperBounds,
+      },
       {
         name: 'Measurements',
         type: 'line',
@@ -139,30 +169,11 @@ export const defaultOption = (
           color: '#6f47ef',
           // width: 2
         },
+        itemStyle: {
+          color: '#6f47ef',
+        },
         areaStyle: hasAnomolies ? {} : undefined,
         data: values,
-      },
-      {
-        name: 'Upper Threshold',
-        type: 'line',
-        smooth: true,
-        lineStyle: {
-          color: 'grey',
-          type: 'dashed'
-          // width: 2
-        },
-        data: upperBounds,
-      },
-      {
-        name: 'Lower Threshold',
-        type: 'line',
-        smooth: true,
-        lineStyle: {
-          color: 'grey',
-          type: 'dotted'
-          // width: 2
-        },
-        data: lowerBounds,
       },
     ],
     tooltip: {

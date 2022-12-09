@@ -653,7 +653,7 @@ export default (
               targetResourceId: materalization.id,
               type,
               executionFrequency: testSelectionLocal[props[1]].frequency || 1,
-              threshold: testSelectionLocal[props[1]].sensitivity || 0,
+              threshold: testSelectionLocal[props[1]].sensitivity || 3,
               executionType:
                 testSelectionLocal[props[1]].executionType || 'automatic',
             },
@@ -1021,7 +1021,7 @@ export default (
           label: columnLabel,
           frequency: suites.length ? suites[0].executionFrequency : 1,
           executionType: suites.length ? suites[0].executionType : 'automatic',
-          sensitivity: suites.length ? suites[0].threshold : 0,
+          sensitivity: suites.length ? suites[0].threshold : 3,
           testConfigs: allowedTests.map((element) => {
             const typeSpecificSuite = suites.find((el) => el.type === element);
 

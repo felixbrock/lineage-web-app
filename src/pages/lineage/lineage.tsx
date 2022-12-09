@@ -113,8 +113,6 @@ export interface AlertHistoryEntry {
   deviation: number;
 }
 
-
-
 const theme = createTheme({
   palette: {
     primary: {
@@ -441,7 +439,7 @@ export default (): ReactElement => {
   const [graph, setGraph] = useState<Graph>();
   const [sql, setSQL] = useState('');
   const [columnTest, setColumnTest] = useState('');
-  const [availableTests, setAvailableTests] = useState<TestHistoryEntry[]>([]);
+  const [nodeTests, setNodeTests] = useState<TestHistoryEntry[]>([]);
   const [alertHistory, setAlertHistory] = useState<AlertHistoryEntry[]>([]);
   // const [info, setInfo] = useState('');
   const [isDataAvailable, setIsDataAvailable] = useState<boolean>(true);
@@ -611,11 +609,11 @@ export default (): ReactElement => {
 
     const newTreeViewElements = populationToSearch
       .map((element: ReactElement) => {
-        if ((new RegExp(value, 'gi')).test(element.props.label)) return element;
+        if (new RegExp(value, 'gi').test(element.props.label)) return element;
 
         const relevantChildren = element.props.children
           .map((child: ReactElement) => {
-            if ((new RegExp(value, 'gi')).test(child.props.label)) return child;
+            if (new RegExp(value, 'gi').test(child.props.label)) return child;
             return null;
           })
           .filter(isReactElement);
@@ -988,24 +986,32 @@ export default (): ReactElement => {
     const testSuiteQuery = `select id, test_type from cito.observability.test_suites
      where target_resource_id = '${binds[0]}' and activated = ${binds[1]}`;
 
-    let testSuiteRepresentations: { id: string; testType: string }[];
+    let testHistory: { [testSuiteId: string]: TestHistoryEntry };
     IntegrationApiRepo.querySnowflake(testSuiteQuery, jwt)
       .then((results) => {
-        testSuiteRepresentations = results[account.organizationId].map(
-          (entry: {
-            [key: string]: unknown;
-          }): { id: string; testType: string } => {
-            const { ID: id, TEST_TYPE: testType } = entry;
+        testHistory = results[account.organizationId].reduce(
+          (
+            accumulation: { [testSuiteId: string]: TestHistoryEntry },
+            el: { [key: string]: unknown }
+          ): { [testSuiteId: string]: TestHistoryEntry } => {
+            const localAcc = accumulation;
+
+            const { ID: id, TEST_TYPE: testType } = el;
 
             if (typeof id !== 'string' || typeof testType !== 'string')
               throw new Error('Receive unexpected types');
 
-            return { id, testType };
-          }
+            localAcc[id] = { testSuiteId: id, testType, historyDataSet: [] };
+
+            return localAcc;
+          },
+          {}
         );
 
-        const whereCondition = `array_contains(test_history.test_suite_id::variant, array_construct(${testSuiteRepresentations
-          .map((el) => `'${el.id}'`)
+        const whereCondition = `array_contains(test_history.test_suite_id::variant, array_construct(${Object.values(
+          testHistory
+        )
+          .map((el) => `'${el.testSuiteId}'`)
           .join(', ')}))`;
 
         const testHistoryQuery = `
@@ -1028,90 +1034,60 @@ export default (): ReactElement => {
         return IntegrationApiRepo.querySnowflake(testHistoryQuery, jwt);
       })
       .then((testHistoryResults) => {
-        const results = testHistoryResults[account.organizationId].reverse();
+        const results: { [key: string]: unknown }[] =
+          testHistoryResults[account.organizationId].reverse();
 
-        const resById: { [testSuiteId: string]: TestHistoryEntry } =
-          results.reduce(
-            (
-              accumulation: { [testSuiteId: string]: TestHistoryEntry },
-              el: { [key: string]: unknown }
-            ): { [testSuiteId: string]: TestHistoryEntry } => {
-              const {
-                VALUE: value,
-                TEST_SUITE_ID: testSuiteId,
-                EXECUTED_ON: executedOn,
-                VALUE_UPPER_BOUND: valueUpperBound,
-                VALUE_LOWER_BOUND: valueLowerBound,
-                IS_ANOMALY: isAnomaly,
-                USER_FEEDBACK_IS_ANOMALY: userFeedbackIsAnomaly,
-              } = el;
+        results.forEach((el: { [key: string]: unknown }) => {
+          const {
+            VALUE: value,
+            TEST_SUITE_ID: testSuiteId,
+            EXECUTED_ON: executedOn,
+            VALUE_UPPER_BOUND: valueUpperBound,
+            VALUE_LOWER_BOUND: valueLowerBound,
+            IS_ANOMALY: isAnomaly,
+            USER_FEEDBACK_IS_ANOMALY: userFeedbackIsAnomaly,
+          } = el;
 
-              const isOptionalOfType = <T,>(
-                val: unknown,
-                targetType:
-                  | 'string'
-                  | 'number'
-                  | 'bigint'
-                  | 'boolean'
-                  | 'symbol'
-                  | 'undefined'
-                  | 'object'
-                  | 'function'
-              ): val is T => val === null || typeof val === targetType;
+          const isOptionalOfType = <T,>(
+            val: unknown,
+            targetType:
+              | 'string'
+              | 'number'
+              | 'bigint'
+              | 'boolean'
+              | 'symbol'
+              | 'undefined'
+              | 'object'
+              | 'function'
+          ): val is T => val === null || typeof val === targetType;
 
-              if (
-                typeof value !== 'number' ||
-                typeof testSuiteId !== 'string' ||
-                typeof executedOn !== 'string' ||
-                typeof isAnomaly !== 'boolean' ||
-                typeof userFeedbackIsAnomaly !== 'number' ||
-                !isOptionalOfType<number>(valueLowerBound, 'number') ||
-                !isOptionalOfType<number>(valueUpperBound, 'number')
-              )
-                throw new Error('Received unexpected type');
+          if (
+            typeof value !== 'number' ||
+            typeof testSuiteId !== 'string' ||
+            typeof executedOn !== 'string' ||
+            typeof isAnomaly !== 'boolean' ||
+            typeof userFeedbackIsAnomaly !== 'number' ||
+            !isOptionalOfType<number>(valueLowerBound, 'number') ||
+            !isOptionalOfType<number>(valueUpperBound, 'number')
+          )
+            throw new Error('Received unexpected type');
 
-              const localAcc = accumulation;
+          testHistory[testSuiteId].historyDataSet.push({
+            isAnomaly,
+            userFeedbackIsAnomaly,
+            timestamp: executedOn,
+            valueLowerBound,
+            valueUpperBound,
+            value,
+          });
+        });
 
-              const repIndex = testSuiteRepresentations.findIndex(
-                (rep) => rep.id === testSuiteId
-              );
+        setNodeTests(Object.values(testHistory));
 
-              if (repIndex === -1) throw new Error('Test-Type not not found');
-
-              if (testSuiteId in localAcc)
-                localAcc[testSuiteId].historyDataSet.push({
-                  isAnomaly,
-                  userFeedbackIsAnomaly,
-                  timestamp: executedOn,
-                  valueLowerBound,
-                  valueUpperBound,
-                  value
-                });
-              else
-                localAcc[testSuiteId] = {
-                  testSuiteId,
-                  testType: testSuiteRepresentations[repIndex].testType,
-                  historyDataSet: [
-                    {
-                      isAnomaly,
-                      userFeedbackIsAnomaly,
-                      timestamp: executedOn,
-                      valueLowerBound,
-                      valueUpperBound,
-                      value
-                    },
-                  ],
-                };
-
-              return localAcc;
-            },
-            {}
-          );
-
-        setAvailableTests(Object.values(resById));
-
-        const whereCondition = `array_contains(test_alerts.test_suite_id::variant, array_construct(${testSuiteRepresentations
-          .map((el) => `'${el.id}'`)
+        const whereCondition = `array_contains(test_alerts.test_suite_id::variant, array_construct(${Object.values(
+          testHistory
+        )
+          .map((el) => `'${el.testSuiteId}'`)
           .join(', ')}))`;
 
         const alertQuery = `select test_alerts.test_suite_id as test_suite_id, test_results.deviation as deviation, test_executions.executed_on as executed_on
@@ -1128,6 +1104,8 @@ export default (): ReactElement => {
       })
       .then((alertHistoryResults) => {
         const results = alertHistoryResults[account.organizationId];
+
+        const testSuiteRepresentations = Object.values(testHistory);
 
         const alertHistoryEntries: AlertHistoryEntry[] = results.map(
           (el: { [key: string]: unknown }): AlertHistoryEntry => {
@@ -1154,7 +1132,7 @@ export default (): ReactElement => {
                   ).toFixed(2);
 
             const repIndex = testSuiteRepresentations.findIndex(
-              (rep) => rep.id === testSuiteId
+              (rep) => rep.testSuiteId === testSuiteId
             );
 
             if (repIndex === -1) throw new Error('Test-Type not not found');
@@ -1746,15 +1724,21 @@ export default (): ReactElement => {
                         <></>
                       )}
                     </div>
-                    {availableTests.map((entry) => (
+                    {nodeTests.map((entry) => (
                       <div className={entry.testType}>
                         <h4>{entry.testType}</h4>
-                        <MetricsGraph
-                          option={defaultOption(
-                            defaultYAxis,
-                            entry.historyDataSet
-                          )}
-                        ></MetricsGraph>
+                        {entry.historyDataSet.length ? (
+                          <MetricsGraph
+                            option={defaultOption(
+                              defaultYAxis,
+                              entry.historyDataSet
+                            )}
+                          ></MetricsGraph>
+                        ) : (
+                          <div className="flex h-96 w-full items-center justify-center bg-gradient-to-r from-white via-purple-50 to-white">
+                            <h4>Test execution has not been triggered yet 📈</h4>
+                          </div>
+                        )}
                       </div>
                     ))}
                     <br></br>

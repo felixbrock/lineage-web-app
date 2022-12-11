@@ -20,7 +20,7 @@ import G6, {
 import './lineage.scss';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { MdChevronRight, MdExpandMore, MdTag } from 'react-icons/md';
+import { MdTag } from 'react-icons/md';
 import MetricsGraph, {
   // defaultDistributionData,
   // defaultFreshnessData,
@@ -50,7 +50,7 @@ import {
   defaultAnomalyStates,
 } from './test-data';
 
-import TreeView from '@mui/lab/TreeView';
+// import TreeView from '@mui/lab/TreeView';
 // import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 // import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TreeItem from '@mui/lab/TreeItem';
@@ -86,7 +86,7 @@ import {
 import { SectionHeading } from './components/headings';
 import AlertHistoryTable from './components/alert-history-table';
 import Navbar from '../../components/navbar';
-import { Snackbar, Alert } from '@mui/material';
+import { Snackbar, Alert, List, ListSubheader, ListItem, ListItemText, ListItemButton } from '@mui/material';
 import LoadingScreen from '../../components/loading-screen';
 import appConfig from '../../config';
 
@@ -371,30 +371,18 @@ const fittingString = (
 
 const buildData = (
   materializations: MaterializationDto[],
-  columns: ColumnDto[],
-  dependencies: DependencyDto[],
   dashboards: DashboardDto[]
 ): GraphData => {
+  const nodes = colNodes.concat(dashNodes).sort(compare);
+
+
   const matCombo = materializations.map(
     (materialization): ComboConfig => ({
       id: materialization.id,
       label: materialization.name,
     })
   );
-  const colNodes = columns.map(
-    (column): NodeConfig => ({
-      id: column.id,
-      label: column.name,
-      comboId: column.materializationId,
-    })
-  );
-  const edges = dependencies.map(
-    (dependency): EdgeConfig => ({
-      source: dependency.tailId,
-      target: dependency.headId,
-    })
-  );
-
+  
   const dashCombo = dashboards.map(
     (dashboard): ComboConfig => ({
       id: dashboard.url ? dashboard.url : '',
@@ -411,9 +399,8 @@ const buildData = (
     })
   );
   const combos = matCombo.concat(dashCombo).sort(compare);
-  const nodes = colNodes.concat(dashNodes).sort(compare);
 
-  return { combos, nodes, edges };
+  return { combos};
 };
 
 type TreeViewElementType = 'node' | 'combo';
@@ -500,6 +487,40 @@ export default (): ReactElement => {
   };
 
   const handleSelect = (nodeId: string) => {
+
+    const colNodes = columns.map(
+      (column): NodeConfig => ({
+        id: column.id,
+        label: column.name,
+        comboId: column.materializationId,
+      })
+    );
+    const edges = dependencies.map(
+      (dependency): EdgeConfig => ({
+        source: dependency.tailId,
+        target: dependency.headId,
+      })
+    );
+
+
+    return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
+
+    .then((columnDtos) => {
+      setColumns(columnDtos);
+      return DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
+    })
+    .then((dependencyDtos) => {
+      setDependencies(dependencyDtos);
+      setReadyToBuild(true);
+      setIsLoading(false);
+    })
+
+
+    setColumns(defaultErrorColumns);
+          setDependencies(defaultErrorDependencies);
+
+
+
     if (!data) return;
     if (!graph) return;
     if (!nodeId) return;
@@ -533,10 +554,10 @@ export default (): ReactElement => {
   const handleSelectEvent = (event: React.SyntheticEvent, nodeId: string) =>
     handleSelect(nodeId);
 
-  const toggleSideNavTreeView = (
-    event: React.SyntheticEvent,
-    nodeIds: string[]
-  ) => setExpandedTreeViewElementIds(nodeIds);
+  // const toggleSideNavTreeView = (
+  //   event: React.SyntheticEvent,
+  //   nodeIds: string[]
+  // ) => setExpandedTreeViewElementIds(nodeIds);
 
   // const handleShowAll = () => {
   //   if (!data) return;
@@ -892,24 +913,12 @@ export default (): ReactElement => {
         })
         .then((dashboardDtos) => {
           setDashboards(dashboardDtos);
-          return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
-        })
-        .then((columnDtos) => {
-          setColumns(columnDtos);
-          return DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
-        })
-        .then((dependencyDtos) => {
-          setDependencies(dependencyDtos);
-          setReadyToBuild(true);
-          setIsLoading(false);
         })
         .catch((error) => {
           console.log(error);
 
           setLineage(defaultErrorLineage);
           setMaterializations(defaultErrorMaterializations);
-          setColumns(defaultErrorColumns);
-          setDependencies(defaultErrorDependencies);
           setDashboards(deafultErrorDashboards);
 
           setIsDataAvailable(false);
@@ -1641,16 +1650,39 @@ export default (): ReactElement => {
           </div>
           <div id="content">
             {isDataAvailable ? (
-              <TreeView
-                aria-label="controlled"
-                defaultCollapseIcon={<MdExpandMore />}
-                defaultExpandIcon={<MdChevronRight />}
-                expanded={expandedTreeViewElementIds}
-                onNodeToggle={toggleSideNavTreeView}
-                onNodeSelect={handleSelectEvent}
-              >
-                {data ? treeViewElements : <></>}
-              </TreeView>
+  <List
+  sx={{
+    '& ul': { padding: 0 },
+  }}
+  subheader={<li />}
+>
+  {[0, 1, 2, 3, 4].map((sectionId) => (
+    <li key={`section-${sectionId}`}>
+      <ul>
+        <ListSubheader>{`I'm sticky ${sectionId}`}</ListSubheader>
+        {[0, 1, 2].map((item) => (
+          <ListItem key={`item-${sectionId}-${item}`}>
+            <ListItemButton
+            >
+            <ListItemText primary={`Item ${item}`} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </ul>
+    </li>
+  ))}
+</List>
+
+              // <TreeView
+              //   aria-label="controlled"
+              //   defaultCollapseIcon={<MdExpandMore />}
+              //   defaultExpandIcon={<MdChevronRight />}
+              //   expanded={expandedTreeViewElementIds}
+              //   onNodeToggle={toggleSideNavTreeView}
+              //   onNodeSelect={handleSelectEvent}
+              // >
+              //   {data ? treeViewElements : <></>}
+              // </TreeView>
             ) : (
               <EmptyStateDottedLine
                 onClick={() => setShowIntegrationSidePanel(true)}

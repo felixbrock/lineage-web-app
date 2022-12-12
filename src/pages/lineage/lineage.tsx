@@ -20,7 +20,6 @@ import G6, {
 import './lineage.scss';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { MdTag } from 'react-icons/md';
 import MetricsGraph, {
   // defaultDistributionData,
   // defaultFreshnessData,
@@ -37,10 +36,8 @@ import MetricsGraph, {
 import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
 import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
 import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
-import DependenciesApiRepository from '../../infrastructure/lineage-api/dependencies/dependencies-api-repository';
 import LineageDto from '../../infrastructure/lineage-api/lineage/lineage-dto';
 import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
-import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
 import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
 import LogicApiRepository from '../../infrastructure/lineage-api/logics/logics-api-repository';
 import {
@@ -50,7 +47,7 @@ import {
   defaultAnomalyStates,
 } from './test-data';
 
-// import TreeView from '@mui/lab/TreeView';
+// import SideNavMat from '@mui/lab/SideNavMat';
 // import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 // import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TreeItem from '@mui/lab/TreeItem';
@@ -72,12 +69,9 @@ import Snowflake from '../../components/integration/snowflake/snowflake';
 import AccountDto from '../../infrastructure/account-api/account-dto';
 import {
   deafultErrorDashboards,
-  defaultErrorColumns,
-  defaultErrorDependencies,
   defaultErrorLineage,
   defaultErrorMaterializations,
 } from './error-handling-data';
-import { ButtonSmall } from './components/buttons';
 import SearchBox from './components/search-box';
 import {
   EmptyStateIntegrations,
@@ -86,7 +80,16 @@ import {
 import { SectionHeading } from './components/headings';
 import AlertHistoryTable from './components/alert-history-table';
 import Navbar from '../../components/navbar';
-import { Snackbar, Alert, List, ListSubheader, ListItem, ListItemText, ListItemButton } from '@mui/material';
+import {
+  Snackbar,
+  Alert,
+  List,
+  ListSubheader,
+  ListItem,
+  ListItemText,
+  ListItemButton,
+  ListItemIcon,
+} from '@mui/material';
 import LoadingScreen from '../../components/loading-screen';
 import appConfig from '../../config';
 
@@ -140,26 +143,6 @@ const getNodeIdsToExplore = (
   );
 
   return nodeIdsToExplore;
-};
-
-/* Loads a specific combo when selected from navigation */
-const loadCombo = (comboId: string, data: GraphData): GraphData => {
-  if (!data.nodes || !data.nodes.length) return data;
-  const dataNodes = data.nodes;
-
-  if (!data.combos || !data.combos.length) return data;
-  const dataCombos = data.combos;
-
-  const selfCombo = dataCombos.find((element) => element.id === comboId);
-  if (!selfCombo) throw new ReferenceError('Node not found');
-
-  const selfNodes = dataNodes.filter((node) => node.comboId === comboId);
-
-  return {
-    nodes: selfNodes,
-    edges: [],
-    combos: [selfCombo],
-  };
 };
 
 /* Compares two nodes based on label. Used for sorting functions */
@@ -373,16 +356,13 @@ const buildData = (
   materializations: MaterializationDto[],
   dashboards: DashboardDto[]
 ): GraphData => {
-  const nodes = colNodes.concat(dashNodes).sort(compare);
-
-
   const matCombo = materializations.map(
     (materialization): ComboConfig => ({
       id: materialization.id,
       label: materialization.name,
     })
   );
-  
+
   const dashCombo = dashboards.map(
     (dashboard): ComboConfig => ({
       id: dashboard.url ? dashboard.url : '',
@@ -391,21 +371,22 @@ const buildData = (
         : fittingString(dashboard.url, 385, 18),
     })
   );
-  const dashNodes = dashboards.map(
-    (dashboard): NodeConfig => ({
-      id: dashboard.id,
-      label: dashboard.columnName,
-      comboId: dashboard.url,
-    })
-  );
+  // const dashNodes = dashboards.map(
+  //   (dashboard): NodeConfig => ({
+  //     id: dashboard.id,
+  //     label: dashboard.columnName,
+  //     comboId: dashboard.url,
+  //   })
+  // );
   const combos = matCombo.concat(dashCombo).sort(compare);
+  // const nodes = colNodes.concat(dashNodes).sort(compare);
 
-  return { combos};
+  return { combos };
 };
 
-type TreeViewElementType = 'node' | 'combo';
+type SideNavMatElementType = 'node' | 'combo';
 
-const determineType = (id: string, data: GraphData): TreeViewElementType => {
+const determineType = (id: string, data: GraphData): SideNavMatElementType => {
   if (!data.combos)
     throw new ReferenceError('Data object is empty. Type cannot be identified');
   const isCombo = data.combos.filter((element) => element.id === id).length > 0;
@@ -436,26 +417,27 @@ export default (): ReactElement => {
   const [materializations, setMaterializations] = useState<
     MaterializationDto[]
   >([]);
-  const [columns, setColumns] = useState<ColumnDto[]>([]);
-  const [dependencies, setDependencies] = useState<DependencyDto[]>([]);
+  // const [columns, setColumns] = useState<ColumnDto[]>([]);
+  // const [dependencies, setDependencies] = useState<DependencyDto[]>([]);
   const [dashboards, setDashboards] = useState<DashboardDto[]>([]);
-  const [data, setData] = useState<GraphData>();
+  const [data, setData] = useState<GraphData>({
+    nodes: [],
+    edges: [],
+    combos: [],
+  });
   const [readyToBuild, setReadyToBuild] = useState(false);
-  const [expandedTreeViewElementIds, setExpandedTreeViewElementIds] = useState<
-    string[]
-  >([]);
-  const [allTreeViewElements, setAllTreeViewElements] = useState<
+  const [allSideNavMatElements, setAllSideNavMatElements] = useState<
     ReactElement[]
   >([]);
-  const [filteredTreeViewElements, setFilteredTreeViewElements] = useState<
+  // const [filteredSideNavMatElements, setFilteredSideNavMatElements] = useState<
+  //   ReactElement[]
+  // >([]);
+  const [searchedSideNavMatElements, setSearchedSideNavMatElements] = useState<
     ReactElement[]
   >([]);
-  const [searchedTreeViewElements, setSearchedTreeViewElements] = useState<
-    ReactElement[]
-  >([]);
-  const [treeViewElements, setTreeViewElements] = useState<ReactElement[]>([]);
+  const [SideNavMatElements, setSideNavMatElements] = useState<ReactElement[]>([]);
   const [tabIndex, setTabIndex] = React.useState<number>(0);
-  const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
+  // const [anomalyFilterOn, setAnomalyFilterOn] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
     useState<boolean>();
@@ -486,41 +468,61 @@ export default (): ReactElement => {
     setTabIndex(newValue);
   };
 
-  const handleSelect = (nodeId: string) => {
+  /* Loads a specific combo when selected from navigation */
+  const loadCombo = async (comboId: string): Promise<GraphData> => {
+    if (!data.combos || !data.combos.length) return data;
+    const dataCombos = data.combos;
 
-    const colNodes = columns.map(
+    const selfCombo = dataCombos.find((element) => element.id === comboId);
+    if (!selfCombo) throw new ReferenceError('Node not found');
+
+    const columnDtos = await ColumnsApiRepository.getBy(
+      new URLSearchParams({ materializationIds: selfCombo.id }),
+      jwt
+    );
+    // setColumns(columnDtos);
+
+    /* 
+  XXXXXXXXXXXXX 
+  XXXXXXXXXXXXX 
+    todo - implement get By tailIds  
+  XXXXXXXXXXXXX 
+  XXXXXXXXXXXXX 
+  */
+    // const dependencyDtos = DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
+    const dependencyDtos: DependencyDto[] = [];
+    // setDependencies(dependencyDtos);
+
+    /* 
+  XXXXXXXXXXXXX 
+  XXXXXXXXXXXXX 
+    load columns that are relevant based on dependencies  
+  XXXXXXXXXXXXX 
+  XXXXXXXXXXXXX 
+  */
+
+    const selfNodes = columnDtos.map(
       (column): NodeConfig => ({
         id: column.id,
         label: column.name,
         comboId: column.materializationId,
       })
     );
-    const edges = dependencies.map(
+    const selfEdges = dependencyDtos.map(
       (dependency): EdgeConfig => ({
         source: dependency.tailId,
         target: dependency.headId,
       })
     );
 
+    return {
+      nodes: selfNodes,
+      edges: selfEdges,
+      combos: [selfCombo],
+    };
+  };
 
-    return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
-
-    .then((columnDtos) => {
-      setColumns(columnDtos);
-      return DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
-    })
-    .then((dependencyDtos) => {
-      setDependencies(dependencyDtos);
-      setReadyToBuild(true);
-      setIsLoading(false);
-    })
-
-
-    setColumns(defaultErrorColumns);
-          setDependencies(defaultErrorDependencies);
-
-
-
+  const handleSelect = async (nodeId: string) => {
     if (!data) return;
     if (!graph) return;
     if (!nodeId) return;
@@ -535,7 +537,8 @@ export default (): ReactElement => {
 
     const type = determineType(id, data);
 
-    if (type === 'combo') graph.data(loadCombo(id, data));
+    const graphData = await loadCombo(id);
+    if (type === 'combo') graph.data(graphData);
     else if (type === 'node')
       graph.data(loadData(id, DataLoadNodeType.Self, [], [], data));
 
@@ -554,10 +557,10 @@ export default (): ReactElement => {
   const handleSelectEvent = (event: React.SyntheticEvent, nodeId: string) =>
     handleSelect(nodeId);
 
-  // const toggleSideNavTreeView = (
+  // const toggleSideNavSideNavMat = (
   //   event: React.SyntheticEvent,
   //   nodeIds: string[]
-  // ) => setExpandedTreeViewElementIds(nodeIds);
+  // ) => setExpandedSideNavMatElementIds(nodeIds);
 
   // const handleShowAll = () => {
   //   if (!data) return;
@@ -568,69 +571,67 @@ export default (): ReactElement => {
   //   graph.render();
   // };
 
-  const handleFilterAnomalies = () => {
-    if (!allTreeViewElements) return;
+  // const handleFilterAnomalies = () => {
+  //   if (!allSideNavMatElements) return;
 
-    if (anomalyFilterOn) {
-      setFilteredTreeViewElements([]);
-      setTreeViewElements(
-        searchedTreeViewElements.length
-          ? searchedTreeViewElements
-          : allTreeViewElements
-      );
-      setAnomalyFilterOn(!anomalyFilterOn);
-      return;
-    }
+  //   if (anomalyFilterOn) {
+  //     setFilteredSideNavMatElements([]);
+  //     setSideNavMatElements(
+  //       searchedSideNavMatElements.length
+  //         ? searchedSideNavMatElements
+  //         : allSideNavMatElements
+  //     );
+  //     setAnomalyFilterOn(!anomalyFilterOn);
+  //     return;
+  //   }
 
-    const isReactElement = (element: any): element is ReactElement => !!element;
+  //   const isReactElement = (element: any): element is ReactElement => !!element;
 
-    const newTreeViewElements = treeViewElements
-      .map((element: ReactElement) => {
-        if (element.props.sx.color !== 'black') return element;
+  //   const newSideNavMatElements = SideNavMatElements
+  //     .map((element: ReactElement) => {
+  //       if (element.props.sx.color !== 'black') return element;
 
-        const relevantChildren = element.props.children
-          .map((child: ReactElement) => {
-            if (child.props.sx.color !== 'black') return child;
-            return null;
-          })
-          .filter(isReactElement);
+  //       const relevantChildren = element.props.children
+  //         .map((child: ReactElement) => {
+  //           if (child.props.sx.color !== 'black') return child;
+  //           return null;
+  //         })
+  //         .filter(isReactElement);
 
-        if (!relevantChildren.length) return null;
+  //       if (!relevantChildren.length) return null;
 
-        return (
-          <TreeItem
-            nodeId={element.props.nodeId}
-            label={element.props.label}
-            sx={element.props.sx}
-          >
-            {relevantChildren}
-          </TreeItem>
-        );
-      })
-      .filter(isReactElement);
+  //       return (
+  //         <TreeItem
+  //           nodeId={element.props.nodeId}
+  //           label={element.props.label}
+  //           sx={element.props.sx}
+  //         >
+  //           {relevantChildren}
+  //         </TreeItem>
+  //       );
+  //     })
+  //     .filter(isReactElement);
 
-    setFilteredTreeViewElements(newTreeViewElements);
+  //   setFilteredSideNavMatElements(newSideNavMatElements);
 
-    setAnomalyFilterOn(!anomalyFilterOn);
-  };
+  //   setAnomalyFilterOn(!anomalyFilterOn);
+  // };
 
   const handleSearchChange = (event: any) => {
-    if (!allTreeViewElements) return;
+    if (!allSideNavMatElements) return;
 
     const value = event.target.value;
     if (!value) {
-      setSearchedTreeViewElements([]);
-      setTreeViewElements(allTreeViewElements);
+      setSearchedSideNavMatElements([]);
+      setSideNavMatElements(allSideNavMatElements);
       return;
     }
 
     const isReactElement = (element: any): element is ReactElement => !!element;
 
-    const populationToSearch = anomalyFilterOn
-      ? filteredTreeViewElements
-      : allTreeViewElements;
+    const populationToSearch = allSideNavMatElements;
 
-    const newTreeViewElements = populationToSearch
+    const newSideNavMatElements = populationToSearch
       .map((element: ReactElement) => {
         if (new RegExp(value, 'gi').test(element.props.label)) return element;
 
@@ -655,19 +656,19 @@ export default (): ReactElement => {
       })
       .filter(isReactElement);
 
-    setSearchedTreeViewElements(newTreeViewElements);
+    setSearchedSideNavMatElements(newSideNavMatElements);
   };
 
-  const handleTreeViewExpandClick = () => {
-    if (!data) return;
-    if (!data.combos) return;
+  // const handleSideNavMatExpandClick = () => {
+  //   if (!data) return;
+  //   if (!data.combos) return;
 
-    const comboIds = data.combos.map((combo) => combo.id);
+  //   const comboIds = data.combos.map((combo) => combo.id);
 
-    setExpandedTreeViewElementIds((oldExpanded) =>
-      oldExpanded.length === 0 ? comboIds : []
-    );
-  };
+  //   setExpandedSideNavMatElementIds((oldExpanded) =>
+  //     oldExpanded.length === 0 ? comboIds : []
+  //   );
+  // };
 
   const toggleShowSideNav = () => {
     const sidenav = document.getElementById('sidenav');
@@ -717,68 +718,63 @@ export default (): ReactElement => {
   //   }, 3000);
   // };
 
-  const buildTreeViewColumn = (
-    column: any,
-    defaultColor: string,
-    anomalyColor: string
+  const buildSideNavMatElement = (
+    mat: MaterializationDto,
+    isAnomolous: boolean
   ): ReactElement => {
-    let hasNewAnomaly: { id: string; hasNewAnomaly: boolean } | undefined;
-    if (!appConfig.react.showRealData) {
-      hasNewAnomaly = defaultAnomalyStates.find(
-        (element) => element.id === column.id
-      );
-      if (!hasNewAnomaly) throw new ReferenceError('Anomaly state not found');
-    }
-
     return (
-      <TreeItem
-        nodeId={column.id}
-        key={column.id}
-        label={column.label}
-        icon={<CircleTwoToneIcon fontSize="small" sx={{ color: '#674BCE' }} />}
-        sx={{
-          color: hasNewAnomaly?.hasNewAnomaly ? anomalyColor : defaultColor,
-        }}
-      />
+      <ListItem key={mat.id} dense={true}>
+        <ListItemButton
+          onClick={(e) => handleSelectEvent(e, mat.id)}
+          dense={true}
+          key={`list-item-button-${mat.id}`}
+        >
+          {isAnomolous ? (
+            <ListItemIcon>
+              <CircleTwoToneIcon fontSize="small" sx={{ color: '#674BCE' }} />
+            </ListItemIcon>
+          ) : undefined}
+          <ListItemText primary={mat.name} />
+        </ListItemButton>
+      </ListItem>
     );
   };
 
-  const buildTreeViewElements = (): ReactElement[] => {
-    if (!data) return [<></>];
-    if (!data.combos) return [<></>];
+  const buildSideNavDbElements = (): ReactElement[] => {
+    const matsByDb = materializations.reduce(
+      (
+        acc: { [dbName: string]: MaterializationDto[] },
+        el: MaterializationDto
+      ) => {
+        const localAcc = acc;
 
-    const defaultColor = 'black';
-    const anomalyColor = '#db1d33';
+        if (el.databaseName in localAcc) localAcc[el.databaseName].push(el);
+        else localAcc[el.databaseName] = [el];
 
-    const materializationElements = data.combos.map((combo): ReactElement => {
-      if (!data.nodes) return <></>;
+        return localAcc;
+      },
+      {}
+    );
 
-      const relevantColumns = data.nodes.filter(
-        (node) => node.comboId === combo.id
-      );
+    const dbElements = Object.entries(matsByDb).map((entry) => {
+      const key = entry[0];
+      const val = entry[1];
 
-      const columnElements = relevantColumns.map((column) =>
-        buildTreeViewColumn(column, defaultColor, anomalyColor)
-      );
+      const dbElement = <ListSubheader>{key}</ListSubheader>;
 
-      const hasAnomalyChilds = columnElements.some(
-        (element) => element.props.sx.color !== defaultColor
-      );
+      const matElements = val.map((el) => buildSideNavMatElement(el, false));
 
       return (
-        <TreeItem
-          nodeId={combo.id}
-          key={combo.id}
-          label={combo.label}
-          sx={{ color: hasAnomalyChilds ? anomalyColor : defaultColor }}
-          endIcon={<MdTag />}
-        >
-          {columnElements}
-        </TreeItem>
+        <li key={`section-${key}`}>
+          <ul>
+            {dbElement}
+            {matElements}
+          </ul>
+        </li>
       );
     });
 
-    return materializationElements;
+    return dbElements;
   };
 
   const renderLineage = () => {
@@ -913,6 +909,8 @@ export default (): ReactElement => {
         })
         .then((dashboardDtos) => {
           setDashboards(dashboardDtos);
+          setReadyToBuild(true);
+          setIsLoading(false);
         })
         .catch((error) => {
           console.log(error);
@@ -920,6 +918,8 @@ export default (): ReactElement => {
           setLineage(defaultErrorLineage);
           setMaterializations(defaultErrorMaterializations);
           setDashboards(deafultErrorDashboards);
+          // setColumns(defaultErrorColumns);
+          // setDependencies(defaultErrorDependencies);
 
           setIsDataAvailable(false);
           setReadyToBuild(true);
@@ -1163,17 +1163,17 @@ export default (): ReactElement => {
       });
   }, [selectedNodeId]);
 
+  // useEffect(() => {
+  //   if (!filteredSideNavMatElements.length) return;
+
+  //   setSideNavMatElements(filteredSideNavMatElements);
+  // }, [filteredSideNavMatElements]);
+
   useEffect(() => {
-    if (!filteredTreeViewElements.length) return;
+    if (!searchedSideNavMatElements.length) return;
 
-    setTreeViewElements(filteredTreeViewElements);
-  }, [filteredTreeViewElements]);
-
-  useEffect(() => {
-    if (!searchedTreeViewElements.length) return;
-
-    setTreeViewElements(searchedTreeViewElements);
-  }, [searchedTreeViewElements]);
+    setSideNavMatElements(searchedSideNavMatElements);
+  }, [searchedSideNavMatElements]);
 
   // useEffect(() => {
   //   if (!info) return;
@@ -1185,7 +1185,7 @@ export default (): ReactElement => {
     if (!readyToBuild) return;
 
     if (appConfig.react.showRealData)
-      setData(buildData(materializations, columns, dependencies, dashboards));
+      setData(buildData(materializations, dashboards));
     else {
       defaultData.nodes.sort(compare);
 
@@ -1218,9 +1218,9 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!data) return;
 
-    const elements = buildTreeViewElements();
-    setAllTreeViewElements(elements);
-    setTreeViewElements(elements);
+    const elements = buildSideNavDbElements();
+    setAllSideNavMatElements(elements);
+    setSideNavMatElements(elements);
 
     const hivediveBlue = '#6f47ef';
 
@@ -1556,7 +1556,7 @@ export default (): ReactElement => {
           }
         }
 
-        graphObj.data(loadCombo(comboId, data));
+        graphObj.data(loadCombo(comboId));
         graphObj.set('latestZoom', graphObj.getZoom());
         graphObj.set('selectedElementId', comboId);
 
@@ -1633,57 +1633,42 @@ export default (): ReactElement => {
               onChange={handleSearchChange}
             />
           </div>
-          <div className="mb-4 flex justify-center gap-x-6">
+          {/* <div className="mb-4 flex justify-center gap-x-6">
             <ButtonSmall
               buttonText={
-                expandedTreeViewElementIds.length === 0
+                expandedSideNavMatElementIds.length === 0
                   ? 'Expand All'
                   : 'Collapse All'
               }
-              onClick={handleTreeViewExpandClick}
+              onClick={handleSideNavMatExpandClick}
             />
             <ButtonSmall
               buttonText="Filter Anomalies"
               onClick={handleFilterAnomalies}
               className="hidden"
             />
-          </div>
+          </div> */}
           <div id="content">
             {isDataAvailable ? (
-  <List
-  sx={{
-    '& ul': { padding: 0 },
-  }}
-  subheader={<li />}
->
-  {[0, 1, 2, 3, 4].map((sectionId) => (
-    <li key={`section-${sectionId}`}>
-      <ul>
-        <ListSubheader>{`I'm sticky ${sectionId}`}</ListSubheader>
-        {[0, 1, 2].map((item) => (
-          <ListItem key={`item-${sectionId}-${item}`}>
-            <ListItemButton
-            >
-            <ListItemText primary={`Item ${item}`} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </ul>
-    </li>
-  ))}
-</List>
-
-              // <TreeView
+              <List
+                sx={{
+                  '& ul': { padding: 0 },
+                }}
+                subheader={<li />}
+              >
+                {data ? SideNavMatElements : <></>}
+              </List>
+            ) : (
+              // <SideNavMat
               //   aria-label="controlled"
               //   defaultCollapseIcon={<MdExpandMore />}
               //   defaultExpandIcon={<MdChevronRight />}
-              //   expanded={expandedTreeViewElementIds}
-              //   onNodeToggle={toggleSideNavTreeView}
+              //   expanded={expandedSideNavMatElementIds}
+              //   onNodeToggle={toggleSideNavSideNavMat}
               //   onNodeSelect={handleSelectEvent}
               // >
-              //   {data ? treeViewElements : <></>}
-              // </TreeView>
-            ) : (
+              //   {data ? SideNavMatElements : <></>}
+              // </SideNavMat>
               <EmptyStateDottedLine
                 onClick={() => setShowIntegrationSidePanel(true)}
               />

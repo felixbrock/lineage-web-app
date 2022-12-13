@@ -55,6 +55,13 @@ export default ({
     navClickCallback({ id: matId, type: 'combo' });
   };
 
+  const handleNavColClickEvent = (
+    event: React.SyntheticEvent,
+    colId: string
+  ) => {
+    navClickCallback({ id: colId, type: 'node' });
+  };
+
   const handleSearchChange = (event: any) => {
     throw new Error('Not implemented');
 
@@ -84,10 +91,18 @@ export default ({
 
   const buildSideNavColElement = (col: ColumnDto) => {
     return (
-      <div className="mb-4 flex">
-        <CircleTwoToneIcon fontSize="small" sx={{ color: '#674BCE' }} />
-        <b>{col.name}</b>
-      </div>
+      <ListItem key={col.id} dense={true}>
+        <ListItemButton
+          onClick={(e) => handleNavColClickEvent(e, col.id)}
+          dense={true}
+          key={`list-item-col-${col.id}`}
+        >
+          <ListItemIcon>
+            <CircleTwoToneIcon fontSize="small" sx={{ color: '#674BCE' }} />
+          </ListItemIcon>
+          <ListItemText primary={col.name} secondary= {`${col.isIdentity ? `🆔`: ''} type: ${col.dataType}`} />
+        </ListItemButton>
+      </ListItem>
     );
   };
 
@@ -105,7 +120,7 @@ export default ({
           <ListItemButton
             onClick={(e) => handleNavMatClickEvent(e, mat.id)}
             dense={true}
-            key={`list-item-button-${mat.id}`}
+            key={`list-item-mat-${mat.id}`}
           >
             <ListItemIcon>
               <SiSnowflake />
@@ -145,7 +160,7 @@ export default ({
   };
 
   useEffect(() => {
-    if(!sourceData) return;
+    if (!sourceData) return;
 
     const elements = buildSideNavElements();
     setAllSideNavMatElements(elements);

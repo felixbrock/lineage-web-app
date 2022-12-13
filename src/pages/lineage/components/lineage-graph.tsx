@@ -6,7 +6,6 @@ import G6, {
   GraphOptions,
   ICombo,
   IEdge,
-  IG6GraphEvent,
   INode,
   NodeConfig,
 } from '@antv/g6';
@@ -42,7 +41,6 @@ export interface SourceData {
 }
 
 export type LineageElement = 'node' | 'combo';
-
 
 /* Compares two nodes based on label. Used for sorting functions */
 const compare = (first: any, second: any) => {
@@ -384,51 +382,55 @@ export default ({
     edges.forEach((edge) => edge.clearStates());
   };
 
-  const clearStates = (graphObj: Graph) => {
+  const clearStates = () => {
+    if (!graph)
+      throw new Error('Graph not available. Cannot handle node select change');
+
     closeMatSidePanelCallback();
     closeColSidePanelCallback();
     closeIntegrationSidePanelCallback();
     setIsRightPanelShownCallback(false);
-    clearEdgeStates(graphObj);
+    clearEdgeStates(graph);
   };
 
-  const handleNodeSelectChange = (graphObj: Graph, e: IG6GraphEvent): void => {
+  const handleNodeSelectChange = (nodeId: string, graphObj?: Graph): void => {
     if (!data)
       throw new Error('Data not available. Cannot handle node select change');
+    if (!graph)
+      throw new Error('Graph not available. Cannot handle node select change');
+
+    const localGraph = graphObj || graph;
 
     closeMatSidePanelCallback();
     closeIntegrationSidePanelCallback();
     setIsRightPanelShownCallback(false);
-    const isNode = (object: any): object is INode => 'getEdges' in object;
 
-    if (!isNode(e.target)) throw new ReferenceError('Event item is no node');
+    clearEdgeStates(localGraph);
 
-    clearEdgeStates(graphObj);
+    nodeSelectCallback(nodeId);
+    localGraph.data(loadData(nodeId, DataLoadNodeType.Self, [], [], data));
 
-    const id = e.target.getID();
+    localGraph.set('latestZoom', localGraph.getZoom());
+    localGraph.set('selectedElementId', nodeId);
 
-    nodeSelectCallback(id);
-    graphObj.data(loadData(id, DataLoadNodeType.Self, [], [], data));
+    localGraph.render();
 
-    graphObj.set('latestZoom', graphObj.getZoom());
-    graphObj.set('selectedElementId', id);
-
-    graphObj.render();
-
-    setGraph(graphObj);
+    setGraph(localGraph);
   };
 
   const handleComboSelectChange = async (
-    graphObj: Graph,
-    e: IG6GraphEvent
+    comboId: string,
+    graphObj?: Graph
   ): Promise<void> => {
     if (!sourceData) throw new Error('');
+    if (!graph)
+      throw new Error('Graph not available. Cannot handle node select change');
+
+    const localGraph = graphObj || graph;
 
     closeColSidePanelCallback();
 
-    clearEdgeStates(graphObj);
-
-    const comboId = e.target.get('id');
+    clearEdgeStates(localGraph);
 
     const materializationsToSearch = appConfig.react.showRealData
       ? sourceData.mats
@@ -452,12 +454,12 @@ export default ({
       'logicId' in combo ? combo.logicId : undefined
     );
 
-    graphObj.set('latestZoom', graphObj.getZoom());
-    graphObj.set('selectedElementId', comboId);
+    localGraph.set('latestZoom', localGraph.getZoom());
+    localGraph.set('selectedElementId', comboId);
 
-    graphObj.render();
+    localGraph.render();
 
-    setGraph(graphObj);
+    setGraph(localGraph);
   };
 
   const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
@@ -491,18 +493,18 @@ export default ({
     if (!container) throw new ReferenceError(`Container for graph not found`);
 
     const options = buildOptions(container);
-    const graphObj = new G6.Graph(options);
+    const localGraph = new G6.Graph(options);
 
     if (typeof window !== 'undefined')
       window.onresize = () => {
-        if (graphObj.get('destroyed')) return;
+        if (localGraph.get('destroyed')) return;
         if (!container || !container.scrollWidth || !container.scrollHeight)
           return;
-        graphObj.changeSize(container.scrollWidth, container.scrollHeight);
+        localGraph.changeSize(container.scrollWidth, container.scrollHeight);
       };
 
-    graphObj.on('afterlayout', () => {
-      graphObj.emit('layout:finish');
+    localGraph.on('afterlayout', () => {
+      localGraph.emit('layout:finish');
     });
 
     const edgeHasAnomalousAncestor = (
@@ -530,15 +532,15 @@ export default ({
       return hasAnomalousAncestor;
     };
 
-    graphObj.on('layout:finish', () => {
-      const selectedElementId = graphObj.get('selectedElementId');
+    localGraph.on('layout:finish', () => {
+      const selectedElementId = localGraph.get('selectedElementId');
 
       const isString = (item: unknown): item is string => !!item;
 
       if (!isString(selectedElementId))
         throw new ReferenceError('Self node id is not of type string');
 
-      const element = graphObj.findById(selectedElementId);
+      const element = localGraph.findById(selectedElementId);
 
       const isNode = (object: any): object is INode =>
         object && 'getType' in object && object.getType() === 'node';
@@ -560,7 +562,7 @@ export default ({
           if (!anomalyState)
             throw new ReferenceError('Anomaly state not found');
         }
-        graphObj.setItemState(
+        localGraph.setItemState(
           selectedElementId,
           anomalyState?.hasNewAnomaly ? 'anomalyNodeSelected' : 'selected',
           true
@@ -586,7 +588,7 @@ export default ({
             isAnomalous = edgeHasAnomalousAncestor(source, false);
           }
 
-          graphObj.setItemState(
+          localGraph.setItemState(
             edge.getID(),
             sourceAnomalyState?.hasNewAnomaly || isAnomalous
               ? 'anomalyNodeSelected'
@@ -597,7 +599,7 @@ export default ({
 
         getDependentEdges(element, false).forEach((edge) => {
           const isAnomalous = edgeHasAnomalousAncestor(edge.getSource(), false);
-          graphObj.setItemState(
+          localGraph.setItemState(
             edge.getID(),
             anomalyState?.hasNewAnomaly || isAnomalous
               ? 'anomalyNodeSelected'
@@ -606,23 +608,29 @@ export default ({
           );
         });
       } else if (isCombo(element)) {
-        graphObj.setItemState(selectedElementId, 'selected', true);
+        localGraph.setItemState(selectedElementId, 'selected', true);
       }
 
-      const zoom = graphObj.get('latestZoom') || 1;
+      const zoom = localGraph.get('latestZoom') || 1;
 
-      graphObj.zoom(zoom);
+      localGraph.zoom(zoom);
 
-      graphObj.focusItem(element);
+      localGraph.focusItem(element);
     });
 
-    graphObj.on('nodeselectchange', (event) => {
-      if (!event.target) clearStates(graphObj);
-      else if (!event.select) clearStates(graphObj);
-      else if (event.target.get('type') === 'node')
-        handleNodeSelectChange(graphObj, event);
+    localGraph.on('nodeselectchange', (event) => {
+      const isNode = (object: any): object is INode =>
+        object && 'getType' in object && object.getType() === 'node';
+
+      const id = isNode(event.target)
+        ? event.target.getID()
+        : event.target.get('id');
+
+      if (!event.target) clearStates();
+      else if (!event.select) clearStates();
+      else if (event.target.get('type') === 'node') handleNodeSelectChange(id);
       else if (event.target.get('type') === 'combo')
-        handleComboSelectChange(graphObj, event);
+        handleComboSelectChange(id);
     });
 
     const defaultNodeId =
@@ -630,14 +638,10 @@ export default ({
         ? data.nodes[0].id
         : '62715f907e3d8066494d409f';
 
-    // const initialData = data;
+    localGraph.set('selectedElementId', defaultNodeId);
 
-    // graphObj.data(initialData);
-
-    graphObj.set('selectedElementId', defaultNodeId);
-
-    const selectedEdges = graphObj.findAllByState('edge', 'nodeSelected');
-    const selectedAnomalyEdges = graphObj.findAllByState(
+    const selectedEdges = localGraph.findAllByState('edge', 'nodeSelected');
+    const selectedAnomalyEdges = localGraph.findAllByState(
       'edge',
       'anomalyNodeSelected'
     );
@@ -645,40 +649,45 @@ export default ({
     edges.forEach((edge) => edge.clearStates());
 
     nodeSelectCallback(defaultNodeId);
-    graphObj.data(loadData(defaultNodeId, DataLoadNodeType.Self, [], [], data));
+    localGraph.data(
+      loadData(defaultNodeId, DataLoadNodeType.Self, [], [], data)
+    );
 
-    graphObj.set('latestZoom', graphObj.getZoom());
+    localGraph.set('latestZoom', localGraph.getZoom());
 
-    graphObj.render();
+    localGraph.render();
 
-    setGraph(graphObj);
+    setGraph(localGraph);
   };
 
   const updateGraph = async (selectedEl: SelectedElement) => {
     if (!data) return;
     if (!graph) return;
 
-    const selectedNodes = graph.findAllByState('node', 'selected');
+    const localGraph = graph;
+
+    const selectedNodes = localGraph.findAllByState('node', 'selected');
     selectedNodes.forEach((node) => node.clearStates());
     selectedNodes.forEach((node) => node.clearStates());
 
-    const selectedCombos = graph.findAllByState('combo', 'selected');
+    const selectedCombos = localGraph.findAllByState('combo', 'selected');
     selectedCombos.forEach((combo) => combo.clearStates());
 
-    if (selectedEl.type === 'combo') graph.data(data);
+    if (selectedEl.type === 'combo') localGraph.data(data);
     else if (selectedEl.type === 'node')
-      graph.data(loadData(selectedEl.id, DataLoadNodeType.Self, [], [], data));
+      localGraph.data(
+        loadData(selectedEl.id, DataLoadNodeType.Self, [], [], data)
+      );
 
-    graph.render();
+    localGraph.render();
 
-    const target = graph.findById(selectedEl.id);
+    const target = localGraph.findById(selectedEl.id);
 
-    graph.setItemState(target, 'selected', true);
+    localGraph.setItemState(target, 'selected', true);
 
-    graph.emit('nodeselectchange', {
-      select: true,
-      target,
-    });
+    if (selectedEl.type === 'node')
+      handleNodeSelectChange(target.getID(), localGraph);
+    else handleComboSelectChange(target.get('id'), localGraph);
   };
 
   const buildData = (): GraphData => {
@@ -729,7 +738,7 @@ export default ({
   useEffect(() => {
     if (!sourceData) return;
 
-    if (appConfig.react.showRealData) setData({...buildData()});
+    if (appConfig.react.showRealData) setData({ ...buildData() });
     else {
       defaultData.nodes.sort(compare);
 

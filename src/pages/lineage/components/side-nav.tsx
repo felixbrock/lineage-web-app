@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
 import { SiSnowflake } from 'react-icons/si';
-import { ReactElement, useEffect, useState } from 'react';
+import { ReactElement, SyntheticEvent, useEffect, useState } from 'react';
 import { EmptyStateDottedLine } from './empty-state';
 import SearchBox from './search-box';
 import MaterializationDto from '../../../infrastructure/lineage-api/materializations/materialization-dto';
@@ -27,16 +27,106 @@ const groupMatsByDbId = (
   return localAcc;
 };
 
-const compareReactElements = (a: ReactElement, b:ReactElement) => {
-    if(!a.key || !b.key) return 0;
-    if (a.key < b.key) {
-      return -1;
-    }
-    if (a.key > b.key) {
-      return 1;
-    }
-    return 0;
-}
+const compareReactElements = (a: ReactElement, b: ReactElement) => {
+  if (!a.key || !b.key) return 0;
+  if (a.key < b.key) {
+    return -1;
+  }
+  if (a.key > b.key) {
+    return 1;
+  }
+  return 0;
+};
+
+const buildSideNavColElement = (col: ColumnDto, clickCallback: (event: SyntheticEvent, colId: string, matId: string)=>void) => {
+  return (
+    <ListItem key={`col-item-${col.name}`} dense={true}>
+      <ListItemButton
+        onClick={(e) =>
+          clickCallback(e, col.id, col.materializationId)
+        }
+        dense={true}
+        key={`list-item-col-${col.id}`}
+      >
+        <ListItemIcon>
+          <CircleTwoToneIcon fontSize="small" sx={{ color: '#674BCE' }} />
+        </ListItemIcon>
+        <ListItemText
+          primary={col.name}
+          secondary={`${col.isIdentity ? `🆔` : ''} type: ${col.dataType}`}
+        />
+      </ListItemButton>
+    </ListItem>
+  );
+};
+
+const buildSideNavMatElement = (
+  mat: MaterializationDto,
+  cols: ColumnDto[], 
+  callback: {
+    col: (event: SyntheticEvent, colId: string, matId: string) => void;
+    mat: (event: SyntheticEvent, matId: string) => void;
+  }
+): ReactElement => {
+  const colElements = cols
+    .filter((el) => el.materializationId === mat.id)
+    .map((el) => buildSideNavColElement(el, callback.col))
+    .sort(compareReactElements);
+
+  return (
+    <div key={`mat-item-${mat.name}`}>
+      <ListItem key={mat.id} dense={true}>
+        <ListItemButton
+          onClick={(e) => callback.mat(e, mat.id)}
+          dense={true}
+          key={`list-item-mat-${mat.id}`}
+        >
+          <ListItemIcon>
+            <SiSnowflake />
+          </ListItemIcon>
+          <ListItemText primary={mat.name} />
+        </ListItemButton>
+      </ListItem>
+      {colElements}
+    </div>
+  );
+};
+
+const buildSideNavElements = (
+  data: SourceData,
+  callback: {
+    col: (event: SyntheticEvent, colId: string, matId: string) => void;
+    mat: (event: SyntheticEvent, matId: string) => void;
+  }
+): ReactElement[] => {
+  if (!data) throw new Error('Missing source data');
+
+  const matsByDb = data.mats.reduce(groupMatsByDbId, {});
+
+  const dbElements = Object.entries(matsByDb)
+    .map((entry) => {
+      const key = entry[0];
+      const val = entry[1];
+
+      const dbElement = <ListSubheader>{key}</ListSubheader>;
+
+      const matElements = val
+        .map((el) => buildSideNavMatElement(el, data.cols, callback))
+        .sort(compareReactElements);
+
+      return (
+        <li key={`section-${key}`}>
+          <ul>
+            {dbElement}
+            {matElements}
+          </ul>
+        </li>
+      );
+    })
+    .sort(compareReactElements);
+
+  return dbElements;
+};
 
 export default ({
   sourceData,
@@ -49,13 +139,7 @@ export default ({
   navClickCallback: (selectedEl: SelectedElement, comboId?: string) => void;
   showIntegrationPanelCallback: (show: boolean) => void;
 }): ReactElement => {
-  const [allSideNavMatElements, setAllSideNavMatElements] = useState<
-    ReactElement[]
-  >([]);
-  const [searchedSideNavMatElements, setSearchedSideNavMatElements] = useState<
-    ReactElement[]
-  >([]);
-  const [SideNavMatElements, setSideNavMatElements] = useState<ReactElement[]>(
+  const [sideNavMatElements, setSideNavMatElements] = useState<ReactElement[]>(
     []
   );
 
@@ -75,115 +159,36 @@ export default ({
   };
 
   const handleSearchChange = (event: any) => {
-    throw new Error('Not implemented');
+    if(!sourceData) return; 
 
-    if (!allSideNavMatElements) return;
-
+    
     const value = event.target.value;
+    
     if (!value) {
-      setSearchedSideNavMatElements([]);
-      setSideNavMatElements(allSideNavMatElements);
+      const elements = buildSideNavElements(sourceData, {col: handleNavColClickEvent, mat: handleNavMatClickEvent});
+      setSideNavMatElements(elements);
       return;
     }
-
-    const isReactElement = (element: any): element is ReactElement => !!element;
-
-    const populationToSearch = allSideNavMatElements;
-
-    const newSideNavMatElements = populationToSearch
-      .map((element: ReactElement) => {
-        if (new RegExp(value, 'gi').test(element.props.label)) return element;
-      })
-      .filter(isReactElement);
-
-    // todo create db overview
-
-    setSearchedSideNavMatElements(newSideNavMatElements);
-  };
-
-  const buildSideNavColElement = (col: ColumnDto) => {
-    return (
-      <ListItem key={`col-item-${col.name}`} dense={true}>
-        <ListItemButton
-          onClick={(e) => handleNavColClickEvent(e, col.id, col.materializationId)}
-          dense={true}
-          key={`list-item-col-${col.id}`}
-        >
-          <ListItemIcon>
-            <CircleTwoToneIcon fontSize="small" sx={{ color: '#674BCE' }} />
-          </ListItemIcon>
-          <ListItemText primary={col.name} secondary= {`${col.isIdentity ? `🆔`: ''} type: ${col.dataType}`} />
-        </ListItemButton>
-      </ListItem>
-    );
-  };
-
-  const buildSideNavMatElement = (mat: MaterializationDto): ReactElement => {
-    if (!sourceData)
-      throw new Error('Cannot build side nav elements - Source data missing');
-
-    const colElements = sourceData.cols
-      .filter((el) => el.materializationId === mat.id)
-      .map((el) => buildSideNavColElement(el)).sort(compareReactElements);
-
-    return (
-      <div key={`mat-item-${mat.name}`}>
-        <ListItem key={mat.id} dense={true}>
-          <ListItemButton
-            onClick={(e) => handleNavMatClickEvent(e, mat.id)}
-            dense={true}
-            key={`list-item-mat-${mat.id}`}
-          >
-            <ListItemIcon>
-              <SiSnowflake />
-            </ListItemIcon>
-            <ListItemText primary={mat.name} />
-          </ListItemButton>
-        </ListItem>
-        {colElements}
-      </div>
-    );
-  };
-
-  const buildSideNavElements = (): ReactElement[] => {
-    if (!sourceData) throw new Error('Missing source data');
-
-    const matsByDb = sourceData.mats.reduce(groupMatsByDbId, {});
-
-    const dbElements = Object.entries(matsByDb).map((entry) => {
-      const key = entry[0];
-      const val = entry[1];
-
-      const dbElement = <ListSubheader>{key}</ListSubheader>;
-
-      const matElements = val.map((el) => buildSideNavMatElement(el)).sort(compareReactElements);
-
-      return (
-        <li key={`section-${key}`}>
-          <ul>
-            {dbElement}
-            {matElements}
-          </ul>
-        </li>
+    
+    const localSourceData = sourceData;
+    
+    const matchingMats = localSourceData.mats
+      .filter((el) => 
+        new RegExp(value, 'gi').test(el.name)
       );
-    }).sort(compareReactElements);
 
-    return dbElements;
+
+      const elements = buildSideNavElements({...localSourceData, mats: matchingMats}, {col: handleNavColClickEvent, mat: handleNavMatClickEvent});
+      setSideNavMatElements(elements);
+
   };
 
   useEffect(() => {
     if (!sourceData) return;
 
-    const elements = buildSideNavElements();
-    setAllSideNavMatElements(elements);
+    const elements = buildSideNavElements(sourceData, {col: handleNavColClickEvent, mat: handleNavMatClickEvent});
     setSideNavMatElements(elements);
   }, [sourceData]);
-
-  useEffect(() => {
-    if (!searchedSideNavMatElements.length) return;
-
-    setSideNavMatElements(searchedSideNavMatElements);
-  }, [searchedSideNavMatElements]);
 
   return (
     <div id="sidenav" className="sidenav">
@@ -217,7 +222,7 @@ export default ({
             }}
             subheader={<li />}
           >
-            {SideNavMatElements}
+            {sideNavMatElements}
           </List>
         ) : (
           <EmptyStateDottedLine

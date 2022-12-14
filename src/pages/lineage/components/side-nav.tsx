@@ -38,13 +38,14 @@ const compareReactElements = (a: ReactElement, b: ReactElement) => {
   return 0;
 };
 
-const buildSideNavColElement = (col: ColumnDto, clickCallback: (event: SyntheticEvent, colId: string, matId: string)=>void) => {
+const buildSideNavColElement = (
+  col: ColumnDto,
+  clickCallback: (event: SyntheticEvent, colId: string, matId: string) => void
+) => {
   return (
     <ListItem key={`col-item-${col.name}`} dense={true}>
       <ListItemButton
-        onClick={(e) =>
-          clickCallback(e, col.id, col.materializationId)
-        }
+        onClick={(e) => clickCallback(e, col.id, col.materializationId)}
         dense={true}
         key={`list-item-col-${col.id}`}
       >
@@ -62,7 +63,7 @@ const buildSideNavColElement = (col: ColumnDto, clickCallback: (event: Synthetic
 
 const buildSideNavMatElement = (
   mat: MaterializationDto,
-  cols: ColumnDto[], 
+  cols: ColumnDto[],
   callback: {
     col: (event: SyntheticEvent, colId: string, matId: string) => void;
     mat: (event: SyntheticEvent, matId: string) => void;
@@ -142,6 +143,7 @@ export default ({
   const [sideNavMatElements, setSideNavMatElements] = useState<ReactElement[]>(
     []
   );
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleNavMatClickEvent = (
     event: React.SyntheticEvent,
@@ -158,35 +160,46 @@ export default ({
     navClickCallback({ id: colId, type: 'node' }, comboId);
   };
 
-  const handleSearchChange = (event: any) => {
-    if(!sourceData) return; 
+  const handleSearchChange = (event: { target: { value: string } }) => {
+    if (!sourceData) return;
 
-    
     const value = event.target.value;
-    
+    setSearchTerm(value);
+
     if (!value) {
-      const elements = buildSideNavElements(sourceData, {col: handleNavColClickEvent, mat: handleNavMatClickEvent});
+      const elements = buildSideNavElements(sourceData, {
+        col: handleNavColClickEvent,
+        mat: handleNavMatClickEvent,
+      });
       setSideNavMatElements(elements);
       return;
     }
-    
+
     const localSourceData = sourceData;
-    
-    const matchingMats = localSourceData.mats
-      .filter((el) => 
-        new RegExp(value, 'gi').test(el.name)
-      );
 
+    const matchingMats = localSourceData.mats.filter((el) =>
+      new RegExp(value, 'gi').test(el.name)
+    );
 
-      const elements = buildSideNavElements({...localSourceData, mats: matchingMats}, {col: handleNavColClickEvent, mat: handleNavMatClickEvent});
-      setSideNavMatElements(elements);
-
+    const elements = buildSideNavElements(
+      { ...localSourceData, mats: matchingMats },
+      { col: handleNavColClickEvent, mat: handleNavMatClickEvent }
+    );
+    setSideNavMatElements(elements);
   };
 
   useEffect(() => {
     if (!sourceData) return;
 
-    const elements = buildSideNavElements(sourceData, {col: handleNavColClickEvent, mat: handleNavMatClickEvent});
+    if (searchTerm) {
+      handleSearchChange({ target: { value: searchTerm } });
+      return;
+    }
+
+    const elements = buildSideNavElements(sourceData, {
+      col: handleNavColClickEvent,
+      mat: handleNavMatClickEvent,
+    });
     setSideNavMatElements(elements);
   }, [sourceData]);
 

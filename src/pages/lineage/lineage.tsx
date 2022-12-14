@@ -386,15 +386,47 @@ export default (): ReactElement => {
         .then((dashboardDtos) => {
           dashboards.push(...dashboardDtos);
 
-          setSourceData({
-            cols: [],
-            dashboards,
-            mats,
-            dependencies: [],
-            selectedEl: mats.length
-              ? { id: mats[0].id, type: 'combo' }
-              : undefined,
-          });
+          if (mats.length)
+            return ColumnsApiRepository.getBy(
+              new URLSearchParams({ materializationIds: mats[0].id }),
+              jwt
+            );
+        })
+        .then((cols) => {
+          if (cols) {
+            setSourceData({
+              cols,
+              dashboards,
+              mats,
+              dependencies: [],
+            });
+
+            setGraphSourceData({
+              cols,
+              dashboards: [],
+              mats: [mats[0]],
+              dependencies: [],
+              selectedEl: {
+                id: mats[0].id,
+                type: 'combo',
+              },
+            });
+          } else {
+            setSourceData({
+              cols: [],
+              dashboards,
+              mats,
+              dependencies: [],
+            });
+
+            setGraphSourceData({
+              cols: [],
+              dashboards: [],
+              mats: [],
+              dependencies: [],
+            });
+          }
+
           setIsLoading(false);
         })
         .catch((error) => {
@@ -409,6 +441,12 @@ export default (): ReactElement => {
             selectedEl: defaultErrorColumns.length
               ? { id: defaultErrorColumns[0].id, type: 'node' }
               : undefined,
+          });
+          setGraphSourceData({
+            cols: [],
+            dashboards: [],
+            dependencies: [],
+            mats: [],
           });
 
           setIsDataAvailable(false);

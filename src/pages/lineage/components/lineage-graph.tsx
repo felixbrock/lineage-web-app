@@ -382,55 +382,44 @@ export default ({
     edges.forEach((edge) => edge.clearStates());
   };
 
-  const clearStates = () => {
-    if (!graph)
-      throw new Error('Graph not available. Cannot handle node select change');
-
+  const clearStates = (graphObj: Graph) => {
     closeMatSidePanelCallback();
     closeColSidePanelCallback();
     closeIntegrationSidePanelCallback();
     setIsRightPanelShownCallback(false);
-    clearEdgeStates(graph);
+    clearEdgeStates(graphObj);
   };
 
-  const handleNodeSelectChange = (nodeId: string, graphObj?: Graph): void => {
+  const handleNodeSelectChange = (nodeId: string, graphObj: Graph): void => {
     if (!data)
       throw new Error('Data not available. Cannot handle node select change');
-    if (!graph)
-      throw new Error('Graph not available. Cannot handle node select change');
-
-    const localGraph = graphObj || graph;
 
     closeMatSidePanelCallback();
     closeIntegrationSidePanelCallback();
     setIsRightPanelShownCallback(false);
 
-    clearEdgeStates(localGraph);
+    clearEdgeStates(graphObj);
 
     nodeSelectCallback(nodeId);
-    localGraph.data(loadData(nodeId, DataLoadNodeType.Self, [], [], data));
+    graphObj.data(loadData(nodeId, DataLoadNodeType.Self, [], [], data));
 
-    localGraph.set('latestZoom', localGraph.getZoom());
-    localGraph.set('selectedElementId', nodeId);
+    graphObj.set('latestZoom', graphObj.getZoom());
+    graphObj.set('selectedElementId', nodeId);
 
-    localGraph.render();
+    graphObj.render();
 
-    setGraph(localGraph);
+    setGraph(graphObj);
   };
 
   const handleComboSelectChange = async (
     comboId: string,
-    graphObj?: Graph
+    graphObj: Graph
   ): Promise<void> => {
     if (!sourceData) throw new Error('');
-    if (!graph)
-      throw new Error('Graph not available. Cannot handle node select change');
-
-    const localGraph = graphObj || graph;
-
+  
     closeColSidePanelCallback();
 
-    clearEdgeStates(localGraph);
+    clearEdgeStates(graphObj);
 
     const materializationsToSearch = appConfig.react.showRealData
       ? sourceData.mats
@@ -454,12 +443,12 @@ export default ({
       'logicId' in combo ? combo.logicId : undefined
     );
 
-    localGraph.set('latestZoom', localGraph.getZoom());
-    localGraph.set('selectedElementId', comboId);
+    graphObj.set('latestZoom', graphObj.getZoom());
+    graphObj.set('selectedElementId', comboId);
 
-    localGraph.render();
+    graphObj.render();
 
-    setGraph(localGraph);
+    setGraph(graphObj);
   };
 
   const getDependentEdges = (node: INode, isUpstream: boolean): IEdge[] => {
@@ -626,11 +615,11 @@ export default ({
         ? event.target.getID()
         : event.target.get('id');
 
-      if (!event.target) clearStates();
-      else if (!event.select) clearStates();
-      else if (event.target.get('type') === 'node') handleNodeSelectChange(id);
+      if (!event.target) clearStates(localGraph);
+      else if (!event.select) clearStates(localGraph);
+      else if (event.target.get('type') === 'node') handleNodeSelectChange(id, localGraph);
       else if (event.target.get('type') === 'combo')
-        handleComboSelectChange(id);
+        handleComboSelectChange(id, localGraph);
     });
 
     const defaultNodeId =

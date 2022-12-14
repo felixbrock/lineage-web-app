@@ -27,6 +27,17 @@ const groupMatsByDbId = (
   return localAcc;
 };
 
+const compareReactElements = (a: ReactElement, b:ReactElement) => {
+    if(!a.key || !b.key) return 0;
+    if (a.key < b.key) {
+      return -1;
+    }
+    if (a.key > b.key) {
+      return 1;
+    }
+    return 0;
+}
+
 export default ({
   sourceData,
   dataAvailable,
@@ -35,7 +46,7 @@ export default ({
 }: {
   sourceData?: SourceData;
   dataAvailable: boolean;
-  navClickCallback: (selectedEl: SelectedElement) => void;
+  navClickCallback: (selectedEl: SelectedElement, comboId?: string) => void;
   showIntegrationPanelCallback: (show: boolean) => void;
 }): ReactElement => {
   const [allSideNavMatElements, setAllSideNavMatElements] = useState<
@@ -57,9 +68,10 @@ export default ({
 
   const handleNavColClickEvent = (
     event: React.SyntheticEvent,
-    colId: string
+    colId: string,
+    comboId: string
   ) => {
-    navClickCallback({ id: colId, type: 'node' });
+    navClickCallback({ id: colId, type: 'node' }, comboId);
   };
 
   const handleSearchChange = (event: any) => {
@@ -91,9 +103,9 @@ export default ({
 
   const buildSideNavColElement = (col: ColumnDto) => {
     return (
-      <ListItem key={col.id} dense={true}>
+      <ListItem key={`col-item-${col.name}`} dense={true}>
         <ListItemButton
-          onClick={(e) => handleNavColClickEvent(e, col.id)}
+          onClick={(e) => handleNavColClickEvent(e, col.id, col.materializationId)}
           dense={true}
           key={`list-item-col-${col.id}`}
         >
@@ -112,10 +124,10 @@ export default ({
 
     const colElements = sourceData.cols
       .filter((el) => el.materializationId === mat.id)
-      .map((el) => buildSideNavColElement(el));
+      .map((el) => buildSideNavColElement(el)).sort(compareReactElements);
 
     return (
-      <>
+      <div key={`mat-item-${mat.name}`}>
         <ListItem key={mat.id} dense={true}>
           <ListItemButton
             onClick={(e) => handleNavMatClickEvent(e, mat.id)}
@@ -129,7 +141,7 @@ export default ({
           </ListItemButton>
         </ListItem>
         {colElements}
-      </>
+      </div>
     );
   };
 
@@ -144,7 +156,7 @@ export default ({
 
       const dbElement = <ListSubheader>{key}</ListSubheader>;
 
-      const matElements = val.map((el) => buildSideNavMatElement(el));
+      const matElements = val.map((el) => buildSideNavMatElement(el)).sort(compareReactElements);
 
       return (
         <li key={`section-${key}`}>
@@ -154,7 +166,7 @@ export default ({
           </ul>
         </li>
       );
-    });
+    }).sort(compareReactElements);
 
     return dbElements;
   };

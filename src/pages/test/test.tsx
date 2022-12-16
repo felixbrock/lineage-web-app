@@ -45,9 +45,12 @@ import AccountDto from '../../infrastructure/account-api/account-dto';
 import SearchBox from '../lineage/components/search-box';
 import Navbar from '../../components/navbar';
 
-import { defaultColumns, defaultMaterializations, defaultTestSuites } from '../lineage/test-data';
-
-
+import {
+  defaultColumns,
+  defaultMaterializations,
+  defaultTestSuites,
+} from '../lineage/test-data';
+import Scheduler from '../../components/scheduler/scheduler';
 
 const showRealData = false;
 // const lineageId = '62f90bec34a8584bd1f6534a';
@@ -142,7 +145,7 @@ export const parseMaterializationType = (
   throw new Error('Provision of invalid type');
 };
 
-export const executionTypes = ['individual', 'automatic', 'frequency'] as const;
+export const executionTypes = ['custom', 'automatic', 'frequency'] as const;
 export type ExecutionType = typeof executionTypes[number];
 
 export const parseExecutionType = (executionType: unknown): ExecutionType => {
@@ -246,6 +249,13 @@ export default (): ReactElement => {
 
   const [initialLoadCompleted, setInitialLoadCompleted] = React.useState(false);
 
+  const [showScheduler, setShowScheduler] = useState<boolean>(false);
+
+  const closeSchedulerCallback = () => setShowScheduler(false);
+
+  const createdScheduleCallback = (expression: string) =>
+    console.log(expression);
+
   const handleSnackbarClose = (
     event?: React.SyntheticEvent | Event,
     reason?: string
@@ -296,8 +306,11 @@ export default (): ReactElement => {
         id: testSuiteId,
         executionType: 'automatic',
       };
-    if (executionType === 'individual')
-      throw new Error('todo - not implemented');
+    else if (executionType === 'custom')
+      return {
+        id: testSuiteId,
+        executionType: 'custom',
+      };
     throw new Error(`Undhandled frequency value detected ${value}`);
   };
 
@@ -358,15 +371,20 @@ export default (): ReactElement => {
       testSelectionLocal[props[1]].columnTestConfigs[
         columnTestConfigIndex
       ].executionType = executionType;
-    else if (executionType === 'individual')
-      throw new Error('todo - not implemented');
+    else if (executionType === 'custom') {
+      setShowScheduler(true);
+
+      testSelectionLocal[props[1]].columnTestConfigs[
+        columnTestConfigIndex
+      ].executionType = executionType;
+    }
 
     setTestSelection({ ...testSelectionLocal });
   };
 
   const handleMatFrequencyChange = (event: SelectChangeEvent<string>) => {
-    const name = event.target.name;
     const value = event.target.value;
+    const name = event.target.name;
     const props = name.split('-');
 
     const testSelectionLocal = testSelection;
@@ -384,8 +402,12 @@ export default (): ReactElement => {
         case 'automatic':
           testSelectionLocal[props[1]].executionType = executionType;
           break;
-        case 'individual':
-          throw new Error('todo - not implemented');
+
+        case 'custom': {
+          setShowScheduler(true);
+          testSelectionLocal[props[1]].executionType = executionType;
+          break;
+        }
         default:
           throw new Error(
             'Unhandled execution type while handling mat frequency change'
@@ -667,12 +689,12 @@ export default (): ReactElement => {
       ].testConfigs[testConfigIndex].testSuiteId = 'testSuite[0].id';
 
       setTestSelection({ ...testSelectionLocal });
-    } else
-      // ObservabilityApiRepo.updateTestSuites(
-      //   [{ id: testSuiteId, activated: newActivatedValue }],
-      //   jwt
-      // );
-      console.log('placeholder observability update')
+    }
+    // ObservabilityApiRepo.updateTestSuites(
+    //   [{ id: testSuiteId, activated: newActivatedValue }],
+    //   jwt
+    // );
+    else console.log('placeholder observability update');
   };
 
   const handleMatTestButtonClick = async (event: any) => {
@@ -880,9 +902,8 @@ export default (): ReactElement => {
 
         testSelectionLocal[props[1]].columnTestConfigs[
           postObject.index
-        ].testConfigs[postObject.testConfigIndex].testSuiteId =
-        'testSuite.id'
-          // filterResult[0].id;
+        ].testConfigs[postObject.testConfigIndex].testSuiteId = 'testSuite.id';
+        // filterResult[0].id;
       });
 
       setTestSelection({ ...testSelectionLocal });
@@ -938,7 +959,7 @@ export default (): ReactElement => {
 
     return (
       <TableRow>
-        <TableCell sx={{...tableCellSx}} align="left">
+        <TableCell sx={{ ...tableCellSx }} align="left">
           {getColumnTestConfig(materializationId, columnId).label}
         </TableCell>
         <TableCell sx={tableCellSx} align="center">
@@ -963,17 +984,18 @@ export default (): ReactElement => {
               onChange={handleColumnFrequencyChange}
               sx={{ width: 100 }}
             >
-              <MenuItem value={'automatic'}>Auto</MenuItem>
               <MenuItem value={'1'}>1h</MenuItem>
               <MenuItem value={'3'}>3h</MenuItem>
               <MenuItem value={'6'}>6h</MenuItem>
               <MenuItem value={'12'}>12h</MenuItem>
               <MenuItem value={'24'}>1d</MenuItem>
+              <MenuItem value={'automatic'}>Auto</MenuItem>
+              <MenuItem value={'custom'}>Custom...</MenuItem>
             </Select>
           </FormControl>
         </TableCell>
-        <TableCell sx={{...tableCellSx, display: 'none'}} align="center">
-          <FormControl sx={{ m: 1}} size="small">
+        <TableCell sx={{ ...tableCellSx, display: 'none' }} align="center">
+          <FormControl sx={{ m: 1 }} size="small">
             <Select
               autoWidth={true}
               name={`sensitivity-${materializationId}-${columnId}`}
@@ -1481,16 +1503,17 @@ export default (): ReactElement => {
                 onChange={handleMatFrequencyChange}
                 sx={{ width: 100 }}
               >
-                <MenuItem value={'automatic'}>Auto</MenuItem>
                 <MenuItem value={'1'}>1h</MenuItem>
                 <MenuItem value={'3'}>3h</MenuItem>
                 <MenuItem value={'6'}>6h</MenuItem>
                 <MenuItem value={'12'}>12h</MenuItem>
                 <MenuItem value={'24'}>1d</MenuItem>
+                <MenuItem value={'automatic'}>Auto</MenuItem>
+                <MenuItem value={'custom'}>Custom...</MenuItem>
               </Select>
             </FormControl>
           </TableCell>
-          <TableCell sx={{...tableCellSx, display: 'none'}} align="center">
+          <TableCell sx={{ ...tableCellSx, display: 'none' }} align="center">
             <FormControl sx={{ m: 1 }} size="small">
               <Select
                 autoWidth={true}
@@ -1849,7 +1872,7 @@ export default (): ReactElement => {
 
     //     // Auth.signOut();
     //   });
-    setAccount({id: '', organizationId: '', userId: ''});
+    setAccount({ id: '', organizationId: '', userId: '' });
   }, [user]);
 
   const handleUserFeedback = () => {
@@ -1883,7 +1906,6 @@ export default (): ReactElement => {
     if (!account || lineage) return;
 
     // if (!jwt) throw new Error('No user authorization found');
-
 
     if (showRealData) {
       handleUserFeedback();
@@ -1943,7 +1965,6 @@ export default (): ReactElement => {
     if (!readyToBuild) return;
 
     console.log('hello'.repeat(10));
-    
 
     if (!materializations.length) throw new Error('Materializations missing');
     if (!columns.length) throw new Error('Columns missing');
@@ -2001,7 +2022,7 @@ export default (): ReactElement => {
                       <p></p>
                     </TableCell>
                     <TableCell
-                      sx={{...tableHeaderCellSx, display: 'none'}}
+                      sx={{ ...tableHeaderCellSx, display: 'none' }}
                       width={135}
                       align="center"
                       style={{ verticalAlign: 'top' }}
@@ -2130,6 +2151,11 @@ export default (): ReactElement => {
             />
           </Paper>
         </>
+        <Scheduler
+          show={showScheduler}
+          closeCallback={closeSchedulerCallback}
+          createdScheduleCallback={createdScheduleCallback}
+        />
         <Snackbar
           open={snackbarOpen}
           autoHideDuration={6000}

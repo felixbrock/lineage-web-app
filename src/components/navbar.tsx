@@ -1,9 +1,13 @@
 import { Auth } from 'aws-amplify';
 import Logo from './top-nav/cito-header-purple.png';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
+import { RiRefreshLine } from 'react-icons/ri';
+import LineageApiRepository from '../infrastructure/lineage-api/lineage/lineage-api-repository';
+
+type SnapshotState = 'loading' | 'creating' | 'available' | 'not available';
 
 const navigation = [
   { name: 'Lineage', href: '/lineage', current: true },
@@ -24,8 +28,13 @@ export default function Navbar({
   toggleRightPanelFunctions,
   isRightPanelShown,
   setIsRightPanelShown,
-}: any) {
+  jwt,
+}: {[key:string]: any}) {
   const [isLeftPanelShown, setIsLeftPanelShown] = useState(true);
+
+  const [snapshotState, setSnapshotState] = useState<SnapshotState>('loading');
+
+  const [snapshotInfo, setSnapshotInfo] = useState<string>('Loading...');
 
   // temp code because of launch
   if (current === 'lineage') {
@@ -35,6 +44,36 @@ export default function Navbar({
     navigation[0].current = false;
     navigation[1].current = true;
   }
+
+  const getSnapshotInfo = (state: SnapshotState, createdAt?: string) => {
+    switch (state) {
+      case 'loading':
+        return 'Loading...';
+      case 'creating':
+        return 'Creating new snapshot...';
+      case 'available':
+        if (!createdAt) throw new Error('CreatedAt param needs to be provided');
+        return new Date(createdAt).toLocaleString();
+      case 'not available':
+        return 'Not available';
+      default:
+        throw new Error('Unhandled snapshot state');
+    }
+  };
+
+  const handleLineageSnapshotRefresh = () => {
+    if (!jwt) {
+      console.error('jwt missing. Cannot create new lineage snapshot');
+      return;
+    }
+
+    if (snapshotState === 'loading' || snapshotState === 'creating') return;
+
+    const state: SnapshotState = 'creating';
+    setSnapshotState(state);
+    setSnapshotInfo(getSnapshotInfo(state));
+    LineageApiRepository.create(jwt);
+  };
 
   function toggleRightPanel() {
     if (isRightPanelShown) {
@@ -53,6 +92,39 @@ export default function Navbar({
     toggleRightPanel();
   };
   subNavigation[1].isShown = isRightPanelShown;
+
+  useEffect(() => {
+    if (!jwt) return;
+
+    LineageApiRepository.getLatest(jwt, true)
+      .then((snapshot) => {
+        let state: SnapshotState = 'not available';
+        if (!snapshot) {
+          setSnapshotState(state);
+          setSnapshotInfo(getSnapshotInfo(state));
+          return;
+        }
+
+        if (snapshot.completed === false) {
+          state = 'creating';
+          setSnapshotState(state);
+          setSnapshotInfo(getSnapshotInfo(state));
+        } else if (snapshot.completed === true) {
+          state = 'available';
+          setSnapshotState(state);
+          setSnapshotInfo(getSnapshotInfo(state, snapshot.createdAt));
+        } else {
+          setSnapshotState(state);
+          setSnapshotInfo(getSnapshotInfo(state));
+        }
+      })
+      .catch((err) => {
+        const state: SnapshotState = 'not available';
+        setSnapshotState(state);
+        setSnapshotInfo(getSnapshotInfo(state));
+        console.error(err);
+      });
+  }, [jwt]);
 
   return (
     <Disclosure as="nav" className="relative z-50 bg-gray-800">
@@ -76,12 +148,12 @@ export default function Navbar({
                   <img
                     className="block h-8 w-auto lg:hidden"
                     src={Logo}
-                    alt="Your Company"
+                    alt="Cito Data"
                   />
                   <img
                     className="hidden h-8 w-auto lg:block"
                     src={Logo}
-                    alt="Your Company"
+                    alt="Cito Data"
                   />
                 </div>
                 <div className="hidden sm:ml-6 sm:block">
@@ -105,14 +177,30 @@ export default function Navbar({
                 </div>
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                {snapshotState === 'loading' || snapshotState === 'creating' ? (
+                  <div className="relative ml-3 animate-spin rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                    <RiRefreshLine className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="relative ml-3 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                    onClick={handleLineageSnapshotRefresh}
+                  >
+                    <span className="sr-only">Create new snapshot</span>
+                    <RiRefreshLine className="h-6 w-6" aria-hidden="true" />
+                  </button>
+                )}
+                <i className="relative ml-3 text-xs text-gray-300">
+                  Latest Snapshot: {snapshotInfo}
+                </i>
                 <button
                   type="button"
-                  className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                  className="relative ml-3 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                 >
                   <span className="sr-only">View notifications</span>
                   <BellIcon className="h-6 w-6" aria-hidden="true" />
                 </button>
-
                 {/* Profile dropdown */}
                 <Menu as="div" className="relative ml-3">
                   <div>

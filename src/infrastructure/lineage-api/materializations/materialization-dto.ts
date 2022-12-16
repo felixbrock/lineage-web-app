@@ -1,11 +1,13 @@
 export default interface MaterializationDto {
   id: string;
-  dbtModelId: string;
-  materializationType: string;
+  relationName: string;
   name: string;
   schemaName: string;
   databaseName: string;
-  logicId?: string;
-  lineageId: string;
+  type: string;
+  logicId?: string ;
+  ownerId?: string ;
+  isTransient?: boolean ;
+  comment?: string ;
   // eslint-disable-next-line semi
 }

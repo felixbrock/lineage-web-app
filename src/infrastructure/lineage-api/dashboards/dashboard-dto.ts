@@ -1,12 +1,11 @@
 export default interface DashboardDto {
-    url?: string;
-    name?: string;
-    materialisation: string;
-    column: string; 
-    id: string;
-    lineageId: string;
-    columnId: string,
-    matId: string;
+  id: string;
+  url?: string;
+  name?: string;
+  materializationName: string;
+  columnName: string;
+  columnId: string;
+  materializationId: string;
     // eslint-disable-next-line semi
   }
   

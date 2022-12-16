@@ -1,10 +1,12 @@
 export default interface ColumnDto {
   id: string;
-  dbtModelId: string;
+  relationName: string;
   name: string;
   index: string;
-  type: string;
+  dataType: string;
   materializationId: string;
-  lineageId: string;
+  isIdentity?: boolean;
+  isNullable?: boolean;
+  comment?: string;
   // eslint-disable-next-line semi
 }

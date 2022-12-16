@@ -10,14 +10,14 @@ import {
   FormControl,
   Divider,
 } from '@mui/material';
-import { mode, slackConfig } from '../../../config';
-import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 import SlackConversationInfoDto from '../../../infrastructure/integration-api/slack-channel-info-dto';
 import SlackProfileDto from '../../../infrastructure/integration-api/slack-profile-dto';
 import './slack.scss';
+import appConfig from '../../../config';
+import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 
 const buildOAuthUrl = (organizationId: string) => {
-  const clientId = encodeURIComponent(slackConfig.slackClientId);
+  const clientId = encodeURIComponent(appConfig.slack.slackClientId);
   const scopes = encodeURIComponent(
     'channels:read,channels:join,channels:manage,chat:write,groups:read,groups:write,im:read,im:write,mpim:read,mpim:write'
   );
@@ -117,7 +117,7 @@ export default ({
 
       <Divider />
 
-      {mode === 'production' ? (
+      {appConfig.react.mode === 'production' ? (
         <div className="integration-button">
           <a href={buildOAuthUrl(organizationId)}>
             <img

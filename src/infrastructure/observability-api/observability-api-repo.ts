@@ -1,7 +1,10 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { mode } from '../../config';
-import { ExecutionType, MaterializationType, TestType } from '../../pages/test/test';
-import getRoot from '../shared/api-root-builder';
+import appConfig from '../../config';
+import {
+  ExecutionType,
+  MaterializationType,
+  TestType,
+} from '../../pages/test/test';
 import { NominalTestSuiteDto, TestSuiteDto } from './test-suite-dto';
 
 interface UpdateTestHistoryEntryDto {
@@ -30,41 +33,42 @@ export interface TestSuiteProps extends BaseTestSuiteProps {
 
 export type NominalTestSuiteProps = BaseTestSuiteProps;
 
-interface BaseUpdateTestSuiteObject {
-  id: string;
+interface BaseUpdateTestSuiteObjProps {
   activated?: boolean;
   frequency?: number;
   cron?: string;
-  executionType?: ExecutionType
+  executionType?: ExecutionType;
 }
 
-export interface UpdateTestSuiteObject extends BaseUpdateTestSuiteObject {
+interface UpdateTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
   threshold?: number;
+}
+
+interface BaseUpdateTestSuiteObject {
+  id: string;
+  props: BaseUpdateTestSuiteObjProps;
+}
+
+export interface UpdateTestSuiteObject
+  extends Omit<BaseUpdateTestSuiteObject, 'props'> {
+  props: UpdateTestSuiteObjProps;
 }
 
 export type UpdateNominalTestSuiteObject = BaseUpdateTestSuiteObject;
 
 // TODO - Implement Interface regarding clean architecture
 export default class ObservabilityApiRepo {
-  private static gateway =
-    mode === 'production'
-      ? 'ax4h0t5r59.execute-api.eu-central-1.amazonaws.com/production'
-      : 'localhost:3012';
+  private static version = 'v1';
 
-  private static path = 'api/v1';
+  private static apiRoot = 'api';
 
-  private static root = getRoot(
-    ObservabilityApiRepo.gateway,
-    ObservabilityApiRepo.path
-  );
+  private static baseUrl = appConfig.baseUrl.observabilityService;
 
-  public static postTestSuites = async (
+  static postTestSuites = async (
     postTestSuiteObjects: TestSuiteProps[],
     jwt: string
   ): Promise<TestSuiteDto[]> => {
     try {
-      const apiRoot = await ObservabilityApiRepo.root;
-
       const payload = { createObjects: postTestSuiteObjects };
 
       const config: AxiosRequestConfig = {
@@ -72,7 +76,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.post(
-        `${apiRoot}/test-suites`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-suites`,
         payload,
         config
       );
@@ -84,13 +88,11 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  public static postNominalTestSuites = async (
+  static postNominalTestSuites = async (
     postTestSuiteObjects: NominalTestSuiteProps[],
     jwt: string
   ): Promise<NominalTestSuiteDto[]> => {
     try {
-      const apiRoot = await ObservabilityApiRepo.root;
-
       const payload = { createObjects: postTestSuiteObjects };
 
       const config: AxiosRequestConfig = {
@@ -98,7 +100,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.post(
-        `${apiRoot}/nominal-test-suites`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/nominal-test-suites`,
         payload,
         config
       );
@@ -110,13 +112,11 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  public static updateTestSuites = async (
+  static updateTestSuites = async (
     updateObjects: UpdateTestSuiteObject[],
     jwt: string
   ): Promise<void> => {
     try {
-      const apiRoot = await ObservabilityApiRepo.root;
-
       const payload = { updateObjects };
 
       const config: AxiosRequestConfig = {
@@ -124,7 +124,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.patch(
-        `${apiRoot}/test-suites`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-suites`,
         payload,
         config
       );
@@ -136,13 +136,11 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  public static updateNominalTestSuites = async (
+  static updateNominalTestSuites = async (
     updateObjects: UpdateNominalTestSuiteObject[],
     jwt: string
   ): Promise<void> => {
     try {
-      const apiRoot = await ObservabilityApiRepo.root;
-
       const payload = { updateObjects };
 
       const config: AxiosRequestConfig = {
@@ -150,7 +148,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.patch(
-        `${apiRoot}/nominal-test-suites`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/nominal-test-suites`,
         payload,
         config
       );
@@ -162,37 +160,14 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  public static getTestSuites = async (
-    jwt: string
-  ): Promise<TestSuiteDto[]> => {
+  static getTestSuites = async (jwt: string): Promise<TestSuiteDto[]> => {
     try {
-      const apiRoot = await ObservabilityApiRepo.root;
-
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.get(`${apiRoot}/test-suites`, config);
-      const jsonResponse = response.data;
-      if (response.status === 200) return jsonResponse;
-      throw new Error(jsonResponse);
-    } catch (error: any) {
-      return Promise.reject(new Error(error.response.data.message));
-    }
-  };
-
-  public static getNominalTestSuites = async (
-    jwt: string
-  ): Promise<NominalTestSuiteDto[]> => {
-    try {
-      const apiRoot = await ObservabilityApiRepo.root;
-
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
       const response = await axios.get(
-        `${apiRoot}/nominal-test-suites`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-suites`,
         config
       );
       const jsonResponse = response.data;
@@ -203,13 +178,31 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  public static updateTestHistoryEntry = async (
+  static getNominalTestSuites = async (
+    jwt: string
+  ): Promise<NominalTestSuiteDto[]> => {
+    try {
+      const config: AxiosRequestConfig = {
+        headers: { Authorization: `Bearer ${jwt}` },
+      };
+
+      const response = await axios.get(
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/nominal-test-suites`,
+        config
+      );
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
+  static updateTestHistoryEntry = async (
     updateTestHistoryEntryDto: UpdateTestHistoryEntryDto,
     jwt: string
   ): Promise<unknown> => {
     try {
-      const apiRoot = await ObservabilityApiRepo.root;
-
       const data = {
         userFeedbackIsAnomaly: updateTestHistoryEntryDto.userFeedbackIsAnomaly,
         testType: updateTestHistoryEntryDto.testType,
@@ -220,7 +213,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.patch(
-        `${apiRoot}/test-data/history/${updateTestHistoryEntryDto.alertId}`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-data/history/${updateTestHistoryEntryDto.alertId}`,
         data,
         config
       );

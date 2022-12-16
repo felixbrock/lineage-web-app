@@ -632,7 +632,7 @@ export default (
               type,
               executionFrequency: testSelectionLocal[props[1]].frequency || 1,
               executionType:
-                testSelectionLocal[props[1]].executionType || 'automatic',
+                testSelectionLocal[props[1]].executionType || 'frequency',
             },
           ],
           jwt
@@ -655,7 +655,7 @@ export default (
               executionFrequency: testSelectionLocal[props[1]].frequency || 1,
               threshold: testSelectionLocal[props[1]].sensitivity || 3,
               executionType:
-                testSelectionLocal[props[1]].executionType || 'automatic',
+                testSelectionLocal[props[1]].executionType || 'frequency',
             },
           ],
           jwt
@@ -1020,7 +1020,7 @@ export default (
           type: column.dataType,
           label: columnLabel,
           frequency: suites.length ? suites[0].executionFrequency : 1,
-          executionType: suites.length ? suites[0].executionType : 'automatic',
+          executionType: suites.length ? suites[0].executionType : 'frequency',
           sensitivity: suites.length ? suites[0].threshold : 3,
           testConfigs: allowedTests.map((element) => {
             const typeSpecificSuite = suites.find((el) => el.type === element);
@@ -1356,12 +1356,12 @@ export default (
                 onChange={handleMatFrequencyChange}
                 sx={{ width: 100 }}
               >
-                <MenuItem value={'automatic'}>Auto</MenuItem>
                 <MenuItem value={'1'}>1h</MenuItem>
                 <MenuItem value={'3'}>3h</MenuItem>
                 <MenuItem value={'6'}>6h</MenuItem>
                 <MenuItem value={'12'}>12h</MenuItem>
                 <MenuItem value={'24'}>1d</MenuItem>
+                <MenuItem value={'automatic'}>Auto</MenuItem>
               </Select>
             </FormControl>
           </TableCell>

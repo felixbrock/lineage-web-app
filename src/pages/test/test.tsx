@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, SyntheticEvent, useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
@@ -154,22 +154,21 @@ const buildCronExpression = (frequency: Frequency) => {
 
   switch (frequency) {
     case '1h':
-      return `${currentMinutes} * * * * *`;
+      return `${currentMinutes} * * * ? *`;
 
     case '3h':
-      return `${currentMinutes} */3 * * * *`;
+      return `${currentMinutes} */3 * * ? *`;
 
     case '6h':
-      return `${currentMinutes} */6 * * * *`;
+      return `${currentMinutes} */6 * * ? *`;
 
     case '12h':
-      return `${currentMinutes} */12 * * * *`;
+      return `${currentMinutes} */12 * * ? *`;
 
     case '24h':
-      return `${currentMinutes} ${currentHours} * * * *`;
+      return `${currentMinutes} ${currentHours} * * ? *`;
     case 'automatic':
-      return `*/5 * * * * *`;
-
+      return `*/5 * * * ? *`;
     default:
       throw new Error('Unhandled frequency type');
   }
@@ -185,34 +184,37 @@ const getFrequency = (cron: string): Frequency => {
 
   if (
     !Number.isNaN(Number(parts[0])) &&
-    parts.slice(1).every((el) => el === '*')
+    parts.slice(1).every((el) => el === '*' || el === '?')
   )
     return '1h';
   if (
     !Number.isNaN(Number(parts[0])) &&
     parts[1] === '*/3' &&
-    parts.slice(2).every((el) => el === '*')
+    parts.slice(2).every((el) => el === '*' || el === '?')
   )
     return '3h';
   if (
     !Number.isNaN(Number(parts[0])) &&
     parts[1] === '*/6' &&
-    parts.slice(2).every((el) => el === '*')
+    parts.slice(2).every((el) => el === '*' || el === '?')
   )
     return '6h';
   if (
     !Number.isNaN(Number(parts[0])) &&
     parts[1] === '*/12' &&
-    parts.slice(2).every((el) => el === '*')
+    parts.slice(2).every((el) => el === '*' || el === '?')
   )
     return '12h';
   if (
     !Number.isNaN(Number(parts[0])) &&
     !Number.isNaN(Number(parts[1])) &&
-    parts.slice(2).every((el) => el === '*')
+    parts.slice(2).every((el) => el === '*' || el === '?')
   )
     return '24h';
-  if (parts[0] === '*/5' && parts.slice(1).every((el) => el === '*'))
+  if (
+    parts[0] === '*/5' &&
+    parts.slice(1).every((el) => el === '*' || el === '?')
+  )
     return 'automatic';
   return 'custom';
 };
@@ -417,31 +419,48 @@ export default (): ReactElement => {
     return;
   };
 
+  const handleColumnFrequencyClick = (e: React.MouseEvent<HTMLElement>) => {
+    const componentName = e.target.name;
+    const nameElements = componentName.split('--');
+    const target = { matId: nameElements[1], colId: nameElements[2] };
+    
+    const frequency = parseFrequency(e.target.value);
+    
+    if(frequency !== 'custom') return;
+
+
+    const currentCronExp = testSelection[target.matId].columnTestConfigs.find(
+      (el) => el.id === target.colId
+    )?.cron;
+    setSchedulerProps({ show: true, target, cronExp: currentCronExp });
+    return;
+  }
+
   const handleColumnFrequencyChange = (event: SelectChangeEvent<string>) => {
     const componentName = event.target.name;
     const nameElements = componentName.split('--');
     const target = { matId: nameElements[1], colId: nameElements[2] };
 
     const frequency = parseFrequency(event.target.value);
-    const cron = buildCronExpression(frequency);
     const executionType = frequency === 'automatic' ? 'automatic' : 'frequency';
 
-    const currentCronExp = 
-      testSelection[target.matId].columnTestConfigs.find(
-          (el) => el.id === target.colId
-        )?.cron
-      
-
-    if (frequency === 'custom')
+    
+    if (frequency === 'custom') {
+      const currentCronExp = testSelection[target.matId].columnTestConfigs.find(
+        (el) => el.id === target.colId
+      )?.cron;
       setSchedulerProps({ show: true, target, cronExp: currentCronExp });
-    else changeColumnFrequency(target, { cron, executionType });
+      return;
+    }
+
+    const cron = buildCronExpression(frequency);
+    changeColumnFrequency(target, { cron, executionType });
   };
 
   const changeMatFrequency = (
     target: { matId: string },
     props: { cron: string; executionType: ExecutionType }
   ) => {
-
     const testSelectionLocal = testSelection;
 
     testSelectionLocal[target.matId].cron = props.cron;
@@ -469,11 +488,13 @@ export default (): ReactElement => {
             id: testSuiteId,
             props,
           };
-       });
+        });
 
-        testSelectionLocal[target.matId].columnTestConfigs[index].cron = props.cron;
-        testSelectionLocal[target.matId].columnTestConfigs[index].executionType =
-          props.executionType;
+        testSelectionLocal[target.matId].columnTestConfigs[index].cron =
+          props.cron;
+        testSelectionLocal[target.matId].columnTestConfigs[
+          index
+        ].executionType = props.executionType;
 
         return objects;
       })
@@ -485,10 +506,15 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
+  const handleMatFrequencyClick = (e: unknown) => {
+    console.log(e);
+
+  }
+
   const handleMatFrequencyChange = (event: SelectChangeEvent<string>) => {
     const componentName = event.target.name;
     const nameElements = componentName.split('--');
-    const target = { matId: nameElements[1]};
+    const target = { matId: nameElements[1] };
 
     const frequency = parseFrequency(event.target.value);
     const cron = buildCronExpression(frequency);
@@ -936,6 +962,7 @@ export default (): ReactElement => {
                 getColumnTestConfig(materializationId, columnId).cron
               )}
               onChange={handleColumnFrequencyChange}
+              onClick = {handleColumnFrequencyClick}
               sx={{ width: 100 }}
             >
               {frequencySelectionItems.map((el) => (
@@ -1409,6 +1436,7 @@ export default (): ReactElement => {
                 displayEmpty={true}
                 value={cron ? getFrequency(cron) : ''}
                 onChange={handleMatFrequencyChange}
+                onClick = {handleMatFrequencyClick}
                 sx={{ width: 100 }}
               >
                 {frequencySelectionItems.map((el) => (
@@ -1832,7 +1860,12 @@ export default (): ReactElement => {
   }, [testSelection]);
 
   useEffect(() => {
-    if (schedulerProps.show || !schedulerProps.target || !schedulerProps.cronExp) return;
+    if (
+      schedulerProps.show ||
+      !schedulerProps.target ||
+      !schedulerProps.cronExp
+    )
+      return;
 
     const colId = schedulerProps.target.colId;
     if (colId)

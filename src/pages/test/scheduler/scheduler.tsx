@@ -73,11 +73,14 @@ export default ({
     parts: ExpressionParts
   ) => setExpressionParts({ ...parts });
 
-
   const handleCreateClick = () => {
     if (!expressionValid) return;
 
-    const expression = `${expressionParts.minutes} ${expressionParts.hours} ${expressionParts.dayOfMonth} ${expressionParts.month} ${expressionParts.dayOfWeek} ${expressionParts.year}`;
+    const expression = `${expressionParts.minutes} ${expressionParts.hours} ${
+      expressionParts.dayOfMonth
+    } ${expressionParts.month} ${
+      expressionParts.dayOfWeek === '*' ? '?' : expressionParts.dayOfWeek
+    } ${expressionParts.year}`;
 
     createdScheduleCallback(expression);
   };
@@ -100,12 +103,19 @@ export default ({
   }, [expressionParts]);
 
   useEffect(() => {
-    if(!cronExpression) return;
+    if (!cronExpression) return;
 
-    const parts = cronExpression.split(' ')
+    const parts = cronExpression.split(' ');
 
-    setExpressionParts({minutes: parts[0], hours: parts[1], dayOfMonth: parts[2], month: parts[3], dayOfWeek: parts[4], year: parts[5]})
-  }, [show])
+    setExpressionParts({
+      minutes: parts[0],
+      hours: parts[1],
+      dayOfMonth: parts[2],
+      month: parts[3],
+      dayOfWeek: parts[4] === '?' ? '*' : parts[4],
+      year: parts[5],
+    });
+  }, [show]);
 
   return (
     <Transition appear show={show} as={Fragment}>

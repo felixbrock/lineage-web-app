@@ -12,8 +12,7 @@ interface BaseTestSuiteDto {
   };
   activated: boolean;
   type: string;
-  executionFrequency: number;
-  cron?: string;
+  cron: string;
   executionType: ExecutionType;
 }
 

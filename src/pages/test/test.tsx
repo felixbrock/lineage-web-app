@@ -119,6 +119,103 @@ const snowflakeTypes: { [key: string]: TestType[] } = {
   geography: geospatialDataTests,
 };
 
+export const frequencies = [
+  '1h',
+  '3h',
+  '6h',
+  '12h',
+  '24h',
+  'automatic',
+  'custom',
+] as const;
+export type Frequency = typeof frequencies[number];
+
+export const parseFrequency = (obj: string): Frequency => {
+  const identifiedElement = frequencies.find((element) => element === obj);
+  if (identifiedElement) return identifiedElement;
+  throw new Error('Provision of invalid type');
+};
+
+const frequencySelectionItems: { value: Frequency; label: string }[] = [
+  { value: '1h', label: '1h' },
+  { value: '3h', label: '3h' },
+  { value: '6h', label: '6h' },
+  { value: '12h', label: '12h' },
+  { value: '24h', label: '1d' },
+  { value: 'automatic', label: 'Auto' },
+  { value: 'custom', label: 'Custom...' },
+];
+
+const buildCronExpression = (frequency: Frequency) => {
+  const currentDate = new Date();
+  const currentMinutes = currentDate.getUTCMinutes();
+  const currentHours = currentDate.getUTCHours();
+
+  switch (frequency) {
+    case '1h':
+      return `${currentMinutes} * * * * *`;
+
+    case '3h':
+      return `${currentMinutes} */3 * * * *`;
+
+    case '6h':
+      return `${currentMinutes} */6 * * * *`;
+
+    case '12h':
+      return `${currentMinutes} */12 * * * *`;
+
+    case '24h':
+      return `${currentMinutes} ${currentHours} * * * *`;
+    case 'automatic':
+      return `*/5 * * * * *`;
+
+    default:
+      throw new Error('Unhandled frequency type');
+  }
+};
+
+const getFrequency = (cron: string): Frequency => {
+  const parts = cron.split(' ');
+
+  if (parts.length !== 6)
+    throw new Error(
+      'Unexpected cron exp. format received. Expected 6 elements'
+    );
+
+  if (
+    !Number.isNaN(Number(parts[0])) &&
+    parts.slice(1).every((el) => el === '*')
+  )
+    return '1h';
+  if (
+    !Number.isNaN(Number(parts[0])) &&
+    parts[1] === '*/3' &&
+    parts.slice(2).every((el) => el === '*')
+  )
+    return '3h';
+  if (
+    !Number.isNaN(Number(parts[0])) &&
+    parts[1] === '*/6' &&
+    parts.slice(2).every((el) => el === '*')
+  )
+    return '6h';
+  if (
+    !Number.isNaN(Number(parts[0])) &&
+    parts[1] === '*/12' &&
+    parts.slice(2).every((el) => el === '*')
+  )
+    return '12h';
+  if (
+    !Number.isNaN(Number(parts[0])) &&
+    !Number.isNaN(Number(parts[1])) &&
+    parts.slice(2).every((el) => el === '*')
+  )
+    return '24h';
+  if (parts[0] === '*/5' && parts.slice(1).every((el) => el === '*'))
+    return 'automatic';
+  return 'custom';
+};
+
 export const materializationTypes = ['Table', 'View'] as const;
 export type MaterializationType = typeof materializationTypes[number];
 
@@ -137,7 +234,7 @@ export const parseMaterializationType = (
   throw new Error('Provision of invalid type');
 };
 
-export const executionTypes = ['individual', 'automatic', 'frequency'] as const;
+export const executionTypes = ['automatic', 'frequency'] as const;
 export type ExecutionType = typeof executionTypes[number];
 
 export const parseExecutionType = (executionType: unknown): ExecutionType => {
@@ -158,8 +255,7 @@ interface ColumnTestConfig {
   id: string;
   label: string;
   type: string;
-  frequency: number;
-  cron?: string;
+  cron: string;
   executionType: ExecutionType;
   sensitivity: number;
   testConfigs: TestConfig[];
@@ -176,7 +272,7 @@ interface MaterializationTestsConfig {
   columnTestConfigs: ColumnTestConfig[];
   navExpanded: boolean;
   label: string;
-  frequency?: number;
+  cron?: string;
   executionType?: ExecutionType;
   sensitivity?: number;
   testDefinitionSummary: TestDefinitionSummary[];
@@ -212,8 +308,7 @@ const tableHeaderCellSx = {
 };
 const tableNameSx = { mt: '0px', mb: '0px', mr: '2px', ml: '2px' };
 
-export default (
-): ReactElement => {
+export default (): ReactElement => {
   const [account, setAccount] = useState<AccountDto>();
   const [user, setUser] = useState<any>();
   const [jwt, setJwt] = useState('');
@@ -237,11 +332,8 @@ export default (
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(25);
 
-
   const [initialLoadCompleted, setInitialLoadCompleted] = React.useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
-  
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -254,42 +346,20 @@ export default (
     setPage(0);
   };
 
-  // Avoid a layout jump when reaching the last page with empty rows.
-  const emptyRows =
-    page > 0
-      ? Math.max(
-          0,
-          (1 + page) * rowsPerPage - Object.keys(testSelection).length
-        )
-      : 0;
-
-  const getColumnUpdateObject = (
-    value: string,
-    testSuiteId: string
-  ): UpdateTestSuiteObject => {
-    if (!isNaN(Number(value))) {
-      const numValue = Number(value);
-      return {
-        id: testSuiteId,
-        props: {frequency: numValue,
-        executionType: 'frequency',}
-      };
-    }
-
-    const executionType = parseExecutionType(value);
-    if (executionType === 'automatic')
-      return {
-        id: testSuiteId,
-        props: {executionType: 'automatic',}
-      };
-    if (executionType === 'individual')
-      throw new Error('todo - not implemented');
-    throw new Error(`Undhandled frequency value detected ${value}`);
-  };
+   // Avoid a layout jump when reaching the last page with empty rows.
+   const emptyRows =
+   page > 0
+     ? Math.max(
+         0,
+         (1 + page) * rowsPerPage - Object.keys(testSelection).length
+       )
+     : 0;
 
   const handleColumnFrequencyChange = (event: SelectChangeEvent<string>) => {
     const name = event.target.name;
-    const value = event.target.value;
+    const frequency = parseFrequency(event.target.value);
+    const cron = buildCronExpression(frequency);
+    const executionType = frequency === 'automatic' ? 'automatic' : 'frequency';
     const props = name.split('--');
 
     const testSelectionLocal = testSelection;
@@ -317,64 +387,38 @@ export default (
       if (!test.testSuiteId)
         throw new Error('Test with status activated found that does not exist');
 
-      return getColumnUpdateObject(value, test.testSuiteId);
+      return {
+        id: test.testSuiteId,
+        props: {
+          executionType,
+          cron,
+        },
+      };
     });
 
     ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
-    if (!isNaN(Number(value))) {
-      const numValue = Number(value);
-
-      testSelectionLocal[props[1]].columnTestConfigs[
-        columnTestConfigIndex
-      ].frequency = numValue;
-      testSelectionLocal[props[1]].columnTestConfigs[
-        columnTestConfigIndex
-      ].executionType = 'frequency';
-
-      setTestSelection({ ...testSelectionLocal });
-      return;
-    }
-
-    const executionType = parseExecutionType(value);
-    if (executionType === 'automatic')
-      testSelectionLocal[props[1]].columnTestConfigs[
-        columnTestConfigIndex
-      ].executionType = executionType;
-    else if (executionType === 'individual')
-      throw new Error('todo - not implemented');
+    testSelectionLocal[props[1]].columnTestConfigs[columnTestConfigIndex].cron =
+      cron;
+    testSelectionLocal[props[1]].columnTestConfigs[
+      columnTestConfigIndex
+    ].executionType = executionType;
 
     setTestSelection({ ...testSelectionLocal });
+    return;
   };
 
   const handleMatFrequencyChange = (event: SelectChangeEvent<string>) => {
     const name = event.target.name;
-    const value = event.target.value;
+    const frequency = parseFrequency(event.target.value);
+    const cron = buildCronExpression(frequency);
+    const executionType = frequency === 'automatic' ? 'automatic' : 'frequency';
     const props = name.split('--');
 
     const testSelectionLocal = testSelection;
 
-    let executionType: ExecutionType;
-    if (!isNaN(Number(value))) {
-      const numValue = Number(value);
-
-      testSelectionLocal[props[1]].frequency = numValue;
-      testSelectionLocal[props[1]].executionType = 'frequency';
-    } else {
-      executionType = parseExecutionType(value);
-
-      switch (executionType) {
-        case 'automatic':
-          testSelectionLocal[props[1]].executionType = executionType;
-          break;
-        case 'individual':
-          throw new Error('todo - not implemented');
-        default:
-          throw new Error(
-            'Unhandled execution type while handling mat frequency change'
-          );
-      }
-    }
+    testSelectionLocal[props[1]].cron = cron;
+    testSelectionLocal[props[1]].executionType = executionType;
 
     const isUpdateObject = (
       updateObject: UpdateTestSuiteObject | undefined
@@ -386,7 +430,7 @@ export default (
           (config) => config.testSuiteId
         );
 
-        if (!existingTests.length) return;
+        if (!existingTests.length) return undefined;
 
         const objects = existingTests.map((test): UpdateTestSuiteObject => {
           const testSuiteId = test.testSuiteId;
@@ -394,19 +438,18 @@ export default (
           if (!testSuiteId)
             throw new Error('Activated test without test suite id');
 
-          return getColumnUpdateObject(value, testSuiteId);
+          return {
+            id: testSuiteId,
+            props: {
+              executionType,
+              cron,
+            },
+          };
         });
 
-        if (!isNaN(Number(value))) {
-          const numValue = Number(value);
-
-          testSelectionLocal[props[1]].columnTestConfigs[index].frequency =
-            numValue;
-          testSelectionLocal[props[1]].columnTestConfigs[index].executionType =
-            'frequency';
-        } else if (executionType === 'automatic')
-          testSelectionLocal[props[1]].columnTestConfigs[index].executionType =
-            executionType;
+        testSelectionLocal[props[1]].columnTestConfigs[index].cron = cron;
+        testSelectionLocal[props[1]].columnTestConfigs[index].executionType =
+          executionType;
 
         return objects;
       })
@@ -433,11 +476,7 @@ export default (
     } = {};
 
     testSelectionKeys.forEach((key) => {
-      if (
-        testSelection[key].label
-          .toLowerCase()
-          .includes(value.toLowerCase())
-      )
+      if (testSelection[key].label.toLowerCase().includes(value.toLowerCase()))
         newTestSelectionElements[key] = testSelection[key];
     });
 
@@ -547,9 +586,9 @@ export default (
             materializationType: parseMaterializationType(materalization.type),
             targetResourceId: column.id,
             type,
-            executionFrequency: columnTestConfigs.frequency,
             executionType: columnTestConfigs.executionType,
             threshold: columnTestConfigs.sensitivity,
+            cron: columnTestConfigs.cron,
           },
         ],
         jwt
@@ -562,7 +601,7 @@ export default (
       setTestSelection({ ...testSelectionLocal });
     } else
       ObservabilityApiRepo.updateTestSuites(
-        [{ id: testSuiteId, props: {activated: newActivatedValue} }],
+        [{ id: testSuiteId, props: { activated: newActivatedValue } }],
         jwt
       );
   };
@@ -598,12 +637,12 @@ export default (
     if (testSuiteId) {
       if (type === 'MaterializationSchemaChange')
         ObservabilityApiRepo.updateNominalTestSuites(
-          [{ id: testSuiteId, props: {activated: invertedValueActivated} }],
+          [{ id: testSuiteId, props: { activated: invertedValueActivated } }],
           jwt
         );
       else
         ObservabilityApiRepo.updateTestSuites(
-          [{ id: testSuiteId, props: {activated: invertedValueActivated} }],
+          [{ id: testSuiteId, props: { activated: invertedValueActivated } }],
           jwt
         );
 
@@ -630,7 +669,8 @@ export default (
               ),
               targetResourceId: materalization.id,
               type,
-              executionFrequency: testSelectionLocal[props[1]].frequency || 1,
+              cron:
+                testSelectionLocal[props[1]].cron || buildCronExpression('1h'),
               executionType:
                 testSelectionLocal[props[1]].executionType || 'frequency',
             },
@@ -652,7 +692,8 @@ export default (
               ),
               targetResourceId: materalization.id,
               type,
-              executionFrequency: testSelectionLocal[props[1]].frequency || 1,
+              cron:
+                testSelectionLocal[props[1]].cron || buildCronExpression('1h'),
               threshold: testSelectionLocal[props[1]].sensitivity || 3,
               executionType:
                 testSelectionLocal[props[1]].executionType || 'frequency',
@@ -749,12 +790,15 @@ export default (
           materializationType: parseMaterializationType(materalization.type),
           targetResourceId: column.id,
           type,
-          executionFrequency: config.frequency,
+          cron: config.cron,
           threshold: config.sensitivity,
           executionType: config.executionType,
         });
       } else
-        updateObjects.push({ id: testSuiteId, props: {activated: newActivatedValue} });
+        updateObjects.push({
+          id: testSuiteId,
+          props: { activated: newActivatedValue },
+        });
     });
 
     if (testSuiteProps.length) {
@@ -848,29 +892,18 @@ export default (
                 !getColumnTestConfig(materializationId, columnId).testsActivated
               }
               displayEmpty={true}
-              value={
-                getColumnTestConfig(materializationId, columnId)
-                  .executionType === 'frequency'
-                  ? getColumnTestConfig(
-                      materializationId,
-                      columnId
-                    ).frequency.toString()
-                  : getColumnTestConfig(materializationId, columnId)
-                      .executionType
-              }
+              value={getFrequency(
+                getColumnTestConfig(materializationId, columnId).cron
+              )}
               onChange={handleColumnFrequencyChange}
               sx={{ width: 100 }}
             >
-              <MenuItem value={'automatic'}>Auto</MenuItem>
-              <MenuItem value={'1'}>1h</MenuItem>
-              <MenuItem value={'3'}>3h</MenuItem>
-              <MenuItem value={'6'}>6h</MenuItem>
-              <MenuItem value={'12'}>12h</MenuItem>
-              <MenuItem value={'24'}>1d</MenuItem>
+              {frequencySelectionItems.map((el) => (
+                <MenuItem value={el.value}>{el.label}</MenuItem>
+              ))}
             </Select>
           </FormControl>
         </TableCell>
-        
 
         <TableCell sx={tableCellSx} align="left">
           {allowedTestTypes.includes('ColumnFreshness') ? (
@@ -1019,7 +1052,7 @@ export default (
           id: column.id,
           type: column.dataType,
           label: columnLabel,
-          frequency: suites.length ? suites[0].executionFrequency : 1,
+          cron: suites.length ? suites[0].cron : buildCronExpression('1h'),
           executionType: suites.length ? suites[0].executionType : 'frequency',
           sensitivity: suites.length ? suites[0].threshold : 3,
           testConfigs: allowedTests.map((element) => {
@@ -1120,11 +1153,11 @@ export default (
         },
       ];
 
-      const uniqueFrequencyValues = Array.from(
+      const uniqueCronValues = Array.from(
         new Set(
           columnTestConfigs
             .filter((el) => el.testsActivated)
-            .map((el) => el.frequency)
+            .map((el) => el.cron)
         )
       );
       const uniqueSensitivityValues = Array.from(
@@ -1177,9 +1210,9 @@ export default (
         label: materializationLabel,
         navExpanded: false,
         columnTestConfigs: columnTestConfigs,
-        frequency:
-          uniqueFrequencyValues.length === 1
-            ? uniqueFrequencyValues[0]
+        cron:
+          uniqueCronValues.length === 1
+            ? uniqueCronValues[0] 
             : undefined,
         sensitivity:
           uniqueSensitivityValues.length === 1
@@ -1319,13 +1352,7 @@ export default (
       materializationSchemaChangeType
     );
 
-    const executionType = testSelection[props.materializationId].executionType;
-    const frequency = testSelection[props.materializationId].frequency;
-
-    if (executionType === 'frequency' && frequency === undefined)
-      throw new Error(
-        'Materialization has executionType "frequency" selected but is missing frequency'
-      );
+    const cron = testSelection[props.materializationId].cron;
 
     return (
       <React.Fragment>
@@ -1344,28 +1371,19 @@ export default (
                 }
                 displayEmpty={true}
                 value={
-                  (testSelection[props.materializationId].executionType ===
-                    'frequency' &&
-                  testSelection[props.materializationId].frequency
-                    ? testSelection[
-                        props.materializationId
-                      ].frequency?.toString()
-                    : testSelection[props.materializationId].executionType) ||
+                  cron ? getFrequency(cron) :
                   ''
                 }
                 onChange={handleMatFrequencyChange}
                 sx={{ width: 100 }}
               >
-                <MenuItem value={'1'}>1h</MenuItem>
-                <MenuItem value={'3'}>3h</MenuItem>
-                <MenuItem value={'6'}>6h</MenuItem>
-                <MenuItem value={'12'}>12h</MenuItem>
-                <MenuItem value={'24'}>1d</MenuItem>
-                <MenuItem value={'automatic'}>Auto</MenuItem>
+                {frequencySelectionItems.map((el) => (
+                  <MenuItem value={el.value}>{el.label}</MenuItem>
+                ))}
               </Select>
             </FormControl>
           </TableCell>
-          
+
           <TableCell sx={tableCellSx} align="left">
             {columnFreshnessSummary.totalCount ? (
               <Button
@@ -1701,16 +1719,12 @@ export default (
       });
   }, [user]);
 
-
-
   useEffect(() => {
     if (!account || lineage) return;
 
     if (!jwt) throw new Error('No user authorization found');
 
-
     if (showRealData) {
-
       LineageApiRepository.getLatest(jwt, false)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
@@ -1724,10 +1738,7 @@ export default (
         })
         .then((materializationDtos) => {
           setMaterializations(materializationDtos);
-          return ColumnsApiRepository.getBy(
-            new URLSearchParams({}),
-            jwt
-          );
+          return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
         })
         .then((columnDtos) => {
           setColumns(columnDtos);
@@ -1748,7 +1759,13 @@ export default (
           console.error(error);
         });
     } else {
-      setLineage({ id: 'todo', createdAt: '', completed: true, dbCoveredNames: [], diff: '' });
+      setLineage({
+        id: 'todo',
+        createdAt: '',
+        completed: true,
+        dbCoveredNames: [],
+        diff: '',
+      });
       setIsLoading(false);
     }
   }, [account]);
@@ -1799,7 +1816,7 @@ export default (
               sx={{ height: window.innerHeight - 50 - 67 - 52 - 20 }}
             >
               {isLoading ? (
-                <LoadingScreen tailwindCss='flex w-full items-center justify-center'/>
+                <LoadingScreen tailwindCss="flex w-full items-center justify-center" />
               ) : (
                 <Table stickyHeader={true} aria-label="collapsible table">
                   <TableHead>
@@ -1820,7 +1837,7 @@ export default (
                         <p>Frequency</p>
                         <p></p>
                       </TableCell>
-                      
+
                       <TableCell
                         sx={tableHeaderCellSx}
                         width={135}

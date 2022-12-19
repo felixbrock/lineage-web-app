@@ -4,9 +4,10 @@ frontend:
     preBuild:
       commands:
         - npm install
-    # build:
-    #   commands:
+    build:
+      commands:
     #     - GENERATE_SOURCEMAP=false npm run build
+        npm run build
   artifacts:
     baseDirectory: build
     files:

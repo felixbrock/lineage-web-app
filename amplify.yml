@@ -6,8 +6,7 @@ frontend:
         - npm install
     build:
       commands:
-    #     - GENERATE_SOURCEMAP=false npm run build
-        - npm run build
+        - GENERATE_SOURCEMAP=false npm run build
   artifacts:
     baseDirectory: build
     files:

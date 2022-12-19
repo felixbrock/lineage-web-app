@@ -66,30 +66,6 @@ export default class ObservabilityApiRepo {
     postTestSuiteObjects: TestSuiteProps[],
     jwt: string
   ): Promise<TestSuiteDto[]> => {
-
-    const currentDate = new Date();
-
-    export const getAutomaticCronExpression = (): string => `*/5 * * * ? *`;
-
-    case 1:
-      return `${currentMinutes} * * * ? *`;
-
-    case 3:
-      return `${currentMinutes} */3 * * ? *`;
-
-    case 6:
-      return `${currentMinutes} */6 * * ? *`;
-
-    case 12:
-      return `${currentMinutes} */12 * * ? *`;
-
-    case 24:
-      return `${currentMinutes} ${currentHours} * * ? *`;
-
-
-    const currentMinutes = currentDate.getUTCMinutes();
-    const currentHours = currentDate.getUTCHours();
-
     try {
       const payload = { createObjects: postTestSuiteObjects };
 

@@ -44,6 +44,7 @@ import AccountDto from '../../infrastructure/account-api/account-dto';
 import SearchBox from '../lineage/components/search-box';
 import Navbar from '../../components/navbar';
 import LoadingScreen from '../../components/loading-screen';
+import Scheduler from './scheduler/scheduler';
 
 const showRealData = true;
 
@@ -335,6 +336,19 @@ export default (): ReactElement => {
   const [initialLoadCompleted, setInitialLoadCompleted] = React.useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [schedulerProps, setSchedulerProps] = useState<{
+    show: boolean;
+    target?: { matId: string; colId?: string };
+    cronExp?: string;
+  }>({ show: false });
+
+  const closeSchedulerCallback = () =>
+    setSchedulerProps({ ...schedulerProps, show: false });
+
+  const createdScheduleCallback = (expression: string) => {
+    setSchedulerProps({ ...schedulerProps, show: false, cronExp: expression });
+  };
+
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -346,35 +360,32 @@ export default (): ReactElement => {
     setPage(0);
   };
 
-   // Avoid a layout jump when reaching the last page with empty rows.
-   const emptyRows =
-   page > 0
-     ? Math.max(
-         0,
-         (1 + page) * rowsPerPage - Object.keys(testSelection).length
-       )
-     : 0;
+  // Avoid a layout jump when reaching the last page with empty rows.
+  const emptyRows =
+    page > 0
+      ? Math.max(
+          0,
+          (1 + page) * rowsPerPage - Object.keys(testSelection).length
+        )
+      : 0;
 
-  const handleColumnFrequencyChange = (event: SelectChangeEvent<string>) => {
-    const name = event.target.name;
-    const frequency = parseFrequency(event.target.value);
-    const cron = buildCronExpression(frequency);
-    const executionType = frequency === 'automatic' ? 'automatic' : 'frequency';
-    const props = name.split('--');
-
+  const changeColumnFrequency = (
+    target: { matId: string; colId: string },
+    props: { cron: string; executionType: ExecutionType }
+  ) => {
     const testSelectionLocal = testSelection;
 
-    const matTestConfig = testSelectionLocal[props[1]];
+    const matTestConfig = testSelectionLocal[target.matId];
     matTestConfig.executionType = undefined;
 
     const columnTestConfigIndex = testSelectionLocal[
-      props[1]
-    ].columnTestConfigs.findIndex((el) => el.id === props[2]);
+      target.matId
+    ].columnTestConfigs.findIndex((el) => el.id === target.colId);
 
     if (columnTestConfigIndex === -1)
       throw new Error('Column Test Config not found');
 
-    const testsToUpdate = testSelectionLocal[props[1]].columnTestConfigs[
+    const testsToUpdate = testSelectionLocal[target.matId].columnTestConfigs[
       columnTestConfigIndex
     ].testConfigs.filter((el) => el.testSuiteId);
 
@@ -389,42 +400,58 @@ export default (): ReactElement => {
 
       return {
         id: test.testSuiteId,
-        props: {
-          executionType,
-          cron,
-        },
+        props,
       };
     });
 
     ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
-    testSelectionLocal[props[1]].columnTestConfigs[columnTestConfigIndex].cron =
-      cron;
-    testSelectionLocal[props[1]].columnTestConfigs[
+    testSelectionLocal[target.matId].columnTestConfigs[
       columnTestConfigIndex
-    ].executionType = executionType;
+    ].cron = props.cron;
+    testSelectionLocal[target.matId].columnTestConfigs[
+      columnTestConfigIndex
+    ].executionType = props.executionType;
 
     setTestSelection({ ...testSelectionLocal });
     return;
   };
 
-  const handleMatFrequencyChange = (event: SelectChangeEvent<string>) => {
-    const name = event.target.name;
+  const handleColumnFrequencyChange = (event: SelectChangeEvent<string>) => {
+    const componentName = event.target.name;
+    const nameElements = componentName.split('--');
+    const target = { matId: nameElements[1], colId: nameElements[2] };
+
     const frequency = parseFrequency(event.target.value);
     const cron = buildCronExpression(frequency);
     const executionType = frequency === 'automatic' ? 'automatic' : 'frequency';
-    const props = name.split('--');
+
+    const currentCronExp = 
+      testSelection[target.matId].columnTestConfigs.find(
+          (el) => el.id === target.colId
+        )?.cron
+      
+
+    if (frequency === 'custom')
+      setSchedulerProps({ show: true, target, cronExp: currentCronExp });
+    else changeColumnFrequency(target, { cron, executionType });
+  };
+
+  const changeMatFrequency = (
+    target: { matId: string },
+    props: { cron: string; executionType: ExecutionType }
+  ) => {
 
     const testSelectionLocal = testSelection;
 
-    testSelectionLocal[props[1]].cron = cron;
-    testSelectionLocal[props[1]].executionType = executionType;
+    testSelectionLocal[target.matId].cron = props.cron;
+    testSelectionLocal[target.matId].executionType = props.executionType;
 
     const isUpdateObject = (
       updateObject: UpdateTestSuiteObject | undefined
     ): updateObject is UpdateTestSuiteObject => !!updateObject;
 
-    const updateObjects = testSelectionLocal[props[1]].columnTestConfigs
+    const updateObjects = testSelectionLocal[target.matId].columnTestConfigs
       .map((el, index) => {
         const existingTests = el.testConfigs.filter(
           (config) => config.testSuiteId
@@ -440,16 +467,13 @@ export default (): ReactElement => {
 
           return {
             id: testSuiteId,
-            props: {
-              executionType,
-              cron,
-            },
+            props,
           };
-        });
+       });
 
-        testSelectionLocal[props[1]].columnTestConfigs[index].cron = cron;
-        testSelectionLocal[props[1]].columnTestConfigs[index].executionType =
-          executionType;
+        testSelectionLocal[target.matId].columnTestConfigs[index].cron = props.cron;
+        testSelectionLocal[target.matId].columnTestConfigs[index].executionType =
+          props.executionType;
 
         return objects;
       })
@@ -459,6 +483,22 @@ export default (): ReactElement => {
     ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     setTestSelection({ ...testSelectionLocal });
+  };
+
+  const handleMatFrequencyChange = (event: SelectChangeEvent<string>) => {
+    const componentName = event.target.name;
+    const nameElements = componentName.split('--');
+    const target = { matId: nameElements[1]};
+
+    const frequency = parseFrequency(event.target.value);
+    const cron = buildCronExpression(frequency);
+    const executionType = frequency === 'automatic' ? 'automatic' : 'frequency';
+
+    const currentCronExp = testSelection[target.matId].cron;
+
+    if (frequency === 'custom')
+      setSchedulerProps({ show: true, target, cronExp: currentCronExp });
+    else changeMatFrequency(target, { cron, executionType });
   };
 
   const handleSearchChange = (event: any) => {
@@ -1210,10 +1250,7 @@ export default (): ReactElement => {
         label: materializationLabel,
         navExpanded: false,
         columnTestConfigs: columnTestConfigs,
-        cron:
-          uniqueCronValues.length === 1
-            ? uniqueCronValues[0] 
-            : undefined,
+        cron: uniqueCronValues.length === 1 ? uniqueCronValues[0] : undefined,
         sensitivity:
           uniqueSensitivityValues.length === 1
             ? uniqueSensitivityValues[0]
@@ -1370,10 +1407,7 @@ export default (): ReactElement => {
                   ].columnTestConfigs.some((el) => el.testsActivated)
                 }
                 displayEmpty={true}
-                value={
-                  cron ? getFrequency(cron) :
-                  ''
-                }
+                value={cron ? getFrequency(cron) : ''}
                 onChange={handleMatFrequencyChange}
                 sx={{ width: 100 }}
               >
@@ -1797,6 +1831,27 @@ export default (): ReactElement => {
     setSearchedTestSelection(testSelection);
   }, [testSelection]);
 
+  useEffect(() => {
+    if (schedulerProps.show || !schedulerProps.target || !schedulerProps.cronExp) return;
+
+    const colId = schedulerProps.target.colId;
+    if (colId)
+      changeColumnFrequency(
+        { matId: schedulerProps.target.matId, colId },
+        {
+          cron: schedulerProps.cronExp,
+          executionType: 'frequency',
+        }
+      );
+    else throw new Error('NI');
+
+    setSchedulerProps({
+      ...schedulerProps,
+      target: undefined,
+      cronExp: undefined,
+    });
+  }, [schedulerProps]);
+
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
@@ -1962,6 +2017,12 @@ export default (): ReactElement => {
           </Paper>
         </>
       </div>
+      <Scheduler
+        show={schedulerProps.show}
+        closeCallback={closeSchedulerCallback}
+        createdScheduleCallback={createdScheduleCallback}
+        cronExpression={schedulerProps.cronExp}
+      />
     </ThemeProvider>
   );
 };

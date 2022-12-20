@@ -83,11 +83,16 @@ export default ({
   const handleCreateClick = () => {
     if (!expressionValid) return;
 
-    const expression = `${expressionParts.minutes} ${expressionParts.hours} ${
-      expressionParts.dayOfMonth === '*' ? '?' : expressionParts.dayOfMonth
-    } ${expressionParts.month} ${
-      expressionParts.dayOfWeek === '*' ? '?' : expressionParts.dayOfWeek
-    } ${expressionParts.year}`;
+    let dayOfMonth = expressionParts.dayOfMonth;
+    let dayOfWeek = expressionParts.dayOfWeek;
+
+    if (dayOfMonth === '*' && dayOfWeek === '*') {
+      dayOfMonth = '*';
+      dayOfWeek = '?';
+    } else if (dayOfMonth === '*') dayOfMonth = '?';
+    else if (dayOfWeek === '*') dayOfMonth = '?';
+
+    const expression = `${expressionParts.minutes} ${expressionParts.hours} ${dayOfMonth} ${expressionParts.month} ${dayOfWeek} ${expressionParts.year}`;
 
     createdScheduleCallback(expression);
   };

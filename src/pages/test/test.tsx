@@ -154,21 +154,21 @@ const buildCronExpression = (frequency: Frequency) => {
 
   switch (frequency) {
     case '1h':
-      return `${currentMinutes} * ? * ? *`;
+      return `${currentMinutes} * * * ? *`;
 
     case '3h':
-      return `${currentMinutes} */3 ? * ? *`;
+      return `${currentMinutes} */3 * * ? *`;
 
     case '6h':
-      return `${currentMinutes} */6 ? * ? *`;
+      return `${currentMinutes} */6 * * ? *`;
 
     case '12h':
-      return `${currentMinutes} */12 ? * ? *`;
+      return `${currentMinutes} */12 * * ? *`;
 
     case '24h':
-      return `${currentMinutes} ${currentHours} ? * ? *`;
+      return `${currentMinutes} ${currentHours} * * ? *`;
     case 'automatic':
-      return `*/5 * ? * ? *`;
+      return `*/5 * * * ? *`;
     default:
       throw new Error('Unhandled frequency type');
   }

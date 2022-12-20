@@ -90,7 +90,7 @@ export default ({
       dayOfMonth = '*';
       dayOfWeek = '?';
     } else if (dayOfMonth === '*') dayOfMonth = '?';
-    else if (dayOfWeek === '*') dayOfMonth = '?';
+    else if (dayOfWeek === '*') dayOfWeek = '?';
 
     const expression = `${expressionParts.minutes} ${expressionParts.hours} ${dayOfMonth} ${expressionParts.month} ${dayOfWeek} ${expressionParts.year}`;
 

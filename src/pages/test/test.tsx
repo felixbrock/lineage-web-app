@@ -1,4 +1,4 @@
-import React, { ReactElement, SyntheticEvent, useEffect, useState } from 'react';
+import React, { ReactElement, useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
@@ -154,21 +154,21 @@ const buildCronExpression = (frequency: Frequency) => {
 
   switch (frequency) {
     case '1h':
-      return `${currentMinutes} * * * ? *`;
+      return `${currentMinutes} * ? * ? *`;
 
     case '3h':
-      return `${currentMinutes} */3 * * ? *`;
+      return `${currentMinutes} */3 ? * ? *`;
 
     case '6h':
-      return `${currentMinutes} */6 * * ? *`;
+      return `${currentMinutes} */6 ? * ? *`;
 
     case '12h':
-      return `${currentMinutes} */12 * * ? *`;
+      return `${currentMinutes} */12 ? * ? *`;
 
     case '24h':
-      return `${currentMinutes} ${currentHours} * * ? *`;
+      return `${currentMinutes} ${currentHours} ? * ? *`;
     case 'automatic':
-      return `*/5 * * * ? *`;
+      return `*/5 * ? * ? *`;
     default:
       throw new Error('Unhandled frequency type');
   }
@@ -419,22 +419,34 @@ export default (): ReactElement => {
     return;
   };
 
-  const handleColumnFrequencyClick = (e: React.MouseEvent<HTMLElement>) => {
-    const componentName = e.target.name;
-    const nameElements = componentName.split('--');
-    const target = { matId: nameElements[1], colId: nameElements[2] };
-    
-    const frequency = parseFrequency(e.target.value);
-    
-    if(frequency !== 'custom') return;
+  const handleColumnFrequencyClick = (
+    eventTarget: unknown,
+    target: { matId: string; colId: string }
+  ) => {
+    const isExpectedEventTarget = (
+      eTarget: unknown
+    ): eTarget is { textContent: string } =>
+      !!eTarget && typeof eTarget === 'object' && 'textContent' in eTarget;
 
+    if (!isExpectedEventTarget(eventTarget))
+      throw new Error('Received unexpected event');
+
+    const matchingSelectionItem = frequencySelectionItems.find(
+      (el) => el.label === eventTarget.textContent
+    );
+
+    if (!matchingSelectionItem)
+      throw new Error('Unexpected selection item label provided');
+
+    const frequency = parseFrequency(matchingSelectionItem.value);
+
+    if (frequency !== 'custom') return;
 
     const currentCronExp = testSelection[target.matId].columnTestConfigs.find(
       (el) => el.id === target.colId
     )?.cron;
     setSchedulerProps({ show: true, target, cronExp: currentCronExp });
-    return;
-  }
+  };
 
   const handleColumnFrequencyChange = (event: SelectChangeEvent<string>) => {
     const componentName = event.target.name;
@@ -444,7 +456,6 @@ export default (): ReactElement => {
     const frequency = parseFrequency(event.target.value);
     const executionType = frequency === 'automatic' ? 'automatic' : 'frequency';
 
-    
     if (frequency === 'custom') {
       const currentCronExp = testSelection[target.matId].columnTestConfigs.find(
         (el) => el.id === target.colId
@@ -506,10 +517,32 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
   };
 
-  const handleMatFrequencyClick = (e: unknown) => {
-    console.log(e);
+  const handleMatFrequencyClick = (
+    eventTarget: unknown,
+    target: { matId: string }
+  ) => {
+    const isExpectedEventTarget = (
+      eTarget: unknown
+    ): eTarget is { textContent: string } =>
+      !!eTarget && typeof eTarget === 'object' && 'textContent' in eTarget;
 
-  }
+    if (!isExpectedEventTarget(eventTarget))
+      throw new Error('Received unexpected event');
+
+    const matchingSelectionItem = frequencySelectionItems.find(
+      (el) => el.label === eventTarget.textContent
+    );
+
+    if (!matchingSelectionItem)
+      throw new Error('Unexpected selection item label provided');
+
+    const frequency = parseFrequency(matchingSelectionItem.value);
+
+    if (frequency !== 'custom') return;
+
+    const currentCronExp = testSelection[target.matId].cron;
+    setSchedulerProps({ show: true, target, cronExp: currentCronExp });
+  };
 
   const handleMatFrequencyChange = (event: SelectChangeEvent<string>) => {
     const componentName = event.target.name;
@@ -517,14 +550,15 @@ export default (): ReactElement => {
     const target = { matId: nameElements[1] };
 
     const frequency = parseFrequency(event.target.value);
-    const cron = buildCronExpression(frequency);
     const executionType = frequency === 'automatic' ? 'automatic' : 'frequency';
 
-    const currentCronExp = testSelection[target.matId].cron;
-
-    if (frequency === 'custom')
+    if (frequency === 'custom') {
+      const currentCronExp = testSelection[target.matId].cron;
       setSchedulerProps({ show: true, target, cronExp: currentCronExp });
-    else changeMatFrequency(target, { cron, executionType });
+    } else {
+      const cron = buildCronExpression(frequency);
+      changeMatFrequency(target, { cron, executionType });
+    }
   };
 
   const handleSearchChange = (event: any) => {
@@ -962,7 +996,12 @@ export default (): ReactElement => {
                 getColumnTestConfig(materializationId, columnId).cron
               )}
               onChange={handleColumnFrequencyChange}
-              onClick = {handleColumnFrequencyClick}
+              onClick={(e) => {
+                handleColumnFrequencyClick(e.target, {
+                  matId: materializationId,
+                  colId: columnId,
+                });
+              }}
               sx={{ width: 100 }}
             >
               {frequencySelectionItems.map((el) => (
@@ -1436,7 +1475,11 @@ export default (): ReactElement => {
                 displayEmpty={true}
                 value={cron ? getFrequency(cron) : ''}
                 onChange={handleMatFrequencyChange}
-                onClick = {handleMatFrequencyClick}
+                onClick={(e) => {
+                  handleMatFrequencyClick(e.target, {
+                    matId: props.materializationId,
+                  });
+                }}
                 sx={{ width: 100 }}
               >
                 {frequencySelectionItems.map((el) => (

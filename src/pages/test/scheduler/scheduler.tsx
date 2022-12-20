@@ -45,7 +45,14 @@ export default ({
 
     const value = e.target.value;
 
-    localExpressionParts[fieldType] = value;
+    if (
+      value === '*' ||
+      (fieldType !== 'dayOfMonth' && fieldType !== 'dayOfWeek') ||
+      expressionParts[
+        fieldType === 'dayOfMonth' ? 'dayOfWeek' : 'dayOfMonth'
+      ] === '*'
+    )
+      localExpressionParts[fieldType] = value;
 
     setExpressionParts({ ...localExpressionParts });
   };
@@ -77,7 +84,7 @@ export default ({
     if (!expressionValid) return;
 
     const expression = `${expressionParts.minutes} ${expressionParts.hours} ${
-      expressionParts.dayOfMonth
+      expressionParts.dayOfMonth === '*' ? '?' : expressionParts.dayOfMonth
     } ${expressionParts.month} ${
       expressionParts.dayOfWeek === '*' ? '?' : expressionParts.dayOfWeek
     } ${expressionParts.year}`;
@@ -110,7 +117,7 @@ export default ({
     setExpressionParts({
       minutes: parts[0],
       hours: parts[1],
-      dayOfMonth: parts[2],
+      dayOfMonth: parts[2] === '?' ? '*' : parts[2],
       month: parts[3],
       dayOfWeek: parts[4] === '?' ? '*' : parts[4],
       year: parts[5],

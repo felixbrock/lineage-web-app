@@ -757,11 +757,11 @@ export default (): ReactElement => {
                   key="table-test-history"
                   className={({ selected }) =>
                     classNames(
-                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5',
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
-                        ? 'bg-gray-800 text-cito shadow'
-                        : 'hover:bg-white/[0.12] hover:text-white'
+                        ? 'bg-white text-cito shadow'
+                        : 'hover:bg-white/[0.12] text-white'
                     )
                   }
                 >
@@ -771,11 +771,11 @@ export default (): ReactElement => {
                   key="table-alert-history"
                   className={({ selected }) =>
                     classNames(
-                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5',
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
-                        ? 'bg-gray-800 text-cito shadow'
-                        : 'hover:bg-white/[0.12] hover:text-white'
+                        ? 'bg-white text-cito shadow'
+                        : 'hover:bg-white/[0.12] text-white'
                     )
                   }
                 >
@@ -785,11 +785,11 @@ export default (): ReactElement => {
                   key="table-sql-model"
                   className={({ selected }) =>
                     classNames(
-                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5',
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
-                        ? 'bg-gray-800 text-cito shadow'
-                        : 'hover:bg-white/[0.12] hover:text-white'
+                        ? 'bg-white text-cito shadow'
+                        : 'hover:bg-white/[0.12] text-white'
                     )
                   }
                 >
@@ -876,11 +876,11 @@ export default (): ReactElement => {
                   key="column-test-history"
                   className={({ selected }) =>
                     classNames(
-                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5',
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
-                        ? 'bg-gray-800 text-cito shadow'
-                        : 'hover:bg-white/[0.12] hover:text-white'
+                        ? 'bg-white text-cito shadow'
+                        : 'hover:bg-white/[0.12] text-white'
                     )
                   }
                 >
@@ -890,11 +890,11 @@ export default (): ReactElement => {
                   key="column-alert-history"
                   className={({ selected }) =>
                     classNames(
-                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5',
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
-                        ? 'bg-gray-800 text-cito shadow'
-                        : 'hover:bg-white/[0.12] hover:text-white'
+                        ? 'bg-white text-cito shadow'
+                        : 'hover:bg-white/[0.12] text-white'
                     )
                   }
                 >
@@ -973,11 +973,11 @@ export default (): ReactElement => {
                   key={integration.name}
                   className={({ selected }) =>
                     classNames(
-                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5 text-white',
+                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5',
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
-                        ? 'bg-gray-800 text-cito shadow'
-                        : 'hover:bg-white/[0.12] hover:text-white'
+                        ? 'bg-white text-cito shadow'
+                        : 'hover:bg-white/[0.12] text-white'
                     )
                   }
                 >

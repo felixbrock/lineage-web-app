@@ -37,7 +37,7 @@ import ObservabilityApiRepo, {
   UpdateTestSuiteObject,
 } from '../../infrastructure/observability-api/observability-api-repo';
 import {
-  NominalTestSuiteDto,
+  QualTestSuiteDto,
   TestSuiteDto,
 } from '../../infrastructure/observability-api/test-suite-dto';
 import AccountDto from '../../infrastructure/account-api/account-dto';
@@ -322,8 +322,8 @@ export default (): ReactElement => {
   >([]);
   const [columns, setColumns] = useState<ColumnDto[]>([]);
   const [testSuites, setTestSuites] = useState<TestSuiteDto[]>([]);
-  const [nominalTestSuites, setNominalTestSuites] = useState<
-    NominalTestSuiteDto[]
+  const [qualTestSuites, setQualTestSuites] = useState<
+    QualTestSuiteDto[]
   >([]);
   const [readyToBuild, setReadyToBuild] = useState(false);
   const [testSelection, setTestSelection] = useState<{
@@ -736,7 +736,7 @@ export default (): ReactElement => {
         .testSuiteId;
     if (testSuiteId) {
       if (type === 'MaterializationSchemaChange')
-        ObservabilityApiRepo.updateNominalTestSuites(
+        ObservabilityApiRepo.updateQualTestSuites(
           [{ id: testSuiteId, props: { activated: invertedValueActivated } }],
           jwt
         );
@@ -754,10 +754,10 @@ export default (): ReactElement => {
 
     if (!materalization) throw new Error('Materialization not found');
 
-    let testSuite: TestSuiteDto | NominalTestSuiteDto;
+    let testSuite: TestSuiteDto | QualTestSuiteDto;
     if (type === 'MaterializationSchemaChange')
       testSuite = (
-        await ObservabilityApiRepo.postNominalTestSuites(
+        await ObservabilityApiRepo.postQualTestSuites(
           [
             {
               activated: invertedValueActivated,
@@ -1278,7 +1278,7 @@ export default (): ReactElement => {
         (el) => el.target.targetResourceId === materialization.id
       );
 
-      const matNominalTestSuites = nominalTestSuites.filter(
+      const matQualTestSuites = qualTestSuites.filter(
         (el) => el.target.targetResourceId === materialization.id
       );
 
@@ -1306,7 +1306,7 @@ export default (): ReactElement => {
       if (matFreshnessMatches.length > 1)
         matchCountError('MaterializationFreshness');
 
-      const matSchemaChangeMatches = matNominalTestSuites.filter(
+      const matSchemaChangeMatches = matQualTestSuites.filter(
         (el) => el.type === 'MaterializationSchemaChange'
       );
       if (matSchemaChangeMatches.length > 1)
@@ -1848,10 +1848,10 @@ export default (): ReactElement => {
         .then((columnDtos) => {
           setColumns(columnDtos);
 
-          return ObservabilityApiRepo.getNominalTestSuites(jwt);
+          return ObservabilityApiRepo.getQualTestSuites(jwt);
         })
-        .then((nominalTestSuiteDtos) => {
-          setNominalTestSuites(nominalTestSuiteDtos);
+        .then((qualTestSuiteDtos) => {
+          setQualTestSuites(qualTestSuiteDtos);
           return ObservabilityApiRepo.getTestSuites(jwt);
         })
         .then((testSuiteDtos) => {

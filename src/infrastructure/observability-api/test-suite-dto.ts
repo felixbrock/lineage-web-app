@@ -20,4 +20,4 @@ export interface TestSuiteDto extends BaseTestSuiteDto {
   threshold: number;
 }
 
-export type NominalTestSuiteDto = BaseTestSuiteDto;
+export type QualTestSuiteDto = BaseTestSuiteDto;

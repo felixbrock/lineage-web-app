@@ -322,9 +322,7 @@ export default (): ReactElement => {
   >([]);
   const [columns, setColumns] = useState<ColumnDto[]>([]);
   const [testSuites, setTestSuites] = useState<TestSuiteDto[]>([]);
-  const [qualTestSuites, setQualTestSuites] = useState<
-    QualTestSuiteDto[]
-  >([]);
+  const [qualTestSuites, setQualTestSuites] = useState<QualTestSuiteDto[]>([]);
   const [readyToBuild, setReadyToBuild] = useState(false);
   const [testSelection, setTestSelection] = useState<{
     [key: string]: MaterializationTestsConfig;
@@ -1911,7 +1909,7 @@ export default (): ReactElement => {
       return;
 
     const colId = schedulerProps.target.colId;
-    if (colId)
+    if (colId) {
       changeColumnFrequency(
         { matId: schedulerProps.target.matId, colId },
         {
@@ -1919,7 +1917,12 @@ export default (): ReactElement => {
           executionType: 'frequency',
         }
       );
-    else throw new Error('NI');
+    } else {
+      changeMatFrequency(
+        { matId: schedulerProps.target.matId },
+        { cron: schedulerProps.cronExp, executionType: 'frequency' }
+      );
+    }
 
     setSchedulerProps({
       ...schedulerProps,

@@ -120,15 +120,7 @@ const snowflakeTypes: { [key: string]: TestType[] } = {
   geography: geospatialDataTests,
 };
 
-export const frequencies = [
-  '1h',
-  '3h',
-  '6h',
-  '12h',
-  '24h',
-  'automatic',
-  'custom',
-] as const;
+export const frequencies = ['1h', '3h', '6h', '12h', '24h', 'custom'] as const;
 export type Frequency = typeof frequencies[number];
 
 export const parseFrequency = (obj: string): Frequency => {
@@ -143,7 +135,6 @@ const frequencySelectionItems: { value: Frequency; label: string }[] = [
   { value: '6h', label: '6h' },
   { value: '12h', label: '12h' },
   { value: '24h', label: '1d' },
-  { value: 'automatic', label: 'Auto' },
   { value: 'custom', label: 'Custom...' },
 ];
 
@@ -167,8 +158,6 @@ const buildCronExpression = (frequency: Frequency) => {
 
     case '24h':
       return `${currentMinutes} ${currentHours} * * ? *`;
-    case 'automatic':
-      return `*/5 * * * ? *`;
     default:
       throw new Error('Unhandled frequency type');
   }
@@ -211,11 +200,6 @@ const getFrequency = (cron: string): Frequency => {
     parts.slice(2).every((el) => el === '*' || el === '?')
   )
     return '24h';
-  if (
-    parts[0] === '*/5' &&
-    parts.slice(1).every((el) => el === '*' || el === '?')
-  )
-    return 'automatic';
   return 'custom';
 };
 
@@ -237,7 +221,7 @@ export const parseMaterializationType = (
   throw new Error('Provision of invalid type');
 };
 
-export const executionTypes = ['automatic', 'frequency'] as const;
+export const executionTypes = ['frequency'] as const;
 export type ExecutionType = typeof executionTypes[number];
 
 export const parseExecutionType = (executionType: unknown): ExecutionType => {
@@ -452,7 +436,7 @@ export default (): ReactElement => {
     const target = { matId: nameElements[1], colId: nameElements[2] };
 
     const frequency = parseFrequency(event.target.value);
-    const executionType = frequency === 'automatic' ? 'automatic' : 'frequency';
+    const executionType = 'frequency';
 
     if (frequency === 'custom') {
       const currentCronExp = testSelection[target.matId].columnTestConfigs.find(
@@ -548,7 +532,7 @@ export default (): ReactElement => {
     const target = { matId: nameElements[1] };
 
     const frequency = parseFrequency(event.target.value);
-    const executionType = frequency === 'automatic' ? 'automatic' : 'frequency';
+    const executionType = 'frequency';
 
     if (frequency === 'custom') {
       const currentCronExp = testSelection[target.matId].cron;

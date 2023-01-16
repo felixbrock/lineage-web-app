@@ -184,7 +184,7 @@ export default ({
                           ${
                             selected
                               ? 'bg-white text-cito shadow'
-                              : 'hover:bg-white/[0.12] text-white'
+                              : 'text-white hover:bg-white/[0.12]'
                           }`
                       }
                     >
@@ -197,7 +197,7 @@ export default ({
                           ${
                             selected
                               ? 'bg-white text-cito shadow'
-                              : 'hover:bg-white/[0.12] text-white'
+                              : 'text-white hover:bg-white/[0.12]'
                           }`
                       }
                     >

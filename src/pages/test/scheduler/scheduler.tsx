@@ -2,6 +2,7 @@ import { Transition, Tab } from '@headlessui/react';
 import { ChangeEvent, Fragment, useEffect, useState } from 'react';
 import { MdClose } from 'react-icons/md';
 import CustomScheduler, { FieldType } from './custom/custom-scheduler';
+import nextDates from './next-dates';
 import QuickScheduler from './quick/quick-scheduler';
 import translate from './translate';
 export interface ExpressionParts {
@@ -25,6 +26,8 @@ export default ({
   createdScheduleCallback: (cronExp: string) => void;
 }) => {
   const [translation, setTranslation] = useState('');
+
+  const [nextExecutions, setNextExecutions] = useState<Date[]>([]);
 
   const [expressionValid, setExpressionValid] = useState<boolean>(true);
 
@@ -104,11 +107,13 @@ export default ({
 
     if (translationResult.description) {
       setTranslation(translationResult.description.full);
+      setNextExecutions(translationResult.nextDates || []);
       setExpressionValid(true);
       return;
     }
 
     setExpressionValid(false);
+    setNextExecutions([]);
     setTranslation(
       'Unknown schedule - Please make sure your expression is correct'
     );
@@ -175,6 +180,9 @@ export default ({
                 >
                   {`"${translation}" (in UTC)`}
                 </p>
+                {nextExecutions.length
+                  ? nextDates({ nextExecutions })
+                  : undefined}
                 <Tab.Group>
                   <Tab.List className="flex space-x-1 rounded-xl bg-cito p-1">
                     <Tab

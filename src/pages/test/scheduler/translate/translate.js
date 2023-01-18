@@ -3,7 +3,16 @@ import prenormalize from './prenormalize';
 import normalize from './normalize';
 import describe from './describe';
 import determineNextDate from './determine-next-date';
-import calcFrequency from './calc-frequency';
+
+const getNextDates = (baseDate, schedule, next = 1, max = 5) => {
+  const res = [determineNextDate(schedule, baseDate)];
+
+  if (next < max)
+    res.push(
+      ...getNextDates(new Date(res[0].getTime() + 1), schedule, next + 1)
+    );
+  return res;
+};
 
 const c = (e) => {
   return e.trim().replace(/ +/g, ' ');
@@ -21,18 +30,12 @@ export default (expression) => {
     o = normalize(r),
     a = o.errors ? null : describe(r),
     u = t.split(' '),
-    nextDate = determineNextDate(o, new Date()),
-    nextDates = [
-      nextDate,
-      determineNextDate(o, new Date(nextDate.getTime() + 1)),
-    ],
-    frequency = calcFrequency(nextDates[0], nextDates[1]);
+    nextDates = o.errors ? null : getNextDates(new Date(), o);
   return {
     schedule: o,
     description: a,
     commonBlurb: n,
     isSpecialString: 1 <= u.length && u[0].startsWith('@'),
     nextDates,
-    minFrequency: frequency,
   };
 };

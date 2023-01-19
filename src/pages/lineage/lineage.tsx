@@ -1532,8 +1532,15 @@ export default (): ReactElement => {
             />
           </div>
           <div id="editor" className="content mt-10">
-            <i>Last Modified: {lastModifiedInfos[Math.floor(Math.random()*lastModifiedInfos.length)]}</i>
-            <ModelVisualizer sql={sql}/>
+            <i>
+              Last Modified:{' '}
+              {
+                lastModifiedInfos[
+                  Math.floor(Math.random() * lastModifiedInfos.length)
+                ]
+              }
+            </i>
+            <ModelVisualizer sql={sql} />
           </div>
         </div>
         <div id="columnSidePanel" className="sidepanel">
@@ -1585,11 +1592,11 @@ export default (): ReactElement => {
                   <>
                     <div className="card">
                       {selectedNodeId === '627160717e3d8066494d41ff' ? (
-                        BasicCard(20.6, 448, 3.4, 5.6, 'distribution')
+                        BasicCard(20.6, 348, 3.4, 5.6, 'distribution')
                       ) : selectedNodeId === '6271607e7e3d8066494d42d7' ? (
-                        BasicCard(92, 195, 28, 33, 'distribution')
+                        BasicCard(92, 95, 28, 33, 'distribution')
                       ) : selectedNodeId === '62715f917e3d8066494d40f7' ? (
-                        BasicCard(2561, 380, 425, 641, 'nullness')
+                        BasicCard(2561, 280, 425, 641, 'nullness')
                       ) : (
                         <></>
                       )}

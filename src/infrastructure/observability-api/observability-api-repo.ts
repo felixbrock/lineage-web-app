@@ -11,6 +11,7 @@ interface UpdateTestHistoryEntryDto {
   alertId: string;
   testType: string;
   userFeedbackIsAnomaly: string;
+  importanceSensitivity?: number;
 }
 
 interface BaseTestSuiteProps {
@@ -28,6 +29,7 @@ interface BaseTestSuiteProps {
 
 export interface TestSuiteProps extends BaseTestSuiteProps {
   threshold: number;
+  importanceSensitivity: number;
 }
 
 export type QualTestSuiteProps = BaseTestSuiteProps;
@@ -40,6 +42,7 @@ interface BaseUpdateTestSuiteObjProps {
 
 interface UpdateTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
   threshold?: number;
+  importanceSensitivity?: number;
 }
 
 interface BaseUpdateTestSuiteObject {
@@ -196,7 +199,7 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  static updateTestHistoryEntry = async (
+  static adjustDetectedAnomaly = async (
     updateTestHistoryEntryDto: UpdateTestHistoryEntryDto,
     jwt: string
   ): Promise<unknown> => {
@@ -204,6 +207,7 @@ export default class ObservabilityApiRepo {
       const data = {
         userFeedbackIsAnomaly: updateTestHistoryEntryDto.userFeedbackIsAnomaly,
         testType: updateTestHistoryEntryDto.testType,
+        importanceSensitivity: updateTestHistoryEntryDto.importanceSensitivity,
       };
 
       const config: AxiosRequestConfig = {

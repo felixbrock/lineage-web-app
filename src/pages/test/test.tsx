@@ -247,6 +247,7 @@ interface ColumnTestConfig {
   sensitivity: number;
   testConfigs: TestConfig[];
   testsActivated: boolean;
+  importanceSensitivity: number;
 }
 
 interface TestDefinitionSummary {
@@ -671,6 +672,7 @@ export default (): ReactElement => {
             executionType: columnTestConfigs.executionType,
             threshold: columnTestConfigs.sensitivity,
             cron: columnTestConfigs.cron,
+            importanceSensitivity: columnTestConfigs.importanceSensitivity,
           },
         ],
         jwt
@@ -779,6 +781,8 @@ export default (): ReactElement => {
               threshold: testSelectionLocal[props[1]].sensitivity || 3,
               executionType:
                 testSelectionLocal[props[1]].executionType || 'frequency',
+              importanceSensitivity:
+                testSelectionLocal[props[1]].sensitivity || -1,
             },
           ],
           jwt
@@ -875,6 +879,7 @@ export default (): ReactElement => {
           cron: config.cron,
           threshold: config.sensitivity,
           executionType: config.executionType,
+          importanceSensitivity: config.importanceSensitivity,
         });
       } else
         updateObjects.push({
@@ -1162,6 +1167,9 @@ export default (): ReactElement => {
             };
           }),
           testsActivated,
+          importanceSensitivity: suites.length
+            ? suites[0].importanceSensitivity
+            : -1,
         });
       });
 

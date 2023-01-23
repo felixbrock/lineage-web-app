@@ -21,6 +21,7 @@ export default (): ReactElement => {
 
     const alertId = searchParams.get('alertId');
     const testType = searchParams.get('testType');
+    const importance = searchParams.get('importance');
 
     if (!!alertId !== !!testType)
       throw new Error('User feedback callback is missing query param(s)');
@@ -29,11 +30,12 @@ export default (): ReactElement => {
 
     const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
     if (!userFeedbackIsAnomaly) return;
-    ObservabilityApiRepo.updateTestHistoryEntry(
+    ObservabilityApiRepo.adjustDetectedAnomaly(
       { alertId, userFeedbackIsAnomaly, testType },
       jwt
     )
       .then(() => {
+        ObservabilityApiRepo.updateTestSuites([{ id }]);
         setIsLoading(false);
       })
       .catch(() => {

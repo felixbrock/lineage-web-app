@@ -7,11 +7,12 @@ import {
 } from '../../pages/test/test';
 import { QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
 
-interface UpdateTestHistoryEntryDto {
+interface PostAnomalyFeedbackDto {
   alertId: string;
   testType: string;
   userFeedbackIsAnomaly: string;
-  importanceSensitivity?: number;
+  testSuiteId?: string;
+  importance?: string;
 }
 
 interface BaseTestSuiteProps {
@@ -29,7 +30,7 @@ interface BaseTestSuiteProps {
 
 export interface TestSuiteProps extends BaseTestSuiteProps {
   threshold: number;
-  importanceSensitivity: number;
+  importanceThreshold: number;
 }
 
 export type QualTestSuiteProps = BaseTestSuiteProps;
@@ -42,7 +43,7 @@ interface BaseUpdateTestSuiteObjProps {
 
 interface UpdateTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
   threshold?: number;
-  importanceSensitivity?: number;
+  importanceThreshold?: number;
 }
 
 interface BaseUpdateTestSuiteObject {
@@ -200,14 +201,16 @@ export default class ObservabilityApiRepo {
   };
 
   static adjustDetectedAnomaly = async (
-    updateTestHistoryEntryDto: UpdateTestHistoryEntryDto,
+    postAnomalyFeedbackDto: PostAnomalyFeedbackDto,
     jwt: string
   ): Promise<unknown> => {
     try {
       const data = {
-        userFeedbackIsAnomaly: updateTestHistoryEntryDto.userFeedbackIsAnomaly,
-        testType: updateTestHistoryEntryDto.testType,
-        importanceSensitivity: updateTestHistoryEntryDto.importanceSensitivity,
+        alertId: postAnomalyFeedbackDto.alertId,
+        testSuiteId: postAnomalyFeedbackDto.testSuiteId,
+        userFeedbackIsAnomaly: postAnomalyFeedbackDto.userFeedbackIsAnomaly,
+        testType: postAnomalyFeedbackDto.testType,
+        importance: postAnomalyFeedbackDto.importance,
       };
 
       const config: AxiosRequestConfig = {
@@ -215,7 +218,7 @@ export default class ObservabilityApiRepo {
       };
 
       const response = await axios.patch(
-        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-data/history/${updateTestHistoryEntryDto.alertId}`,
+        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/anomaly/feedback`,
         data,
         config
       );

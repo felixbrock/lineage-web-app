@@ -244,10 +244,10 @@ interface ColumnTestConfig {
   type: string;
   cron: string;
   executionType: ExecutionType;
-  sensitivity: number;
+  threshold: number;
   testConfigs: TestConfig[];
   testsActivated: boolean;
-  importanceSensitivity: number;
+  importanceThreshold: number;
 }
 
 interface TestDefinitionSummary {
@@ -262,7 +262,7 @@ interface MaterializationTestsConfig {
   label: string;
   cron?: string;
   executionType?: ExecutionType;
-  sensitivity?: number;
+  threshold?: number;
   testDefinitionSummary: TestDefinitionSummary[];
   testsActivated: boolean;
   materializationTestConfigs: TestConfig[];
@@ -375,9 +375,7 @@ export default (): ReactElement => {
     ].testConfigs.filter((el) => el.testSuiteId);
 
     if (!testsToUpdate.length)
-      throw new Error(
-        'No activated tests found. Sensitivity change not allowed'
-      );
+      throw new Error('No activated tests found. Threshold change not allowed');
 
     const updateObjects = testsToUpdate.map((test): UpdateTestSuiteObject => {
       if (!test.testSuiteId)
@@ -670,9 +668,9 @@ export default (): ReactElement => {
             targetResourceId: column.id,
             type,
             executionType: columnTestConfigs.executionType,
-            threshold: columnTestConfigs.sensitivity,
+            threshold: columnTestConfigs.threshold,
             cron: columnTestConfigs.cron,
-            importanceSensitivity: columnTestConfigs.importanceSensitivity,
+            importanceThreshold: columnTestConfigs.importanceThreshold,
           },
         ],
         jwt
@@ -778,11 +776,10 @@ export default (): ReactElement => {
               type,
               cron:
                 testSelectionLocal[props[1]].cron || buildCronExpression('1h'),
-              threshold: testSelectionLocal[props[1]].sensitivity || 3,
+              threshold: testSelectionLocal[props[1]].threshold || 3,
               executionType:
                 testSelectionLocal[props[1]].executionType || 'frequency',
-              importanceSensitivity:
-                testSelectionLocal[props[1]].sensitivity || -1,
+              importanceThreshold: testSelectionLocal[props[1]].threshold || -1,
             },
           ],
           jwt
@@ -877,9 +874,9 @@ export default (): ReactElement => {
           targetResourceId: column.id,
           type,
           cron: config.cron,
-          threshold: config.sensitivity,
+          threshold: config.threshold,
           executionType: config.executionType,
-          importanceSensitivity: config.importanceSensitivity,
+          importanceThreshold: config.importanceThreshold,
         });
       } else
         updateObjects.push({
@@ -1147,7 +1144,7 @@ export default (): ReactElement => {
           label: columnLabel,
           cron: suites.length ? suites[0].cron : buildCronExpression('1h'),
           executionType: suites.length ? suites[0].executionType : 'frequency',
-          sensitivity: suites.length ? suites[0].threshold : 3,
+          threshold: suites.length ? suites[0].threshold : 3,
           testConfigs: allowedTests.map((element) => {
             const typeSpecificSuite = suites.find((el) => el.type === element);
 
@@ -1167,8 +1164,8 @@ export default (): ReactElement => {
             };
           }),
           testsActivated,
-          importanceSensitivity: suites.length
-            ? suites[0].importanceSensitivity
+          importanceThreshold: suites.length
+            ? suites[0].importanceThreshold
             : -1,
         });
       });
@@ -1256,11 +1253,11 @@ export default (): ReactElement => {
             .map((el) => el.cron)
         )
       );
-      const uniqueSensitivityValues = Array.from(
+      const uniqueThresholdValues = Array.from(
         new Set(
           columnTestConfigs
             .filter((el) => el.testsActivated)
-            .map((el) => el.sensitivity)
+            .map((el) => el.threshold)
         )
       );
 
@@ -1307,9 +1304,9 @@ export default (): ReactElement => {
         navExpanded: false,
         columnTestConfigs: columnTestConfigs,
         cron: uniqueCronValues.length === 1 ? uniqueCronValues[0] : undefined,
-        sensitivity:
-          uniqueSensitivityValues.length === 1
-            ? uniqueSensitivityValues[0]
+        threshold:
+          uniqueThresholdValues.length === 1
+            ? uniqueThresholdValues[0]
             : undefined,
         testDefinitionSummary,
         testsActivated: false,

@@ -18,7 +18,7 @@ interface BaseTestSuiteDto {
 
 export interface TestSuiteDto extends BaseTestSuiteDto {
   threshold: number;
-  importanceSensitivity: number;
+  importanceThreshold: number;
 }
 
 export type QualTestSuiteDto = BaseTestSuiteDto;

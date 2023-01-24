@@ -21,21 +21,27 @@ export default (): ReactElement => {
 
     const alertId = searchParams.get('alertId');
     const testType = searchParams.get('testType');
-    const importance = searchParams.get('importance');
+    const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
 
-    if (!!alertId !== !!testType)
+    if (!alertId || !testType || !userFeedbackIsAnomaly)
       throw new Error('User feedback callback is missing query param(s)');
 
-    if (!alertId || !testType) return;
+    const testSuiteId = searchParams.get('testSuiteId');
+    const importance = searchParams.get('importance');
+    if (userFeedbackIsAnomaly === '0' && !(importance || testSuiteId))
+      throw new Error('Expected importance value for reported false-positive ');
 
-    const userFeedbackIsAnomaly = searchParams.get('userFeedbackIsAnomaly');
-    if (!userFeedbackIsAnomaly) return;
     ObservabilityApiRepo.adjustDetectedAnomaly(
-      { alertId, userFeedbackIsAnomaly, testType },
+      {
+        alertId,
+        userFeedbackIsAnomaly,
+        testType,
+        importance: importance || undefined,
+        testSuiteId: testSuiteId || undefined,
+      },
       jwt
     )
       .then(() => {
-        ObservabilityApiRepo.updateTestSuites([{ id }]);
         setIsLoading(false);
       })
       .catch(() => {

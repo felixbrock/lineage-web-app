@@ -217,7 +217,7 @@ export default class ObservabilityApiRepo {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
-      const response = await axios.patch(
+      const response = await axios.post(
         `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/anomaly/feedback`,
         data,
         config

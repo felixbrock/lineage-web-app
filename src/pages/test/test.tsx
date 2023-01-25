@@ -248,6 +248,7 @@ interface ColumnTestConfig {
   testConfigs: TestConfig[];
   testsActivated: boolean;
   importanceThreshold: number;
+  boundsIntervalRelative: number;
 }
 
 interface TestDefinitionSummary {
@@ -671,6 +672,7 @@ export default (): ReactElement => {
             threshold: columnTestConfigs.threshold,
             cron: columnTestConfigs.cron,
             importanceThreshold: columnTestConfigs.importanceThreshold,
+            boundsIntervalRelative: columnTestConfigs.boundsIntervalRelative,
           },
         ],
         jwt
@@ -779,7 +781,8 @@ export default (): ReactElement => {
               threshold: testSelectionLocal[props[1]].threshold || 3,
               executionType:
                 testSelectionLocal[props[1]].executionType || 'frequency',
-              importanceThreshold: testSelectionLocal[props[1]].threshold || -1,
+              importanceThreshold: -1,
+              boundsIntervalRelative: 0,
             },
           ],
           jwt
@@ -877,6 +880,7 @@ export default (): ReactElement => {
           threshold: config.threshold,
           executionType: config.executionType,
           importanceThreshold: config.importanceThreshold,
+          boundsIntervalRelative: config.boundsIntervalRelative,
         });
       } else
         updateObjects.push({
@@ -1167,6 +1171,9 @@ export default (): ReactElement => {
           importanceThreshold: suites.length
             ? suites[0].importanceThreshold
             : -1,
+          boundsIntervalRelative: suites.length
+            ? suites[0].boundsIntervalRelative
+            : 0,
         });
       });
 

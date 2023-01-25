@@ -13,6 +13,7 @@ interface PostAnomalyFeedbackDto {
   userFeedbackIsAnomaly: string;
   testSuiteId?: string;
   importance?: string;
+  boundsIntervalRelative?: string;
 }
 
 interface BaseTestSuiteProps {
@@ -31,6 +32,7 @@ interface BaseTestSuiteProps {
 export interface TestSuiteProps extends BaseTestSuiteProps {
   threshold: number;
   importanceThreshold: number;
+  boundsIntervalRelative: number;
 }
 
 export type QualTestSuiteProps = BaseTestSuiteProps;
@@ -44,6 +46,7 @@ interface BaseUpdateTestSuiteObjProps {
 interface UpdateTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
   threshold?: number;
   importanceThreshold?: number;
+  boundsIntervalRelative?: number;
 }
 
 interface BaseUpdateTestSuiteObject {
@@ -211,6 +214,7 @@ export default class ObservabilityApiRepo {
         userFeedbackIsAnomaly: postAnomalyFeedbackDto.userFeedbackIsAnomaly,
         testType: postAnomalyFeedbackDto.testType,
         importance: postAnomalyFeedbackDto.importance,
+        boundsIntervalRelative: postAnomalyFeedbackDto.boundsIntervalRelative,
       };
 
       const config: AxiosRequestConfig = {

@@ -19,6 +19,7 @@ interface BaseTestSuiteDto {
 export interface TestSuiteDto extends BaseTestSuiteDto {
   threshold: number;
   importanceThreshold: number;
+  boundsIntervalRelative: number;
 }
 
 export type QualTestSuiteDto = BaseTestSuiteDto;

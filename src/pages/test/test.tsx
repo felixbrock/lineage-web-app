@@ -754,7 +754,7 @@ export default (): ReactElement => {
               targetResourceId: materalization.id,
               type,
               cron:
-                testSelectionLocal[props[1]].cron || buildCronExpression('1h'),
+                testSelectionLocal[props[1]].cron || buildCronExpression('3h'),
               executionType:
                 testSelectionLocal[props[1]].executionType || 'frequency',
             },
@@ -777,7 +777,7 @@ export default (): ReactElement => {
               targetResourceId: materalization.id,
               type,
               cron:
-                testSelectionLocal[props[1]].cron || buildCronExpression('1h'),
+                testSelectionLocal[props[1]].cron || buildCronExpression('3h'),
               threshold: testSelectionLocal[props[1]].threshold || 3,
               executionType:
                 testSelectionLocal[props[1]].executionType || 'frequency',
@@ -1146,7 +1146,7 @@ export default (): ReactElement => {
           id: column.id,
           type: column.dataType,
           label: columnLabel,
-          cron: suites.length ? suites[0].cron : buildCronExpression('1h'),
+          cron: suites.length ? suites[0].cron : buildCronExpression('3h'),
           executionType: suites.length ? suites[0].executionType : 'frequency',
           threshold: suites.length ? suites[0].threshold : 3,
           testConfigs: allowedTests.map((element) => {

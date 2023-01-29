@@ -15,14 +15,16 @@ import MaterializationDto from '../../../infrastructure/lineage-api/materializat
 import { SelectedElement, SourceData } from './lineage-graph';
 import ColumnDto from '../../../infrastructure/lineage-api/columns/column-dto';
 
-const groupMatsByDbId = (
+const groupMatsBySchemaId = (
   acc: { [dbName: string]: MaterializationDto[] },
   el: MaterializationDto
 ) => {
   const localAcc = acc;
 
-  if (el.databaseName in localAcc) localAcc[el.databaseName].push(el);
-  else localAcc[el.databaseName] = [el];
+  const schemaId = `${el.databaseName}.${el.schemaName}`;
+
+  if (schemaId in localAcc) localAcc[schemaId].push(el);
+  else localAcc[schemaId] = [el];
 
   return localAcc;
 };
@@ -102,7 +104,7 @@ const buildSideNavElements = (
 ): ReactElement[] => {
   if (!data) throw new Error('Missing source data');
 
-  const matsByDb = data.mats.reduce(groupMatsByDbId, {});
+  const matsByDb = data.mats.reduce(groupMatsBySchemaId, {});
 
   const dbElements = Object.entries(matsByDb)
     .map((entry) => {

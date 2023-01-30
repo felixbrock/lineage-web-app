@@ -15,6 +15,7 @@ export const defaultYAxis: YAXisComponentOption = {
   type: 'value',
   boundaryGap: [0, '30%'],
   min: 'dataMin',
+  max: 'dataMax',
 };
 
 export const defaultYAxisTime: YAXisComponentOption = {
@@ -34,6 +35,7 @@ export const defaultOption = (
     type: 'category',
     boundaryGap: false,
     min: 'dataMin',
+    max: 'dataMax',
   },
   yAxis,
   visualMap: {

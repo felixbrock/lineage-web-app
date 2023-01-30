@@ -43,7 +43,6 @@ export const defaultYAxisTime: YAXisComponentOption = {
   axisLabel: {
     formatter: '{value} min',
   },
-  min: 'dataMin',
 };
 
 // interface MarkAreaBoundary {

@@ -35,6 +35,7 @@ export const effectiveRateSampleDistributionData = [
 export const defaultYAxis: YAXisComponentOption = {
   type: 'value',
   boundaryGap: [0, '30%'],
+  min: 'dataMin',
 };
 
 export const defaultYAxisTime: YAXisComponentOption = {
@@ -42,6 +43,7 @@ export const defaultYAxisTime: YAXisComponentOption = {
   axisLabel: {
     formatter: '{value} min',
   },
+  min: 'dataMin',
 };
 
 // interface MarkAreaBoundary {
@@ -102,13 +104,14 @@ export const defaultOption = (
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: xAxis
+      data: xAxis,
+      min: 'dataMin',
     },
     yAxis,
     toolbox: {
       feature: {
-        saveAsImage: {}
-      }
+        saveAsImage: {},
+      },
     },
     visualMap: hasAnomolies
       ? {
@@ -128,9 +131,9 @@ export const defaultOption = (
                 : undefined
             )
             .filter(isVisualPiece),
-          }
-          : undefined,
-          series: [
+        }
+      : undefined,
+    series: [
       {
         name: 'Lower Threshold',
         type: 'line',
@@ -141,7 +144,7 @@ export const defaultOption = (
           color: 'grey',
           // width: 2
         },
-        itemStyle:{
+        itemStyle: {
           color: 'grey',
         },
         data: lowerBounds,
@@ -156,9 +159,9 @@ export const defaultOption = (
           color: 'grey',
           // width: 2
         },
-        itemStyle:{
+        itemStyle: {
           color: 'grey',
-        }, 
+        },
         data: upperBounds,
       },
       {

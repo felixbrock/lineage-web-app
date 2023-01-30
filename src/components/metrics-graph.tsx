@@ -14,18 +14,26 @@ export const effectiveRateSampleDistributionData = [
 export const defaultYAxis: YAXisComponentOption = {
   type: 'value',
   boundaryGap: [0, '30%'],
+  min: 'dataMin',
 };
 
 export const defaultYAxisTime: YAXisComponentOption = {
-  ...defaultYAxis,     axisLabel: {
+  ...defaultYAxis,
+  axisLabel: {
     formatter: '{value} min',
   },
 };
 
-export const defaultOption = (yAxis: YAXisComponentOption, data: number[], gt: number, lt: number) : EChartsOption => ({
+export const defaultOption = (
+  yAxis: YAXisComponentOption,
+  data: number[],
+  gt: number,
+  lt: number
+): EChartsOption => ({
   xAxis: {
     type: 'category',
     boundaryGap: false,
+    min: 'dataMin',
   },
   yAxis,
   visualMap: {
@@ -61,7 +69,6 @@ export const defaultOption = (yAxis: YAXisComponentOption, data: number[], gt: n
     trigger: 'axis',
   },
 });
-
 
 // export const DistributionDefaultOption: EChartsOption = {
 //   xAxis: {
@@ -106,9 +113,13 @@ export const defaultOption = (yAxis: YAXisComponentOption, data: number[], gt: n
 //   },
 // };
 
-export const defaultFreshnessData = [132, 131, 130, 132, 540, 129, 127, 120, 128];
+export const defaultFreshnessData = [
+  132, 131, 130, 132, 540, 129, 127, 120, 128,
+];
 
-export const effectiveRateSampleFreshnessData = [32, 31, 29, 30, 30, 30, 92, 31, 30].reverse();
+export const effectiveRateSampleFreshnessData = [
+  32, 31, 29, 30, 30, 30, 92, 31, 30,
+].reverse();
 
 // export const FreshnessDefaultOption: EChartsOption = {
 //   xAxis: {
@@ -156,28 +167,13 @@ export const effectiveRateSampleFreshnessData = [32, 31, 29, 30, 30, 30, 92, 31,
 //   },
 // };
 
-export const defaultNullnessData =  [
-  531,
-  601,
-  598,
-  1561,
-  576,
-  599,
-  564,
-  602,
-  595,
+export const defaultNullnessData = [
+  531, 601, 598, 1561, 576, 599, 564, 602, 595,
 ];
 
-export const effectiveRateSampleNullnessData = [  431,
-  501,
-  498,
-  516,
-  593,
-  524,
-  2561,
-  632,
-  545,];
-
+export const effectiveRateSampleNullnessData = [
+  431, 501, 498, 516, 593, 524, 2561, 632, 545,
+];
 
 // export const NullnessDefaultOption: EChartsOption = {
 //   xAxis: {

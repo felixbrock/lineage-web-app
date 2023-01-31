@@ -16,26 +16,24 @@ interface PostAnomalyFeedbackDto {
   boundsIntervalRelative?: string;
 }
 
-interface BaseTestSuiteProps {
+interface CreateTestSuiteBaseProps {
   activated: boolean;
-  type: TestType;
+  cron: string;
+  executionType: ExecutionType;
   databaseName: string;
   schemaName: string;
   materializationName: string;
-  materializationType: MaterializationType;
   columnName?: string;
+  materializationType: MaterializationType;
   targetResourceId: string;
-  cron: string;
-  executionType: ExecutionType;
+  type: TestType;
 }
 
-export interface TestSuiteProps extends BaseTestSuiteProps {
+export interface CreateQuantTestSuiteProps extends CreateTestSuiteBaseProps {
   threshold: number;
-  importanceThreshold: number;
-  boundsIntervalRelative: number;
 }
 
-export type QualTestSuiteProps = BaseTestSuiteProps;
+export type CreateQualTestSuiteProps = CreateTestSuiteBaseProps;
 
 interface BaseUpdateTestSuiteObjProps {
   activated?: boolean;
@@ -70,11 +68,11 @@ export default class ObservabilityApiRepo {
   private static baseUrl = appConfig.baseUrl.observabilityService;
 
   static postTestSuites = async (
-    postTestSuiteObjects: TestSuiteProps[],
+    props: CreateQuantTestSuiteProps[],
     jwt: string
   ): Promise<TestSuiteDto[]> => {
     try {
-      const payload = { createObjects: postTestSuiteObjects };
+      const payload = { createObjects: props };
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
@@ -94,7 +92,7 @@ export default class ObservabilityApiRepo {
   };
 
   static postQualTestSuites = async (
-    postTestSuiteObjects: QualTestSuiteProps[],
+    postTestSuiteObjects: CreateQualTestSuiteProps[],
     jwt: string
   ): Promise<QualTestSuiteDto[]> => {
     try {

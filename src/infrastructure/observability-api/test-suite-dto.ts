@@ -14,6 +14,7 @@ interface BaseTestSuiteDto {
   type: string;
   cron: string;
   executionType: ExecutionType;
+  deletedAt?: string;
 }
 
 export interface TestSuiteDto extends BaseTestSuiteDto {
@@ -21,5 +22,8 @@ export interface TestSuiteDto extends BaseTestSuiteDto {
   importanceThreshold: number;
   boundsIntervalRelative: number;
 }
+
+export const instanceOfTestSuiteDto = (obj: unknown): obj is TestSuiteDto =>
+  !!obj && typeof obj === 'object' && 'importanceThreshold' in obj;
 
 export type QualTestSuiteDto = BaseTestSuiteDto;

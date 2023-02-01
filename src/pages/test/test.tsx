@@ -37,7 +37,6 @@ import ObservabilityApiRepo, {
   UpdateTestSuiteObject,
 } from '../../infrastructure/observability-api/observability-api-repo';
 import {
-  instanceOfTestSuiteDto,
   QualTestSuiteDto,
   TestSuiteDto,
 } from '../../infrastructure/observability-api/test-suite-dto';
@@ -233,21 +232,11 @@ export const parseExecutionType = (executionType: unknown): ExecutionType => {
   throw new Error('Provision of invalid type');
 };
 
-interface TestSuiteConfigBase {
+interface TestSuiteConfig {
   type: TestType;
   activated: boolean;
+  testSuiteId?: string;
 }
-
-interface TestSuiteConfig extends TestSuiteConfigBase {
-  testSuiteId: string;
-  importanceThreshold: number;
-  boundsIntervalRelative: number;
-  deletedAt?: string;
-}
-
-const instanceOfTestSuiteConfig = (obj: unknown): obj is TestSuiteConfig => {
-  return !!obj && typeof obj === 'object' && 'testSuiteId' in obj;
-};
 
 interface ColumnTestConfig {
   id: string;
@@ -256,7 +245,7 @@ interface ColumnTestConfig {
   cron: string;
   executionType: ExecutionType;
   threshold: number;
-  testConfigs: (TestSuiteConfigBase | TestSuiteConfig)[];
+  testConfigs: TestSuiteConfig[];
   testsActivated: boolean;
 }
 
@@ -275,7 +264,7 @@ interface MaterializationTestsConfig {
   threshold?: number;
   testDefinitionSummary: TestDefinitionSummary[];
   testsActivated: boolean;
-  materializationTestConfigs: (TestSuiteConfigBase | TestSuiteConfig)[];
+  materializationTestConfigs: TestSuiteConfig[];
 }
 
 const theme = createTheme({
@@ -382,13 +371,13 @@ export default (): ReactElement => {
 
     const testsToUpdate = testSelectionLocal[target.matId].columnTestConfigs[
       columnTestConfigIndex
-    ].testConfigs.filter((el) => instanceOfTestSuiteConfig(el));
+    ].testConfigs.filter((el) => el.testSuiteId);
 
     if (!testsToUpdate.length)
       throw new Error('No activated tests found. Threshold change not allowed');
 
     const updateObjects = testsToUpdate.map((test): UpdateTestSuiteObject => {
-      if (!instanceOfTestSuiteConfig(test))
+      if (!test.testSuiteId)
         throw new Error('Test with status activated found that does not exist');
 
       return {
@@ -475,8 +464,7 @@ export default (): ReactElement => {
     const updateObjects = testSelectionLocal[target.matId].columnTestConfigs
       .map((el, index) => {
         const existingTests = el.testConfigs.filter(
-          (config): config is TestSuiteConfig =>
-            instanceOfTestSuiteConfig(config)
+          (config): config is TestSuiteConfig => !!config.testSuiteId
         );
 
         if (!existingTests.length) return undefined;
@@ -657,9 +645,7 @@ export default (): ReactElement => {
       testSelectionLocal[props[1]].columnTestConfigs[columnTestConfigIndex];
 
     const config = columnTestConfigs.testConfigs[testConfigIndex];
-    const testSuiteId = instanceOfTestSuiteConfig(config)
-      ? config.testSuiteId
-      : undefined;
+    const testSuiteId = config.testSuiteId ? config.testSuiteId : undefined;
 
     if (!testSuiteId) {
       const materalization = materializations.find((el) => el.id === props[1]);
@@ -693,9 +679,6 @@ export default (): ReactElement => {
         ...testSelectionLocal[props[1]].columnTestConfigs[columnTestConfigIndex]
           .testConfigs[testConfigIndex],
         testSuiteId: testSuite[0].id,
-        importanceThreshold: testSuite[0].importanceThreshold,
-        boundsIntervalRelative: testSuite[0].boundsIntervalRelative,
-        deletedAt: testSuite[0].deletedAt,
       };
 
       testSelectionLocal[props[1]].columnTestConfigs[
@@ -737,7 +720,7 @@ export default (): ReactElement => {
 
     const matTestConfig =
       testSelectionLocal[props[1]].materializationTestConfigs[testIndex];
-    if (instanceOfTestSuiteConfig(matTestConfig)) {
+    if (matTestConfig.testSuiteId) {
       const testSuiteId = matTestConfig.testSuiteId;
 
       if (type === 'MaterializationSchemaChange')
@@ -811,15 +794,6 @@ export default (): ReactElement => {
     testSelectionLocal[props[1]].materializationTestConfigs[testIndex] = {
       ...testSelectionLocal[props[1]].materializationTestConfigs[testIndex],
       testSuiteId: testSuite.id,
-      boundsIntervalRelative: instanceOfTestSuiteDto(testSuite)
-        ? testSuite.boundsIntervalRelative
-        : undefined,
-      importanceThreshold: instanceOfTestSuiteDto(testSuite)
-        ? testSuite.importanceThreshold
-        : undefined,
-      deletedAt: instanceOfTestSuiteDto(testSuite)
-        ? testSuite.deletedAt
-        : undefined,
     };
 
     setTestSelection({ ...testSelectionLocal });
@@ -879,7 +853,7 @@ export default (): ReactElement => {
       setTestSelection({ ...testSelectionLocal });
 
       const testConfig = config.testConfigs[testConfigIndex];
-      if (!instanceOfTestSuiteConfig(testConfig)) {
+      if (!testConfig.testSuiteId) {
         const materalization = materializations.find(
           (el) => el.id === props[1]
         );
@@ -1178,31 +1152,22 @@ export default (): ReactElement => {
           cron: suites.length ? suites[0].cron : buildCronExpression('1h'),
           executionType: suites.length ? suites[0].executionType : 'frequency',
           threshold: suites.length ? suites[0].threshold : 3,
-          testConfigs: allowedTests.map((element) => {
+          testConfigs: allowedTests.map((element): TestSuiteConfig => {
             const typeSpecificSuite = suites.find((el) => el.type === element);
 
-            if (
-              !testsActivated &&
-              typeSpecificSuite &&
-              typeSpecificSuite.activated
-            )
+            if (!typeSpecificSuite)
+              return {
+                type: element,
+                activated: false,
+              };
+
+            if (!testsActivated && typeSpecificSuite.activated)
               testsActivated = true;
 
             return {
               type: element,
-              activated: typeSpecificSuite
-                ? typeSpecificSuite.activated
-                : false,
-              testSuiteId: typeSpecificSuite ? typeSpecificSuite.id : undefined,
-              importanceThreshold: typeSpecificSuite
-                ? typeSpecificSuite.importanceThreshold
-                : undefined,
-              boundsIntervalRelative: typeSpecificSuite
-                ? typeSpecificSuite.boundsIntervalRelative
-                : undefined,
-              deletedAt: typeSpecificSuite
-                ? typeSpecificSuite.deletedAt
-                : undefined,
+              activated: typeSpecificSuite.activated,
+              testSuiteId: typeSpecificSuite.id,
             };
           }),
           testsActivated,
@@ -1464,23 +1429,19 @@ export default (): ReactElement => {
       props.materializationId,
       columnNullnessType
     );
-    const materializationColumnCountConfig:
-      | TestSuiteConfigBase
-      | TestSuiteConfig = getMatTestConfig(
+    const materializationColumnCountConfig: TestSuiteConfig = getMatTestConfig(
       props.materializationId,
       materializationColumnCountType
     );
-    const materializationRowCountConfig: TestSuiteConfigBase | TestSuiteConfig =
-      getMatTestConfig(props.materializationId, materializationRowCountType);
-    const materializationFreshnessConfig:
-      | TestSuiteConfigBase
-      | TestSuiteConfig = getMatTestConfig(
+    const materializationRowCountConfig: TestSuiteConfig = getMatTestConfig(
+      props.materializationId,
+      materializationRowCountType
+    );
+    const materializationFreshnessConfig: TestSuiteConfig = getMatTestConfig(
       props.materializationId,
       materializationFreshnessType
     );
-    const materializationSchemaChangeConfig:
-      | TestSuiteConfigBase
-      | TestSuiteConfig = getMatTestConfig(
+    const materializationSchemaChangeConfig: TestSuiteConfig = getMatTestConfig(
       props.materializationId,
       materializationSchemaChangeType
     );

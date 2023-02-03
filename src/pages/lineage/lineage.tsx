@@ -521,7 +521,7 @@ export default (): ReactElement => {
     const binds: (string | number)[] = [selectedNodeId, 'true'];
 
     const testSuiteQuery = `select id, test_type from cito.observability.test_suites
-     where target_resource_id = '${binds[0]}' and activated = ${binds[1]}`;
+     where target_resource_id = '${binds[0]}' and activated = ${binds[1]} and deleted_at is null`;
 
     let testHistory: { [testSuiteId: string]: TestHistoryEntry };
     IntegrationApiRepo.querySnowflake(testSuiteQuery, jwt)
@@ -761,7 +761,7 @@ export default (): ReactElement => {
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
                         ? 'bg-white text-cito shadow'
-                        : 'hover:bg-white/[0.12] text-white'
+                        : 'text-white hover:bg-white/[0.12]'
                     )
                   }
                 >
@@ -775,7 +775,7 @@ export default (): ReactElement => {
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
                         ? 'bg-white text-cito shadow'
-                        : 'hover:bg-white/[0.12] text-white'
+                        : 'text-white hover:bg-white/[0.12]'
                     )
                   }
                 >
@@ -789,7 +789,7 @@ export default (): ReactElement => {
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
                         ? 'bg-white text-cito shadow'
-                        : 'hover:bg-white/[0.12] text-white'
+                        : 'text-white hover:bg-white/[0.12]'
                     )
                   }
                 >
@@ -880,7 +880,7 @@ export default (): ReactElement => {
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
                         ? 'bg-white text-cito shadow'
-                        : 'hover:bg-white/[0.12] text-white'
+                        : 'text-white hover:bg-white/[0.12]'
                     )
                   }
                 >
@@ -894,7 +894,7 @@ export default (): ReactElement => {
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
                         ? 'bg-white text-cito shadow'
-                        : 'hover:bg-white/[0.12] text-white'
+                        : 'text-white hover:bg-white/[0.12]'
                     )
                   }
                 >
@@ -977,7 +977,7 @@ export default (): ReactElement => {
                       'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
                       selected
                         ? 'bg-white text-cito shadow'
-                        : 'hover:bg-white/[0.12] text-white'
+                        : 'text-white hover:bg-white/[0.12]'
                     )
                   }
                 >

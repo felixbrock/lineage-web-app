@@ -97,7 +97,8 @@ export default (): ReactElement => {
   const [lineage, setLineage] = useState<LineageDto>();
   const [sourceData, setSourceData] = useState<SourceData>();
   const [graphSourceData, setGraphSourceData] = useState<SourceData>();
-  const [sidePanelTabIndex, setSidePanelTabIndex] = React.useState<number>(-1);
+  const [integrationSidePanelTabIndex, setIntegrationSidePanelTabIndex] =
+    React.useState<number>(0);
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
     useState<boolean>();
@@ -121,7 +122,7 @@ export default (): ReactElement => {
     event: SyntheticEvent,
     newValue: number
   ) => {
-    setSidePanelTabIndex(newValue);
+    setIntegrationSidePanelTabIndex(newValue);
   };
 
   const setIsRightPanelShownCallback = (show: boolean) =>
@@ -304,14 +305,9 @@ export default (): ReactElement => {
     if (typeof state !== 'object')
       throw new Error('Unexpected navigation state type');
 
-    const { sidePanelTabIndex: localSidePanelTabIndexChange } = state as any;
+    const { sidePanelTabIndex: localSidePanelTabIndex } = state as any;
 
-    if (localSidePanelTabIndexChange === undefined)
-      throw new Error('Invalid state');
-
-    setSidePanelTabIndex(localSidePanelTabIndexChange);
-
-    window.history.replaceState({}, document.title);
+    if (localSidePanelTabIndex) setShowIntegrationSidePanel(true);
   };
 
   useEffect(() => {
@@ -427,6 +423,19 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (!integrations.length) return;
+
+    const state = location.state;
+
+    if (!state) return;
+    if (typeof state !== 'object')
+      throw new Error('Unexpected navigation state type');
+
+    const { sidePanelTabIndex: localSidePanelTabIndexChange } = state as any;
+
+    if (localSidePanelTabIndexChange !== undefined)
+      setIntegrationSidePanelTabIndex(localSidePanelTabIndexChange);
+
+    window.history.replaceState({}, document.title);
   }, [integrations]);
 
   useEffect(() => {
@@ -651,11 +660,6 @@ export default (): ReactElement => {
     panel.style.opacity = '1';
   }, [sql]);
 
-  useEffect(() => {
-    if (sidePanelTabIndex === -1) return;
-    setShowIntegrationSidePanel(true);
-  }, [sidePanelTabIndex]);
-
   const graphBuiltCallback = () => {
     const targetResourceId = searchParams.get('targetResourceId');
     if (targetResourceId)
@@ -669,7 +673,7 @@ export default (): ReactElement => {
           current="lineage"
           toggleLeftPanel={toggleShowSideNav}
           toggleRightPanelFunctions={{
-            open: () => setSidePanelTabIndex(0),
+            open: () => setIntegrationSidePanelTabIndex(0),
             close: closeIntegrationSidePanel,
           }}
           isRightPanelShown={isRightPanelShown}
@@ -925,8 +929,8 @@ export default (): ReactElement => {
             />
           </div>
           <Tab.Group
-            selectedIndex={sidePanelTabIndex}
-            onChange={setSidePanelTabIndex}
+            selectedIndex={integrationSidePanelTabIndex}
+            onChange={setIntegrationSidePanelTabIndex}
           >
             <Tab.List className="mx-6 mt-10 flex space-x-1 rounded-xl bg-cito p-1">
               {Object.values(integrations).map((integration: any) => (

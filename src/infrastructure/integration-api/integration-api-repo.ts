@@ -49,7 +49,9 @@ export default class IntegrationApiRepo {
 
   private static baseUrl = appConfig.baseUrl.integrationService;
 
-  static getSlackProfile = async (jwt: string): Promise<SlackProfileDto | null> => {
+  static getSlackProfile = async (
+    jwt: string
+  ): Promise<SlackProfileDto | null> => {
     try {
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
@@ -249,7 +251,10 @@ export default class IntegrationApiRepo {
     }
   };
 
-  static getAccessToken = async (code: string, jwt: string): Promise<string> => {
+  static getAccessToken = async (
+    code: string,
+    jwt: string
+  ): Promise<string> => {
     try {
       const config: AxiosRequestConfig = {
         headers: {
@@ -361,10 +366,7 @@ export default class IntegrationApiRepo {
     }
   };
 
-  static querySnowflake = async (
-    query: string,
-    jwt: string
-  ): Promise<any> => {
+  static querySnowflake = async (query: string, jwt: string): Promise<any> => {
     try {
       const config: AxiosRequestConfig = {
         headers: {

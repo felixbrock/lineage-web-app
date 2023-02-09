@@ -2,7 +2,6 @@
 import { ReactElement, useEffect, useState } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {
-  Button,
   InputLabel,
   MenuItem,
   Select,
@@ -27,15 +26,11 @@ const buildOAuthUrl = (organizationId: string) => {
 
 interface SlackProps {
   organizationId: string;
-  accessToken?: string;
+
   jwt: string;
 }
 
-export default ({
-  accessToken,
-  organizationId,
-  jwt,
-}: SlackProps): ReactElement => {
+export default ({ organizationId, jwt }: SlackProps): ReactElement => {
   const [channels, setChannels] = useState<SlackConversationInfoDto[]>([]);
   const [selectedChannelId, setSelectedChannelId] = useState('');
   const [selectElements, setSelectElements] = useState<ReactElement[]>([]);
@@ -80,6 +75,11 @@ export default ({
     setSelectedChannelId(channelId);
   };
 
+  const readSessionStorage = (key: string): string | null => {
+    const slackToken = sessionStorage.getItem('slack-access-token');
+    if (slackToken) setAccessToken(slackToken);
+  };
+
   useEffect(() => {
     IntegrationApiRepo.getSlackConversations(
       new URLSearchParams(accessToken ? { accessToken } : {}),
@@ -87,7 +87,6 @@ export default ({
     )
       .then((res) => {
         setChannels(res);
-
         return IntegrationApiRepo.getSlackProfile(jwt);
       })
       .then((res) => {
@@ -114,30 +113,18 @@ export default ({
   return (
     <>
       <h4>Connect to Slack</h4>
-
       <Divider />
-
-      {appConfig.react.mode === 'production' ? (
-        <div className="integration-button">
-          <a href={buildOAuthUrl(organizationId)}>
-            <img
-              alt="Add to Slack"
-              height="40"
-              width="139"
-              src="https://platform.slack-edge.com/img/add_to_slack.png"
-              srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-            />
-          </a>
-        </div>
-      ) : (
-        <Button
-          sx={{ minHeight: 0, minWidth: 0, padding: 0, mt: 2, mb: 2, fontWeight: 'bold' }}
-          href={buildOAuthUrl(organizationId)}
-        >
-          {'Install'}
-        </Button>
-      )}
-
+      <div className="integration-button">
+        <a href={buildOAuthUrl(organizationId)}>
+          <img
+            alt="Add to Slack"
+            height="40"
+            width="139"
+            src="https://platform.slack-edge.com/img/add_to_slack.png"
+            srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+          />
+        </a>
+      </div>
       <FormControl fullWidth>
         <InputLabel id="select-channel-label">Select Channel</InputLabel>
         <Select

@@ -73,6 +73,8 @@ export default () => {
     SlackAccessTokenRepo.getAccessToken(code)
       .then((res) => {
         accessToken = res;
+        sessionStorage.setItem('slack-access-token', accessToken);
+
         return IntegrationApiRepo.getSlackProfile(jwt);
       })
       .then((slackProfile) => {
@@ -83,7 +85,7 @@ export default () => {
       .then(() =>
         navigate(`/lineage`, {
           state: {
-            slackToken: accessToken,
+            redirectSource: 'slack',
             showIntegrationPanel: true,
             sidePanelTabIndex: 2,
           },

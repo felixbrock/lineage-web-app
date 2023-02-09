@@ -101,7 +101,6 @@ export default (): ReactElement => {
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
     useState<boolean>();
-  const [slackAccessToken, setSlackAccessToken] = useState<string>('');
   const [githubInstallationId, setGithubInstallationId] = useState<string>('');
   const [githubAccessToken, setGithubAccessToken] = useState<string>('');
   const [isRightPanelShown, setIsRightPanelShown] = useState(false);
@@ -298,61 +297,29 @@ export default (): ReactElement => {
       });
   }, [user]);
 
-  const handleSlackRedirect = () => {
+  const handleRedirect = () => {
     const state = location.state;
 
     if (!state) return;
     if (typeof state !== 'object')
       throw new Error('Unexpected navigation state type');
 
-    const { slackToken, showIntegrationPanel, sidePanelTabIndex } =
-      state as any;
+    const { showIntegrationPanel, sidePanelTabIndex } = state as any;
 
-    if (!slackToken || !showIntegrationPanel || sidePanelTabIndex === undefined)
-      return;
+    if (!showIntegrationPanel || sidePanelTabIndex === undefined)
+      throw new Error('Invalid state');
 
-    if (slackToken) setSlackAccessToken(slackToken);
-    else {
-      IntegrationApiRepo.getSlackProfile(jwt)
-        .then((res) => setSlackAccessToken(res ? res.accessToken : ''))
-        .catch(() => console.trace('Slack profile retrieval failed'));
-    }
-
-    setTabIndex(sidePanelTabIndex);
     if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
+    setTabIndex(sidePanelTabIndex);
 
     window.history.replaceState({}, document.title);
   };
 
-  const handleGithubRedirect = () => {
-    const state = location.state;
-
-    if (!state) return;
-    if (typeof state !== 'object')
-      throw new Error('Unexpected navigation state type');
-
-    const {
-      githubInstallId,
-      githubToken,
-      showIntegrationPanel,
-      sidePanelTabIndex,
-    } = state as any;
-
-    if (
-      !githubInstallId ||
-      !githubToken ||
-      !showIntegrationPanel ||
-      sidePanelTabIndex === undefined
-    )
-      return;
-
-    if (githubInstallId) setGithubInstallationId(githubInstallId);
+  const readSessionStorage = () => {
+    const githubToken = sessionStorage.getItem('github-access-token');
+    const githubInstallId = sessionStorage.getItem('github-installation-id');
     if (githubToken) setGithubAccessToken(githubToken);
-
-    setTabIndex(sidePanelTabIndex);
-    if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
-
-    window.history.replaceState({}, document.title);
+    if (githubInstallId) setGithubInstallationId(githubInstallId);
   };
 
   useEffect(() => {
@@ -361,6 +328,8 @@ export default (): ReactElement => {
     if (!jwt) throw new Error('No user authorization found');
 
     if (lineage) return;
+
+    readSessionStorage();
 
     toggleShowSideNav();
 
@@ -463,8 +432,7 @@ export default (): ReactElement => {
       setIsLoading(false);
     }
 
-    handleSlackRedirect();
-    handleGithubRedirect();
+    handleRedirect();
   }, [account]);
 
   useEffect(() => {
@@ -500,11 +468,7 @@ export default (): ReactElement => {
         name: 'Slack',
         icon: FaSlack,
         tabContentJsx: (
-          <Slack
-            organizationId={account.organizationId}
-            accessToken={slackAccessToken}
-            jwt={jwt}
-          ></Slack>
+          <Slack organizationId={account.organizationId} jwt={jwt}></Slack>
         ),
       },
     ]);

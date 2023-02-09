@@ -73,10 +73,12 @@ export default () => {
 
     IntegrationApiRepo.getAccessToken(code, jwt)
       .then((accessToken) => {
+        sessionStorage.setItem('github-installation-id', installationId);
+        sessionStorage.setItem('github-access-token', accessToken);
+
         navigate(`/lineage`, {
           state: {
-            githubInstallId: installationId,
-            githubToken: accessToken,
+            redirectSource: 'github',
             showIntegrationPanel: true,
             sidePanelTabIndex: 1,
           },

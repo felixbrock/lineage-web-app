@@ -2,7 +2,6 @@
 import { ReactElement, useEffect, useState } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {
-  Button,
   InputLabel,
   MenuItem,
   Select,
@@ -117,26 +116,17 @@ export default ({
 
       <Divider />
 
-      {appConfig.react.mode === 'production' ? (
-        <div className="integration-button">
-          <a href={buildOAuthUrl(organizationId)}>
-            <img
-              alt="Add to Slack"
-              height="40"
-              width="139"
-              src="https://platform.slack-edge.com/img/add_to_slack.png"
-              srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-            />
-          </a>
-        </div>
-      ) : (
-        <Button
-          sx={{ minHeight: 0, minWidth: 0, padding: 0, mt: 2, mb: 2, fontWeight: 'bold' }}
-          href={buildOAuthUrl(organizationId)}
-        >
-          {'Install'}
-        </Button>
-      )}
+      <div className="integration-button">
+        <a href={buildOAuthUrl(organizationId)}>
+          <img
+            alt="Add to Slack"
+            height="40"
+            width="139"
+            src="https://platform.slack-edge.com/img/add_to_slack.png"
+            srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+          />
+        </a>
+      </div>
 
       <FormControl fullWidth>
         <InputLabel id="select-channel-label">Select Channel</InputLabel>

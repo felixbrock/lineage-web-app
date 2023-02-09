@@ -79,7 +79,6 @@ export default () => {
         navigate(`/lineage`, {
           state: {
             redirectSource: 'github',
-            showIntegrationPanel: true,
             sidePanelTabIndex: 1,
           },
           replace: true,

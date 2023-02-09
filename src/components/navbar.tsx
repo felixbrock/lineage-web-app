@@ -29,7 +29,9 @@ export default function Navbar({
   isRightPanelShown,
   setIsRightPanelShown,
   jwt,
-}: {[key:string]: any}) {
+}: {
+  [key: string]: any;
+}) {
   const [isLeftPanelShown, setIsLeftPanelShown] = useState(true);
 
   const [snapshotState, setSnapshotState] = useState<SnapshotState>('loading');
@@ -222,7 +224,10 @@ export default function Navbar({
                       <Menu.Item>
                         {({ active }) => (
                           <button
-                            onClick={() => Auth.signOut()}
+                            onClick={() => {
+                              sessionStorage.clear();
+                              Auth.signOut();
+                            }}
                             className={classNames(
                               active ? 'bg-gray-100' : '',
                               'block w-full px-4 py-2 text-left text-sm text-gray-700'

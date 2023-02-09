@@ -26,7 +26,6 @@ const buildOAuthUrl = (organizationId: string) => {
 
 interface SlackProps {
   organizationId: string;
-
   jwt: string;
 }
 
@@ -35,6 +34,7 @@ export default ({ organizationId, jwt }: SlackProps): ReactElement => {
   const [selectedChannelId, setSelectedChannelId] = useState('');
   const [selectElements, setSelectElements] = useState<ReactElement[]>([]);
   const [profile, setProfile] = useState<SlackProfileDto | null>();
+  const [accessToken, setAccessToken] = useState<string | undefined>();
 
   const handleChannelSelectChange = async (
     event: SelectChangeEvent
@@ -46,13 +46,11 @@ export default ({ organizationId, jwt }: SlackProps): ReactElement => {
 
     const oldChannelId = profile ? profile.channelId : selectedChannelId;
 
-    const slackAccessToken = accessToken || profile?.accessToken;
-
-    if (slackAccessToken)
+    if (accessToken)
       await IntegrationApiRepo.joinSlackConversation(
         oldChannelId,
         channelId,
-        slackAccessToken,
+        accessToken,
         jwt
       );
 
@@ -75,14 +73,15 @@ export default ({ organizationId, jwt }: SlackProps): ReactElement => {
     setSelectedChannelId(channelId);
   };
 
-  const readSessionStorage = (key: string): string | null => {
-    const slackToken = sessionStorage.getItem('slack-access-token');
-    if (slackToken) setAccessToken(slackToken);
-  };
-
   useEffect(() => {
+    const slackAccessToken = sessionStorage.getItem('slack-access-token');
+
+    if (slackAccessToken) setAccessToken(slackAccessToken);
+
     IntegrationApiRepo.getSlackConversations(
-      new URLSearchParams(accessToken ? { accessToken } : {}),
+      new URLSearchParams(
+        slackAccessToken ? { accessToken: slackAccessToken } : {}
+      ),
       jwt
     )
       .then((res) => {

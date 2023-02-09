@@ -11,8 +11,6 @@ import appConfig from '../../../config';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 
 interface GithubProps {
-  installationId?: string;
-  accessToken?: string;
   organizationId: string;
   jwt: string;
 }
@@ -22,21 +20,25 @@ interface RepoNameResult {
   checked: boolean;
 }
 
-export default ({
-  installationId,
-  accessToken,
-  organizationId,
-  jwt,
-}: GithubProps): ReactElement => {
+export default ({ organizationId, jwt }: GithubProps): ReactElement => {
   const [repoNameResult, setRepoNameResult] = useState<RepoNameResult>({
     repoNames: [],
     checked: false,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [installationId, setInstallationId] = useState<string | undefined>();
+  const [accessToken, setAccessToken] = useState<string | undefined>();
 
   useEffect(() => {
-    if (installationId && accessToken) {
-      GithubApiRepo.getRepositories(accessToken, installationId)
+    const githubAccessToken = sessionStorage.getItem('github-access-token');
+    const githubInstallationId = sessionStorage.getItem(
+      'github-installation-id'
+    );
+    if (githubAccessToken) setAccessToken(githubAccessToken);
+    if (githubInstallationId) setInstallationId(githubInstallationId);
+
+    if (githubInstallationId && githubAccessToken) {
+      GithubApiRepo.getRepositories(githubAccessToken, githubInstallationId)
         .then((repos) => {
           setRepoNameResult({
             repoNames: repos.map((repo) => repo.full_name),
@@ -48,8 +50,10 @@ export default ({
           console.trace(error);
         });
     } else {
-      IntegrationApiRepo
-        .getGithubProfile(new URLSearchParams({ organizationId }), jwt)
+      IntegrationApiRepo.getGithubProfile(
+        new URLSearchParams({ organizationId }),
+        jwt
+      )
         .then((profile) => {
           if (profile)
             setRepoNameResult({
@@ -69,8 +73,10 @@ export default ({
     setIsLoading(false);
 
     if (installationId && accessToken)
-      IntegrationApiRepo
-        .getGithubProfile(new URLSearchParams({ organizationId }), jwt)
+      IntegrationApiRepo.getGithubProfile(
+        new URLSearchParams({ organizationId }),
+        jwt
+      )
         .then((profile) => {
           if (profile)
             return IntegrationApiRepo.updateGithubProfile(
@@ -100,7 +106,9 @@ export default ({
         <div className="flex w-full items-center justify-center">
           <a
             href={`https://github.com/apps/${
-              appConfig.react.mode === 'development' ? 'cito-data-dev' : 'cito-data'
+              appConfig.react.mode === 'development'
+                ? 'cito-data-dev'
+                : 'cito-data'
             }/installations/new?state=${organizationId}`}
           >
             <ButtonBig
@@ -117,7 +125,9 @@ export default ({
             <p className="caption">Installed on Following Repositories:</p>
             <a
               href={`https://github.com/apps/${
-                appConfig.react.mode === 'development' ? 'cito-data-dev' : 'cito-data'
+                appConfig.react.mode === 'development'
+                  ? 'cito-data-dev'
+                  : 'cito-data'
               }/installations/new?state=${organizationId}`}
             >
               <ButtonSmall

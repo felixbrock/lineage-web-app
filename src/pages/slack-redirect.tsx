@@ -86,7 +86,6 @@ export default () => {
         navigate(`/lineage`, {
           state: {
             redirectSource: 'slack',
-            showIntegrationPanel: true,
             sidePanelTabIndex: 2,
           },
           replace: true,

@@ -96,6 +96,7 @@ export default (): ReactElement => {
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
+        sessionStorage.clear();
 
         Auth.signOut();
       });

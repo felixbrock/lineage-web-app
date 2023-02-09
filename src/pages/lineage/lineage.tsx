@@ -97,12 +97,10 @@ export default (): ReactElement => {
   const [lineage, setLineage] = useState<LineageDto>();
   const [sourceData, setSourceData] = useState<SourceData>();
   const [graphSourceData, setGraphSourceData] = useState<SourceData>();
-  const [tabIndex, setTabIndex] = React.useState<number>(0);
+  const [sidePanelTabIndex, setSidePanelTabIndex] = React.useState<number>(-1);
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
     useState<boolean>();
-  const [githubInstallationId, setGithubInstallationId] = useState<string>('');
-  const [githubAccessToken, setGithubAccessToken] = useState<string>('');
   const [isRightPanelShown, setIsRightPanelShown] = useState(false);
   const [integrations, setIntegrations] = useState<any>([]);
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
@@ -119,10 +117,11 @@ export default (): ReactElement => {
     setSnackbarOpen(false);
   };
 
-  const handleTabIndexChange = (event: SyntheticEvent, newValue: number) => {
-    // Make sure the integration side panel is open when tab is set
-    setShowIntegrationSidePanel(true);
-    setTabIndex(newValue);
+  const handleSidePanelTabIndexChange = (
+    event: SyntheticEvent,
+    newValue: number
+  ) => {
+    setSidePanelTabIndex(newValue);
   };
 
   const setIsRightPanelShownCallback = (show: boolean) =>
@@ -292,6 +291,7 @@ export default (): ReactElement => {
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
+        sessionStorage.clear();
 
         Auth.signOut();
       });
@@ -304,22 +304,14 @@ export default (): ReactElement => {
     if (typeof state !== 'object')
       throw new Error('Unexpected navigation state type');
 
-    const { showIntegrationPanel, sidePanelTabIndex } = state as any;
+    const { sidePanelTabIndex: localSidePanelTabIndexChange } = state as any;
 
-    if (!showIntegrationPanel || sidePanelTabIndex === undefined)
+    if (localSidePanelTabIndexChange === undefined)
       throw new Error('Invalid state');
 
-    if (showIntegrationPanel) setShowIntegrationSidePanel(showIntegrationPanel);
-    setTabIndex(sidePanelTabIndex);
+    setSidePanelTabIndex(localSidePanelTabIndexChange);
 
     window.history.replaceState({}, document.title);
-  };
-
-  const readSessionStorage = () => {
-    const githubToken = sessionStorage.getItem('github-access-token');
-    const githubInstallId = sessionStorage.getItem('github-installation-id');
-    if (githubToken) setGithubAccessToken(githubToken);
-    if (githubInstallId) setGithubInstallationId(githubInstallId);
   };
 
   useEffect(() => {
@@ -328,8 +320,6 @@ export default (): ReactElement => {
     if (!jwt) throw new Error('No user authorization found');
 
     if (lineage) return;
-
-    readSessionStorage();
 
     toggleShowSideNav();
 
@@ -436,6 +426,10 @@ export default (): ReactElement => {
   }, [account]);
 
   useEffect(() => {
+    if (!integrations.length) return;
+  }, [integrations]);
+
+  useEffect(() => {
     if (!showIntegrationSidePanel || !account) return;
 
     closeColSidePanel();
@@ -456,12 +450,7 @@ export default (): ReactElement => {
         name: 'GitHub',
         icon: FaGithub,
         tabContentJsx: (
-          <Github
-            installationId={githubInstallationId}
-            accessToken={githubAccessToken}
-            organizationId={account.organizationId}
-            jwt={jwt}
-          ></Github>
+          <Github organizationId={account.organizationId} jwt={jwt}></Github>
         ),
       },
       {
@@ -662,6 +651,11 @@ export default (): ReactElement => {
     panel.style.opacity = '1';
   }, [sql]);
 
+  useEffect(() => {
+    if (sidePanelTabIndex === -1) return;
+    setShowIntegrationSidePanel(true);
+  }, [sidePanelTabIndex]);
+
   const graphBuiltCallback = () => {
     const targetResourceId = searchParams.get('targetResourceId');
     if (targetResourceId)
@@ -675,7 +669,7 @@ export default (): ReactElement => {
           current="lineage"
           toggleLeftPanel={toggleShowSideNav}
           toggleRightPanelFunctions={{
-            open: () => setShowIntegrationSidePanel(true),
+            open: () => setSidePanelTabIndex(0),
             close: closeIntegrationSidePanel,
           }}
           isRightPanelShown={isRightPanelShown}
@@ -683,7 +677,7 @@ export default (): ReactElement => {
           jwt={jwt}
         />
         {!isDataAvailable && (
-          <EmptyStateIntegrations onClick={handleTabIndexChange} />
+          <EmptyStateIntegrations onClick={handleSidePanelTabIndexChange} />
         )}
         {isLoading ? (
           <LoadingScreen tailwindCss="fixed flex w-full h-full items-center justify-center" />
@@ -930,7 +924,10 @@ export default (): ReactElement => {
               onClick={closeIntegrationSidePanel}
             />
           </div>
-          <Tab.Group selectedIndex={tabIndex} onChange={setTabIndex}>
+          <Tab.Group
+            selectedIndex={sidePanelTabIndex}
+            onChange={setSidePanelTabIndex}
+          >
             <Tab.List className="mx-6 mt-10 flex space-x-1 rounded-xl bg-cito p-1">
               {Object.values(integrations).map((integration: any) => (
                 <Tab

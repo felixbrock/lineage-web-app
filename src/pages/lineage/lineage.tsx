@@ -98,7 +98,7 @@ export default (): ReactElement => {
   const [sourceData, setSourceData] = useState<SourceData>();
   const [graphSourceData, setGraphSourceData] = useState<SourceData>();
   const [integrationSidePanelTabIndex, setIntegrationSidePanelTabIndex] =
-    React.useState<number>(0);
+    React.useState<number>(-1);
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
     useState<boolean>();
@@ -241,6 +241,7 @@ export default (): ReactElement => {
   };
 
   const closeIntegrationSidePanel = () => {
+    setIntegrationSidePanelTabIndex(-1);
     setShowIntegrationSidePanel(false);
 
     const panel = document.getElementById('integrationsSidePanel');
@@ -298,16 +299,26 @@ export default (): ReactElement => {
       });
   }, [user]);
 
+  useEffect(() => {
+    if (integrationSidePanelTabIndex === -1) return;
+    setShowIntegrationSidePanel(true);
+  }, [integrationSidePanelTabIndex]);
+
   const handleRedirect = () => {
+    if (!integrations.length) return;
+
     const state = location.state;
 
     if (!state) return;
     if (typeof state !== 'object')
       throw new Error('Unexpected navigation state type');
 
-    const { sidePanelTabIndex: localSidePanelTabIndex } = state as any;
+    const { sidePanelTabIndex: localSidePanelTabIndexChange } = state as any;
 
-    if (localSidePanelTabIndex) setShowIntegrationSidePanel(true);
+    if (localSidePanelTabIndexChange !== undefined)
+      setIntegrationSidePanelTabIndex(localSidePanelTabIndexChange);
+
+    window.history.replaceState({}, document.title);
   };
 
   useEffect(() => {
@@ -424,18 +435,10 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!integrations.length) return;
 
-    const state = location.state;
-
-    if (!state) return;
-    if (typeof state !== 'object')
-      throw new Error('Unexpected navigation state type');
-
-    const { sidePanelTabIndex: localSidePanelTabIndexChange } = state as any;
-
-    if (localSidePanelTabIndexChange !== undefined)
-      setIntegrationSidePanelTabIndex(localSidePanelTabIndexChange);
-
-    window.history.replaceState({}, document.title);
+    const panel = document.getElementById('integrationsSidePanel');
+    if (!panel) throw new ReferenceError('Integrations Panel does not exist');
+    panel.style.visibility = 'visible';
+    panel.style.opacity = '1';
   }, [integrations]);
 
   useEffect(() => {
@@ -445,36 +448,33 @@ export default (): ReactElement => {
     closeMatSidePanel();
 
     setIntegrations([
-      {
-        name: 'Snowflake',
-        icon: SiSnowflake,
-        tabContentJsx: (
-          <Snowflake
-            jwt={jwt}
-            parentHandleSaveClick={() => setSnackbarOpen(true)}
-          ></Snowflake>
-        ),
-      },
-      {
-        name: 'GitHub',
-        icon: FaGithub,
-        tabContentJsx: (
-          <Github organizationId={account.organizationId} jwt={jwt}></Github>
-        ),
-      },
-      {
-        name: 'Slack',
-        icon: FaSlack,
-        tabContentJsx: (
-          <Slack organizationId={account.organizationId} jwt={jwt}></Slack>
-        ),
-      },
+      ...[
+        {
+          name: 'Snowflake',
+          icon: SiSnowflake,
+          tabContentJsx: (
+            <Snowflake
+              jwt={jwt}
+              parentHandleSaveClick={() => setSnackbarOpen(true)}
+            ></Snowflake>
+          ),
+        },
+        {
+          name: 'GitHub',
+          icon: FaGithub,
+          tabContentJsx: (
+            <Github organizationId={account.organizationId} jwt={jwt}></Github>
+          ),
+        },
+        {
+          name: 'Slack',
+          icon: FaSlack,
+          tabContentJsx: (
+            <Slack organizationId={account.organizationId} jwt={jwt}></Slack>
+          ),
+        },
+      ],
     ]);
-
-    const panel = document.getElementById('integrationsSidePanel');
-    if (!panel) throw new ReferenceError('Integrations Panel does not exist');
-    panel.style.visibility = 'visible';
-    panel.style.opacity = '1';
   }, [showIntegrationSidePanel]);
 
   useEffect(() => {

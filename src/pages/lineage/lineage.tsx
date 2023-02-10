@@ -57,6 +57,7 @@ import LineageGraph, {
   SourceData,
 } from './components/lineage-graph';
 import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
+import IntegrationTabs from './components/integration-tabs';
 
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ');
@@ -98,7 +99,7 @@ export default (): ReactElement => {
   const [sourceData, setSourceData] = useState<SourceData>();
   const [graphSourceData, setGraphSourceData] = useState<SourceData>();
   const [integrationSidePanelTabIndex, setIntegrationSidePanelTabIndex] =
-    React.useState<number>(-1);
+    React.useState<number>(0);
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [showIntegrationSidePanel, setShowIntegrationSidePanel] =
     useState<boolean>();
@@ -241,13 +242,22 @@ export default (): ReactElement => {
   };
 
   const closeIntegrationSidePanel = () => {
-    setIntegrationSidePanelTabIndex(-1);
     setShowIntegrationSidePanel(false);
 
     const panel = document.getElementById('integrationsSidePanel');
     if (!panel) throw new ReferenceError('Integrations panel does not exist');
     panel.style.visibility = 'hidden';
     panel.style.opacity = '0';
+  };
+
+  const openIntegrationSidePanel = (tabIndex: number) => {
+    setIntegrationSidePanelTabIndex(tabIndex);
+    setShowIntegrationSidePanel(true);
+
+    const panel = document.getElementById('integrationsSidePanel');
+    if (!panel) throw new ReferenceError('Integrations Panel does not exist');
+    panel.style.visibility = 'visible';
+    panel.style.opacity = '1';
   };
 
   const renderLineage = () => {
@@ -299,14 +309,7 @@ export default (): ReactElement => {
       });
   }, [user]);
 
-  useEffect(() => {
-    if (integrationSidePanelTabIndex === -1) return;
-    setShowIntegrationSidePanel(true);
-  }, [integrationSidePanelTabIndex]);
-
   const handleRedirect = () => {
-    if (!integrations.length) return;
-
     const state = location.state;
 
     if (!state) return;
@@ -316,9 +319,42 @@ export default (): ReactElement => {
     const { sidePanelTabIndex: localSidePanelTabIndexChange } = state as any;
 
     if (localSidePanelTabIndexChange !== undefined)
-      setIntegrationSidePanelTabIndex(localSidePanelTabIndexChange);
+      openIntegrationSidePanel(localSidePanelTabIndexChange);
 
     window.history.replaceState({}, document.title);
+  };
+
+  const createIntegrationTabs = () => {
+    if (!jwt || !account) throw new Error('No user authorization found');
+
+    setIntegrations([
+      ...[
+        {
+          name: 'Snowflake',
+          icon: SiSnowflake,
+          tabContentJsx: (
+            <Snowflake
+              jwt={jwt}
+              parentHandleSaveClick={() => setSnackbarOpen(true)}
+            ></Snowflake>
+          ),
+        },
+        {
+          name: 'GitHub',
+          icon: FaGithub,
+          tabContentJsx: (
+            <Github organizationId={account.organizationId} jwt={jwt}></Github>
+          ),
+        },
+        {
+          name: 'Slack',
+          icon: FaSlack,
+          tabContentJsx: (
+            <Slack organizationId={account.organizationId} jwt={jwt}></Slack>
+          ),
+        },
+      ],
+    ]);
   };
 
   useEffect(() => {
@@ -329,6 +365,7 @@ export default (): ReactElement => {
     if (lineage) return;
 
     toggleShowSideNav();
+    createIntegrationTabs();
 
     const mats: MaterializationDto[] = [];
     const dashboards: DashboardDto[] = [];
@@ -433,48 +470,10 @@ export default (): ReactElement => {
   }, [account]);
 
   useEffect(() => {
-    if (!integrations.length) return;
-
-    const panel = document.getElementById('integrationsSidePanel');
-    if (!panel) throw new ReferenceError('Integrations Panel does not exist');
-    panel.style.visibility = 'visible';
-    panel.style.opacity = '1';
-  }, [integrations]);
-
-  useEffect(() => {
     if (!showIntegrationSidePanel || !account) return;
 
     closeColSidePanel();
     closeMatSidePanel();
-
-    setIntegrations([
-      ...[
-        {
-          name: 'Snowflake',
-          icon: SiSnowflake,
-          tabContentJsx: (
-            <Snowflake
-              jwt={jwt}
-              parentHandleSaveClick={() => setSnackbarOpen(true)}
-            ></Snowflake>
-          ),
-        },
-        {
-          name: 'GitHub',
-          icon: FaGithub,
-          tabContentJsx: (
-            <Github organizationId={account.organizationId} jwt={jwt}></Github>
-          ),
-        },
-        {
-          name: 'Slack',
-          icon: FaSlack,
-          tabContentJsx: (
-            <Slack organizationId={account.organizationId} jwt={jwt}></Slack>
-          ),
-        },
-      ],
-    ]);
   }, [showIntegrationSidePanel]);
 
   useEffect(() => {
@@ -673,7 +672,7 @@ export default (): ReactElement => {
           current="lineage"
           toggleLeftPanel={toggleShowSideNav}
           toggleRightPanelFunctions={{
-            open: () => setIntegrationSidePanelTabIndex(0),
+            open: () => openIntegrationSidePanel(0),
             close: closeIntegrationSidePanel,
           }}
           isRightPanelShown={isRightPanelShown}
@@ -928,43 +927,10 @@ export default (): ReactElement => {
               onClick={closeIntegrationSidePanel}
             />
           </div>
-          <Tab.Group
-            selectedIndex={integrationSidePanelTabIndex}
-            onChange={setIntegrationSidePanelTabIndex}
-          >
-            <Tab.List className="mx-6 mt-10 flex space-x-1 rounded-xl bg-cito p-1">
-              {Object.values(integrations).map((integration: any) => (
-                <Tab
-                  key={integration.name}
-                  className={({ selected }) =>
-                    classNames(
-                      'flex w-full flex-col items-center justify-center rounded-lg py-2.5 text-sm font-medium leading-5',
-                      'ring-white ring-opacity-60 ring-offset-2 ring-offset-cito focus:outline-none focus:ring-2',
-                      selected
-                        ? 'bg-white text-cito shadow'
-                        : 'text-white hover:bg-white/[0.12]'
-                    )
-                  }
-                >
-                  <integration.icon className="h-6 w-6" />
-                  {integration.name}
-                </Tab>
-              ))}
-            </Tab.List>
-            <Tab.Panels className="mt-2">
-              {Object.values(integrations).map((integration: any, idx) => (
-                <Tab.Panel
-                  key={idx}
-                  className={classNames(
-                    'rounded-xl bg-white p-3',
-                    'ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2'
-                  )}
-                >
-                  {integration.tabContentJsx}
-                </Tab.Panel>
-              ))}
-            </Tab.Panels>
-          </Tab.Group>
+          <IntegrationTabs
+            integrations={integrations}
+            selectedTabIndex={integrationSidePanelTabIndex}
+          />
         </div>
         <Snackbar
           open={snackbarOpen}

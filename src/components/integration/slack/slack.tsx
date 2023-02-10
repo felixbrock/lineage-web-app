@@ -68,6 +68,7 @@ export default ({ organizationId, jwt }: SlackProps): ReactElement => {
       if (!slackProfile)
         throw new Error('Did not receive slack profile after creating it');
       setProfile(slackProfile);
+      sessionStorage.removeItem('slack-access-token');
     }
 
     setSelectedChannelId(channelId);

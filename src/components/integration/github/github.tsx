@@ -92,6 +92,10 @@ export default ({ organizationId, jwt }: GithubProps): ReactElement => {
             jwt
           );
         })
+        .then(() => {
+          sessionStorage.removeItem('github-access-token');
+          sessionStorage.removeItem('github-installation-id');
+        })
         .catch((error: any) => {
           console.trace(error);
         });

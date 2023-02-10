@@ -58,6 +58,7 @@ import LineageGraph, {
 } from './components/lineage-graph';
 import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
 import IntegrationTabs from './components/integration-tabs';
+import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
 
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ');
@@ -357,6 +358,31 @@ export default (): ReactElement => {
     ]);
   };
 
+  const getSessionStorageData = ():
+    | {
+        lineage: LineageDto;
+        mats: MaterializationDto[];
+        cols: ColumnDto[];
+        dashboards: DashboardDto[];
+      }
+    | undefined => {
+    const sessionStorageLineage = sessionStorage.getItem('lineage');
+    if (!sessionStorageLineage) return undefined;
+
+    const sessionStorageMats = sessionStorage.getItem('mats');
+    const sessionStorageDashboards = sessionStorage.getItem('dashboards');
+    const sessionStorageCols = sessionStorage.getItem('cols');
+
+    return {
+      lineage: JSON.parse(sessionStorageLineage),
+      mats: sessionStorageMats ? JSON.parse(sessionStorageMats) : [],
+      dashboards: sessionStorageDashboards
+        ? JSON.parse(sessionStorageDashboards)
+        : [],
+      cols: sessionStorageCols ? JSON.parse(sessionStorageCols) : [],
+    };
+  };
+
   useEffect(() => {
     if (!account) return;
 
@@ -367,16 +393,54 @@ export default (): ReactElement => {
     toggleShowSideNav();
     createIntegrationTabs();
 
-    const mats: MaterializationDto[] = [];
-    const dashboards: DashboardDto[] = [];
+    const sessionStorageData = getSessionStorageData();
+    if (sessionStorageData) {
+      setLineage(sessionStorageData.lineage);
+      if (sessionStorageData.cols) {
+        setSourceData({
+          cols: sessionStorageData.cols,
+          dashboards: sessionStorageData.dashboards,
+          mats: sessionStorageData.mats,
+          dependencies: [],
+        });
 
-    if (appConfig.react.showRealData) {
+        setGraphSourceData({
+          cols: sessionStorageData.cols,
+          dashboards: [],
+          mats: [sessionStorageData.mats[0]],
+          dependencies: [],
+          selectedEl: {
+            id: sessionStorageData.mats[0].id,
+            type: 'combo',
+          },
+        });
+      } else {
+        setSourceData({
+          cols: [],
+          dashboards: sessionStorageData.dashboards,
+          mats: sessionStorageData.mats,
+          dependencies: [],
+        });
+
+        setGraphSourceData({
+          cols: [],
+          dashboards: [],
+          mats: [],
+          dependencies: [],
+        });
+      }
+    } else if (appConfig.react.showRealData) {
+      const mats: MaterializationDto[] = [];
+      const dashboards: DashboardDto[] = [];
+
       LineageApiRepository.getLatest(jwt, false)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
         .then((lineageDto) => {
           if (!lineageDto)
             throw new TypeError('Queried lineage object not found');
           setLineage(lineageDto);
+          sessionStorage.setItem('lineage', JSON.stringify(lineageDto));
+
           return MaterializationsApiRepository.getBy(
             new URLSearchParams({}),
             jwt
@@ -384,11 +448,12 @@ export default (): ReactElement => {
         })
         .then((materializationDtos) => {
           mats.push(...materializationDtos);
+          sessionStorage.setItem('mats', JSON.stringify(mats));
           return DashboardsApiRepository.getBy(new URLSearchParams({}), jwt);
         })
         .then((dashboardDtos) => {
           dashboards.push(...dashboardDtos);
-
+          sessionStorage.setItem('dashboards', JSON.stringify(dashboards));
           if (mats.length)
             return ColumnsApiRepository.getBy(
               new URLSearchParams({ materializationIds: mats[0].id }),
@@ -397,6 +462,8 @@ export default (): ReactElement => {
         })
         .then((cols) => {
           if (cols) {
+            sessionStorage.setItem('cols', JSON.stringify(cols));
+
             setSourceData({
               cols,
               dashboards,
@@ -415,6 +482,8 @@ export default (): ReactElement => {
               },
             });
           } else {
+            sessionStorage.setItem('cols', JSON.stringify([]));
+
             setSourceData({
               cols: [],
               dashboards,

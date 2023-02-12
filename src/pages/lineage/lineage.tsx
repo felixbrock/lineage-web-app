@@ -59,6 +59,7 @@ import LineageGraph, {
 import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
 import IntegrationTabs from './components/integration-tabs';
 import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
+import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
 
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ');
@@ -177,10 +178,9 @@ export default (): ReactElement => {
     localSourceData.selectedEl = selectedEl;
 
     if (selectedEl.type === 'combo')
-      localSourceData.cols = await ColumnsApiRepository.getBy(
-        new URLSearchParams({ materializationIds: selectedEl.id }),
-        jwt
-      );
+      localSourceData.cols = JSON.parse(
+        sessionStorage.getItem('cols') || '[]'
+      ).filter((el: ColumnDto) => el.materializationId === selectedEl.id);
 
     /* 
   XXXXXXXXXXXXX 
@@ -364,6 +364,7 @@ export default (): ReactElement => {
         mats: MaterializationDto[];
         cols: ColumnDto[];
         dashboards: DashboardDto[];
+        dependencies: DependencyDto[];
       }
     | undefined => {
     const sessionStorageLineage = sessionStorage.getItem('lineage');
@@ -372,6 +373,7 @@ export default (): ReactElement => {
     const sessionStorageMats = sessionStorage.getItem('mats');
     const sessionStorageDashboards = sessionStorage.getItem('dashboards');
     const sessionStorageCols = sessionStorage.getItem('cols');
+    const sessionStorageDependencies = sessionStorage.getItem('dependencies');
 
     return {
       lineage: JSON.parse(sessionStorageLineage),
@@ -380,72 +382,47 @@ export default (): ReactElement => {
         ? JSON.parse(sessionStorageDashboards)
         : [],
       cols: sessionStorageCols ? JSON.parse(sessionStorageCols) : [],
+      dependencies: sessionStorageDependencies
+        ? JSON.parse(sessionStorageDependencies)
+        : [],
     };
   };
 
   useEffect(() => {
-    if (!account) return;
-
-    if (!jwt) throw new Error('No user authorization found');
-
-    if (lineage) return;
-
-    toggleShowSideNav();
-    createIntegrationTabs();
+    if (!jwt) return;
 
     const sessionStorageData = getSessionStorageData();
-    if (sessionStorageData) {
-      setLineage(sessionStorageData.lineage);
-      if (sessionStorageData.cols) {
-        setSourceData({
-          cols: sessionStorageData.cols,
-          dashboards: sessionStorageData.dashboards,
-          mats: sessionStorageData.mats,
-          dependencies: [],
-        });
 
-        setGraphSourceData({
-          cols: sessionStorageData.cols,
-          dashboards: [],
-          mats: [sessionStorageData.mats[0]],
-          dependencies: [],
-          selectedEl: {
-            id: sessionStorageData.mats[0].id,
-            type: 'combo',
-          },
-        });
-      } else {
-        setSourceData({
-          cols: [],
-          dashboards: sessionStorageData.dashboards,
-          mats: sessionStorageData.mats,
-          dependencies: [],
-        });
+    if (!sessionStorageData) return;
+    if (sessionStorageData && sessionStorageData.mats.length) {
+      const selectedMat: MaterializationDto = sessionStorageData.mats[0];
 
-        setGraphSourceData({
-          cols: [],
-          dashboards: [],
-          mats: [],
-          dependencies: [],
-        });
-      }
-    } else if (appConfig.react.showRealData) {
+      const selectedCols = sessionStorageData.cols.filter(
+        (c) => c.materializationId === selectedMat.id
+      );
+
+      setSourceData({
+        cols: selectedCols,
+        dashboards: sessionStorageData.dashboards,
+        mats: sessionStorageData.mats,
+        dependencies: sessionStorageData.dependencies,
+      });
+
+      setGraphSourceData({
+        cols: selectedCols,
+        dashboards: [],
+        mats: [selectedMat],
+        dependencies: [],
+        selectedEl: {
+          id: selectedMat.id,
+          type: 'combo',
+        },
+      });
+    } else {
       const mats: MaterializationDto[] = [];
       const dashboards: DashboardDto[] = [];
 
-      LineageApiRepository.getLatest(jwt, false)
-        // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
-        .then((lineageDto) => {
-          if (!lineageDto)
-            throw new TypeError('Queried lineage object not found');
-          setLineage(lineageDto);
-          sessionStorage.setItem('lineage', JSON.stringify(lineageDto));
-
-          return MaterializationsApiRepository.getBy(
-            new URLSearchParams({}),
-            jwt
-          );
-        })
+      MaterializationsApiRepository.getBy(new URLSearchParams({}), jwt)
         .then((materializationDtos) => {
           mats.push(...materializationDtos);
           sessionStorage.setItem('mats', JSON.stringify(mats));
@@ -455,24 +432,27 @@ export default (): ReactElement => {
           dashboards.push(...dashboardDtos);
           sessionStorage.setItem('dashboards', JSON.stringify(dashboards));
           if (mats.length)
-            return ColumnsApiRepository.getBy(
-              new URLSearchParams({ materializationIds: mats[0].id }),
-              jwt
-            );
+            return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
         })
         .then((cols) => {
           if (cols) {
+            const selectedMat: MaterializationDto = mats[0];
+
+            const selectedCols = cols.filter(
+              (c) => c.materializationId === selectedMat.id
+            );
+
             sessionStorage.setItem('cols', JSON.stringify(cols));
 
             setSourceData({
-              cols,
+              cols: selectedCols,
               dashboards,
               mats,
               dependencies: [],
             });
 
             setGraphSourceData({
-              cols,
+              cols: selectedCols,
               dashboards: [],
               mats: [mats[0]],
               dependencies: [],
@@ -498,8 +478,6 @@ export default (): ReactElement => {
               dependencies: [],
             });
           }
-
-          setIsLoading(false);
         })
         .catch((error) => {
           console.log(error);
@@ -522,7 +500,69 @@ export default (): ReactElement => {
           });
 
           setIsDataAvailable(false);
-          setIsLoading(false);
+        });
+    }
+
+    handleRedirect();
+    setIsLoading(false);
+  }, [lineage]);
+
+  useEffect(() => {
+    if (!account) return;
+
+    if (!jwt) throw new Error('No user authorization found');
+
+    if (lineage) return;
+
+    toggleShowSideNav();
+    createIntegrationTabs();
+
+    if (appConfig.react.showRealData) {
+      LineageApiRepository.getLatest(jwt, false)
+        // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
+        .then((lineageDto) => {
+          if (!lineageDto)
+            throw new TypeError('Queried lineage object not found');
+
+          const sessionStorageLineageStr = sessionStorage.getItem('lineage');
+          const sessionStorageLineage: LineageDto | undefined =
+            sessionStorageLineageStr
+              ? JSON.parse(sessionStorageLineageStr)
+              : undefined;
+
+          if (
+            sessionStorageLineage &&
+            sessionStorageLineage.createdAt === lineageDto.createdAt
+          )
+            setLineage(sessionStorageLineage);
+          else {
+            setLineage(lineageDto);
+            sessionStorage.clear();
+            sessionStorage.setItem('lineage', JSON.stringify(lineageDto));
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          sessionStorage.clear();
+
+          setLineage(defaultErrorLineage);
+          setSourceData({
+            cols: defaultErrorColumns,
+            dashboards: deafultErrorDashboards,
+            mats: defaultErrorMaterializations,
+            dependencies: defaultErrorDependencies,
+            selectedEl: defaultErrorColumns.length
+              ? { id: defaultErrorColumns[0].id, type: 'node' }
+              : undefined,
+          });
+          setGraphSourceData({
+            cols: [],
+            dashboards: [],
+            dependencies: [],
+            mats: [],
+          });
+
+          setIsDataAvailable(false);
         });
     } else {
       setLineage({
@@ -532,10 +572,7 @@ export default (): ReactElement => {
         dbCoveredNames: [],
         diff: '',
       });
-      setIsLoading(false);
     }
-
-    handleRedirect();
   }, [account]);
 
   useEffect(() => {

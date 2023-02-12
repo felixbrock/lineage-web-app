@@ -5,8 +5,8 @@ import LineageDto from './lineage-dto';
 // TODO - Implement Interface regarding clean architecture
 export default class LineageApiRepository {
   private static version = 'v1';
-  
-  private static apiRoot =  'api';
+
+  private static apiRoot = 'api';
 
   private static baseUrl = appConfig.baseUrl.lineageService;
 
@@ -15,13 +15,14 @@ export default class LineageApiRepository {
     jwt: string
   ): Promise<LineageDto | null> => {
     try {
-      
-
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
       };
 
-      const response = await axios.get(`${LineageApiRepository.baseUrl}/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/${id}`, config);
+      const response = await axios.get(
+        `${LineageApiRepository.baseUrl}/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/${id}`,
+        config
+      );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);
@@ -30,16 +31,29 @@ export default class LineageApiRepository {
     }
   };
 
-  static getLatest = async (jwt: string, tolerateIncomplete: boolean): Promise<LineageDto | null> => {
+  static getLatest = async (
+    jwt: string,
+    tolerateIncomplete: boolean,
+    minuteTolerance?: number
+  ): Promise<LineageDto | null> => {
     try {
-      
+      const params = new URLSearchParams({
+        tolerateIncomplete: tolerateIncomplete.toString(),
+      });
+
+      if (minuteTolerance) {
+        params.append('minuteTolerance', minuteTolerance.toString());
+      }
 
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
-        params: new URLSearchParams({ tolerateIncomplete: tolerateIncomplete.toString() }),
+        params,
       };
 
-      const response = await axios.get(`${LineageApiRepository.baseUrl}/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/`, config);
+      const response = await axios.get(
+        `${LineageApiRepository.baseUrl}/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/`,
+        config
+      );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);
@@ -50,8 +64,6 @@ export default class LineageApiRepository {
 
   static create = async (jwt: string) => {
     try {
-      
-
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
       };

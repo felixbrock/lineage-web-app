@@ -98,7 +98,7 @@ export default function Navbar({
   useEffect(() => {
     if (!jwt) return;
 
-    LineageApiRepository.getLatest(jwt, true)
+    LineageApiRepository.getLatest(jwt, true, 3)
       .then((snapshot) => {
         let state: SnapshotState = 'not available';
         if (!snapshot) {

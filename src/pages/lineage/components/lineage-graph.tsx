@@ -33,10 +33,12 @@ export interface SelectedElement {
 }
 
 export interface SourceData {
-  selectedEl?: SelectedElement;
   mats: MaterializationDto[];
   cols: ColumnDto[];
   dashboards: DashboardDto[];
+}
+export interface GraphSourceData extends SourceData {
+  selectedEl?: SelectedElement;
   dependencies: DependencyDto[];
 }
 
@@ -243,7 +245,7 @@ const fittingString = (
 };
 
 export default ({
-  sourceData,
+  graphSourceData,
   dataAvailable,
   closeMatSidePanelCallback,
   closeColSidePanelCallback,
@@ -253,7 +255,7 @@ export default ({
   comboSelectCallback,
   graphBuiltCallback,
 }: {
-  sourceData?: SourceData;
+  graphSourceData?: GraphSourceData;
   dataAvailable: boolean;
   closeMatSidePanelCallback: () => void;
   closeColSidePanelCallback: () => void;
@@ -415,19 +417,19 @@ export default ({
     comboId: string,
     graphObj: Graph
   ): Promise<void> => {
-    if (!sourceData) throw new Error('');
-  
+    if (!graphSourceData) throw new Error('');
+
     closeColSidePanelCallback();
 
     clearEdgeStates(graphObj);
 
     const materializationsToSearch = appConfig.react.showRealData
-      ? sourceData.mats
+      ? graphSourceData.mats
       : defaultMaterializations;
 
     const matCombo = materializationsToSearch.find((el) => el.id === comboId);
 
-    const dashCombo = sourceData.dashboards.find(
+    const dashCombo = graphSourceData.dashboards.find(
       (dashboard) => dashboard.url === comboId
     );
 
@@ -617,7 +619,8 @@ export default ({
 
       if (!event.target) clearStates(localGraph);
       else if (!event.select) clearStates(localGraph);
-      else if (event.target.get('type') === 'node') handleNodeSelectChange(id, localGraph);
+      else if (event.target.get('type') === 'node')
+        handleNodeSelectChange(id, localGraph);
       else if (event.target.get('type') === 'combo')
         handleComboSelectChange(id, localGraph);
     });
@@ -680,30 +683,30 @@ export default ({
   };
 
   const buildData = (): GraphData => {
-    if (!sourceData)
+    if (!graphSourceData)
       throw new Error('SourceData not found - Required to build GraphData');
 
-    const matCombo = sourceData.mats.map(
+    const matCombo = graphSourceData.mats.map(
       (materialization): ComboConfig => ({
         id: materialization.id,
         label: materialization.name,
       })
     );
-    const colNodes = sourceData.cols.map(
+    const colNodes = graphSourceData.cols.map(
       (column): NodeConfig => ({
         id: column.id,
         label: column.name,
         comboId: column.materializationId,
       })
     );
-    const edges = sourceData.dependencies.map(
+    const edges = graphSourceData.dependencies.map(
       (dependency): EdgeConfig => ({
         source: dependency.tailId,
         target: dependency.headId,
       })
     );
 
-    const dashCombo = sourceData.dashboards.map(
+    const dashCombo = graphSourceData.dashboards.map(
       (dashboard): ComboConfig => ({
         id: dashboard.url ? dashboard.url : '',
         label: dashboard.name
@@ -711,7 +714,7 @@ export default ({
           : fittingString(dashboard.url, 385, 18),
       })
     );
-    const dashNodes = sourceData.dashboards.map(
+    const dashNodes = graphSourceData.dashboards.map(
       (dashboard): NodeConfig => ({
         id: dashboard.id,
         label: dashboard.columnName,
@@ -725,7 +728,7 @@ export default ({
   };
 
   useEffect(() => {
-    if (!sourceData) return;
+    if (!graphSourceData) return;
 
     if (appConfig.react.showRealData) setData({ ...buildData() });
     else {
@@ -735,17 +738,18 @@ export default ({
 
       setData(defaultData);
     }
-  }, [sourceData]);
+  }, [graphSourceData]);
 
   useEffect(() => {
-    if (!data || !sourceData) return;
+    if (!data || !graphSourceData) return;
 
     if (!graph) {
       buildGraph();
       graphBuiltCallback();
     } else {
-      if (!sourceData.selectedEl) throw new Error('Missing selected element');
-      updateGraph(sourceData.selectedEl);
+      if (!graphSourceData.selectedEl)
+        throw new Error('Missing selected element');
+      updateGraph(graphSourceData.selectedEl);
     }
   }, [data]);
 

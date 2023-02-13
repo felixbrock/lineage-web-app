@@ -53,6 +53,7 @@ import LoadingScreen from '../../components/loading-screen';
 import appConfig from '../../config';
 import SideNav from './components/side-nav';
 import LineageGraph, {
+  GraphSourceData,
   SelectedElement,
   SourceData,
 } from './components/lineage-graph';
@@ -60,6 +61,7 @@ import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/colum
 import IntegrationTabs from './components/integration-tabs';
 import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
 import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
+import DependenciesApiRepository from '../../infrastructure/lineage-api/dependencies/dependencies-api-repository';
 
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ');
@@ -99,7 +101,7 @@ export default (): ReactElement => {
   const [isDataAvailable, setIsDataAvailable] = useState<boolean>(true);
   const [lineage, setLineage] = useState<LineageDto>();
   const [sourceData, setSourceData] = useState<SourceData>();
-  const [graphSourceData, setGraphSourceData] = useState<SourceData>();
+  const [graphSourceData, setGraphSourceData] = useState<GraphSourceData>();
   const [integrationSidePanelTabIndex, setIntegrationSidePanelTabIndex] =
     React.useState<number>(0);
   const [selectedNodeId, setSelectedNodeId] = useState('');
@@ -165,23 +167,100 @@ export default (): ReactElement => {
   const showIntegrationPanelCallback = (show: boolean) =>
     setShowIntegrationSidePanel(show);
 
+  const getSessionStorageData = ():
+    | {
+        lineage: LineageDto;
+        mats: MaterializationDto[];
+        cols: ColumnDto[];
+        dashboards: DashboardDto[];
+        dependencies: DependencyDto[];
+      }
+    | undefined => {
+    const sessionStorageLineage = sessionStorage.getItem('lineage');
+    if (!sessionStorageLineage) return undefined;
+
+    const sessionStorageMats = sessionStorage.getItem('mats');
+    const sessionStorageDashboards = sessionStorage.getItem('dashboards');
+    const sessionStorageCols = sessionStorage.getItem('cols');
+    const sessionStorageDependencies = sessionStorage.getItem('dependencies');
+
+    return {
+      lineage: JSON.parse(sessionStorageLineage),
+      mats: sessionStorageMats ? JSON.parse(sessionStorageMats) : [],
+      dashboards: sessionStorageDashboards
+        ? JSON.parse(sessionStorageDashboards)
+        : [],
+      cols: sessionStorageCols ? JSON.parse(sessionStorageCols) : [],
+      dependencies: sessionStorageDependencies
+        ? JSON.parse(sessionStorageDependencies)
+        : [],
+    };
+  };
+
+  const defineSourceData = (
+    selectedMat: MaterializationDto,
+    dependencies: DependencyDto[],
+    mats: MaterializationDto[],
+    cols: ColumnDto[],
+    dashboards: DashboardDto[]
+  ): void => {
+    const selectedCols = cols.filter(
+      (c) => c.materializationId === selectedMat.id
+    );
+
+    const relevantResources = getRelevantResources(
+      selectedMat.id,
+      dependencies,
+      mats,
+      cols,
+      dashboards
+    );
+
+    setSourceData({
+      cols: selectedCols,
+      dashboards,
+      mats,
+    });
+
+    setGraphSourceData({
+      cols: selectedCols.concat(relevantResources.cols),
+      dashboards: relevantResources.dashboards,
+      mats: [selectedMat, ...relevantResources.mats],
+      dependencies: relevantResources.dependencies,
+      selectedEl: {
+        id: selectedMat.id,
+        type: 'combo',
+      },
+    });
+  };
+
   const sideNavClickCallback = async (
     selectedEl: SelectedElement,
     comboId?: string
   ): Promise<void> => {
     if (!sourceData) throw new Error('Source data not found');
+    if (!sourceData) throw new Error('Graph source data not found');
     if (selectedEl.type === 'node' && !comboId)
       throw new Error('Error: Node selected but no combo id provided');
 
-    const localSourceData = sourceData;
+    const sessionStorageData = getSessionStorageData();
+    if (!sessionStorageData || !sessionStorageData.mats.length)
+      throw new Error('Session storage data not found');
 
-    localSourceData.selectedEl = selectedEl;
+    const selectedMat = sessionStorageData.mats.find(
+      (el) => el.id === selectedEl.id
+    );
+
+    if (!selectedMat) throw new Error('Selected materialization not found');
 
     if (selectedEl.type === 'combo')
-      localSourceData.cols = JSON.parse(
-        sessionStorage.getItem('cols') || '[]'
-      ).filter((el: ColumnDto) => el.materializationId === selectedEl.id);
-
+      defineSourceData(
+        selectedMat,
+        sessionStorageData.dependencies,
+        sessionStorageData.mats,
+        sessionStorageData.cols,
+        sessionStorageData.dashboards
+      );
     /* 
   XXXXXXXXXXXXX 
   XXXXXXXXXXXXX 
@@ -358,33 +437,49 @@ export default (): ReactElement => {
     ]);
   };
 
-  const getSessionStorageData = ():
-    | {
-        lineage: LineageDto;
-        mats: MaterializationDto[];
-        cols: ColumnDto[];
-        dashboards: DashboardDto[];
-        dependencies: DependencyDto[];
-      }
-    | undefined => {
-    const sessionStorageLineage = sessionStorage.getItem('lineage');
-    if (!sessionStorageLineage) return undefined;
+  const getRelevantResources = (
+    selectedMatId: string,
+    dependencies: DependencyDto[],
+    mats: MaterializationDto[],
+    cols: ColumnDto[],
+    dashboards: DashboardDto[]
+  ): {
+    dependencies: DependencyDto[];
+    mats: MaterializationDto[];
+    cols: ColumnDto[];
+    dashboards: DashboardDto[];
+  } => {
+    const relevantDependencies = dependencies.filter(
+      (d) => d.headId === selectedMatId || d.tailId === selectedMatId
+    );
 
-    const sessionStorageMats = sessionStorage.getItem('mats');
-    const sessionStorageDashboards = sessionStorage.getItem('dashboards');
-    const sessionStorageCols = sessionStorage.getItem('cols');
-    const sessionStorageDependencies = sessionStorage.getItem('dependencies');
+    const dependentMats = mats.filter((m) =>
+      relevantDependencies.some(
+        (d) =>
+          (m.id !== selectedMatId && d.headId === m.id) || d.tailId === m.id
+      )
+    );
+
+    const dependentDashboards = dashboards.filter((dashboard) =>
+      relevantDependencies.some(
+        (d) =>
+          (dashboard.id !== selectedMatId && d.headId === dashboard.id) ||
+          d.tailId === dashboard.id
+      )
+    );
+
+    const dependentCols = cols.filter((m) =>
+      relevantDependencies.some(
+        (d) =>
+          (m.id !== selectedMatId && d.headId === m.id) || d.tailId === m.id
+      )
+    );
 
     return {
-      lineage: JSON.parse(sessionStorageLineage),
-      mats: sessionStorageMats ? JSON.parse(sessionStorageMats) : [],
-      dashboards: sessionStorageDashboards
-        ? JSON.parse(sessionStorageDashboards)
-        : [],
-      cols: sessionStorageCols ? JSON.parse(sessionStorageCols) : [],
-      dependencies: sessionStorageDependencies
-        ? JSON.parse(sessionStorageDependencies)
-        : [],
+      dependencies: relevantDependencies,
+      cols: dependentCols,
+      mats: dependentMats,
+      dashboards: dependentDashboards,
     };
   };
 
@@ -393,74 +488,52 @@ export default (): ReactElement => {
 
     const sessionStorageData = getSessionStorageData();
 
-    if (!sessionStorageData) return;
+    if (!sessionStorageData) {
+      setIsLoading(false);
+      return;
+    }
     if (sessionStorageData && sessionStorageData.mats.length) {
       const selectedMat: MaterializationDto = sessionStorageData.mats[0];
 
-      const selectedCols = sessionStorageData.cols.filter(
-        (c) => c.materializationId === selectedMat.id
+      defineSourceData(
+        selectedMat,
+        sessionStorageData.dependencies,
+        sessionStorageData.mats,
+        sessionStorageData.cols,
+        sessionStorageData.dashboards
       );
-
-      setSourceData({
-        cols: selectedCols,
-        dashboards: sessionStorageData.dashboards,
-        mats: sessionStorageData.mats,
-        dependencies: sessionStorageData.dependencies,
-      });
-
-      setGraphSourceData({
-        cols: selectedCols,
-        dashboards: [],
-        mats: [selectedMat],
-        dependencies: [],
-        selectedEl: {
-          id: selectedMat.id,
-          type: 'combo',
-        },
-      });
     } else {
       const mats: MaterializationDto[] = [];
       const dashboards: DashboardDto[] = [];
+      const dependencies: DependencyDto[] = [];
+      const cols: ColumnDto[] = [];
 
       MaterializationsApiRepository.getBy(new URLSearchParams({}), jwt)
-        .then((materializationDtos) => {
-          mats.push(...materializationDtos);
-          sessionStorage.setItem('mats', JSON.stringify(mats));
+        .then((matDtos) => {
+          mats.push(...matDtos);
+          sessionStorage.setItem('mats', JSON.stringify(matDtos));
+          return DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
+        })
+        .then((dependencyDtos) => {
+          dependencies.push(...dependencyDtos);
+          sessionStorage.setItem(
+            'dependencies',
+            JSON.stringify(dependencyDtos)
+          );
+
           return DashboardsApiRepository.getBy(new URLSearchParams({}), jwt);
         })
         .then((dashboardDtos) => {
           dashboards.push(...dashboardDtos);
-          sessionStorage.setItem('dashboards', JSON.stringify(dashboards));
+          sessionStorage.setItem('dashboards', JSON.stringify(dashboardDtos));
           if (mats.length)
             return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
         })
-        .then((cols) => {
-          if (cols) {
-            const selectedMat: MaterializationDto = mats[0];
-
-            const selectedCols = cols.filter(
-              (c) => c.materializationId === selectedMat.id
-            );
-
-            sessionStorage.setItem('cols', JSON.stringify(cols));
-
-            setSourceData({
-              cols: selectedCols,
-              dashboards,
-              mats,
-              dependencies: [],
-            });
-
-            setGraphSourceData({
-              cols: selectedCols,
-              dashboards: [],
-              mats: [mats[0]],
-              dependencies: [],
-              selectedEl: {
-                id: mats[0].id,
-                type: 'combo',
-              },
-            });
+        .then((colDtos) => {
+          if (colDtos) {
+            cols.push(...colDtos);
+            sessionStorage.setItem('cols', JSON.stringify(colDtos));
+            defineSourceData(mats[0], dependencies, mats, cols, dashboards);
           } else {
             sessionStorage.setItem('cols', JSON.stringify([]));
 
@@ -468,7 +541,6 @@ export default (): ReactElement => {
               cols: [],
               dashboards,
               mats,
-              dependencies: [],
             });
 
             setGraphSourceData({
@@ -487,10 +559,6 @@ export default (): ReactElement => {
             cols: defaultErrorColumns,
             dashboards: deafultErrorDashboards,
             mats: defaultErrorMaterializations,
-            dependencies: defaultErrorDependencies,
-            selectedEl: defaultErrorColumns.length
-              ? { id: defaultErrorColumns[0].id, type: 'node' }
-              : undefined,
           });
           setGraphSourceData({
             cols: [],
@@ -550,10 +618,6 @@ export default (): ReactElement => {
             cols: defaultErrorColumns,
             dashboards: deafultErrorDashboards,
             mats: defaultErrorMaterializations,
-            dependencies: defaultErrorDependencies,
-            selectedEl: defaultErrorColumns.length
-              ? { id: defaultErrorColumns[0].id, type: 'node' }
-              : undefined,
           });
           setGraphSourceData({
             cols: [],
@@ -794,7 +858,7 @@ export default (): ReactElement => {
           <></>
         )}
         <LineageGraph
-          sourceData={graphSourceData}
+          graphSourceData={graphSourceData}
           dataAvailable={isDataAvailable}
           closeColSidePanelCallback={closeColSidePanel}
           closeIntegrationSidePanelCallback={closeIntegrationSidePanel}

@@ -40,7 +40,6 @@ import AccountDto from '../../infrastructure/account-api/account-dto';
 import {
   deafultErrorDashboards,
   defaultErrorColumns,
-  defaultErrorDependencies,
   defaultErrorLineage,
   defaultErrorMaterializations,
 } from './error-handling-data';
@@ -197,6 +196,49 @@ export default (): ReactElement => {
     };
   };
 
+  const getRelevantResources = (
+    selectedMatId: string,
+    dependencies: DependencyDto[],
+    mats: MaterializationDto[],
+    cols: ColumnDto[],
+    dashboards: DashboardDto[]
+  ): {
+    dependencies: DependencyDto[];
+    mats: MaterializationDto[];
+    cols: ColumnDto[];
+    dashboards: DashboardDto[];
+  } => {
+    const relevantDependencies = dependencies.filter(
+      (d) => d.headId === selectedMatId || d.tailId === selectedMatId
+    );
+
+    const dependentMats = mats.filter((m) =>
+      relevantDependencies.some(
+        (d) =>
+          m.id !== selectedMatId && (d.headId === m.id || d.tailId === m.id)
+      )
+    );
+
+    const dependentDashboards = dashboards.filter((dashboard) =>
+      relevantDependencies.some(
+        (d) =>
+          (dashboard.id !== selectedMatId && d.headId === dashboard.id) ||
+          d.tailId === dashboard.id
+      )
+    );
+
+    const dependentCols = cols.filter((col) =>
+      dependentMats.some((m) => m.id === col.materializationId)
+    );
+
+    return {
+      dependencies: relevantDependencies,
+      cols: dependentCols,
+      mats: dependentMats,
+      dashboards: dependentDashboards,
+    };
+  };
+
   const defineSourceData = (
     selectedMat: MaterializationDto,
     dependencies: DependencyDto[],
@@ -247,46 +289,22 @@ export default (): ReactElement => {
     if (!sessionStorageData || !sessionStorageData.mats.length)
       throw new Error('Session storage data not found');
 
-    const selectedMat = sessionStorageData.mats.find(
-      (el) => el.id === selectedEl.id
-    );
+    if (selectedEl.type !== 'combo' && !comboId)
+      throw new Error('Combo id for selecte column missing');
+
+    const selectedMat = comboId
+      ? sessionStorageData.mats.find((el) => el.id === comboId)
+      : sessionStorageData.mats.find((el) => el.id === selectedEl.id);
 
     if (!selectedMat) throw new Error('Selected materialization not found');
 
-    if (selectedEl.type === 'combo')
-      defineSourceData(
-        selectedMat,
-        sessionStorageData.dependencies,
-        sessionStorageData.mats,
-        sessionStorageData.cols,
-        sessionStorageData.dashboards
-      );
-    /* 
-  XXXXXXXXXXXXX 
-  XXXXXXXXXXXXX 
-    todo - implement get By tailIds  
-  XXXXXXXXXXXXX 
-  XXXXXXXXXXXXX 
-  */
-    // const dependencyDtos = DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
-    // setDependencies(dependencyDtos);
-
-    /* 
-  XXXXXXXXXXXXX 
-  XXXXXXXXXXXXX 
-    load columns that are relevant based on dependencies  
-  XXXXXXXXXXXXX 
-  XXXXXXXXXXXXX 
-  */
-
-    setSourceData({ ...localSourceData });
-    setGraphSourceData({
-      ...localSourceData,
-      mats:
-        selectedEl.type === 'combo'
-          ? localSourceData.mats.filter((el) => el.id === selectedEl.id)
-          : localSourceData.mats.filter((el) => el.id === comboId),
-    });
+    defineSourceData(
+      selectedMat,
+      sessionStorageData.dependencies,
+      sessionStorageData.mats,
+      sessionStorageData.cols,
+      sessionStorageData.dashboards
+    );
   };
 
   const simulateSideNavClick = async (
@@ -435,52 +453,6 @@ export default (): ReactElement => {
         },
       ],
     ]);
-  };
-
-  const getRelevantResources = (
-    selectedMatId: string,
-    dependencies: DependencyDto[],
-    mats: MaterializationDto[],
-    cols: ColumnDto[],
-    dashboards: DashboardDto[]
-  ): {
-    dependencies: DependencyDto[];
-    mats: MaterializationDto[];
-    cols: ColumnDto[];
-    dashboards: DashboardDto[];
-  } => {
-    const relevantDependencies = dependencies.filter(
-      (d) => d.headId === selectedMatId || d.tailId === selectedMatId
-    );
-
-    const dependentMats = mats.filter((m) =>
-      relevantDependencies.some(
-        (d) =>
-          (m.id !== selectedMatId && d.headId === m.id) || d.tailId === m.id
-      )
-    );
-
-    const dependentDashboards = dashboards.filter((dashboard) =>
-      relevantDependencies.some(
-        (d) =>
-          (dashboard.id !== selectedMatId && d.headId === dashboard.id) ||
-          d.tailId === dashboard.id
-      )
-    );
-
-    const dependentCols = cols.filter((m) =>
-      relevantDependencies.some(
-        (d) =>
-          (m.id !== selectedMatId && d.headId === m.id) || d.tailId === m.id
-      )
-    );
-
-    return {
-      dependencies: relevantDependencies,
-      cols: dependentCols,
-      mats: dependentMats,
-      dashboards: dependentDashboards,
-    };
   };
 
   useEffect(() => {
@@ -878,7 +850,7 @@ export default (): ReactElement => {
           <div className="header">
             <SectionHeading
               title="Table Insights"
-              onClick={closeColSidePanel}
+              onClick={closeMatSidePanel}
             />
           </div>
           <div className="content mt-10">

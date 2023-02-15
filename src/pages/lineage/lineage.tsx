@@ -11,7 +11,8 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import MetricsGraph, {
   defaultOption,
-  defaultYAxis,
+  getDefaultYAxis,
+  HistoryDataSet,
   TestHistoryEntry,
 } from '../../components/metrics-graph';
 
@@ -807,6 +808,21 @@ export default (): ReactElement => {
       simulateSideNavClick({ id: targetResourceId, type: 'node' });
   };
 
+  const getHistoryMinMax = (
+    historyDataSet: HistoryDataSet[]
+  ): [number, number] =>
+    historyDataSet.reduce<[number, number]>(
+      (acc, curr) => {
+        const localAcc = acc;
+
+        if (curr.value < localAcc[0]) localAcc[0] = curr.value;
+        if (curr.value > localAcc[1]) localAcc[1] = curr.value;
+
+        return localAcc;
+      },
+      [historyDataSet[0].value, historyDataSet[0].value]
+    );
+
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
@@ -914,7 +930,9 @@ export default (): ReactElement => {
                         {entry.historyDataSet.length ? (
                           <MetricsGraph
                             option={defaultOption(
-                              defaultYAxis,
+                              getDefaultYAxis(
+                                ...getHistoryMinMax(entry.historyDataSet)
+                              ),
                               entry.historyDataSet
                             )}
                           ></MetricsGraph>
@@ -1027,7 +1045,9 @@ export default (): ReactElement => {
                         {entry.historyDataSet.length ? (
                           <MetricsGraph
                             option={defaultOption(
-                              defaultYAxis,
+                              getDefaultYAxis(
+                                ...getHistoryMinMax(entry.historyDataSet)
+                              ),
                               entry.historyDataSet
                             )}
                           ></MetricsGraph>

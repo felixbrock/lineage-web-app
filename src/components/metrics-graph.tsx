@@ -9,7 +9,7 @@ import {
 } from 'echarts';
 import LoadingScreen from './loading-screen';
 
-interface HistoryDataSet {
+export interface HistoryDataSet {
   isAnomaly: boolean;
   userFeedbackIsAnomaly: number;
   timestamp: string;
@@ -32,24 +32,15 @@ export const effectiveRateSampleDistributionData = [
   4, 4.5, 4.7, 4.8, 3.8, 3.8, 3.8, 5.2, 20.6,
 ].reverse();
 
-export const defaultYAxis: YAXisComponentOption = {
+export const getDefaultYAxis = (
+  minBase: number,
+  maxBase: number
+): YAXisComponentOption => ({
   type: 'value',
   boundaryGap: [0, '30%'],
-  min: 'dataMin',
-  max: 'dataMax',
-};
-
-export const defaultYAxisTime: YAXisComponentOption = {
-  ...defaultYAxis,
-  axisLabel: {
-    formatter: '{value} min',
-  },
-};
-
-// interface MarkAreaBoundary {
-//   name?: string;
-//   xAxis: number;
-// }
+  min: `${minBase - (maxBase - minBase) * 0.5}`,
+  max: `${maxBase + (maxBase - minBase) * 0.5}`,
+});
 
 interface VisualPiece {
   gte: number;

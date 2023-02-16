@@ -7,8 +7,6 @@ import React, {
 import { FaGithub, FaSlack } from 'react-icons/fa';
 import { SiSnowflake } from 'react-icons/si';
 import './lineage.scss';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import MetricsGraph, {
   defaultOption,
   getDefaultYAxis,
@@ -52,6 +50,7 @@ import MaterializationDto from '../../infrastructure/lineage-api/materialization
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
 import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
+import ModelVisualizer from '../../components/model-visualizer';
 
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ');
@@ -94,6 +93,8 @@ export default (): ReactElement => {
 
   const selectionAlertHistory: AlertHistoryEntry[] = [];
   const isDataAvailable = true;
+
+  const lastModifiedInfos = ['Oliver Morana, 12 Minutes ago'];
 
   const handleSnackbarClose = (
     event?: React.SyntheticEvent | Event,
@@ -621,14 +622,7 @@ export default (): ReactElement => {
                           ]
                         }
                       </i>
-                      <SyntaxHighlighter
-                        language="sql"
-                        style={dracula}
-                        showLineNumbers={true}
-                        wrapLongLines={false}
-                      >
-                        {sql}
-                      </SyntaxHighlighter>
+                      <ModelVisualizer sql={sql} />
                     </div>
                   </>
                 </Tab.Panel>

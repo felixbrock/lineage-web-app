@@ -82,8 +82,8 @@ const getSlackConfig = (): SlackConfig => {
       slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET_DEV;
       break;
     case 'demo':
-      slackClientId = '';
-      slackClientSecret = '';
+      slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID_DEV;
+      slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET_DEV;
       break;
     case 'production':
       slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID;

@@ -29,7 +29,6 @@ import BasicTable from '../../components/table';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
-import { useLocation, useSearchParams } from 'react-router-dom';
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
 import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
@@ -37,7 +36,6 @@ import IntegrationApiRepo from '../../infrastructure/integration-api/integration
 import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
 import Snowflake from '../../components/integration/snowflake/snowflake';
-import AccountDto from '../../infrastructure/account-api/account-dto';
 import {
   deafultErrorDashboards,
   defaultErrorColumns,
@@ -62,6 +60,7 @@ import IntegrationTabs from './components/integration-tabs';
 import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
 import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
 import DependenciesApiRepository from '../../infrastructure/lineage-api/dependencies/dependencies-api-repository';
+import AccountDto from '../../infrastructure/account-api/account-dto';
 
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ');
@@ -85,13 +84,7 @@ const theme = createTheme({
 });
 
 export default (): ReactElement => {
-  const location = useLocation();
-
-  const [searchParams] = useSearchParams();
-
-  const [account, setAccount] = useState<AccountDto>();
   const [user, setUser] = useState<any>();
-  const [jwt, setJwt] = useState('');
 
   const [sql, setSQL] = useState('');
   const [selectionTests, setSelectionTests] = useState<TestHistoryEntry[]>([]);
@@ -148,12 +141,7 @@ export default (): ReactElement => {
     if (!logicId) return;
 
     if (appConfig.react.showRealData) {
-      const logicDto = await LogicApiRepository.getOne(logicId, jwt);
-
-      if (!logicDto)
-        throw new ReferenceError('Not able to retrieve logic object');
-
-      setSQL(logicDto.sql);
+      throw new Error('Not implemented');
     } else {
       const logic = defaultLogics.find((element) => element.id === logicId);
 
@@ -359,10 +347,8 @@ export default (): ReactElement => {
     panel.style.opacity = '1';
   };
 
-  const renderLineage = () => {
-    setUser(undefined);
-    setJwt('');
-    setAccount(undefined);
+  useEffect(() => {
+    if (user) return;
 
     Auth.currentAuthenticatedUser()
       .then((cognitoUser) => setUser(cognitoUser))
@@ -371,61 +357,9 @@ export default (): ReactElement => {
 
         Auth.federatedSignIn();
       });
-  };
-
-  useEffect(() => {
-    if (!location || !searchParams) return;
-
-    renderLineage();
-  }, [location, searchParams]);
-
-  useEffect(() => {
-    if (!user) return;
-    let token: string;
-    Auth.currentSession()
-      .then((session) => {
-        const accessToken = session.getAccessToken();
-
-        token = accessToken.getJwtToken();
-
-        setJwt(token);
-
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
-      })
-      .then((accounts) => {
-        if (!accounts.length) throw new Error(`No accounts found for user`);
-
-        if (accounts.length > 1)
-          throw new Error(`Multiple accounts found for user`);
-
-        setAccount(accounts[0]);
-      })
-      .catch((error) => {
-        console.trace(typeof error === 'string' ? error : error.message);
-        sessionStorage.clear();
-
-        Auth.signOut();
-      });
-  }, [user]);
-
-  const handleRedirect = () => {
-    const state = location.state;
-
-    if (!state) return;
-    if (typeof state !== 'object')
-      throw new Error('Unexpected navigation state type');
-
-    const { sidePanelTabIndex: localSidePanelTabIndexChange } = state as any;
-
-    if (localSidePanelTabIndexChange !== undefined)
-      openIntegrationSidePanel(localSidePanelTabIndexChange);
-
-    window.history.replaceState({}, document.title);
-  };
+  }, []);
 
   const createIntegrationTabs = () => {
-    if (!jwt || !account) throw new Error('No user authorization found');
-
     setIntegrations([
       ...[
         {
@@ -433,7 +367,7 @@ export default (): ReactElement => {
           icon: SiSnowflake,
           tabContentJsx: (
             <Snowflake
-              jwt={jwt}
+              jwt={'jwt'}
               parentHandleSaveClick={() => setSnackbarOpen(true)}
             ></Snowflake>
           ),
@@ -442,14 +376,20 @@ export default (): ReactElement => {
           name: 'GitHub',
           icon: FaGithub,
           tabContentJsx: (
-            <Github organizationId={account.organizationId} jwt={jwt}></Github>
+            <Github
+              organizationId={'account.organizationId'}
+              jwt={'jwt'}
+            ></Github>
           ),
         },
         {
           name: 'Slack',
           icon: FaSlack,
           tabContentJsx: (
-            <Slack organizationId={account.organizationId} jwt={jwt}></Slack>
+            <Slack
+              organizationId={'account.organizationId'}
+              jwt={'jwt'}
+            ></Slack>
           ),
         },
       ],
@@ -457,8 +397,6 @@ export default (): ReactElement => {
   };
 
   useEffect(() => {
-    if (!jwt) return;
-
     const sessionStorageData = getSessionStorageData();
 
     if (!sessionStorageData) {
@@ -475,160 +413,46 @@ export default (): ReactElement => {
         sessionStorageData.cols,
         sessionStorageData.dashboards
       );
-    } else {
-      const mats: MaterializationDto[] = [];
-      const dashboards: DashboardDto[] = [];
-      const dependencies: DependencyDto[] = [];
-      const cols: ColumnDto[] = [];
-
-      MaterializationsApiRepository.getBy(new URLSearchParams({}), jwt)
-        .then((matDtos) => {
-          mats.push(...matDtos);
-          sessionStorage.setItem('mats', JSON.stringify(matDtos));
-          return DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
-        })
-        .then((dependencyDtos) => {
-          dependencies.push(...dependencyDtos);
-          sessionStorage.setItem(
-            'dependencies',
-            JSON.stringify(dependencyDtos)
-          );
-
-          return DashboardsApiRepository.getBy(new URLSearchParams({}), jwt);
-        })
-        .then((dashboardDtos) => {
-          dashboards.push(...dashboardDtos);
-          sessionStorage.setItem('dashboards', JSON.stringify(dashboardDtos));
-          if (mats.length)
-            return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
-        })
-        .then((colDtos) => {
-          if (colDtos) {
-            cols.push(...colDtos);
-            sessionStorage.setItem('cols', JSON.stringify(colDtos));
-            defineSourceData(mats[0], dependencies, mats, cols, dashboards);
-          } else {
-            sessionStorage.setItem('cols', JSON.stringify([]));
-
-            setSourceData({
-              cols: [],
-              dashboards,
-              mats,
-            });
-
-            setGraphSourceData({
-              cols: [],
-              dashboards: [],
-              mats: [],
-              dependencies: [],
-            });
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-
-          setLineage(defaultErrorLineage);
-          setSourceData({
-            cols: defaultErrorColumns,
-            dashboards: deafultErrorDashboards,
-            mats: defaultErrorMaterializations,
-          });
-          setGraphSourceData({
-            cols: [],
-            dashboards: [],
-            dependencies: [],
-            mats: [],
-          });
-
-          setIsDataAvailable(false);
-        });
     }
 
-    handleRedirect();
     setIsLoading(false);
   }, [lineage]);
 
   useEffect(() => {
-    if (!account) return;
-
-    if (!jwt) throw new Error('No user authorization found');
-
     if (lineage) return;
 
     toggleShowSideNav();
     createIntegrationTabs();
 
-    if (appConfig.react.showRealData) {
-      LineageApiRepository.getLatest(jwt, false)
-        // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
-        .then((lineageDto) => {
-          if (!lineageDto)
-            throw new TypeError('Queried lineage object not found');
+    const lineageDto = {
+      id: 'todo',
+      createdAt: '',
+      completed: true,
+      dbCoveredNames: [],
+      diff: '',
+    };
 
-          const sessionStorageLineageStr = sessionStorage.getItem('lineage');
-          const sessionStorageLineage: LineageDto | undefined =
-            sessionStorageLineageStr
-              ? JSON.parse(sessionStorageLineageStr)
-              : undefined;
+    setLineage(lineageDto);
 
-          if (
-            sessionStorageLineage &&
-            sessionStorageLineage.createdAt === lineageDto.createdAt
-          )
-            setLineage(sessionStorageLineage);
-          else {
-            setLineage(lineageDto);
-            sessionStorage.clear();
-            sessionStorage.setItem('lineage', JSON.stringify(lineageDto));
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-          sessionStorage.clear();
-
-          setLineage(defaultErrorLineage);
-          setSourceData({
-            cols: defaultErrorColumns,
-            dashboards: deafultErrorDashboards,
-            mats: defaultErrorMaterializations,
-          });
-          setGraphSourceData({
-            cols: [],
-            dashboards: [],
-            dependencies: [],
-            mats: [],
-          });
-
-          setIsDataAvailable(false);
-        });
-    } else {
-      setLineage({
-        id: 'todo',
-        createdAt: '',
-        completed: true,
-        dbCoveredNames: [],
-        diff: '',
-      });
-    }
-  }, [account]);
+    sessionStorage.clear();
+    sessionStorage.setItem('lineage', JSON.stringify(lineageDto));
+  }, [user]);
 
   useEffect(() => {
-    if (!showIntegrationSidePanel || !account) return;
+    if (!showIntegrationSidePanel) return;
 
     closeColSidePanel();
     closeMatSidePanel();
   }, [showIntegrationSidePanel]);
 
   useEffect(() => {
-    if (!account) return;
-
     const binds: (string | number)[] = [selectedNodeId, 'true'];
 
     const testSuiteQuery = `select id, test_type from cito.observability.test_suites
      where target_resource_id = '${binds[0]}' and activated = ${binds[1]} and deleted_at is null`;
 
     let testHistory: { [testSuiteId: string]: TestHistoryEntry };
-    IntegrationApiRepo.querySnowflake(testSuiteQuery, jwt)
+    IntegrationApiRepo.querySnowflake(testSuiteQuery)
       .then((results) => {
         testHistory = results[account.organizationId].reduce(
           (

@@ -16,12 +16,13 @@ import MetricsGraph, {
   TestHistoryEntry,
 } from '../../components/metrics-graph';
 
-import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
-import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
-import LineageDto from '../../infrastructure/lineage-api/lineage/lineage-dto';
-import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
-import LogicApiRepository from '../../infrastructure/lineage-api/logics/logics-api-repository';
-import { defaultLogics } from './test-data';
+import {
+  defaultColumns,
+  defaultDependencies,
+  defaultLogics,
+  defaultMaterializations,
+  defaultTestHistory,
+} from './test-data';
 
 import { Tab } from '@headlessui/react';
 import BasicCard from '../../components/card';
@@ -29,19 +30,9 @@ import BasicTable from '../../components/table';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Auth } from 'aws-amplify';
-import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
-import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
-import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
-import IntegrationApiRepo from '../../infrastructure/integration-api/integration-api-repo';
 import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
 import Snowflake from '../../components/integration/snowflake/snowflake';
-import {
-  deafultErrorDashboards,
-  defaultErrorColumns,
-  defaultErrorLineage,
-  defaultErrorMaterializations,
-} from './error-handling-data';
 import { EmptyStateIntegrations } from './components/empty-state';
 import { SectionHeading } from './components/headings';
 import AlertHistoryTable from './components/alert-history-table';
@@ -55,12 +46,12 @@ import LineageGraph, {
   SelectedElement,
   SourceData,
 } from './components/lineage-graph';
-import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
 import IntegrationTabs from './components/integration-tabs';
+import LineageDto from '../../infrastructure/lineage-api/lineage/lineage-dto';
+import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
+import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
 import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
-import DependenciesApiRepository from '../../infrastructure/lineage-api/dependencies/dependencies-api-repository';
-import AccountDto from '../../infrastructure/account-api/account-dto';
 
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ');
@@ -88,10 +79,6 @@ export default (): ReactElement => {
 
   const [sql, setSQL] = useState('');
   const [selectionTests, setSelectionTests] = useState<TestHistoryEntry[]>([]);
-  const [selectionAlertHistory, setSelectionAlertHistory] = useState<
-    AlertHistoryEntry[]
-  >([]);
-  const [isDataAvailable, setIsDataAvailable] = useState<boolean>(true);
   const [lineage, setLineage] = useState<LineageDto>();
   const [sourceData, setSourceData] = useState<SourceData>();
   const [graphSourceData, setGraphSourceData] = useState<GraphSourceData>();
@@ -104,6 +91,9 @@ export default (): ReactElement => {
   const [integrations, setIntegrations] = useState<any>([]);
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const selectionAlertHistory: AlertHistoryEntry[] = [];
+  const isDataAvailable = true;
 
   const handleSnackbarClose = (
     event?: React.SyntheticEvent | Event,
@@ -296,12 +286,6 @@ export default (): ReactElement => {
     );
   };
 
-  const simulateSideNavClick = async (
-    selectedEl: SelectedElement
-  ): Promise<void> => {
-    await sideNavClickCallback(selectedEl);
-  };
-
   const toggleShowSideNav = () => {
     const sidenav = document.getElementById('sidenav');
     if (!sidenav) throw new ReferenceError('Sidenav does not exist');
@@ -367,7 +351,7 @@ export default (): ReactElement => {
           icon: SiSnowflake,
           tabContentJsx: (
             <Snowflake
-              jwt={'jwt'}
+              jwt={''}
               parentHandleSaveClick={() => setSnackbarOpen(true)}
             ></Snowflake>
           ),
@@ -375,22 +359,12 @@ export default (): ReactElement => {
         {
           name: 'GitHub',
           icon: FaGithub,
-          tabContentJsx: (
-            <Github
-              organizationId={'account.organizationId'}
-              jwt={'jwt'}
-            ></Github>
-          ),
+          tabContentJsx: <Github organizationId={''} jwt={''}></Github>,
         },
         {
           name: 'Slack',
           icon: FaSlack,
-          tabContentJsx: (
-            <Slack
-              organizationId={'account.organizationId'}
-              jwt={'jwt'}
-            ></Slack>
-          ),
+          tabContentJsx: <Slack organizationId={''} jwt={''}></Slack>,
         },
       ],
     ]);
@@ -399,11 +373,25 @@ export default (): ReactElement => {
   useEffect(() => {
     const sessionStorageData = getSessionStorageData();
 
-    if (!sessionStorageData) {
-      setIsLoading(false);
-      return;
-    }
-    if (sessionStorageData && sessionStorageData.mats.length) {
+    if (!appConfig.react.showRealData) {
+      const selectedMat: MaterializationDto = defaultMaterializations[0];
+
+      defineSourceData(
+        selectedMat,
+        defaultDependencies,
+        defaultMaterializations,
+        defaultColumns,
+        []
+      );
+
+      sessionStorage.setItem(
+        'dependencies',
+        JSON.stringify(defaultDependencies)
+      );
+      sessionStorage.setItem('mats', JSON.stringify(defaultMaterializations));
+      sessionStorage.setItem('dashboards', JSON.stringify([]));
+      sessionStorage.setItem('cols', JSON.stringify(defaultColumns));
+    } else if (sessionStorageData && sessionStorageData.mats.length) {
       const selectedMat: MaterializationDto = sessionStorageData.mats[0];
 
       defineSourceData(
@@ -432,10 +420,10 @@ export default (): ReactElement => {
       diff: '',
     };
 
-    setLineage(lineageDto);
-
     sessionStorage.clear();
     sessionStorage.setItem('lineage', JSON.stringify(lineageDto));
+
+    setLineage(lineageDto);
   }, [user]);
 
   useEffect(() => {
@@ -446,175 +434,8 @@ export default (): ReactElement => {
   }, [showIntegrationSidePanel]);
 
   useEffect(() => {
-    const binds: (string | number)[] = [selectedNodeId, 'true'];
-
-    const testSuiteQuery = `select id, test_type from cito.observability.test_suites
-     where target_resource_id = '${binds[0]}' and activated = ${binds[1]} and deleted_at is null`;
-
-    let testHistory: { [testSuiteId: string]: TestHistoryEntry };
-    IntegrationApiRepo.querySnowflake(testSuiteQuery)
-      .then((results) => {
-        testHistory = results[account.organizationId].reduce(
-          (
-            accumulation: { [testSuiteId: string]: TestHistoryEntry },
-            el: { [key: string]: unknown }
-          ): { [testSuiteId: string]: TestHistoryEntry } => {
-            const localAcc = accumulation;
-
-            const { ID: id, TEST_TYPE: testType } = el;
-
-            if (typeof id !== 'string' || typeof testType !== 'string')
-              throw new Error('Receive unexpected types');
-
-            localAcc[id] = { testSuiteId: id, testType, historyDataSet: [] };
-
-            return localAcc;
-          },
-          {}
-        );
-
-        const whereCondition = `array_contains(test_history.test_suite_id::variant, array_construct(${Object.values(
-          testHistory
-        )
-          .map((el) => `'${el.testSuiteId}'`)
-          .join(', ')}))`;
-
-        const testHistoryQuery = `
-        select 
-          test_history.test_suite_id as test_suite_id,
-          test_history.value as value,
-          test_executions.executed_on as executed_on,
-          test_results.expected_value_upper_bound as value_upper_bound,
-          test_results.expected_value_lower_bound as value_lower_bound,
-          test_history.is_anomaly as is_anomaly,
-          test_history.user_feedback_is_anomaly as user_feedback_is_anomaly 
-        from cito.observability.test_history as test_history
-        inner join cito.observability.test_executions as test_executions
-          on test_history.execution_id = test_executions.id
-        left join cito.observability.test_results as test_results
-          on test_history.execution_id = test_results.execution_id
-        where ${whereCondition}
-        order by test_executions.executed_on desc limit 200;`;
-
-        return IntegrationApiRepo.querySnowflake(testHistoryQuery, jwt);
-      })
-      .then((testHistoryResults) => {
-        const results: { [key: string]: unknown }[] =
-          testHistoryResults[account.organizationId].reverse();
-
-        results.forEach((el: { [key: string]: unknown }) => {
-          const {
-            VALUE: value,
-            TEST_SUITE_ID: testSuiteId,
-            EXECUTED_ON: executedOn,
-            VALUE_UPPER_BOUND: valueUpperBound,
-            VALUE_LOWER_BOUND: valueLowerBound,
-            IS_ANOMALY: isAnomaly,
-            USER_FEEDBACK_IS_ANOMALY: userFeedbackIsAnomaly,
-          } = el;
-
-          const isOptionalOfType = <T,>(
-            val: unknown,
-            targetType:
-              | 'string'
-              | 'number'
-              | 'bigint'
-              | 'boolean'
-              | 'symbol'
-              | 'undefined'
-              | 'object'
-              | 'function'
-          ): val is T => val === null || typeof val === targetType;
-
-          if (
-            typeof value !== 'number' ||
-            typeof testSuiteId !== 'string' ||
-            typeof executedOn !== 'string' ||
-            typeof isAnomaly !== 'boolean' ||
-            typeof userFeedbackIsAnomaly !== 'number' ||
-            !isOptionalOfType<number>(valueLowerBound, 'number') ||
-            !isOptionalOfType<number>(valueUpperBound, 'number')
-          )
-            throw new Error('Received unexpected type');
-
-          testHistory[testSuiteId].historyDataSet.push({
-            isAnomaly,
-            userFeedbackIsAnomaly,
-            timestamp: executedOn,
-            valueLowerBound,
-            valueUpperBound,
-            value,
-          });
-        });
-
-        setSelectionTests(Object.values(testHistory));
-
-        const whereCondition = `array_contains(test_alerts.test_suite_id::variant, array_construct(${Object.values(
-          testHistory
-        )
-          .map((el) => `'${el.testSuiteId}'`)
-          .join(', ')}))`;
-
-        const alertQuery = `select test_alerts.test_suite_id as test_suite_id, test_results.deviation as deviation, test_executions.executed_on as executed_on
-        from cito.observability.test_alerts as test_alerts
-        join cito.observability.test_results as test_results
-          on test_alerts.execution_id = test_results.execution_id
-        join cito.observability.test_executions as test_executions
-          on test_alerts.execution_id = test_executions.id
-        where ${whereCondition}
-        order by test_executions.executed_on desc
-        limit 200;`;
-
-        return IntegrationApiRepo.querySnowflake(alertQuery, jwt);
-      })
-      .then((alertHistoryResults) => {
-        const results = alertHistoryResults[account.organizationId];
-
-        const testSuiteRepresentations = Object.values(testHistory);
-
-        const alertHistoryEntries: AlertHistoryEntry[] = results.map(
-          (el: { [key: string]: unknown }): AlertHistoryEntry => {
-            const {
-              TEST_SUITE_ID: testSuiteId,
-              DEVIATION: deviation,
-              EXECUTED_ON: executedOn,
-            } = el;
-
-            if (
-              typeof executedOn !== 'string' ||
-              (typeof deviation !== 'string' &&
-                typeof deviation !== 'number') ||
-              typeof testSuiteId !== 'string'
-            )
-              throw new Error('Received unexpected type');
-
-            const deviationValue =
-              typeof deviation === 'number'
-                ? +((Math.round(deviation * 100) / 100) * 100).toFixed(2)
-                : +(
-                    (Math.round(parseFloat(deviation) * 100) / 100) *
-                    100
-                  ).toFixed(2);
-
-            const repIndex = testSuiteRepresentations.findIndex(
-              (rep) => rep.testSuiteId === testSuiteId
-            );
-
-            if (repIndex === -1) throw new Error('Test-Type not not found');
-
-            return {
-              date: executedOn,
-              testType: testSuiteRepresentations[repIndex].testType,
-              deviation: deviationValue,
-            };
-          }
-        );
-
-        setSelectionAlertHistory(alertHistoryEntries);
-      })
-      .catch((error) => {
-        console.trace(typeof error === 'string' ? error : error.message);
-      });
+    const testHistoryEntries = defaultTestHistory(selectedNodeId);
+    setSelectionTests(testHistoryEntries);
   }, [selectedNodeId]);
 
   useEffect(() => {
@@ -627,9 +448,9 @@ export default (): ReactElement => {
   }, [sql]);
 
   const graphBuiltCallback = () => {
-    const targetResourceId = searchParams.get('targetResourceId');
-    if (targetResourceId)
-      simulateSideNavClick({ id: targetResourceId, type: 'node' });
+    // const targetResourceId = searchParams.get('targetResourceId');
+    // if (targetResourceId)
+    //   simulateSideNavClick({ id: targetResourceId, type: 'node' });
   };
 
   const getHistoryMinMax = (
@@ -659,7 +480,7 @@ export default (): ReactElement => {
           }}
           isRightPanelShown={isRightPanelShown}
           setIsRightPanelShown={setIsRightPanelShown}
-          jwt={jwt}
+          jwt={''}
         />
         {!isDataAvailable && (
           <EmptyStateIntegrations onClick={handleSidePanelTabIndexChange} />

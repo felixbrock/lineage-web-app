@@ -9,10 +9,7 @@ import {
 import './App.scss';
 import Lineage from './pages/lineage/lineage';
 import Test from './pages/test/test';
-import GithubRedirect from './pages/github-redirect';
-import SlackRedirect from './pages/slack-redirect';
 import appConfig from './config';
-import ModelFeedback from './pages/model-feedback';
 
 export default (): ReactElement => {
   Auth.configure({
@@ -62,18 +59,9 @@ export default (): ReactElement => {
           <Router>
             <div id="ContentContainer">
               <Routes>
-                <Route path="/model-feedback" element={<ModelFeedback />} />
                 <Route path="/lineage" element={<Lineage />} />
                 <Route path="/test" element={<Test />} />
                 {/* in development copy query params and manually call Github redirect: https://smee.io/XeUBYbnaoGxxxcf */}
-                <Route
-                  path="/oauth/github/:code/:installationId/:state"
-                  element={<GithubRedirect />}
-                />
-                <Route
-                  path="/oauth/slack/:code/:state"
-                  element={<SlackRedirect />}
-                />
                 <Route path="/" element={<Navigate to="/lineage" />} />
               </Routes>
             </div>

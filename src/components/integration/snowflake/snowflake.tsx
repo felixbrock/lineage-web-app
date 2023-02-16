@@ -1,17 +1,13 @@
 /* eslint-disable @typescript-eslint/dot-notation */
-import { ReactElement, useEffect, useState } from 'react';
+import { ReactElement, useState } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 
 interface SnowflakeProps {
   jwt: string;
   parentHandleSaveClick: () => unknown;
 }
 
-export default ({
-  jwt,
-  parentHandleSaveClick,
-}: SnowflakeProps): ReactElement => {
+export default ({ parentHandleSaveClick }: SnowflakeProps): ReactElement => {
   const [buttonText, setButtonText] = useState('Save');
   const [form, setForm] = useState({
     accountId: '',
@@ -21,35 +17,10 @@ export default ({
   });
 
   const handleSaveClick = async (): Promise<void> => {
-    const snowflakeProfile = await IntegrationApiRepo.getSnowflakeProfile(jwt);
-
-    if (!snowflakeProfile)
-      await IntegrationApiRepo.postSnowflakeProfile(form, jwt);
-    else await IntegrationApiRepo.updateSnowflakeProfile(form, jwt);
-
     setButtonText('Saved');
 
     parentHandleSaveClick();
-
-    await IntegrationApiRepo.postSnowflakeEnvironment(jwt);
   };
-
-  useEffect(() => {
-    IntegrationApiRepo.getSnowflakeProfile(jwt)
-      .then((res) => {
-        if (!res) return;
-
-        setForm({
-          accountId: res.accountId,
-          username: res.username,
-          password: res.password,
-          warehouseName: res.warehouseName,
-        });
-      })
-      .catch((error: any) => {
-        console.trace(error);
-      });
-  }, []);
 
   return (
     <>

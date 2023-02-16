@@ -13,13 +13,9 @@ import Paper from '@mui/material/Paper';
 import './test.scss';
 import { MdChevronRight, MdExpandMore } from 'react-icons/md';
 
-import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
-import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
-import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
 import LineageDto from '../../infrastructure/lineage-api/lineage/lineage-dto';
 import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
 import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
-import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
 
 import Button from '@mui/material/Button';
 
@@ -32,21 +28,14 @@ import { Auth } from 'aws-amplify';
 
 import Chip from '@mui/material/Chip';
 import TablePagination from '@mui/material/TablePagination';
-import ObservabilityApiRepo, {
-  CreateQuantTestSuiteProps,
-  UpdateTestSuiteObject,
-} from '../../infrastructure/observability-api/observability-api-repo';
 import {
   QualTestSuiteDto,
   TestSuiteDto,
 } from '../../infrastructure/observability-api/test-suite-dto';
-import AccountDto from '../../infrastructure/account-api/account-dto';
 import SearchBox from '../lineage/components/search-box';
 import Navbar from '../../components/navbar';
 import LoadingScreen from '../../components/loading-screen';
 import Scheduler from './scheduler/scheduler';
-
-const showRealData = true;
 
 export const testTypes = [
   'ColumnFreshness',
@@ -296,17 +285,15 @@ const tableHeaderCellSx = {
 const tableNameSx = { mt: '0px', mb: '0px', mr: '2px', ml: '2px' };
 
 export default (): ReactElement => {
-  const [account, setAccount] = useState<AccountDto>();
   const [user, setUser] = useState<any>();
-  const [jwt, setJwt] = useState('');
 
-  const [lineage, setLineage] = useState<LineageDto>();
   const [materializations, setMaterializations] = useState<
     MaterializationDto[]
   >([]);
+  const [lineage, setLineage] = useState<LineageDto>();
   const [columns, setColumns] = useState<ColumnDto[]>([]);
-  const [testSuites, setTestSuites] = useState<TestSuiteDto[]>([]);
-  const [qualTestSuites, setQualTestSuites] = useState<QualTestSuiteDto[]>([]);
+  const testSuites: TestSuiteDto[] = [];
+  const qualTestSuites: QualTestSuiteDto[] = [];
   const [readyToBuild, setReadyToBuild] = useState(false);
   const [testSelection, setTestSelection] = useState<{
     [key: string]: MaterializationTestsConfig;
@@ -317,7 +304,6 @@ export default (): ReactElement => {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(25);
 
-  const [initialLoadCompleted, setInitialLoadCompleted] = React.useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const [schedulerProps, setSchedulerProps] = useState<{
@@ -373,20 +359,9 @@ export default (): ReactElement => {
       columnTestConfigIndex
     ].testConfigs.filter((el) => el.testSuiteId);
 
-    if (!testsToUpdate.length)
+    if (!testsToUpdate.length) {
       throw new Error('No activated tests found. Threshold change not allowed');
-
-    const updateObjects = testsToUpdate.map((test): UpdateTestSuiteObject => {
-      if (!test.testSuiteId)
-        throw new Error('Test with status activated found that does not exist');
-
-      return {
-        id: test.testSuiteId,
-        props,
-      };
-    });
-
-    ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
+    }
 
     testSelectionLocal[target.matId].columnTestConfigs[
       columnTestConfigIndex
@@ -456,43 +431,6 @@ export default (): ReactElement => {
 
     testSelectionLocal[target.matId].cron = props.cron;
     testSelectionLocal[target.matId].executionType = props.executionType;
-
-    const isUpdateObject = (
-      updateObject: UpdateTestSuiteObject | undefined
-    ): updateObject is UpdateTestSuiteObject => !!updateObject;
-
-    const updateObjects = testSelectionLocal[target.matId].columnTestConfigs
-      .map((el, index) => {
-        const existingTests = el.testConfigs.filter(
-          (config): config is TestSuiteConfig => !!config.testSuiteId
-        );
-
-        if (!existingTests.length) return undefined;
-
-        const objects = existingTests.map((test): UpdateTestSuiteObject => {
-          const testSuiteId = test.testSuiteId;
-
-          if (!testSuiteId)
-            throw new Error('Activated test without test suite id');
-
-          return {
-            id: testSuiteId,
-            props,
-          };
-        });
-
-        testSelectionLocal[target.matId].columnTestConfigs[index].cron =
-          props.cron;
-        testSelectionLocal[target.matId].columnTestConfigs[
-          index
-        ].executionType = props.executionType;
-
-        return objects;
-      })
-      .flat()
-      .filter(isUpdateObject);
-
-    ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     setTestSelection({ ...testSelectionLocal });
   };
@@ -656,29 +594,10 @@ export default (): ReactElement => {
 
       if (!column) throw new Error('Column not found');
 
-      const testSuite = await ObservabilityApiRepo.postTestSuites(
-        [
-          {
-            activated: newActivatedValue,
-            columnName: column.name,
-            databaseName: materalization.databaseName,
-            schemaName: materalization.schemaName,
-            materializationName: materalization.name,
-            materializationType: parseMaterializationType(materalization.type),
-            targetResourceId: column.id,
-            type,
-            executionType: columnTestConfigs.executionType,
-            threshold: columnTestConfigs.threshold,
-            cron: columnTestConfigs.cron,
-          },
-        ],
-        jwt
-      );
-
       const testSuiteConfig: TestSuiteConfig = {
         ...testSelectionLocal[props[1]].columnTestConfigs[columnTestConfigIndex]
           .testConfigs[testConfigIndex],
-        testSuiteId: testSuite[0].id,
+        testSuiteId: `${column.id}-${type}`,
       };
 
       testSelectionLocal[props[1]].columnTestConfigs[
@@ -686,11 +605,7 @@ export default (): ReactElement => {
       ].testConfigs[testConfigIndex] = testSuiteConfig;
 
       setTestSelection({ ...testSelectionLocal });
-    } else
-      ObservabilityApiRepo.updateTestSuites(
-        [{ id: testSuiteId, props: { activated: newActivatedValue } }],
-        jwt
-      );
+    }
   };
 
   const handleMatTestButtonClick = async (event: any) => {
@@ -721,19 +636,6 @@ export default (): ReactElement => {
     const matTestConfig =
       testSelectionLocal[props[1]].materializationTestConfigs[testIndex];
     if (matTestConfig.testSuiteId) {
-      const testSuiteId = matTestConfig.testSuiteId;
-
-      if (type === 'MaterializationSchemaChange')
-        ObservabilityApiRepo.updateQualTestSuites(
-          [{ id: testSuiteId, props: { activated: invertedValueActivated } }],
-          jwt
-        );
-      else
-        ObservabilityApiRepo.updateTestSuites(
-          [{ id: testSuiteId, props: { activated: invertedValueActivated } }],
-          jwt
-        );
-
       setTestSelection({ ...testSelectionLocal });
       return;
     }
@@ -742,58 +644,9 @@ export default (): ReactElement => {
 
     if (!materalization) throw new Error('Materialization not found');
 
-    let testSuite: TestSuiteDto | QualTestSuiteDto;
-    if (type === 'MaterializationSchemaChange')
-      testSuite = (
-        await ObservabilityApiRepo.postQualTestSuites(
-          [
-            {
-              activated: invertedValueActivated,
-              databaseName: materalization.databaseName,
-              schemaName: materalization.schemaName,
-              materializationName: materalization.name,
-              materializationType: parseMaterializationType(
-                materalization.type
-              ),
-              targetResourceId: materalization.id,
-              type,
-              cron:
-                testSelectionLocal[props[1]].cron || buildCronExpression('1h'),
-              executionType:
-                testSelectionLocal[props[1]].executionType || 'frequency',
-            },
-          ],
-          jwt
-        )
-      )[0];
-    else
-      testSuite = (
-        await ObservabilityApiRepo.postTestSuites(
-          [
-            {
-              activated: invertedValueActivated,
-              databaseName: materalization.databaseName,
-              schemaName: materalization.schemaName,
-              materializationName: materalization.name,
-              materializationType: parseMaterializationType(
-                materalization.type
-              ),
-              targetResourceId: materalization.id,
-              type,
-              cron:
-                testSelectionLocal[props[1]].cron || buildCronExpression('1h'),
-              threshold: testSelectionLocal[props[1]].threshold || 3,
-              executionType:
-                testSelectionLocal[props[1]].executionType || 'frequency',
-            },
-          ],
-          jwt
-        )
-      )[0];
-
     testSelectionLocal[props[1]].materializationTestConfigs[testIndex] = {
       ...testSelectionLocal[props[1]].materializationTestConfigs[testIndex],
-      testSuiteId: testSuite.id,
+      testSuiteId: `${materalization.id}-${type}`,
     };
 
     setTestSelection({ ...testSelectionLocal });
@@ -826,8 +679,8 @@ export default (): ReactElement => {
       index: number;
       testConfigIndex: number;
     }[] = [];
-    const testSuiteProps: CreateQuantTestSuiteProps[] = [];
-    const updateObjects: UpdateTestSuiteObject[] = [];
+    const testSuiteProps: any[] = [];
+    const updateObjects: any[] = [];
 
     testSelectionLocal[props[1]].columnTestConfigs.forEach((config, index) => {
       const testConfigIndex = config.testConfigs.findIndex(
@@ -893,21 +746,7 @@ export default (): ReactElement => {
       if (testSuiteProps.length !== postObjects.length)
         throw new Error('Test Suite creation misalignment');
 
-      const suites = await ObservabilityApiRepo.postTestSuites(
-        testSuiteProps,
-        jwt
-      );
-
-      if (suites.length !== postObjects.length)
-        throw new Error('Test Suite creation failed');
-
       testSuiteProps.forEach((el, index) => {
-        const filterResult = suites.filter(
-          (suite) => suite.target.targetResourceId === el.targetResourceId
-        );
-        if (filterResult.length !== 1)
-          throw new Error('Ambiguous test suite filter');
-
         const postObject = postObjects[index];
 
         testSelectionLocal[props[1]].columnTestConfigs[
@@ -915,14 +754,12 @@ export default (): ReactElement => {
         ].testConfigs[postObject.testConfigIndex] = {
           ...testSelectionLocal[props[1]].columnTestConfigs[postObject.index]
             .testConfigs[postObject.testConfigIndex],
-          testSuiteId: filterResult[0].id,
+          testSuiteId: el.id,
         };
       });
 
       setTestSelection({ ...testSelectionLocal });
     }
-    if (updateObjects.length)
-      await ObservabilityApiRepo.updateTestSuites(updateObjects, jwt);
 
     const activated = testSelectionLocal[props[1]].testDefinitionSummary.some(
       (el) => !!el.activationCount
@@ -1774,8 +1611,6 @@ export default (): ReactElement => {
 
   const renderTests = () => {
     setUser(undefined);
-    setJwt('');
-    setAccount(undefined);
 
     Auth.currentAuthenticatedUser()
       .then((cognitoUser) => setUser(cognitoUser))
@@ -1789,89 +1624,15 @@ export default (): ReactElement => {
   useEffect(renderTests, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || lineage) return;
 
-    Auth.currentSession()
-      .then((session) => {
-        const accessToken = session.getAccessToken();
+    setLineage(JSON.parse(sessionStorage.getItem('lineage') || '[]'));
+    setMaterializations(JSON.parse(sessionStorage.getItem('mats') || '[]'));
+    setColumns(JSON.parse(sessionStorage.getItem('cols') || '[]'));
 
-        const token = accessToken.getJwtToken();
-        setJwt(token);
-
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
-      })
-      .then((accounts) => {
-        if (!accounts.length) throw new Error(`No accounts found for user`);
-
-        if (accounts.length > 1)
-          throw new Error(`Multiple accounts found for user`);
-
-        setAccount(accounts[0]);
-      })
-      .catch((error) => {
-        console.trace(typeof error === 'string' ? error : error.message);
-        sessionStorage.clear();
-
-        Auth.signOut();
-      });
-  }, [user]);
-
-  useEffect(() => {
-    if (!account || lineage) return;
-
-    if (!jwt) throw new Error('No user authorization found');
-
-    if (showRealData) {
-      LineageApiRepository.getLatest(jwt, false)
-        // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
-        .then((lineageDto) => {
-          if (!lineageDto)
-            throw new TypeError('Queried lineage object not found');
-          setLineage(lineageDto);
-          return MaterializationsApiRepository.getBy(
-            new URLSearchParams({}),
-            jwt
-          );
-        })
-        .then((materializationDtos) => {
-          setMaterializations(materializationDtos);
-          return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
-        })
-        .then((columnDtos) => {
-          setColumns(columnDtos);
-
-          return ObservabilityApiRepo.getQualTestSuites(jwt);
-        })
-        .then((qualTestSuiteDtos) => {
-          setQualTestSuites(qualTestSuiteDtos);
-          return ObservabilityApiRepo.getTestSuites(jwt);
-        })
-        .then((testSuiteDtos) => {
-          setInitialLoadCompleted(true);
-          setTestSuites(testSuiteDtos);
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          setIsLoading(false);
-          console.error(error);
-        });
-    } else {
-      setLineage({
-        id: 'todo',
-        createdAt: '',
-        completed: true,
-        dbCoveredNames: [],
-        diff: '',
-      });
-      setIsLoading(false);
-    }
-  }, [account]);
-
-  useEffect(() => {
-    if (!initialLoadCompleted) return;
-
+    setIsLoading(false);
     setReadyToBuild(true);
-  }, [testSuites]);
+  }, [user]);
 
   useEffect(() => {
     if (!readyToBuild) return;
@@ -1928,7 +1689,7 @@ export default (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
-        <Navbar current="tests" jwt={jwt} />
+        <Navbar current="tests" jwt={''} />
         <>
           <div className="items-top relative flex h-20 justify-center">
             <div className="relative mt-2 w-1/4">

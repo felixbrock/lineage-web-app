@@ -1,11 +1,10 @@
 import { Auth } from 'aws-amplify';
 import Logo from './top-nav/cito-header-purple.png';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { RiRefreshLine } from 'react-icons/ri';
-import LineageApiRepository from '../infrastructure/lineage-api/lineage/lineage-api-repository';
 
 type SnapshotState = 'loading' | 'creating' | 'available' | 'not available';
 
@@ -34,9 +33,12 @@ export default function Navbar({
 }) {
   const [isLeftPanelShown, setIsLeftPanelShown] = useState(true);
 
-  const [snapshotState, setSnapshotState] = useState<SnapshotState>('loading');
+  const [snapshotState, setSnapshotState] =
+    useState<SnapshotState>('available');
 
-  const [snapshotInfo, setSnapshotInfo] = useState<string>('Loading...');
+  const [snapshotInfo, setSnapshotInfo] = useState<string>(
+    'Updated 2 hours ago'
+  );
 
   // temp code because of launch
   if (current === 'lineage') {
@@ -74,7 +76,6 @@ export default function Navbar({
     const state: SnapshotState = 'creating';
     setSnapshotState(state);
     setSnapshotInfo(getSnapshotInfo(state));
-    LineageApiRepository.create(jwt);
   };
 
   function toggleRightPanel() {
@@ -94,39 +95,6 @@ export default function Navbar({
     toggleRightPanel();
   };
   subNavigation[1].isShown = isRightPanelShown;
-
-  useEffect(() => {
-    if (!jwt) return;
-
-    LineageApiRepository.getLatest(jwt, true, 3)
-      .then((snapshot) => {
-        let state: SnapshotState = 'not available';
-        if (!snapshot) {
-          setSnapshotState(state);
-          setSnapshotInfo(getSnapshotInfo(state));
-          return;
-        }
-
-        if (snapshot.completed === false) {
-          state = 'creating';
-          setSnapshotState(state);
-          setSnapshotInfo(getSnapshotInfo(state));
-        } else if (snapshot.completed === true) {
-          state = 'available';
-          setSnapshotState(state);
-          setSnapshotInfo(getSnapshotInfo(state, snapshot.createdAt));
-        } else {
-          setSnapshotState(state);
-          setSnapshotInfo(getSnapshotInfo(state));
-        }
-      })
-      .catch((err) => {
-        const state: SnapshotState = 'not available';
-        setSnapshotState(state);
-        setSnapshotInfo(getSnapshotInfo(state));
-        console.error(err);
-      });
-  }, [jwt]);
 
   return (
     <Disclosure as="nav" className="relative z-50 bg-gray-800">

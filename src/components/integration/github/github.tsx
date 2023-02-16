@@ -1,6 +1,5 @@
 import { List, ListItem, ListItemText, ListItemIcon } from '@mui/material';
 import { ReactElement, useEffect, useState } from 'react';
-import GithubApiRepo from '../../../infrastructure/github-api/github-api-repo';
 import { BiGitBranch } from 'react-icons/bi';
 import {
   ButtonBig,
@@ -8,97 +7,22 @@ import {
 } from '../../../pages/lineage/components/buttons';
 import LoadingScreen from '../../loading-screen';
 import appConfig from '../../../config';
-import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 
 interface GithubProps {
   organizationId: string;
   jwt: string;
 }
 
-interface RepoNameResult {
-  repoNames: string[];
-  checked: boolean;
-}
-
-export default ({ organizationId, jwt }: GithubProps): ReactElement => {
-  const [repoNameResult, setRepoNameResult] = useState<RepoNameResult>({
+export default ({ organizationId }: GithubProps): ReactElement => {
+  const repoNameResult = {
     repoNames: [],
     checked: false,
-  });
+  };
   const [isLoading, setIsLoading] = useState(true);
-  const [installationId, setInstallationId] = useState<string | undefined>();
-  const [accessToken, setAccessToken] = useState<string | undefined>();
-
-  useEffect(() => {
-    const githubAccessToken = sessionStorage.getItem('github-access-token');
-    const githubInstallationId = sessionStorage.getItem(
-      'github-installation-id'
-    );
-    if (githubAccessToken) setAccessToken(githubAccessToken);
-    if (githubInstallationId) setInstallationId(githubInstallationId);
-
-    if (githubInstallationId && githubAccessToken) {
-      GithubApiRepo.getRepositories(githubAccessToken, githubInstallationId)
-        .then((repos) => {
-          setRepoNameResult({
-            repoNames: repos.map((repo) => repo.full_name),
-            checked: true,
-          });
-          setIsLoading(false);
-        })
-        .catch((error: any) => {
-          console.trace(error);
-        });
-    } else {
-      IntegrationApiRepo.getGithubProfile(
-        new URLSearchParams({ organizationId }),
-        jwt
-      )
-        .then((profile) => {
-          if (profile)
-            setRepoNameResult({
-              repoNames: profile.repositoryNames,
-              checked: true,
-            });
-          setIsLoading(false);
-        })
-        .catch((error: any) => {
-          console.trace(error);
-        });
-    }
-  }, []);
 
   useEffect(() => {
     if (!repoNameResult.checked) return;
     setIsLoading(false);
-
-    if (installationId && accessToken)
-      IntegrationApiRepo.getGithubProfile(
-        new URLSearchParams({ organizationId }),
-        jwt
-      )
-        .then((profile) => {
-          if (profile)
-            return IntegrationApiRepo.updateGithubProfile(
-              { installationId },
-              jwt
-            );
-          return IntegrationApiRepo.postGithubProfile(
-            {
-              installationId,
-              organizationId,
-              repositoryNames: repoNameResult.repoNames,
-            },
-            jwt
-          );
-        })
-        .then(() => {
-          sessionStorage.removeItem('github-access-token');
-          sessionStorage.removeItem('github-installation-id');
-        })
-        .catch((error: any) => {
-          console.trace(error);
-        });
   }, [repoNameResult]);
 
   return (

@@ -20,6 +20,11 @@ const getUserPoolConfig = (): UserPoolConfig => {
       userPoolWebClientId = '2kt5cdpsbfc53sokgii4l5lecc';
       tokenUrl = '';
       break;
+    case 'demo':
+      userPoolId = 'eu-central-1_pyZJ42OJ6';
+      userPoolWebClientId = '5o7prc8mt4nuqtlbatofpv9f5';
+      tokenUrl = '';
+      break;
     case 'production':
       userPoolId = 'eu-central-1_0muGtKMk3';
       userPoolWebClientId = '90hkfejkd81bp3ta5gd80hanp';
@@ -46,6 +51,12 @@ const getOAuthEnvConfig = (): OAuthEnvConfig => {
       redirectSignIn = 'http://localhost:3006';
       redirectSignOut = 'http://localhost:3006';
       break;
+    case 'demo':
+      domain = 'auth-cito-demo.auth.eu-central-1.amazoncognito.com';
+      redirectSignIn = 'https://demo-environment.d3pbv3guh4fc7o.amplifyapp.com';
+      redirectSignOut =
+        'https://demo-environment.d3pbv3guh4fc7o.amplifyapp.com';
+      break;
     case 'production':
       domain = 'auth.citodata.com';
       redirectSignIn = 'https://www.app.citodata.com';
@@ -69,6 +80,10 @@ const getSlackConfig = (): SlackConfig => {
     case 'development':
       slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID_DEV;
       slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET_DEV;
+      break;
+    case 'demo':
+      slackClientId = '';
+      slackClientSecret = '';
       break;
     case 'production':
       slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID;

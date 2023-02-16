@@ -613,6 +613,14 @@ export default (): ReactElement => {
                 >
                   <>
                     <div id="editor" className="content mt-10">
+                      <i>
+                        Last Modified:{' '}
+                        {
+                          lastModifiedInfos[
+                            Math.floor(Math.random() * lastModifiedInfos.length)
+                          ]
+                        }
+                      </i>
                       <SyntaxHighlighter
                         language="sql"
                         style={dracula}

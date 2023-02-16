@@ -82,8 +82,8 @@ const getSlackConfig = (): SlackConfig => {
       slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET_DEV;
       break;
     case 'demo':
-      slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID_DEV;
-      slackClientSecret = process.env.REACT_APP_SLACK_CLIENT_SECRET_DEV;
+      slackClientId = 'xxx';
+      slackClientSecret = 'xxx';
       break;
     case 'production':
       slackClientId = process.env.REACT_APP_SLACK_CLIENT_ID;
@@ -119,6 +119,12 @@ const getBaseUrlConfig = (): BaseUrlConfig => {
       integrationService =
         process.env.REACT_APP_BASE_URL_INTEGRATION_SERVICE_DEV;
       lineageService = process.env.REACT_APP_BASE_URL_LINEAGE_ANALYSIS_DEV;
+      break;
+    case 'demo':
+      accountService = 'xxx';
+      observabilityService = 'xxx';
+      integrationService = 'xxx';
+      lineageService = 'xxx';
       break;
     case 'production':
       accountService = process.env.REACT_APP_BASE_URL_ACCOUNT;

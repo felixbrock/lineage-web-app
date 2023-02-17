@@ -11,6 +11,7 @@ type SnapshotState = 'loading' | 'creating' | 'available' | 'not available';
 const navigation = [
   { name: 'Lineage', href: '/lineage', current: true },
   { name: 'Tests', href: '/test', current: false },
+  { name: 'Alert Center', href: '/alert-center', current: false },
 ];
 const subNavigation = [
   { name: 'Overview', isShown: true, toggle: () => {} },
@@ -44,9 +45,15 @@ export default function Navbar({
   if (current === 'lineage') {
     navigation[0].current = true;
     navigation[1].current = false;
-  } else {
+    navigation[2].current = false;
+  } else if (current === 'tests') {
     navigation[0].current = false;
     navigation[1].current = true;
+    navigation[2].current = false;
+  } else {
+    navigation[0].current = false;
+    navigation[1].current = false;
+    navigation[2].current = true;
   }
 
   const getSnapshotInfo = (state: SnapshotState, createdAt?: string) => {

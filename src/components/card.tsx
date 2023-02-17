@@ -3,10 +3,15 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import { Avatar, CardHeader } from '@mui/material';
+import { Avatar, AvatarGroup, CardHeader } from '@mui/material';
 import { BsSlack } from 'react-icons/bs';
 
-export default (value: number, relativeDeviation: number, rangeLowerBorder: number, rangeUpperBorder: number) => (
+export default (
+  value: number,
+  relativeDeviation: number,
+  rangeLowerBorder: number,
+  rangeUpperBorder: number
+) => (
   <Card sx={{ minWidth: 275 }}>
     <CardHeader
       avatar={
@@ -16,6 +21,30 @@ export default (value: number, relativeDeviation: number, rangeLowerBorder: numb
       }
       title="Slack Notification"
       subheader={new Date().toISOString().split('T')[0]}
+      action={
+        <AvatarGroup max={4}>
+          <Avatar
+            alt="Remy Sharp"
+            src="https://source.unsplash.com/random/150x150?people"
+          />
+          <Avatar
+            alt="Travis Howard"
+            src="https://source.unsplash.com/random/150x150?nature"
+          />
+          <Avatar
+            alt="Cindy Baker"
+            src="https://source.unsplash.com/random/150x150"
+          />
+          <Avatar
+            alt="Agnes Walker"
+            src="https://source.unsplash.com/random/150x150"
+          />
+          <Avatar
+            alt="Trevor Henderson"
+            src="https://source.unsplash.com/random/150x150"
+          />
+        </AvatarGroup>
+      }
     />
     <CardContent>
       <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
@@ -28,9 +57,11 @@ export default (value: number, relativeDeviation: number, rangeLowerBorder: numb
       <Typography sx={{ mb: 1.5 }} color="text.secondary">
         Data distribution significantly higher than expected
       </Typography>
-      <Typography variant="body2">Expected range: {rangeLowerBorder} - {rangeUpperBorder}</Typography>
+      <Typography variant="body2">
+        Expected range: {rangeLowerBorder} - {rangeUpperBorder}
+      </Typography>
     </CardContent>
-    <CardActions>
+    <CardActions disableSpacing>
       <Button size="small">Mark as Read</Button>
     </CardActions>
   </Card>

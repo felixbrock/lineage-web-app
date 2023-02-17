@@ -10,6 +10,7 @@ import './App.scss';
 import Lineage from './pages/lineage/lineage';
 import Test from './pages/test/test';
 import appConfig from './config';
+import { alertSummaries, Overview } from './pages/alert-center/alert-overview';
 
 export default (): ReactElement => {
   Auth.configure({
@@ -61,6 +62,10 @@ export default (): ReactElement => {
               <Routes>
                 <Route path="/lineage" element={<Lineage />} />
                 <Route path="/test" element={<Test />} />
+                <Route
+                  path="/alert-center"
+                  element={<Overview alerts={alertSummaries} />}
+                />
                 {/* in development copy query params and manually call Github redirect: https://smee.io/XeUBYbnaoGxxxcf */}
                 <Route path="/" element={<Navigate to="/lineage" />} />
               </Routes>

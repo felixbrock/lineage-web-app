@@ -90,7 +90,7 @@ const groupByRelationName = (
 const generateAlertRow = (alert: OverviewAlertSummary): ReactElement => {
   const twCss = 'whitespace-nowrap py-2 px-4';
   return (
-    <tr className="rounded-xl bg-gradient-to-r from-white via-violet-200 to-white">
+    <tr className="rounded-xl ">
       <td className={twCss}>{alert.matName}</td>
       <td className={twCss}>{alert.colName}</td>
       <td className={twCss}>{alert.type}</td>

@@ -1,9 +1,11 @@
 import { Avatar, AvatarGroup, createTheme, ThemeProvider } from '@mui/material';
+import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
 import { ReactElement } from 'react';
-import Navbar from '../../components/navbar';
 import baseAlertSummaries from './alerts';
 import dependencies from './dependencies';
 import people from './people';
+import avatarUrls from './avatar-urls';
+import Navbar from '../../components/navbar';
 
 type DependencyType = 'up' | 'down';
 
@@ -88,36 +90,30 @@ const groupByRelationName = (
 const generateAlertRow = (alert: OverviewAlertSummary): ReactElement => {
   const twCss = 'whitespace-nowrap py-2 px-4';
   return (
-    <tr>
+    <tr className="rounded-xl bg-gradient-to-r from-white via-violet-200 to-white">
       <td className={twCss}>{alert.matName}</td>
       <td className={twCss}>{alert.colName}</td>
       <td className={twCss}>{alert.type}</td>
       <td className={twCss}>
         <AvatarGroup max={4}>
-          <Avatar
-            alt="Remy Sharp"
-            src="https://source.unsplash.com/random/150x150?people"
-          />
-          <Avatar
-            alt="Travis Howard"
-            src="https://source.unsplash.com/random/150x150?nature"
-          />
-          <Avatar
-            alt="Cindy Baker"
-            src="https://source.unsplash.com/random/150x150"
-          />
-          <Avatar
-            alt="Agnes Walker"
-            src="https://source.unsplash.com/random/150x150"
-          />
-          <Avatar
-            alt="Trevor Henderson"
-            src="https://source.unsplash.com/random/150x150"
-          />
+          {Array(Math.floor(Math.random() * 10 || 7))
+            .fill(0)
+            .map(() => (
+              <Avatar
+                alt="Remy Sharp"
+                src={
+                  avatarUrls[
+                    Math.floor(Math.random() * (avatarUrls.length - 1))
+                  ]
+                }
+                sx={{ bgcolor: 'white' }}
+                imgProps={{ style: { border: 1 } }}
+              />
+            ))}
         </AvatarGroup>
       </td>
       <td className={twCss}>
-        <button className="rounded-full border-2 border-violet-600 py-1 px-2 font-bold text-white">
+        <button className="rounded-full border-2 border-violet-600 py-1 px-2 font-bold ">
           Details
         </button>
       </td>
@@ -127,10 +123,10 @@ const generateAlertRow = (alert: OverviewAlertSummary): ReactElement => {
 
 const generateTable = (alerts: OverviewAlertSummary[]): ReactElement => {
   const twCss =
-    'py-3 px-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 min-w-fit';
+    'py-3 px-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap   ';
 
   return (
-    <table className=" divide-y divide-gray-200">
+    <table className="  divide-y divide-gray-200 rounded-xl bg-gradient-to-r from-white via-violet-200 to-white">
       <thead>
         <tr>
           <th className={twCss}>Table Name</th>
@@ -152,9 +148,13 @@ const generatePerRelationNameOverview = (
   alerts: OverviewAlertSummary[]
 ): ReactElement => (
   <>
-    <h3 className="mb-3 min-w-full text-xl font-bold text-violet-800">
-      {relationName}
-    </h3>
+    <div className="mt-10 mb-2 flex flex-wrap items-center">
+      <CircleTwoToneIcon className="mr-2 w-1/12  " />
+
+      <h3 className=" w-11/12 whitespace-nowrap text-xl font-bold  text-gray-400  ">
+        {relationName}
+      </h3>
+    </div>
     {generateTable(alerts)}
   </>
 );
@@ -164,7 +164,7 @@ const generatePerDayOverview = (
   alerts: OverviewAlertSummary[]
 ): ReactElement => (
   <div className=" mb-8 flex w-full items-start justify-between pl-1">
-    <div className="z-20 flex min-w-fit items-center rounded-full bg-gray-800 shadow-xl">
+    <div className="z-20 m-2 flex min-w-fit items-center rounded-full bg-violet-800 shadow-xl">
       <h1 className="auto p-2 text-lg font-semibold text-white">{day}</h1>
     </div>
     <div className="order-1 w-full p-2 py-12">
@@ -200,14 +200,13 @@ export const Overview = ({
   <ThemeProvider theme={theme}>
     <div id="lineageContainer">
       <Navbar current="alert-center" jwt={''} />
-
-      <div className="h-screen overflow-y-auto">
+      <div className="h-screen overflow-y-auto bg-gradient-to-r from-white via-violet-200 to-white">
         <div className="relative max-w-2xl">
           <div className="pl-10">
             <div className="absolute top-0 bottom-0 z-0 h-full w-0 border-2 border-gray-400"></div>
-            {Object.entries(groupByDay(alerts)).map((el) =>
-              generatePerDayOverview(el[0], el[1])
-            )}
+            {Object.entries(groupByDay(alerts))
+              .sort(([keyA], [keyB]) => keyB.localeCompare(keyA))
+              .map((el) => generatePerDayOverview(el[0], el[1]))}
           </div>
         </div>
       </div>

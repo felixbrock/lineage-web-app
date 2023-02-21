@@ -58,6 +58,17 @@ const compare = (first: any, second: any) => {
   return 0;
 };
 
+const setTableLevelLineagePlaceholderState = (g: Graph): Graph => {
+  const localGraph = g;
+  localGraph.getNodes().forEach((node) => {
+    const nodeId = node.getID();
+    if (nodeId.includes(tableLevelLineageIdSuffix))
+      localGraph.setItemState(nodeId, 'tableLevelLineagePlaceholder', true);
+  });
+
+  return localGraph;
+};
+
 const getNodeIdsToExplore = (
   edgesToExplore: EdgeConfig[],
   coveredNodeIds: string[]
@@ -409,9 +420,10 @@ export default ({
     clearEdgeStates(graphObj);
 
     nodeSelectCallback(nodeId);
-    graphObj.read(loadData(nodeId, DataLoadNodeType.Self, [], [], data));
 
     graphObj.set('latestZoom', graphObj.getZoom());
+    graphObj.data(loadData(nodeId, DataLoadNodeType.Self, [], [], data));
+
     graphObj.set('selectedElementId', nodeId);
 
     setGraph(graphObj);
@@ -617,6 +629,8 @@ export default ({
         return;
       }
 
+      const localG = setTableLevelLineagePlaceholderState(localGraph);
+
       const isNode = (object: any): object is INode =>
         object && 'getType' in object && object.getType() === 'node';
 
@@ -627,12 +641,12 @@ export default ({
       if (id.includes(tableLevelLineageIdSuffix))
         handleComboSelectChange(
           id.replace(`-${tableLevelLineageIdSuffix}`, ''),
-          localGraph
+          localG
         );
       else if (event.target.get('type') === 'node')
-        handleNodeSelectChange(id, localGraph, data);
+        handleNodeSelectChange(id, localG, data);
       else if (event.target.get('type') === 'combo')
-        handleComboSelectChange(id, localGraph);
+        handleComboSelectChange(id, localG);
     });
 
     const defaultNodeId =
@@ -664,7 +678,7 @@ export default ({
   const updateGraph = async (selectedEl: SelectedElement, data: GraphData) => {
     if (!graph) return;
 
-    const localGraph = graph;
+    let localGraph = graph;
 
     const selectedNodes = localGraph.findAllByState('node', 'selected');
     selectedNodes.forEach((node) => node.clearStates());
@@ -682,11 +696,7 @@ export default ({
 
     const target = localGraph.findById(selectedEl.id);
 
-    localGraph.getNodes().forEach((node) => {
-      const nodeId = node.getID();
-      if (nodeId.includes(tableLevelLineageIdSuffix))
-        localGraph.setItemState(nodeId, 'tableLevelLineagePlaceholder', true);
-    });
+    localGraph = setTableLevelLineagePlaceholderState(localGraph);
 
     localGraph.setItemState(target, 'selected', true);
 

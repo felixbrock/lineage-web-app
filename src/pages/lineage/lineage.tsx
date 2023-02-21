@@ -453,99 +453,96 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!jwt) return;
 
-    const sessionStorageData = getSessionStorageData();
+    // const sessionStorageData = getSessionStorageData();
 
-    if (!sessionStorageData) {
-      setIsLoading(false);
-      return;
-    }
-    if (sessionStorageData && sessionStorageData.mats.length) {
-      const selectedEl: SelectedElement = {
-        id: sessionStorageData.mats[0].id,
-        type: 'combo',
-      };
+    // if (!sessionStorageData) {
+    //   setIsLoading(false);
+    //   return;
+    // }
+    // if (sessionStorageData && sessionStorageData.mats.length) {
+    //   const selectedEl: SelectedElement = {
+    //     id: sessionStorageData.mats[0].id,
+    //     type: 'combo',
+    //   };
 
-      defineSourceData(
-        selectedEl,
-        sessionStorageData.dependencies,
-        sessionStorageData.mats,
-        sessionStorageData.cols,
-        sessionStorageData.dashboards
-      );
-    } else {
-      const mats: MaterializationDto[] = [];
-      const dashboards: DashboardDto[] = [];
-      const dependencies: DependencyDto[] = [];
-      const cols: ColumnDto[] = [];
+    //   defineSourceData(
+    //     selectedEl,
+    //     sessionStorageData.dependencies,
+    //     sessionStorageData.mats,
+    //     sessionStorageData.cols,
+    //     sessionStorageData.dashboards
+    //   );
+    // } else {
+    const mats: MaterializationDto[] = [];
+    const dashboards: DashboardDto[] = [];
+    const dependencies: DependencyDto[] = [];
+    const cols: ColumnDto[] = [];
 
-      MaterializationsApiRepository.getBy(new URLSearchParams({}), jwt)
-        .then((matDtos) => {
-          mats.push(...matDtos);
-          sessionStorage.setItem('mats', JSON.stringify(matDtos));
-          return DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
-        })
-        .then((dependencyDtos) => {
-          dependencies.push(...dependencyDtos);
-          sessionStorage.setItem(
-            'dependencies',
-            JSON.stringify(dependencyDtos)
+    MaterializationsApiRepository.getBy(new URLSearchParams({}), jwt)
+      .then((matDtos) => {
+        mats.push(...matDtos);
+        sessionStorage.setItem('mats', JSON.stringify(matDtos));
+        return DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
+      })
+      .then((dependencyDtos) => {
+        dependencies.push(...dependencyDtos);
+        sessionStorage.setItem('dependencies', JSON.stringify(dependencyDtos));
+
+        return DashboardsApiRepository.getBy(new URLSearchParams({}), jwt);
+      })
+      .then((dashboardDtos) => {
+        dashboards.push(...dashboardDtos);
+        sessionStorage.setItem('dashboards', JSON.stringify(dashboardDtos));
+        if (mats.length)
+          return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
+      })
+      .then((colDtos) => {
+        if (colDtos) {
+          cols.push(...colDtos);
+          sessionStorage.setItem('cols', JSON.stringify(colDtos));
+          defineSourceData(
+            { id: mats[0].id, type: 'combo' },
+            dependencies,
+            mats,
+            cols,
+            dashboards
           );
+        } else {
+          sessionStorage.setItem('cols', JSON.stringify([]));
 
-          return DashboardsApiRepository.getBy(new URLSearchParams({}), jwt);
-        })
-        .then((dashboardDtos) => {
-          dashboards.push(...dashboardDtos);
-          sessionStorage.setItem('dashboards', JSON.stringify(dashboardDtos));
-          if (mats.length)
-            return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
-        })
-        .then((colDtos) => {
-          if (colDtos) {
-            cols.push(...colDtos);
-            sessionStorage.setItem('cols', JSON.stringify(colDtos));
-            defineSourceData(
-              { id: mats[0].id, type: 'combo' },
-              dependencies,
-              mats,
-              cols,
-              dashboards
-            );
-          } else {
-            sessionStorage.setItem('cols', JSON.stringify([]));
-
-            setSourceData({
-              cols: [],
-              dashboards,
-              mats,
-            });
-
-            setGraphSourceData({
-              cols: [],
-              dashboards: [],
-              mats: [],
-              dependencies: [],
-            });
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-
-          setLineage(defaultErrorLineage);
           setSourceData({
-            cols: defaultErrorColumns,
-            dashboards: deafultErrorDashboards,
-            mats: defaultErrorMaterializations,
+            cols: [],
+            dashboards,
+            mats,
           });
+
           setGraphSourceData({
             cols: [],
             dashboards: [],
-            dependencies: [],
             mats: [],
+            dependencies: [],
           });
+        }
+      })
+      .catch((error) => {
+        console.log(error);
 
-          setIsDataAvailable(false);
+        setLineage(defaultErrorLineage);
+        setSourceData({
+          cols: defaultErrorColumns,
+          dashboards: deafultErrorDashboards,
+          mats: defaultErrorMaterializations,
         });
-    }
+        setGraphSourceData({
+          cols: [],
+          dashboards: [],
+          dependencies: [],
+          mats: [],
+        });
+
+        setIsDataAvailable(false);
+      });
+    // }
 
     handleRedirect();
     setIsLoading(false);

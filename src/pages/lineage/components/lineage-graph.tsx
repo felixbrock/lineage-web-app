@@ -30,6 +30,7 @@ enum DataLoadNodeType {
 export interface SelectedElement {
   id: string;
   type: LineageElement;
+  comboId?: string;
 }
 
 export interface SourceData {

@@ -241,13 +241,20 @@ export default (): ReactElement => {
   };
 
   const defineSourceData = (
-    selectedMat: MaterializationDto,
+    selectedEl: SelectedElement,
     dependencies: DependencyDto[],
     mats: MaterializationDto[],
     cols: ColumnDto[],
     dashboards: DashboardDto[]
   ): void => {
-    const selectedCols = cols.filter(
+    const selectedMat = mats.find(
+      (el) =>
+        el.id ===
+        (selectedEl.type === 'combo' ? selectedEl.id : selectedEl.comboId)
+    );
+    if (!selectedMat) throw new Error('No selected materialization');
+
+    const selectedMatCols = cols.filter(
       (c) => c.materializationId === selectedMat.id
     );
 
@@ -260,47 +267,34 @@ export default (): ReactElement => {
     );
 
     setSourceData({
-      cols: selectedCols,
+      cols: selectedMatCols,
       dashboards,
       mats,
     });
 
     setGraphSourceData({
-      cols: selectedCols.concat(relevantResources.cols),
+      cols: selectedMatCols.concat(relevantResources.cols),
       dashboards: relevantResources.dashboards,
       mats: [selectedMat, ...relevantResources.mats],
       dependencies: relevantResources.dependencies,
-      selectedEl: {
-        id: selectedMat.id,
-        type: 'combo',
-      },
+      selectedEl,
     });
   };
 
   const sideNavClickCallback = async (
-    selectedEl: SelectedElement,
-    comboId?: string
+    selectedEl: SelectedElement
   ): Promise<void> => {
     if (!sourceData) throw new Error('Source data not found');
     if (!sourceData) throw new Error('Graph source data not found');
-    if (selectedEl.type === 'node' && !comboId)
+    if (selectedEl.type === 'node' && !selectedEl.comboId)
       throw new Error('Error: Node selected but no combo id provided');
 
     const sessionStorageData = getSessionStorageData();
     if (!sessionStorageData || !sessionStorageData.mats.length)
       throw new Error('Session storage data not found');
 
-    if (selectedEl.type !== 'combo' && !comboId)
-      throw new Error('Combo id for selecte column missing');
-
-    const selectedMat = comboId
-      ? sessionStorageData.mats.find((el) => el.id === comboId)
-      : sessionStorageData.mats.find((el) => el.id === selectedEl.id);
-
-    if (!selectedMat) throw new Error('Selected materialization not found');
-
     defineSourceData(
-      selectedMat,
+      selectedEl,
       sessionStorageData.dependencies,
       sessionStorageData.mats,
       sessionStorageData.cols,
@@ -466,10 +460,13 @@ export default (): ReactElement => {
       return;
     }
     if (sessionStorageData && sessionStorageData.mats.length) {
-      const selectedMat: MaterializationDto = sessionStorageData.mats[0];
+      const selectedEl: SelectedElement = {
+        id: sessionStorageData.mats[0].id,
+        type: 'combo',
+      };
 
       defineSourceData(
-        selectedMat,
+        selectedEl,
         sessionStorageData.dependencies,
         sessionStorageData.mats,
         sessionStorageData.cols,
@@ -506,7 +503,13 @@ export default (): ReactElement => {
           if (colDtos) {
             cols.push(...colDtos);
             sessionStorage.setItem('cols', JSON.stringify(colDtos));
-            defineSourceData(mats[0], dependencies, mats, cols, dashboards);
+            defineSourceData(
+              { id: mats[0].id, type: 'combo' },
+              dependencies,
+              mats,
+              cols,
+              dashboards
+            );
           } else {
             sessionStorage.setItem('cols', JSON.stringify([]));
 

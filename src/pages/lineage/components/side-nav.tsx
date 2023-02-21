@@ -139,7 +139,7 @@ export default ({
 }: {
   sourceData?: SourceData;
   dataAvailable: boolean;
-  navClickCallback: (selectedEl: SelectedElement, comboId?: string) => void;
+  navClickCallback: (selectedEl: SelectedElement) => void;
   showIntegrationPanelCallback: (show: boolean) => void;
 }): ReactElement => {
   const [sideNavMatElements, setSideNavMatElements] = useState<ReactElement[]>(
@@ -159,7 +159,7 @@ export default ({
     colId: string,
     comboId: string
   ) => {
-    navClickCallback({ id: colId, type: 'node' }, comboId);
+    navClickCallback({ id: colId, type: 'node', comboId });
   };
 
   const handleSearchChange = (event: { target: { value: string } }) => {

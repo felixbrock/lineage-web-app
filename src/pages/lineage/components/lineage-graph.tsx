@@ -45,6 +45,8 @@ export interface GraphSourceData extends SourceData {
 
 export type LineageElement = 'node' | 'combo';
 
+const tableLevelLineageIdSuffix = 'table-level-lineage';
+
 /* Compares two nodes based on label. Used for sorting functions */
 const compare = (first: any, second: any) => {
   if (first.label < second.label) {
@@ -320,6 +322,9 @@ export default ({
           stroke: '#db1d33',
           lineWidth: 1,
           shadowBlur: 5,
+        },
+        tableLevelLineagePlaceholder: {
+          fill: hivediveBlue,
         },
       },
       defaultEdge: {
@@ -619,7 +624,12 @@ export default ({
         ? event.target.getID()
         : event.target.get('id');
 
-      if (event.target.get('type') === 'node')
+      if (id.includes(tableLevelLineageIdSuffix))
+        handleComboSelectChange(
+          id.replace(`-${tableLevelLineageIdSuffix}`, ''),
+          localGraph
+        );
+      else if (event.target.get('type') === 'node')
         handleNodeSelectChange(id, localGraph, data);
       else if (event.target.get('type') === 'combo')
         handleComboSelectChange(id, localGraph);
@@ -671,6 +681,12 @@ export default ({
       );
 
     const target = localGraph.findById(selectedEl.id);
+
+    localGraph.getNodes().forEach((node) => {
+      const nodeId = node.getID();
+      if (nodeId.includes(tableLevelLineageIdSuffix))
+        localGraph.setItemState(nodeId, 'tableLevelLineagePlaceholder', true);
+    });
 
     localGraph.setItemState(target, 'selected', true);
 
@@ -724,6 +740,41 @@ export default ({
     return { combos, nodes, edges };
   };
 
+  const getTableLevelLineage = (dataToAdjust: GraphData): GraphData => {
+    const tableLevelLineageFixNodes: NodeConfig[] = dataToAdjust.combos
+      ? dataToAdjust.combos.map((combo) => ({
+          id: `${combo.id}-${tableLevelLineageIdSuffix}`,
+          label: `<<<<< ${combo.label} >>>>>`,
+          comboId: combo.id,
+        }))
+      : [];
+
+    const comboIds = dataToAdjust.combos
+      ? dataToAdjust.combos.map((combo) => combo.id)
+      : [];
+
+    return {
+      combos: dataToAdjust.combos
+        ? dataToAdjust.combos.map((combo) => ({ ...combo, label: '' }))
+        : [],
+      nodes: dataToAdjust.nodes
+        ? tableLevelLineageFixNodes.concat(dataToAdjust.nodes)
+        : tableLevelLineageFixNodes,
+      edges: dataToAdjust.edges
+        ? dataToAdjust.edges.map((edge) => ({
+            source:
+              edge.source && comboIds.includes(edge.source)
+                ? `${edge.source}-${tableLevelLineageIdSuffix}`
+                : edge.source,
+            target:
+              edge.target && comboIds.includes(edge.target)
+                ? `${edge.target}-${tableLevelLineageIdSuffix}`
+                : edge.target,
+          }))
+        : [],
+    };
+  };
+
   useEffect(() => {
     if (!graphSourceData) return;
 
@@ -735,6 +786,8 @@ export default ({
 
       data = defaultData;
     }
+
+    data = getTableLevelLineage(data);
 
     if (!graph) {
       buildGraph(data);

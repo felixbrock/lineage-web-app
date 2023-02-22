@@ -304,13 +304,13 @@ export default ({
         sortByCombo: true,
         controlPoints: true,
         nodesep: 1,
-        ranksep: 120,
+        ranksep: 150,
       },
       defaultNode: {
         // size: [30, 20],
         type: 'rect',
         style: {
-          width: 350,
+          width: 550,
           lineWidth: 1,
           stroke: '#ababab',
           fill: '#fafaff',

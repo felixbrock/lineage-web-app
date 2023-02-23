@@ -1859,7 +1859,7 @@ export default (): ReactElement => {
       setLineage({
         id: 'todo',
         createdAt: '',
-        completed: true,
+        creationState: 'completed',
         dbCoveredNames: [],
         diff: '',
       });

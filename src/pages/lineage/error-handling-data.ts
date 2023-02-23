@@ -7,7 +7,7 @@ import MaterializationDto from '../../infrastructure/lineage-api/materialization
 export const defaultErrorLineage: LineageDto = {
   id: '62715f897e3d8066494d3f9e',
   createdAt: '',
-  completed: true,
+  creationState: 'completed',
   dbCoveredNames: [],
   diff: '',
 };

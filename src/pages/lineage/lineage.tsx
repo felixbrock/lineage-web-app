@@ -530,12 +530,6 @@ export default (): ReactElement => {
             dashboards: deafultErrorDashboards,
             mats: defaultErrorMaterializations,
           });
-          setGraphSourceData({
-            cols: [],
-            dashboards: [],
-            dependencies: [],
-            mats: [],
-          });
 
           setIsDataAvailable(false);
         });

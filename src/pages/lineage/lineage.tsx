@@ -84,6 +84,48 @@ const theme = createTheme({
   },
 });
 
+const getRelevantResources = (
+  selectedMatId: string,
+  dependencies: DependencyDto[],
+  mats: MaterializationDto[],
+  cols: ColumnDto[],
+  dashboards: DashboardDto[]
+): {
+  dependencies: DependencyDto[];
+  mats: MaterializationDto[];
+  cols: ColumnDto[];
+  dashboards: DashboardDto[];
+} => {
+  const relevantDependencies = dependencies.filter(
+    (d) => d.headId === selectedMatId || d.tailId === selectedMatId
+  );
+
+  const dependentMats = mats.filter((m) =>
+    relevantDependencies.some(
+      (d) => m.id !== selectedMatId && (d.headId === m.id || d.tailId === m.id)
+    )
+  );
+
+  const dependentDashboards = dashboards.filter((dashboard) =>
+    relevantDependencies.some(
+      (d) =>
+        (dashboard.id !== selectedMatId && d.headId === dashboard.id) ||
+        d.tailId === dashboard.id
+    )
+  );
+
+  const dependentCols = cols.filter((col) =>
+    dependentMats.some((m) => m.id === col.materializationId)
+  );
+
+  return {
+    dependencies: relevantDependencies,
+    cols: dependentCols,
+    mats: dependentMats,
+    dashboards: dependentDashboards,
+  };
+};
+
 export default (): ReactElement => {
   const location = useLocation();
 
@@ -111,6 +153,11 @@ export default (): ReactElement => {
   const [integrations, setIntegrations] = useState<any>([]);
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [mats, setMats] = useState<MaterializationDto[]>();
+  const [cols, setCols] = useState<ColumnDto[]>();
+  const [dependencies, setDependencies] = useState<DependencyDto[]>();
+  const [dashboards, setDashboards] = useState<DashboardDto[]>();
 
   const handleSnackbarClose = (
     event?: React.SyntheticEvent | Event,
@@ -167,86 +214,10 @@ export default (): ReactElement => {
   const showIntegrationPanelCallback = (show: boolean) =>
     setShowIntegrationSidePanel(show);
 
-  const getSessionStorageData = ():
-    | {
-        lineage: LineageDto;
-        mats: MaterializationDto[];
-        cols: ColumnDto[];
-        dashboards: DashboardDto[];
-        dependencies: DependencyDto[];
-      }
-    | undefined => {
-    const sessionStorageLineage = sessionStorage.getItem('lineage');
-    if (!sessionStorageLineage) return undefined;
+  const defineSourceData = (selectedEl: SelectedElement): void => {
+    if (!mats || !cols || !dashboards || !dependencies)
+      throw new Error('No data available');
 
-    const sessionStorageMats = sessionStorage.getItem('mats');
-    const sessionStorageDashboards = sessionStorage.getItem('dashboards');
-    const sessionStorageCols = sessionStorage.getItem('cols');
-    const sessionStorageDependencies = sessionStorage.getItem('dependencies');
-
-    return {
-      lineage: JSON.parse(sessionStorageLineage),
-      mats: sessionStorageMats ? JSON.parse(sessionStorageMats) : [],
-      dashboards: sessionStorageDashboards
-        ? JSON.parse(sessionStorageDashboards)
-        : [],
-      cols: sessionStorageCols ? JSON.parse(sessionStorageCols) : [],
-      dependencies: sessionStorageDependencies
-        ? JSON.parse(sessionStorageDependencies)
-        : [],
-    };
-  };
-
-  const getRelevantResources = (
-    selectedMatId: string,
-    dependencies: DependencyDto[],
-    mats: MaterializationDto[],
-    cols: ColumnDto[],
-    dashboards: DashboardDto[]
-  ): {
-    dependencies: DependencyDto[];
-    mats: MaterializationDto[];
-    cols: ColumnDto[];
-    dashboards: DashboardDto[];
-  } => {
-    const relevantDependencies = dependencies.filter(
-      (d) => d.headId === selectedMatId || d.tailId === selectedMatId
-    );
-
-    const dependentMats = mats.filter((m) =>
-      relevantDependencies.some(
-        (d) =>
-          m.id !== selectedMatId && (d.headId === m.id || d.tailId === m.id)
-      )
-    );
-
-    const dependentDashboards = dashboards.filter((dashboard) =>
-      relevantDependencies.some(
-        (d) =>
-          (dashboard.id !== selectedMatId && d.headId === dashboard.id) ||
-          d.tailId === dashboard.id
-      )
-    );
-
-    const dependentCols = cols.filter((col) =>
-      dependentMats.some((m) => m.id === col.materializationId)
-    );
-
-    return {
-      dependencies: relevantDependencies,
-      cols: dependentCols,
-      mats: dependentMats,
-      dashboards: dependentDashboards,
-    };
-  };
-
-  const defineSourceData = (
-    selectedEl: SelectedElement,
-    dependencies: DependencyDto[],
-    mats: MaterializationDto[],
-    cols: ColumnDto[],
-    dashboards: DashboardDto[]
-  ): void => {
     const selectedMat = mats.find(
       (el) =>
         el.id ===
@@ -289,17 +260,7 @@ export default (): ReactElement => {
     if (selectedEl.type === 'node' && !selectedEl.comboId)
       throw new Error('Error: Node selected but no combo id provided');
 
-    const sessionStorageData = getSessionStorageData();
-    if (!sessionStorageData || !sessionStorageData.mats.length)
-      throw new Error('Session storage data not found');
-
-    defineSourceData(
-      selectedEl,
-      sessionStorageData.dependencies,
-      sessionStorageData.mats,
-      sessionStorageData.cols,
-      sessionStorageData.dashboards
-    );
+    defineSourceData(selectedEl);
   };
 
   const simulateSideNavClick = async (
@@ -396,6 +357,7 @@ export default (): ReactElement => {
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
+        caches.delete('lineage');
         sessionStorage.clear();
 
         Auth.signOut();
@@ -451,78 +413,46 @@ export default (): ReactElement => {
   };
 
   useEffect(() => {
+    if (!cols) return;
+
+    if (!mats || !mats.length || !dashboards)
+      throw new Error('No materializations found');
+
+    if (cols.length) {
+      defineSourceData({ id: mats[0].id, type: 'combo' });
+    } else {
+      setSourceData({
+        cols: [],
+        dashboards,
+        mats,
+      });
+
+      setIsDataAvailable(false);
+    }
+  }, [cols]);
+
+  useEffect(() => {
     if (!jwt) return;
 
-    // const sessionStorageData = getSessionStorageData();
-
-    // if (!sessionStorageData) {
-    //   setIsLoading(false);
-    //   return;
-    // }
-    // if (sessionStorageData && sessionStorageData.mats.length) {
-    //   const selectedEl: SelectedElement = {
-    //     id: sessionStorageData.mats[0].id,
-    //     type: 'combo',
-    //   };
-
-    //   defineSourceData(
-    //     selectedEl,
-    //     sessionStorageData.dependencies,
-    //     sessionStorageData.mats,
-    //     sessionStorageData.cols,
-    //     sessionStorageData.dashboards
-    //   );
-    // } else {
-    const mats: MaterializationDto[] = [];
-    const dashboards: DashboardDto[] = [];
-    const dependencies: DependencyDto[] = [];
-    const cols: ColumnDto[] = [];
-
+    let matsAvailable = false;
     MaterializationsApiRepository.getBy(new URLSearchParams({}), jwt)
       .then((matDtos) => {
-        mats.push(...matDtos);
-        sessionStorage.setItem('mats', JSON.stringify(matDtos));
+        if (matDtos.length) matsAvailable = true;
+        setMats(matDtos);
         return DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
       })
       .then((dependencyDtos) => {
-        dependencies.push(...dependencyDtos);
-        sessionStorage.setItem('dependencies', JSON.stringify(dependencyDtos));
+        setDependencies(dependencyDtos);
 
         return DashboardsApiRepository.getBy(new URLSearchParams({}), jwt);
       })
       .then((dashboardDtos) => {
-        dashboards.push(...dashboardDtos);
-        sessionStorage.setItem('dashboards', JSON.stringify(dashboardDtos));
-        if (mats.length)
+        setDashboards(dashboardDtos);
+        if (matsAvailable)
           return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
       })
       .then((colDtos) => {
-        if (colDtos) {
-          cols.push(...colDtos);
-          sessionStorage.setItem('cols', JSON.stringify(colDtos));
-          defineSourceData(
-            { id: mats[0].id, type: 'combo' },
-            dependencies,
-            mats,
-            cols,
-            dashboards
-          );
-        } else {
-          sessionStorage.setItem('cols', JSON.stringify([]));
-
-          setSourceData({
-            cols: [],
-            dashboards,
-            mats,
-          });
-
-          setGraphSourceData({
-            cols: [],
-            dashboards: [],
-            mats: [],
-            dependencies: [],
-          });
-        }
+        setCols(colDtos || []);
       })
       .catch((error) => {
         console.log(error);
@@ -559,11 +489,14 @@ export default (): ReactElement => {
     createIntegrationTabs();
 
     if (appConfig.react.showRealData) {
+      let localLineage: LineageDto;
       LineageApiRepository.getLatest(jwt, false)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
-        .then((lineageDto) => {
-          if (!lineageDto)
+        .then((latestLineage) => {
+          if (!latestLineage)
             throw new TypeError('Queried lineage object not found');
+
+          localLineage = latestLineage;
 
           const sessionStorageLineageStr = sessionStorage.getItem('lineage');
           const sessionStorageLineage: LineageDto | undefined =
@@ -573,18 +506,23 @@ export default (): ReactElement => {
 
           if (
             sessionStorageLineage &&
-            sessionStorageLineage.createdAt === lineageDto.createdAt
+            sessionStorageLineage.createdAt === localLineage.createdAt
           )
             setLineage(sessionStorageLineage);
           else {
-            setLineage(lineageDto);
+            setLineage(localLineage);
             sessionStorage.clear();
-            sessionStorage.setItem('lineage', JSON.stringify(lineageDto));
+            return caches.delete('lineage');
           }
+        })
+        .then(() => {
+          if (!sessionStorage.getItem('lineage'))
+            sessionStorage.setItem('lineage', JSON.stringify(localLineage));
         })
         .catch((error) => {
           console.log(error);
           sessionStorage.clear();
+          caches.delete('lineage');
 
           setLineage(defaultErrorLineage);
           setSourceData({

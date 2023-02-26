@@ -1,0 +1,2 @@
+- fix layout of schema table (scroll and overflow)
+- tree line for column table

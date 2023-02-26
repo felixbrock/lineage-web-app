@@ -159,28 +159,6 @@ export default (): ReactElement => {
     setSelectedNodeId(nodeId);
   };
 
-  const comboSelectCallback = async (comboId: string, logicId?: string) => {
-    setSelectedNodeId(comboId);
-
-    if (!logicId) return;
-
-    if (appConfig.react.showRealData) {
-      const logicDto = await LogicApiRepository.getOne(logicId, jwt);
-
-      if (!logicDto)
-        throw new ReferenceError('Not able to retrieve logic object');
-
-      setSQL(logicDto.sql);
-    } else {
-      const logic = defaultLogics.find((element) => element.id === logicId);
-
-      if (!logic)
-        throw new ReferenceError('Logic object for selected combo not found');
-
-      setSQL(logic.sql);
-    }
-  };
-
   const showIntegrationPanelCallback = (show: boolean) =>
     setShowIntegrationSidePanel(show);
 
@@ -344,7 +322,7 @@ export default (): ReactElement => {
     };
   };
 
-  const getRelevantResources = (
+  const getConnectedResources = (
     selectedMatId: string
   ): FullDependencyCapture => {
     if (!dependencies || !mats || !cols || !dashboards)
@@ -352,19 +330,12 @@ export default (): ReactElement => {
         'Cannot search for relevant resources. No data available'
       );
 
-    const selfMat = mats.find((m) => m.id === selectedMatId);
-    if (!selfMat) throw new Error('Cannot find materialization');
-
-    const selfCols = cols.filter((c) => c.materializationId === selectedMatId);
-    if (!selfCols.length)
-      throw new Error('Cannot find columns for materialization');
-
     const downstreamResources = exploreDownstreamDependencies(selectedMatId);
     const upstreamResources = exploreUpstreamDependencies(selectedMatId);
 
     return {
-      mats: [selfMat].concat(downstreamResources.mats, upstreamResources.mats),
-      cols: selfCols.concat(downstreamResources.cols, upstreamResources.cols),
+      mats: downstreamResources.mats.concat(upstreamResources.mats),
+      cols: downstreamResources.cols.concat(upstreamResources.cols),
       dependencies: downstreamResources.dependencies.concat(
         upstreamResources.dependencies
       ),
@@ -387,7 +358,7 @@ export default (): ReactElement => {
       (c) => c.materializationId === selectedMat.id
     );
 
-    const relevantResources = getRelevantResources(selectedMat.id);
+    const relevantResources = getConnectedResources(selectedMat.id);
 
     setSourceData({
       cols: selectedMatCols,
@@ -402,6 +373,32 @@ export default (): ReactElement => {
       dependencies: relevantResources.dependencies,
       selectedEl,
     });
+  };
+
+  const comboSelectCallback = async (comboId: string, logicId?: string) => {
+    setSelectedNodeId(comboId);
+
+    if (!logicId) return;
+
+    if (appConfig.react.showRealData) {
+      const logicDto = await LogicApiRepository.getOne(logicId, jwt);
+
+      if (!logicDto)
+        throw new ReferenceError('Not able to retrieve logic object');
+
+      setSQL(logicDto.sql);
+    } else {
+      const logic = defaultLogics.find((element) => element.id === logicId);
+
+      if (!logic)
+        throw new ReferenceError('Logic object for selected combo not found');
+
+      setSQL(logic.sql);
+    }
+  };
+
+  const comboSelectChangeCallback = async (comboId: string) => {
+    defineSourceData({ id: comboId, type: 'combo' });
   };
 
   const sideNavClickCallback = async (
@@ -894,6 +891,7 @@ export default (): ReactElement => {
           nodeSelectCallback={nodeSelectCallback}
           setIsRightPanelShownCallback={setIsRightPanelShownCallback}
           graphBuiltCallback={graphBuiltCallback}
+          comboSelectChangeCallback={comboSelectChangeCallback}
         />
         <SideNav
           sourceData={sourceData}

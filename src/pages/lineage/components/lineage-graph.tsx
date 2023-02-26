@@ -267,6 +267,7 @@ export default ({
   setIsRightPanelShownCallback,
   nodeSelectCallback,
   comboSelectCallback,
+  comboSelectChangeCallback,
   graphBuiltCallback,
 }: {
   graphSourceData?: GraphSourceData;
@@ -277,6 +278,7 @@ export default ({
   setIsRightPanelShownCallback: (show: boolean) => void;
   nodeSelectCallback: (nodeId: string) => void;
   comboSelectCallback: (comboId: string, logicId?: string) => void;
+  comboSelectChangeCallback: (comboId: string) => void;
   graphBuiltCallback: () => void;
 }): ReactElement => {
   const [graph, setGraph] = useState<Graph>();
@@ -431,7 +433,8 @@ export default ({
 
   const handleComboSelectChange = async (
     comboId: string,
-    graphObj: Graph
+    graphObj: Graph,
+    initalSelect: boolean
   ): Promise<void> => {
     closeColSidePanelCallback();
 
@@ -460,6 +463,8 @@ export default ({
       comboId,
       'logicId' in combo ? combo.logicId : undefined
     );
+
+    if (!initalSelect) comboSelectChangeCallback(comboId);
 
     graphObj.set('latestZoom', graphObj.getZoom());
     graphObj.set('selectedElementId', comboId);
@@ -641,12 +646,13 @@ export default ({
       if (id.includes(tableLevelLineageIdSuffix))
         handleComboSelectChange(
           id.replace(`-${tableLevelLineageIdSuffix}`, ''),
-          localG
+          localG,
+          false
         );
       else if (event.target.get('type') === 'node')
         handleNodeSelectChange(id, localG, data);
       else if (event.target.get('type') === 'combo')
-        handleComboSelectChange(id, localG);
+        handleComboSelectChange(id, localG, false);
     });
 
     const defaultNodeId =
@@ -702,7 +708,7 @@ export default ({
 
     if (selectedEl.type === 'node')
       handleNodeSelectChange(target.getID(), localGraph, data);
-    else handleComboSelectChange(target.get('id'), localGraph);
+    else handleComboSelectChange(target.get('id'), localGraph, true);
   };
 
   const buildData = (): GraphData => {

@@ -694,11 +694,18 @@ export default ({
     selectedCombos.forEach((combo) => combo.clearStates());
 
     localGraph.set('rawData', graphSourceData);
+
+    const currZoom = localGraph.getZoom();
+
     if (selectedEl.type === 'combo') localGraph.read(data);
     else if (selectedEl.type === 'node')
       localGraph.read(
         loadData(selectedEl.id, DataLoadNodeType.Self, [], [], data)
       );
+
+    localGraph.zoom(currZoom);
+    const element = localGraph.findById(selectedEl.id);
+    localGraph.focusItem(element);
 
     const target = localGraph.findById(selectedEl.id);
 

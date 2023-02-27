@@ -16,8 +16,8 @@ const toTimeString = (time: [number, number, number], toLocal: boolean) => {
     if (timezoneOffset < 0 && minutesOffset) hoursOffset -= 1;
 
     let hours = timeCopy[0] + hoursOffset;
-    if(hours < 0) hours = 24 - hours;
-    if(hours >= 24) hours = hours - 24;
+    if (hours < 0) hours = 24 - hours;
+    if (hours >= 24) hours = hours - 24;
 
     timeCopy = [
       hours,
@@ -37,12 +37,12 @@ export default ({
   onExpressionPartsChangeCallback: (expressionParts: ExpressionParts) => void;
 }) => {
   const [daySelectionStates, setDaySelectionState] = useState<boolean[]>([
-    true,
-    true,
-    true,
-    true,
-    true,
     false,
+    true,
+    true,
+    true,
+    true,
+    true,
     false,
   ]);
   const [timeFrom, setTimeFrom] = useState<
@@ -74,7 +74,7 @@ export default ({
     else hours = hours.concat(`/${~~(frequency / 60)}`);
 
     const selectedDayIndices = daySelectionStates
-      .map((el, index) => (el ? index + 1 : undefined))
+      .map((el, index) => (el ? index : undefined))
       .filter((el: unknown): el is number => typeof el === 'number');
 
     const dayOfWeek =
@@ -166,13 +166,25 @@ export default ({
       <div className="my-2 text-lg font-bold">Execution Days</div>
       <div className="my-2 mb-8 grid grid-cols-7">
         <div>
-          <label htmlFor="check-mon" className={labelClassName}>
-            Mon
+          <label htmlFor="check-sun" className={labelClassName}>
+            Sun
           </label>
           <input
             type="checkbox"
             checked={daySelectionStates[0]}
             onChange={(e) => handleDayCheck(e, 0)}
+            className={checkboxClassName}
+            id="check-sun"
+          />
+        </div>
+        <div>
+          <label htmlFor="check-mon" className={labelClassName}>
+            Mon
+          </label>
+          <input
+            type="checkbox"
+            checked={daySelectionStates[1]}
+            onChange={(e) => handleDayCheck(e, 1)}
             className={checkboxClassName}
             id="check-mon"
           />
@@ -183,8 +195,8 @@ export default ({
           </label>
           <input
             type="checkbox"
-            checked={daySelectionStates[1]}
-            onChange={(e) => handleDayCheck(e, 1)}
+            checked={daySelectionStates[2]}
+            onChange={(e) => handleDayCheck(e, 2)}
             className={checkboxClassName}
             id="check-tue"
           />
@@ -195,8 +207,8 @@ export default ({
           </label>
           <input
             type="checkbox"
-            checked={daySelectionStates[2]}
-            onChange={(e) => handleDayCheck(e, 2)}
+            checked={daySelectionStates[3]}
+            onChange={(e) => handleDayCheck(e, 3)}
             className={checkboxClassName}
             id="check-wed"
           />
@@ -207,8 +219,8 @@ export default ({
           </label>
           <input
             type="checkbox"
-            checked={daySelectionStates[3]}
-            onChange={(e) => handleDayCheck(e, 3)}
+            checked={daySelectionStates[4]}
+            onChange={(e) => handleDayCheck(e, 4)}
             className={checkboxClassName}
             id="check-thu"
           />
@@ -219,8 +231,8 @@ export default ({
           </label>
           <input
             type="checkbox"
-            checked={daySelectionStates[4]}
-            onChange={(e) => handleDayCheck(e, 4)}
+            checked={daySelectionStates[5]}
+            onChange={(e) => handleDayCheck(e, 5)}
             className={checkboxClassName}
             id="check-fri"
           />
@@ -232,22 +244,10 @@ export default ({
           </label>
           <input
             type="checkbox"
-            checked={daySelectionStates[5]}
-            onChange={(e) => handleDayCheck(e, 5)}
-            className={checkboxClassName}
-            id="check-sat"
-          />
-        </div>
-        <div>
-          <label htmlFor="check-sun" className={labelClassName}>
-            Sun
-          </label>
-          <input
-            type="checkbox"
             checked={daySelectionStates[6]}
             onChange={(e) => handleDayCheck(e, 6)}
             className={checkboxClassName}
-            id="check-sun"
+            id="check-sat"
           />
         </div>
       </div>
@@ -284,9 +284,7 @@ export default ({
         >
           <IoMdRemoveCircleOutline className="flex h-6 w-6 content-center justify-center fill-gray-500 text-center hover:fill-cito" />
         </button>
-        <p className="flex items-center px-4 py-2 uppercase">
-          UTC
-        </p>
+        <p className="flex items-center px-4 py-2 uppercase">UTC</p>
       </div>
       <div className="my-2 grid grid-cols-4 ">
         <div>
@@ -324,7 +322,6 @@ export default ({
         <option value="360">6h</option>
         <option value="720">12h</option>
         <option value="1440">1d</option>
-        <option value="5">Auto</option>
       </select>
     </>
   );

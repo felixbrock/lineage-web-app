@@ -348,15 +348,10 @@ export default (e) => {
     var m = y(t[4], '0-6'),
       f = e.originalParts[4],
       h = g(m, 7);
-    (n.weekdays = v(
-      h.list.map(function (e) {
-        return 7 === e ? 0 : e;
-      })
-    ).sort(p)),
+    (n.weekdays = v(h.list).sort(p)),
       (h.errors.length || b(n.weekdays, 0, 6) || w.test(m)) &&
         ((n.weekdays = []), n.errors.push('weekdays')),
       (h.warnings.length ||
-        h.list.includes(7) ||
         (f && t[4] !== f && 3 < f.length && /\D/.test(f))) &&
         n.warnings.push('weekdays');
   } else void 0 === t[4] && n.errors.push('weekdays');

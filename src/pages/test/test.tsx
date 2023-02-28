@@ -12,6 +12,7 @@ import Paper from '@mui/material/Paper';
 
 import './test.scss';
 import { MdChevronRight, MdExpandMore } from 'react-icons/md';
+import { GoSettings } from 'react-icons/go';
 
 import LineageApiRepository from '../../infrastructure/lineage-api/lineage/lineage-api-repository';
 import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
@@ -696,6 +697,33 @@ export default (): ReactElement => {
         jwt
       );
   };
+
+  const handleGoSettingsButtonClick = (event: any) => {
+    const id = event.target.id as string;
+    const props = id.split('--');
+    console.log(props);
+  };
+
+  const testSuiteSettingsButton =
+    (target: {id :string ,matId?:string}, testType: TestType) => () =>
+      {
+        testSelection[target.matId].columnTestConfigs.find(el => el.id === target.id)
+
+        const testConfig: TestSuiteConfig | undefined = target.matId ? : testSelection[target.id].materializationTestConfigs.find(el => el.type === testType);
+
+        const button = testConfig && testConfig.testSuiteId ? (<button
+          id={`${testType}--${testConfig.testSuiteId}--settings`}
+          className=" mx-2 rounded-full bg-violet-500 px-2 py-1 text-center  font-bold   text-white hover:bg-violet-700 "
+          onClick={handleGoSettingsButtonClick}
+        >
+          <GoSettings />
+        </button>
+      ) : (<button
+        className=" mx-2 rounded-full bg-violet-500 px-2 py-1 text-center  font-bold   text-white hover:bg-violet-700 "
+        disabled={true}
+      >
+        <GoSettings />
+      </button>);
 
   const handleMatTestButtonClick = async (event: any) => {
     const id = event.target.id as string;
@@ -1645,13 +1673,17 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="left">
             <Button
               id={`${materializationRowCountType}--${props.materializationId}`}
-              size="large"
+              size="medium"
               variant="contained"
               color={
                 materializationRowCountConfig.activated ? 'primary' : 'info'
               }
               onClick={handleMatTestButtonClick}
             />
+            {testSuiteSettingsButton(
+              props.materializationId,
+              materializationRowCountType
+            )}
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
             <Button

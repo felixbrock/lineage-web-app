@@ -1,12 +1,13 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import appConfig from '../../../config';
+import { consumeStream, uint8ArrayToString, writeToCache } from '../../cache';
 import MaterializationDto from './materialization-dto';
 
 // TODO - Implement Interface regarding clean architecture
 export default class MaterializationsApiRepository {
   private static version = 'v1';
-  
-  private static apiRoot =  'api';
+
+  private static apiRoot = 'api';
 
   private static baseUrl = appConfig.baseUrl.lineageService;
 
@@ -15,17 +16,32 @@ export default class MaterializationsApiRepository {
     jwt: string
   ): Promise<MaterializationDto[]> => {
     try {
-      
-
       const config: AxiosRequestConfig = {
         headers: { Authorization: `Bearer ${jwt}` },
         params,
+        baseURL: MaterializationsApiRepository.baseUrl,
       };
+      const url = `/${MaterializationsApiRepository.apiRoot}/${MaterializationsApiRepository.version}/materializations`;
 
-      const response = await axios.get(`${MaterializationsApiRepository.baseUrl}/${MaterializationsApiRepository.apiRoot}/${MaterializationsApiRepository.version}/materializations`, config);
-      const jsonResponse = response.data;
-      if (response.status === 200) return jsonResponse;
-      throw new Error(jsonResponse);
+      const fullUrl = `${config.baseURL}${url}${params.toString()}`;
+
+      const cachedRes = await caches.match(fullUrl);
+
+      if (cachedRes) {
+        if (!cachedRes.body) throw new Error('No body in cached response');
+        const data = await consumeStream(cachedRes.body);
+
+        const mats = JSON.parse(uint8ArrayToString(data));
+        return mats;
+      } else {
+        const response = await axios.get(url, config);
+        const jsonResponse = response.data;
+        if (response.status === 200) {
+          await writeToCache(fullUrl, response, 'lineage');
+          return jsonResponse;
+        }
+        throw new Error(jsonResponse);
+      }
     } catch (error: any) {
       return Promise.reject(new Error(error.response.data.message));
     }

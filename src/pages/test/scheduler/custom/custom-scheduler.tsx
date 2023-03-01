@@ -42,7 +42,7 @@ const fieldDescription: { [key: string]: FieldDescription } = {
     wildcards: [',', '-', '*', '/'],
   },
   dayOfWeek: {
-    allowedValueRange: '1-7 or SUN-SAT',
+    allowedValueRange: '0-6 or SUN-SAT',
     wildcards: [',', '-', '*'],
   },
 };
@@ -60,10 +60,7 @@ export default ({
     e: ChangeEvent<HTMLInputElement>,
     fieldType: FieldType
   ) => void;
-  onBlurCallback: (
-    e: {target: unknown},
-    fieldType: FieldType
-  ) => void;
+  onBlurCallback: (e: { target: unknown }, fieldType: FieldType) => void;
 }): ReactElement => {
   const [typeOfSelectedField, setTypeOfSelectedField] = useState<FieldType>();
 
@@ -90,7 +87,7 @@ export default ({
               onFocus={(e) => handleOnFocus(e, 'minutes')}
               autoFocus={true}
               onChange={(e) => onChangeCallback(e, 'minutes')}
-              onBlur ={(e) => onBlurCallback(e, 'minutes')}
+              onBlur={(e) => onBlurCallback(e, 'minutes')}
             />
           </div>
           <div>

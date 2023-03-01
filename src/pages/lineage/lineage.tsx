@@ -11,7 +11,8 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import MetricsGraph, {
   defaultOption,
-  defaultYAxis,
+  getDefaultYAxis,
+  HistoryDataSet,
   TestHistoryEntry,
 } from '../../components/metrics-graph';
 
@@ -66,6 +67,18 @@ function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ');
 }
 
+interface BaseDependencyCapture {
+  dependencies: DependencyDto[];
+  mats: MaterializationDto[];
+  cols: ColumnDto[];
+}
+
+type UpstreamDepencencyCapture = BaseDependencyCapture;
+
+interface FullDependencyCapture extends BaseDependencyCapture {
+  dashboards: DashboardDto[];
+}
+
 export interface AlertHistoryEntry {
   date: string;
   testType: string;
@@ -111,6 +124,11 @@ export default (): ReactElement => {
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [mats, setMats] = useState<MaterializationDto[]>();
+  const [cols, setCols] = useState<ColumnDto[]>();
+  const [dependencies, setDependencies] = useState<DependencyDto[]>();
+  const [dashboards, setDashboards] = useState<DashboardDto[]>();
+
   const handleSnackbarClose = (
     event?: React.SyntheticEvent | Event,
     reason?: string
@@ -141,177 +159,8 @@ export default (): ReactElement => {
     setSelectedNodeId(nodeId);
   };
 
-  const comboSelectCallback = async (comboId: string, logicId?: string) => {
-    setSelectedNodeId(comboId);
-
-    if (!logicId) return;
-
-    if (appConfig.react.showRealData) {
-      const logicDto = await LogicApiRepository.getOne(logicId, jwt);
-
-      if (!logicDto)
-        throw new ReferenceError('Not able to retrieve logic object');
-
-      setSQL(logicDto.sql);
-    } else {
-      const logic = defaultLogics.find((element) => element.id === logicId);
-
-      if (!logic)
-        throw new ReferenceError('Logic object for selected combo not found');
-
-      setSQL(logic.sql);
-    }
-  };
-
   const showIntegrationPanelCallback = (show: boolean) =>
     setShowIntegrationSidePanel(show);
-
-  const getSessionStorageData = ():
-    | {
-        lineage: LineageDto;
-        mats: MaterializationDto[];
-        cols: ColumnDto[];
-        dashboards: DashboardDto[];
-        dependencies: DependencyDto[];
-      }
-    | undefined => {
-    const sessionStorageLineage = sessionStorage.getItem('lineage');
-    if (!sessionStorageLineage) return undefined;
-
-    const sessionStorageMats = sessionStorage.getItem('mats');
-    const sessionStorageDashboards = sessionStorage.getItem('dashboards');
-    const sessionStorageCols = sessionStorage.getItem('cols');
-    const sessionStorageDependencies = sessionStorage.getItem('dependencies');
-
-    return {
-      lineage: JSON.parse(sessionStorageLineage),
-      mats: sessionStorageMats ? JSON.parse(sessionStorageMats) : [],
-      dashboards: sessionStorageDashboards
-        ? JSON.parse(sessionStorageDashboards)
-        : [],
-      cols: sessionStorageCols ? JSON.parse(sessionStorageCols) : [],
-      dependencies: sessionStorageDependencies
-        ? JSON.parse(sessionStorageDependencies)
-        : [],
-    };
-  };
-
-  const getRelevantResources = (
-    selectedMatId: string,
-    dependencies: DependencyDto[],
-    mats: MaterializationDto[],
-    cols: ColumnDto[],
-    dashboards: DashboardDto[]
-  ): {
-    dependencies: DependencyDto[];
-    mats: MaterializationDto[];
-    cols: ColumnDto[];
-    dashboards: DashboardDto[];
-  } => {
-    const relevantDependencies = dependencies.filter(
-      (d) => d.headId === selectedMatId || d.tailId === selectedMatId
-    );
-
-    const dependentMats = mats.filter((m) =>
-      relevantDependencies.some(
-        (d) =>
-          m.id !== selectedMatId && (d.headId === m.id || d.tailId === m.id)
-      )
-    );
-
-    const dependentDashboards = dashboards.filter((dashboard) =>
-      relevantDependencies.some(
-        (d) =>
-          (dashboard.id !== selectedMatId && d.headId === dashboard.id) ||
-          d.tailId === dashboard.id
-      )
-    );
-
-    const dependentCols = cols.filter((col) =>
-      dependentMats.some((m) => m.id === col.materializationId)
-    );
-
-    return {
-      dependencies: relevantDependencies,
-      cols: dependentCols,
-      mats: dependentMats,
-      dashboards: dependentDashboards,
-    };
-  };
-
-  const defineSourceData = (
-    selectedMat: MaterializationDto,
-    dependencies: DependencyDto[],
-    mats: MaterializationDto[],
-    cols: ColumnDto[],
-    dashboards: DashboardDto[]
-  ): void => {
-    const selectedCols = cols.filter(
-      (c) => c.materializationId === selectedMat.id
-    );
-
-    const relevantResources = getRelevantResources(
-      selectedMat.id,
-      dependencies,
-      mats,
-      cols,
-      dashboards
-    );
-
-    setSourceData({
-      cols: selectedCols,
-      dashboards,
-      mats,
-    });
-
-    setGraphSourceData({
-      cols: selectedCols.concat(relevantResources.cols),
-      dashboards: relevantResources.dashboards,
-      mats: [selectedMat, ...relevantResources.mats],
-      dependencies: relevantResources.dependencies,
-      selectedEl: {
-        id: selectedMat.id,
-        type: 'combo',
-      },
-    });
-  };
-
-  const sideNavClickCallback = async (
-    selectedEl: SelectedElement,
-    comboId?: string
-  ): Promise<void> => {
-    if (!sourceData) throw new Error('Source data not found');
-    if (!sourceData) throw new Error('Graph source data not found');
-    if (selectedEl.type === 'node' && !comboId)
-      throw new Error('Error: Node selected but no combo id provided');
-
-    const sessionStorageData = getSessionStorageData();
-    if (!sessionStorageData || !sessionStorageData.mats.length)
-      throw new Error('Session storage data not found');
-
-    if (selectedEl.type !== 'combo' && !comboId)
-      throw new Error('Combo id for selecte column missing');
-
-    const selectedMat = comboId
-      ? sessionStorageData.mats.find((el) => el.id === comboId)
-      : sessionStorageData.mats.find((el) => el.id === selectedEl.id);
-
-    if (!selectedMat) throw new Error('Selected materialization not found');
-
-    defineSourceData(
-      selectedMat,
-      sessionStorageData.dependencies,
-      sessionStorageData.mats,
-      sessionStorageData.cols,
-      sessionStorageData.dashboards
-    );
-  };
-
-  const simulateSideNavClick = async (
-    selectedEl: SelectedElement
-  ): Promise<void> => {
-    await sideNavClickCallback(selectedEl);
-  };
 
   const toggleShowSideNav = () => {
     const sidenav = document.getElementById('sidenav');
@@ -358,6 +207,217 @@ export default (): ReactElement => {
     panel.style.opacity = '1';
   };
 
+  const exploreDownstreamDependencies = (
+    selectedMatId: string
+  ): FullDependencyCapture => {
+    if (!dependencies || !mats || !cols || !dashboards)
+      throw new Error(
+        'Cannot search for relevant resources. No data available'
+      );
+
+    const downstreamEdges = dependencies.filter(
+      (d) => d.tailId === selectedMatId
+    );
+
+    const referencingMats = mats.filter((m) =>
+      downstreamEdges.some((d) => m.id !== selectedMatId && d.headId === m.id)
+    );
+
+    const downstreamMatDependencies = referencingMats.reduce(
+      (acc: FullDependencyCapture, el: MaterializationDto) => {
+        const localAcc = acc;
+
+        const downstreamDependencies = exploreDownstreamDependencies(el.id);
+
+        const newMats = downstreamDependencies.mats.filter(
+          (m) => !localAcc.mats.some((m2) => m2.id === m.id)
+        );
+        const newDashboards = downstreamDependencies.dashboards.filter(
+          (d) => !localAcc.dashboards.some((d2) => d2.id === d.id)
+        );
+        const newCols = downstreamDependencies.cols.filter(
+          (c) => !localAcc.cols.some((c2) => c2.id === c.id)
+        );
+
+        return {
+          dependencies: localAcc.dependencies.concat(
+            downstreamDependencies.dependencies
+          ),
+          mats: localAcc.mats.concat(newMats),
+          cols: localAcc.cols.concat(newCols),
+          dashboards: localAcc.dashboards.concat(newDashboards),
+        };
+      },
+      { dependencies: [], mats: [], cols: [], dashboards: [] }
+    );
+
+    const referencingDashboards = dashboards.filter((dashboard) =>
+      downstreamEdges.some(
+        (d) => dashboard.id !== selectedMatId && d.headId === dashboard.id
+      )
+    );
+
+    const downstreamCols = cols.filter((col) =>
+      referencingMats.some((m) => m.id === col.materializationId)
+    );
+
+    return {
+      dependencies: downstreamEdges.concat(
+        downstreamMatDependencies.dependencies
+      ),
+      mats: referencingMats.concat(downstreamMatDependencies.mats),
+      cols: downstreamCols.concat(downstreamMatDependencies.cols),
+      dashboards: referencingDashboards,
+    };
+  };
+
+  const exploreUpstreamDependencies = (
+    selectedMatId: string
+  ): UpstreamDepencencyCapture => {
+    if (!dependencies || !mats || !cols || !dashboards)
+      throw new Error(
+        'Cannot search for relevant resources. No data available'
+      );
+
+    const upstreamEdges = dependencies.filter(
+      (d) => d.headId === selectedMatId
+    );
+
+    const referencedMats = mats.filter((m) =>
+      upstreamEdges.some((d) => m.id !== selectedMatId && d.tailId === m.id)
+    );
+
+    const upstreamMatDependencies = referencedMats.reduce(
+      (acc: UpstreamDepencencyCapture, el: MaterializationDto) => {
+        const localAcc = acc;
+
+        const downstreamDependencies = exploreUpstreamDependencies(el.id);
+
+        const newMats = downstreamDependencies.mats.filter(
+          (m) => !localAcc.mats.some((m2) => m2.id === m.id)
+        );
+        const newCols = downstreamDependencies.cols.filter(
+          (c) => !localAcc.cols.some((c2) => c2.id === c.id)
+        );
+
+        return {
+          dependencies: localAcc.dependencies.concat(
+            downstreamDependencies.dependencies
+          ),
+          mats: localAcc.mats.concat(newMats),
+          cols: localAcc.cols.concat(newCols),
+        };
+      },
+      { dependencies: [], mats: [], cols: [] }
+    );
+
+    const upstreamCols = cols.filter((col) =>
+      referencedMats.some((m) => m.id === col.materializationId)
+    );
+
+    return {
+      dependencies: upstreamEdges.concat(upstreamMatDependencies.dependencies),
+      mats: referencedMats.concat(upstreamMatDependencies.mats),
+      cols: upstreamCols.concat(upstreamMatDependencies.cols),
+    };
+  };
+
+  const getConnectedResources = (
+    selectedMatId: string
+  ): FullDependencyCapture => {
+    if (!dependencies || !mats || !cols || !dashboards)
+      throw new Error(
+        'Cannot search for relevant resources. No data available'
+      );
+
+    const downstreamResources = exploreDownstreamDependencies(selectedMatId);
+    const upstreamResources = exploreUpstreamDependencies(selectedMatId);
+
+    return {
+      mats: downstreamResources.mats.concat(upstreamResources.mats),
+      cols: downstreamResources.cols.concat(upstreamResources.cols),
+      dependencies: downstreamResources.dependencies.concat(
+        upstreamResources.dependencies
+      ),
+      dashboards: downstreamResources.dashboards,
+    };
+  };
+
+  const defineSourceData = (selectedEl: SelectedElement): void => {
+    if (!mats || !cols || !dashboards || !dependencies)
+      throw new Error('No data available');
+
+    const selectedMat = mats.find(
+      (el) =>
+        el.id ===
+        (selectedEl.type === 'combo' ? selectedEl.id : selectedEl.comboId)
+    );
+    if (!selectedMat) throw new Error('No selected materialization');
+
+    const selectedMatCols = cols.filter(
+      (c) => c.materializationId === selectedMat.id
+    );
+
+    const relevantResources = getConnectedResources(selectedMat.id);
+
+    setSourceData({
+      cols: selectedMatCols,
+      dashboards,
+      mats,
+    });
+
+    setGraphSourceData({
+      cols: selectedMatCols.concat(relevantResources.cols),
+      dashboards: relevantResources.dashboards,
+      mats: [selectedMat, ...relevantResources.mats],
+      dependencies: relevantResources.dependencies,
+      selectedEl,
+    });
+  };
+
+  const comboSelectCallback = async (comboId: string, logicId?: string) => {
+    setSelectedNodeId(comboId);
+
+    if (!logicId) return;
+
+    if (appConfig.react.showRealData) {
+      const logicDto = await LogicApiRepository.getOne(logicId, jwt);
+
+      if (!logicDto)
+        throw new ReferenceError('Not able to retrieve logic object');
+
+      setSQL(logicDto.sql);
+    } else {
+      const logic = defaultLogics.find((element) => element.id === logicId);
+
+      if (!logic)
+        throw new ReferenceError('Logic object for selected combo not found');
+
+      setSQL(logic.sql);
+    }
+  };
+
+  const comboSelectChangeCallback = async (comboId: string) => {
+    defineSourceData({ id: comboId, type: 'combo' });
+  };
+
+  const sideNavClickCallback = async (
+    selectedEl: SelectedElement
+  ): Promise<void> => {
+    if (!sourceData) throw new Error('Source data not found');
+    if (!sourceData) throw new Error('Graph source data not found');
+    if (selectedEl.type === 'node' && !selectedEl.comboId)
+      throw new Error('Error: Node selected but no combo id provided');
+
+    defineSourceData(selectedEl);
+  };
+
+  const simulateSideNavClick = async (
+    selectedEl: SelectedElement
+  ): Promise<void> => {
+    await sideNavClickCallback(selectedEl);
+  };
+
   const renderLineage = () => {
     setUser(undefined);
     setJwt('');
@@ -401,6 +461,7 @@ export default (): ReactElement => {
       })
       .catch((error) => {
         console.trace(typeof error === 'string' ? error : error.message);
+        caches.delete('lineage');
         sessionStorage.clear();
 
         Auth.signOut();
@@ -456,92 +517,66 @@ export default (): ReactElement => {
   };
 
   useEffect(() => {
+    if (!cols) return;
+
+    if (!mats || !mats.length || !dashboards)
+      throw new Error('No materializations found');
+
+    if (cols.length) {
+      defineSourceData({ id: mats[0].id, type: 'combo' });
+    } else {
+      setSourceData({
+        cols: [],
+        dashboards,
+        mats,
+      });
+
+      setIsDataAvailable(false);
+    }
+  }, [cols]);
+
+  useEffect(() => {
     if (!jwt) return;
 
-    const sessionStorageData = getSessionStorageData();
+    let matsAvailable = false;
+    MaterializationsApiRepository.getBy(new URLSearchParams({}), jwt)
+      .then((matDtos) => {
+        if (matDtos.length) matsAvailable = true;
+        setMats(matDtos);
+        return DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
+      })
+      .then((dependencyDtos) => {
+        setDependencies(dependencyDtos);
 
-    if (!sessionStorageData) {
-      setIsLoading(false);
-      return;
-    }
-    if (sessionStorageData && sessionStorageData.mats.length) {
-      const selectedMat: MaterializationDto = sessionStorageData.mats[0];
+        return DashboardsApiRepository.getBy(new URLSearchParams({}), jwt);
+      })
+      .then((dashboardDtos) => {
+        setDashboards(dashboardDtos);
+        if (matsAvailable)
+          return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
+      })
+      .then((colDtos) => {
+        setCols(colDtos || []);
+      })
+      .catch((error) => {
+        console.log(error);
 
-      defineSourceData(
-        selectedMat,
-        sessionStorageData.dependencies,
-        sessionStorageData.mats,
-        sessionStorageData.cols,
-        sessionStorageData.dashboards
-      );
-    } else {
-      const mats: MaterializationDto[] = [];
-      const dashboards: DashboardDto[] = [];
-      const dependencies: DependencyDto[] = [];
-      const cols: ColumnDto[] = [];
-
-      MaterializationsApiRepository.getBy(new URLSearchParams({}), jwt)
-        .then((matDtos) => {
-          mats.push(...matDtos);
-          sessionStorage.setItem('mats', JSON.stringify(matDtos));
-          return DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
-        })
-        .then((dependencyDtos) => {
-          dependencies.push(...dependencyDtos);
-          sessionStorage.setItem(
-            'dependencies',
-            JSON.stringify(dependencyDtos)
-          );
-
-          return DashboardsApiRepository.getBy(new URLSearchParams({}), jwt);
-        })
-        .then((dashboardDtos) => {
-          dashboards.push(...dashboardDtos);
-          sessionStorage.setItem('dashboards', JSON.stringify(dashboardDtos));
-          if (mats.length)
-            return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
-        })
-        .then((colDtos) => {
-          if (colDtos) {
-            cols.push(...colDtos);
-            sessionStorage.setItem('cols', JSON.stringify(colDtos));
-            defineSourceData(mats[0], dependencies, mats, cols, dashboards);
-          } else {
-            sessionStorage.setItem('cols', JSON.stringify([]));
-
-            setSourceData({
-              cols: [],
-              dashboards,
-              mats,
-            });
-
-            setGraphSourceData({
-              cols: [],
-              dashboards: [],
-              mats: [],
-              dependencies: [],
-            });
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-
-          setLineage(defaultErrorLineage);
-          setSourceData({
-            cols: defaultErrorColumns,
-            dashboards: deafultErrorDashboards,
-            mats: defaultErrorMaterializations,
-          });
-          setGraphSourceData({
-            cols: [],
-            dashboards: [],
-            dependencies: [],
-            mats: [],
-          });
-
-          setIsDataAvailable(false);
+        setLineage(defaultErrorLineage);
+        setSourceData({
+          cols: defaultErrorColumns,
+          dashboards: deafultErrorDashboards,
+          mats: defaultErrorMaterializations,
         });
-    }
+        setGraphSourceData({
+          cols: [],
+          dashboards: [],
+          dependencies: [],
+          mats: [],
+        });
+
+        setIsDataAvailable(false);
+      });
+    // }
 
     handleRedirect();
     setIsLoading(false);
@@ -558,11 +593,14 @@ export default (): ReactElement => {
     createIntegrationTabs();
 
     if (appConfig.react.showRealData) {
+      let localLineage: LineageDto;
       LineageApiRepository.getLatest(jwt, false)
         // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
-        .then((lineageDto) => {
-          if (!lineageDto)
+        .then((latestLineage) => {
+          if (!latestLineage)
             throw new TypeError('Queried lineage object not found');
+
+          localLineage = latestLineage;
 
           const sessionStorageLineageStr = sessionStorage.getItem('lineage');
           const sessionStorageLineage: LineageDto | undefined =
@@ -572,30 +610,29 @@ export default (): ReactElement => {
 
           if (
             sessionStorageLineage &&
-            sessionStorageLineage.createdAt === lineageDto.createdAt
+            sessionStorageLineage.createdAt === localLineage.createdAt
           )
             setLineage(sessionStorageLineage);
           else {
-            setLineage(lineageDto);
+            setLineage(localLineage);
             sessionStorage.clear();
-            sessionStorage.setItem('lineage', JSON.stringify(lineageDto));
+            return caches.delete('lineage');
           }
+        })
+        .then(() => {
+          if (!sessionStorage.getItem('lineage'))
+            sessionStorage.setItem('lineage', JSON.stringify(localLineage));
         })
         .catch((error) => {
           console.log(error);
           sessionStorage.clear();
+          caches.delete('lineage');
 
           setLineage(defaultErrorLineage);
           setSourceData({
             cols: defaultErrorColumns,
             dashboards: deafultErrorDashboards,
             mats: defaultErrorMaterializations,
-          });
-          setGraphSourceData({
-            cols: [],
-            dashboards: [],
-            dependencies: [],
-            mats: [],
           });
 
           setIsDataAvailable(false);
@@ -604,7 +641,7 @@ export default (): ReactElement => {
       setLineage({
         id: 'todo',
         createdAt: '',
-        completed: true,
+        creationState: 'completed',
         dbCoveredNames: [],
         diff: '',
       });
@@ -807,6 +844,21 @@ export default (): ReactElement => {
       simulateSideNavClick({ id: targetResourceId, type: 'node' });
   };
 
+  const getHistoryMinMax = (
+    historyDataSet: HistoryDataSet[]
+  ): [number, number] =>
+    historyDataSet.reduce<[number, number]>(
+      (acc, curr) => {
+        const localAcc = acc;
+
+        if (curr.value < localAcc[0]) localAcc[0] = curr.value;
+        if (curr.value > localAcc[1]) localAcc[1] = curr.value;
+
+        return localAcc;
+      },
+      [historyDataSet[0].value, historyDataSet[0].value]
+    );
+
   return (
     <ThemeProvider theme={theme}>
       <div id="lineageContainer">
@@ -839,6 +891,7 @@ export default (): ReactElement => {
           nodeSelectCallback={nodeSelectCallback}
           setIsRightPanelShownCallback={setIsRightPanelShownCallback}
           graphBuiltCallback={graphBuiltCallback}
+          comboSelectChangeCallback={comboSelectChangeCallback}
         />
         <SideNav
           sourceData={sourceData}
@@ -914,7 +967,9 @@ export default (): ReactElement => {
                         {entry.historyDataSet.length ? (
                           <MetricsGraph
                             option={defaultOption(
-                              defaultYAxis,
+                              getDefaultYAxis(
+                                ...getHistoryMinMax(entry.historyDataSet)
+                              ),
                               entry.historyDataSet
                             )}
                           ></MetricsGraph>
@@ -1027,7 +1082,9 @@ export default (): ReactElement => {
                         {entry.historyDataSet.length ? (
                           <MetricsGraph
                             option={defaultOption(
-                              defaultYAxis,
+                              getDefaultYAxis(
+                                ...getHistoryMinMax(entry.historyDataSet)
+                              ),
                               entry.historyDataSet
                             )}
                           ></MetricsGraph>

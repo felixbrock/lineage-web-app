@@ -107,11 +107,11 @@ export default function Navbar({
           return;
         }
 
-        if (snapshot.completed === false) {
+        if (snapshot.creationState !== 'completed') {
           state = 'creating';
           setSnapshotState(state);
           setSnapshotInfo(getSnapshotInfo(state));
-        } else if (snapshot.completed === true) {
+        } else if (snapshot.creationState === 'completed') {
           state = 'available';
           setSnapshotState(state);
           setSnapshotInfo(getSnapshotInfo(state, snapshot.createdAt));

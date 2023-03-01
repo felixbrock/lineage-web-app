@@ -14,6 +14,30 @@ export interface ExpressionParts {
   year: string;
 }
 
+export type SchedulerState = 'opening' | 'closing' | 'saving';
+
+const transformDayOfWeekExpression = (
+  expression: string,
+  targetFormat: 'aws' | 'standard'
+): string => {
+  let newExpr = '';
+  for (let i = 0; i < expression.length; i++) {
+    const currentChar = expression[i];
+
+    if (!Number.isNaN(Number(currentChar))) {
+      const newChar =
+        (targetFormat === 'standard'
+          ? Number(currentChar) - 1
+          : Number(currentChar) + 1) % 10;
+      newExpr = newExpr + newChar.toString();
+    } else {
+      newExpr += currentChar;
+    }
+  }
+
+  return newExpr;
+};
+
 export default ({
   show,
   cronExpression,
@@ -87,7 +111,10 @@ export default ({
     if (!expressionValid) return;
 
     let dayOfMonth = expressionParts.dayOfMonth;
-    let dayOfWeek = expressionParts.dayOfWeek;
+    let dayOfWeek = transformDayOfWeekExpression(
+      expressionParts.dayOfWeek,
+      'aws'
+    );
 
     if (dayOfMonth === '*' && dayOfWeek === '*') {
       dayOfMonth = '*';
@@ -124,12 +151,17 @@ export default ({
 
     const parts = cronExpression.split(' ');
 
+    let dayOfWeek = parts[4];
+    if (parts[4] === '?') dayOfWeek = '*';
+    else if (show)
+      dayOfWeek = transformDayOfWeekExpression(parts[4], 'standard');
+
     setExpressionParts({
       minutes: parts[0],
       hours: parts[1],
       dayOfMonth: parts[2] === '?' ? '*' : parts[2],
       month: parts[3],
-      dayOfWeek: parts[4] === '?' ? '*' : parts[4],
+      dayOfWeek,
       year: parts[5],
     });
   }, [show]);

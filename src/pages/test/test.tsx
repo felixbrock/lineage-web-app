@@ -44,7 +44,7 @@ import AccountDto from '../../infrastructure/account-api/account-dto';
 import SearchBox from '../lineage/components/search-box';
 import Navbar from '../../components/navbar';
 import LoadingScreen from '../../components/loading-screen';
-import Scheduler from './scheduler/scheduler';
+import Scheduler, { SchedulerState } from './scheduler/scheduler';
 
 const showRealData = true;
 
@@ -321,16 +321,20 @@ export default (): ReactElement => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [schedulerProps, setSchedulerProps] = useState<{
-    show: boolean;
+    state: SchedulerState;
     target?: { matId: string; colId?: string };
     cronExp?: string;
-  }>({ show: false });
+  }>({ state: 'closing' });
 
   const closeSchedulerCallback = () =>
-    setSchedulerProps({ ...schedulerProps, show: false });
+    setSchedulerProps({ ...schedulerProps, state: 'closing' });
 
   const createdScheduleCallback = (expression: string) => {
-    setSchedulerProps({ ...schedulerProps, show: false, cronExp: expression });
+    setSchedulerProps({
+      ...schedulerProps,
+      state: 'saving',
+      cronExp: expression,
+    });
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -425,7 +429,7 @@ export default (): ReactElement => {
     const currentCronExp = testSelection[target.matId].columnTestConfigs.find(
       (el) => el.id === target.colId
     )?.cron;
-    setSchedulerProps({ show: true, target, cronExp: currentCronExp });
+    setSchedulerProps({ state: 'opening', target, cronExp: currentCronExp });
   };
 
   const handleColumnFrequencyChange = (event: SelectChangeEvent<string>) => {
@@ -440,7 +444,7 @@ export default (): ReactElement => {
       const currentCronExp = testSelection[target.matId].columnTestConfigs.find(
         (el) => el.id === target.colId
       )?.cron;
-      setSchedulerProps({ show: true, target, cronExp: currentCronExp });
+      setSchedulerProps({ state: 'opening', target, cronExp: currentCronExp });
       return;
     }
 
@@ -521,7 +525,7 @@ export default (): ReactElement => {
     if (frequency !== 'custom') return;
 
     const currentCronExp = testSelection[target.matId].cron;
-    setSchedulerProps({ show: true, target, cronExp: currentCronExp });
+    setSchedulerProps({ state: 'opening', target, cronExp: currentCronExp });
   };
 
   const handleMatFrequencyChange = (event: SelectChangeEvent<string>) => {
@@ -534,7 +538,7 @@ export default (): ReactElement => {
 
     if (frequency === 'custom') {
       const currentCronExp = testSelection[target.matId].cron;
-      setSchedulerProps({ show: true, target, cronExp: currentCronExp });
+      setSchedulerProps({ state: 'opening', target, cronExp: currentCronExp });
     } else {
       const cron = buildCronExpression(frequency);
       changeMatFrequency(target, { cron, executionType });
@@ -1859,7 +1863,7 @@ export default (): ReactElement => {
       setLineage({
         id: 'todo',
         createdAt: '',
-        completed: true,
+        creationState: 'completed',
         dbCoveredNames: [],
         diff: '',
       });
@@ -1896,7 +1900,8 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (
-      schedulerProps.show ||
+      schedulerProps.state === 'opening' ||
+      schedulerProps.state === 'closing' ||
       !schedulerProps.target ||
       !schedulerProps.cronExp
     )
@@ -2091,7 +2096,7 @@ export default (): ReactElement => {
         </>
       </div>
       <Scheduler
-        show={schedulerProps.show}
+        show={schedulerProps.state === 'opening'}
         closeCallback={closeSchedulerCallback}
         createdScheduleCallback={createdScheduleCallback}
         cronExpression={schedulerProps.cronExp}

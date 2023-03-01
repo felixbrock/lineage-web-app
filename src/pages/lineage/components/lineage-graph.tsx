@@ -30,6 +30,7 @@ enum DataLoadNodeType {
 export interface SelectedElement {
   id: string;
   type: LineageElement;
+  comboId?: string;
 }
 
 export interface SourceData {
@@ -44,6 +45,8 @@ export interface GraphSourceData extends SourceData {
 
 export type LineageElement = 'node' | 'combo';
 
+const tableLevelLineageIdSuffix = 'table-level-lineage';
+
 /* Compares two nodes based on label. Used for sorting functions */
 const compare = (first: any, second: any) => {
   if (first.label < second.label) {
@@ -53,6 +56,17 @@ const compare = (first: any, second: any) => {
     return 1;
   }
   return 0;
+};
+
+const setTableLevelLineagePlaceholderState = (g: Graph): Graph => {
+  const localGraph = g;
+  localGraph.getNodes().forEach((node) => {
+    const nodeId = node.getID();
+    if (nodeId.includes(tableLevelLineageIdSuffix))
+      localGraph.setItemState(nodeId, 'tableLevelLineagePlaceholder', true);
+  });
+
+  return localGraph;
 };
 
 const getNodeIdsToExplore = (
@@ -253,6 +267,7 @@ export default ({
   setIsRightPanelShownCallback,
   nodeSelectCallback,
   comboSelectCallback,
+  comboSelectChangeCallback,
   graphBuiltCallback,
 }: {
   graphSourceData?: GraphSourceData;
@@ -263,6 +278,7 @@ export default ({
   setIsRightPanelShownCallback: (show: boolean) => void;
   nodeSelectCallback: (nodeId: string) => void;
   comboSelectCallback: (comboId: string, logicId?: string) => void;
+  comboSelectChangeCallback: (comboId: string) => void;
   graphBuiltCallback: () => void;
 }): ReactElement => {
   const [graph, setGraph] = useState<Graph>();
@@ -290,13 +306,13 @@ export default ({
         sortByCombo: true,
         controlPoints: true,
         nodesep: 1,
-        ranksep: 120,
+        ranksep: 150,
       },
       defaultNode: {
         // size: [30, 20],
         type: 'rect',
         style: {
-          width: 350,
+          width: 550,
           lineWidth: 1,
           stroke: '#ababab',
           fill: '#fafaff',
@@ -319,6 +335,9 @@ export default ({
           stroke: '#db1d33',
           lineWidth: 1,
           shadowBlur: 5,
+        },
+        tableLevelLineagePlaceholder: {
+          fill: hivediveBlue,
         },
       },
       defaultEdge: {
@@ -403,9 +422,10 @@ export default ({
     clearEdgeStates(graphObj);
 
     nodeSelectCallback(nodeId);
-    graphObj.read(loadData(nodeId, DataLoadNodeType.Self, [], [], data));
 
     graphObj.set('latestZoom', graphObj.getZoom());
+    graphObj.data(loadData(nodeId, DataLoadNodeType.Self, [], [], data));
+
     graphObj.set('selectedElementId', nodeId);
 
     setGraph(graphObj);
@@ -413,7 +433,8 @@ export default ({
 
   const handleComboSelectChange = async (
     comboId: string,
-    graphObj: Graph
+    graphObj: Graph,
+    initalSelect: boolean
   ): Promise<void> => {
     closeColSidePanelCallback();
 
@@ -442,6 +463,8 @@ export default ({
       comboId,
       'logicId' in combo ? combo.logicId : undefined
     );
+
+    if (!initalSelect) comboSelectChangeCallback(comboId);
 
     graphObj.set('latestZoom', graphObj.getZoom());
     graphObj.set('selectedElementId', comboId);
@@ -611,6 +634,8 @@ export default ({
         return;
       }
 
+      const localG = setTableLevelLineagePlaceholderState(localGraph);
+
       const isNode = (object: any): object is INode =>
         object && 'getType' in object && object.getType() === 'node';
 
@@ -618,10 +643,16 @@ export default ({
         ? event.target.getID()
         : event.target.get('id');
 
-      if (event.target.get('type') === 'node')
-        handleNodeSelectChange(id, localGraph, data);
+      if (id.includes(tableLevelLineageIdSuffix))
+        handleComboSelectChange(
+          id.replace(`-${tableLevelLineageIdSuffix}`, ''),
+          localG,
+          false
+        );
+      else if (event.target.get('type') === 'node')
+        handleNodeSelectChange(id, localG, data);
       else if (event.target.get('type') === 'combo')
-        handleComboSelectChange(id, localGraph);
+        handleComboSelectChange(id, localG, false);
     });
 
     const defaultNodeId =
@@ -653,7 +684,7 @@ export default ({
   const updateGraph = async (selectedEl: SelectedElement, data: GraphData) => {
     if (!graph) return;
 
-    const localGraph = graph;
+    let localGraph = graph;
 
     const selectedNodes = localGraph.findAllByState('node', 'selected');
     selectedNodes.forEach((node) => node.clearStates());
@@ -663,19 +694,28 @@ export default ({
     selectedCombos.forEach((combo) => combo.clearStates());
 
     localGraph.set('rawData', graphSourceData);
+
+    const currZoom = localGraph.getZoom();
+
     if (selectedEl.type === 'combo') localGraph.read(data);
     else if (selectedEl.type === 'node')
       localGraph.read(
         loadData(selectedEl.id, DataLoadNodeType.Self, [], [], data)
       );
 
+    localGraph.zoom(currZoom);
+    const element = localGraph.findById(selectedEl.id);
+    localGraph.focusItem(element);
+
     const target = localGraph.findById(selectedEl.id);
+
+    localGraph = setTableLevelLineagePlaceholderState(localGraph);
 
     localGraph.setItemState(target, 'selected', true);
 
     if (selectedEl.type === 'node')
       handleNodeSelectChange(target.getID(), localGraph, data);
-    else handleComboSelectChange(target.get('id'), localGraph);
+    else handleComboSelectChange(target.get('id'), localGraph, true);
   };
 
   const buildData = (): GraphData => {
@@ -723,6 +763,41 @@ export default ({
     return { combos, nodes, edges };
   };
 
+  const getTableLevelLineage = (dataToAdjust: GraphData): GraphData => {
+    const tableLevelLineageFixNodes: NodeConfig[] = dataToAdjust.combos
+      ? dataToAdjust.combos.map((combo) => ({
+          id: `${combo.id}-${tableLevelLineageIdSuffix}`,
+          label: `<<<<< ${combo.label} >>>>>`,
+          comboId: combo.id,
+        }))
+      : [];
+
+    const comboIds = dataToAdjust.combos
+      ? dataToAdjust.combos.map((combo) => combo.id)
+      : [];
+
+    return {
+      combos: dataToAdjust.combos
+        ? dataToAdjust.combos.map((combo) => ({ ...combo, label: '' }))
+        : [],
+      nodes: dataToAdjust.nodes
+        ? tableLevelLineageFixNodes.concat(dataToAdjust.nodes)
+        : tableLevelLineageFixNodes,
+      edges: dataToAdjust.edges
+        ? dataToAdjust.edges.map((edge) => ({
+            source:
+              edge.source && comboIds.includes(edge.source)
+                ? `${edge.source}-${tableLevelLineageIdSuffix}`
+                : edge.source,
+            target:
+              edge.target && comboIds.includes(edge.target)
+                ? `${edge.target}-${tableLevelLineageIdSuffix}`
+                : edge.target,
+          }))
+        : [],
+    };
+  };
+
   useEffect(() => {
     if (!graphSourceData) return;
 
@@ -734,6 +809,8 @@ export default ({
 
       data = defaultData;
     }
+
+    data = getTableLevelLineage(data);
 
     if (!graph) {
       buildGraph(data);

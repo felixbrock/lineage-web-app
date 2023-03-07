@@ -35,6 +35,7 @@ import Chip from '@mui/material/Chip';
 import TablePagination from '@mui/material/TablePagination';
 import ObservabilityApiRepo, {
   CreateQuantTestSuiteProps,
+  CustomThresholdMode,
   UpdateTestSuiteObject,
 } from '../../infrastructure/observability-api/observability-api-repo';
 import {
@@ -237,6 +238,10 @@ interface TestSuiteConfig {
   type: TestType;
   activated: boolean;
   testSuiteId?: string;
+  customLowerThreshold?: number;
+  customUpperThreshold?: number;
+  customLowerThresholdMode: CustomThresholdMode;
+  customUpperThresholdMode: CustomThresholdMode;
 }
 
 interface ColumnTestConfig {
@@ -245,7 +250,10 @@ interface ColumnTestConfig {
   type: string;
   cron: string;
   executionType: ExecutionType;
-  threshold: number;
+  customLowerThreshold?: number;
+  customUpperThreshold?: number;
+  customLowerThresholdMode: CustomThresholdMode;
+  customUpperThresholdMode: CustomThresholdMode;
   testConfigs: TestSuiteConfig[];
   testsActivated: boolean;
 }
@@ -262,7 +270,6 @@ interface MaterializationTestsConfig {
   label: string;
   cron?: string;
   executionType?: ExecutionType;
-  threshold?: number;
   testDefinitionSummary: TestDefinitionSummary[];
   testsActivated: boolean;
   materializationTestConfigs: TestSuiteConfig[];
@@ -650,7 +657,7 @@ export default (): ReactElement => {
       testSelectionLocal[props[1]].columnTestConfigs[columnTestConfigIndex];
 
     const config = columnTestConfigs.testConfigs[testConfigIndex];
-    const testSuiteId = config.testSuiteId ? config.testSuiteId : undefined;
+    const testSuiteId = config.testSuiteId;
 
     if (!testSuiteId) {
       const materalization = materializations.find((el) => el.id === props[1]);
@@ -673,7 +680,6 @@ export default (): ReactElement => {
             targetResourceId: column.id,
             type,
             executionType: columnTestConfigs.executionType,
-            threshold: columnTestConfigs.threshold,
             cron: columnTestConfigs.cron,
           },
         ],
@@ -837,7 +843,6 @@ export default (): ReactElement => {
               type,
               cron:
                 testSelectionLocal[props[1]].cron || buildCronExpression('1h'),
-              threshold: testSelectionLocal[props[1]].threshold || 3,
               executionType:
                 testSelectionLocal[props[1]].executionType || 'frequency',
             },
@@ -934,13 +939,14 @@ export default (): ReactElement => {
           targetResourceId: column.id,
           type,
           cron: config.cron,
-          threshold: config.threshold,
           executionType: config.executionType,
         });
       } else
         updateObjects.push({
           id: testConfig.testSuiteId,
-          props: { activated: newActivatedValue },
+          props: {
+            activated: newActivatedValue,
+          },
         });
     });
 
@@ -1206,7 +1212,18 @@ export default (): ReactElement => {
           label: columnLabel,
           cron: suites.length ? suites[0].cron : buildCronExpression('1h'),
           executionType: suites.length ? suites[0].executionType : 'frequency',
-          threshold: suites.length ? suites[0].threshold : 3,
+          customLowerThreshold: suites.length
+            ? suites[0].customLowerThreshold
+            : undefined,
+          customLowerThresholdMode: suites.length
+            ? suites[0].customLowerThresholdMode
+            : 'absolute',
+          customUpperThreshold: suites.length
+            ? suites[0].customUpperThreshold
+            : undefined,
+          customUpperThresholdMode: suites.length
+            ? suites[0].customUpperThresholdMode
+            : 'absolute',
           testConfigs: allowedTests.map((element): TestSuiteConfig => {
             const typeSpecificSuite = suites.find((el) => el.type === element);
 
@@ -1214,6 +1231,8 @@ export default (): ReactElement => {
               return {
                 type: element,
                 activated: false,
+                customLowerThresholdMode: 'absolute',
+                customUpperThresholdMode: 'absolute',
               };
 
             if (!testsActivated && typeSpecificSuite.activated)
@@ -1223,6 +1242,12 @@ export default (): ReactElement => {
               type: element,
               activated: typeSpecificSuite.activated,
               testSuiteId: typeSpecificSuite.id,
+              customLowerThreshold: typeSpecificSuite.customLowerThreshold,
+              customUpperThreshold: typeSpecificSuite.customUpperThreshold,
+              customLowerThresholdMode:
+                typeSpecificSuite.customLowerThresholdMode,
+              customUpperThresholdMode:
+                typeSpecificSuite.customUpperThresholdMode,
             };
           }),
           testsActivated,
@@ -1312,13 +1337,6 @@ export default (): ReactElement => {
             .map((el) => el.cron)
         )
       );
-      const uniqueThresholdValues = Array.from(
-        new Set(
-          columnTestConfigs
-            .filter((el) => el.testsActivated)
-            .map((el) => el.threshold)
-        )
-      );
 
       const materializationSuites = testSuites.filter(
         (el) => el.target.targetResourceId === materialization.id
@@ -1363,10 +1381,6 @@ export default (): ReactElement => {
         navExpanded: false,
         columnTestConfigs: columnTestConfigs,
         cron: uniqueCronValues.length === 1 ? uniqueCronValues[0] : undefined,
-        threshold:
-          uniqueThresholdValues.length === 1
-            ? uniqueThresholdValues[0]
-            : undefined,
         testDefinitionSummary,
         testsActivated: false,
         materializationTestConfigs: [
@@ -1378,6 +1392,18 @@ export default (): ReactElement => {
             testSuiteId: matColumnCountMatches.length
               ? matColumnCountMatches[0].id
               : undefined,
+            customLowerThresholdMode: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customLowerThresholdMode
+              : 'absolute',
+            customUpperThresholdMode: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customUpperThresholdMode
+              : 'absolute',
+            customLowerThreshold: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customLowerThreshold
+              : undefined,
+            customUpperThreshold: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customUpperThreshold
+              : undefined,
           },
           {
             type: 'MaterializationRowCount',
@@ -1386,6 +1412,18 @@ export default (): ReactElement => {
               : false,
             testSuiteId: matRowCountMatches.length
               ? matRowCountMatches[0].id
+              : undefined,
+            customLowerThresholdMode: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customLowerThresholdMode
+              : 'absolute',
+            customUpperThresholdMode: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customUpperThresholdMode
+              : 'absolute',
+            customLowerThreshold: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customLowerThreshold
+              : undefined,
+            customUpperThreshold: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customUpperThreshold
               : undefined,
           },
           {
@@ -1396,6 +1434,18 @@ export default (): ReactElement => {
             testSuiteId: matFreshnessMatches.length
               ? matFreshnessMatches[0].id
               : undefined,
+            customLowerThresholdMode: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customLowerThresholdMode
+              : 'absolute',
+            customUpperThresholdMode: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customUpperThresholdMode
+              : 'absolute',
+            customLowerThreshold: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customLowerThreshold
+              : undefined,
+            customUpperThreshold: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customUpperThreshold
+              : undefined,
           },
           {
             type: 'MaterializationSchemaChange',
@@ -1404,6 +1454,18 @@ export default (): ReactElement => {
               : false,
             testSuiteId: matSchemaChangeMatches.length
               ? matSchemaChangeMatches[0].id
+              : undefined,
+            customLowerThresholdMode: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customLowerThresholdMode
+              : 'absolute',
+            customUpperThresholdMode: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customUpperThresholdMode
+              : 'absolute',
+            customLowerThreshold: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customLowerThreshold
+              : undefined,
+            customUpperThreshold: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customUpperThreshold
               : undefined,
           },
         ],

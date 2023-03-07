@@ -1,4 +1,5 @@
 import { ExecutionType } from '../../pages/test/test';
+import { CustomThresholdMode } from './observability-api-repo';
 
 interface BaseTestSuiteDto {
   id: string;
@@ -18,7 +19,10 @@ interface BaseTestSuiteDto {
 }
 
 export interface TestSuiteDto extends BaseTestSuiteDto {
-  threshold: number;
+  customLowerThreshold?: number;
+  customUpperThreshold?: number;
+  customLowerThresholdMode: CustomThresholdMode;
+  customUpperThresholdMode: CustomThresholdMode;
   importanceThreshold: number;
   boundsIntervalRelative: number;
 }

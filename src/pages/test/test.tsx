@@ -46,7 +46,7 @@ import AccountDto from '../../infrastructure/account-api/account-dto';
 import SearchBox from '../lineage/components/search-box';
 import Navbar from '../../components/navbar';
 import LoadingScreen from '../../components/loading-screen';
-import Scheduler, { SchedulerState } from './scheduler/scheduler';
+import Scheduler, { SchedulerState } from './components/scheduler/scheduler';
 
 const showRealData = true;
 

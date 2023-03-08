@@ -968,7 +968,9 @@ export default (): ReactElement => {
                           <MetricsGraph
                             option={defaultOption(
                               getDefaultYAxis(
-                                ...getHistoryMinMax(entry.historyDataSet)
+                                getHistoryMinMax(entry.historyDataSet),
+                                true,
+                                true
                               ),
                               entry.historyDataSet
                             )}
@@ -1083,7 +1085,9 @@ export default (): ReactElement => {
                           <MetricsGraph
                             option={defaultOption(
                               getDefaultYAxis(
-                                ...getHistoryMinMax(entry.historyDataSet)
+                                getHistoryMinMax(entry.historyDataSet),
+                                true,
+                                true
                               ),
                               entry.historyDataSet
                             )}

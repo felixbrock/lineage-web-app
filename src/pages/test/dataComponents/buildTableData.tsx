@@ -19,7 +19,7 @@ interface Column {
 
 type Columns = Map<string, Column>;
 
-interface Table {
+export interface Table {
   tests: Test[];
   name: string;
   columns?: Columns;
@@ -27,7 +27,7 @@ interface Table {
 
 type Tables = Map<string, Table>;
 
-interface Schema {
+export interface Schema {
   tables: Tables;
 }
 
@@ -37,7 +37,7 @@ interface Database {
   schemas: Schemas;
 }
 
-type TableData = Map<string, Database>;
+export type TableData = Map<string, Database>;
 
 // Optimize by returning all objects as maps with id as key
 // Optimize by having the test only target one id (not columnName, databaseName ...)
@@ -66,7 +66,7 @@ export function buildTableData(
       }
     }
 
-    for (let test of [...testSuites, ...qualTestSuites]) {
+    [...testSuites, ...qualTestSuites].forEach((test) => {
       const testTargetId = test.target.targetResourceId;
 
       const testInfo: Test = {
@@ -90,7 +90,7 @@ export function buildTableData(
         };
         addTestToMap(tables, table, testTargetId, testInfo);
       }
-    }
+    });
     return [columns, tables];
   }
 
@@ -99,15 +99,21 @@ export function buildTableData(
   function mapColsToTable() {
     const columnsToTableMap = new Map();
 
-    for (let col of cols) {
-      const columnTable = columnsToTableMap.get(col.materializationId);
+    for (const col of cols) {
+      const { id, materializationId, name } = col;
+      let columnObject: Column = {
+        tests: [],
+        name: name,
+      };
+      const columnTable = columnsToTableMap.get(materializationId);
+      const columnTest = allColumnTests.get(id);
+      if (columnTest) {
+        columnObject = columnTest;
+      }
       if (columnTable) {
-        columnTable.set(col.id, allColumnTests.get(col.id));
+        columnTable.set(id, columnObject);
       } else {
-        columnsToTableMap.set(
-          col.materializationId,
-          new Map([[col.id, allTableTests.get(col.id)]])
-        );
+        columnsToTableMap.set(materializationId, new Map([[id, columnObject]]));
       }
     }
 
@@ -119,9 +125,8 @@ export function buildTableData(
   function mapTables(allTableTests: Tables) {
     const tableData: TableData = new Map();
 
-    for (let mat of mats) {
-      const databaseName = mat.databaseName;
-      const schemaName = mat.schemaName;
+    mats.forEach((mat) => {
+      const { databaseName, schemaName } = mat;
 
       const database = tableData.get(databaseName);
 
@@ -134,8 +139,10 @@ export function buildTableData(
       const tableTests = allTableTests.get(mat.id);
       const tableColumns = columnsToTableMap.get(mat.id);
 
-      if (tableTests) tableObject['tests'] = tableTests.tests;
-      if (tableColumns) tableObject['columns'] = tableColumns;
+      tableObject.tests = tableTests?.tests ?? [];
+      tableObject.columns = tableColumns ?? new Map();
+      //      if (tableTests) tableObject['tests'] = tableTests.tests;
+      //      if (tableColumns) tableObject['columns'] = tableColumns;
 
       const schemaObject: Schema = {
         tables: new Map([[mat.id, tableObject]]),
@@ -153,10 +160,10 @@ export function buildTableData(
           schemas: new Map([[schemaName, schemaObject]]),
         });
       }
-    }
+    });
     return tableData;
   }
 
   const tableData = mapTables(allTableTests);
-  return tableData
+  return tableData;
 }

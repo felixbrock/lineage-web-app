@@ -7,6 +7,9 @@ import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/colum
 import ObservabilityApiRepo from '../../infrastructure/observability-api/observability-api-repo';
 import { useEffect, useState } from 'react';
 import { buildTestSelectionStructure } from './dataComponents/buildTestData';
+import { buildTableData } from './dataComponents/buildTableData';
+import { tab } from '@testing-library/user-event/dist/tab';
+import { table } from 'console';
 
 export default function NewTest() {
   const [jwt, account] = useAccount();
@@ -18,17 +21,22 @@ export default function NewTest() {
     ObservabilityApiRepo.getQualTestSuites
   );
 
-  const [tableData, setTableData] = useState({ loading: true, tableData: {} });
+  const [tableData, setTableData] = useState({
+    loading: true,
+    tableData: new Map(),
+  });
 
   useEffect(() => {
     if (mats && cols && testSuite && testQualSuite) {
-      setTableData(
-        buildTestSelectionStructure(mats, cols, testSuite, testQualSuite)
-      );
+      const start = performance.now();
+      setTableData({
+        loading: false,
+        tableData: buildTableData(mats, cols, testSuite, testQualSuite),
+      });
+      const end = performance.now();
+      console.log(end - start);
     }
   }, [mats, cols, testSuite, testQualSuite]);
-
-  console.log(tableData);
 
   return (
     <div className="h-screen w-full">
@@ -42,21 +50,28 @@ export default function NewTest() {
           />
         </div>
       </div>
-      <MainTable
-        buttonOnClick={() => {}}
-        buttonText={'Columns'}
-        buttonIsDisclosure={true}
-        buttonDisclosureContent={
-          <MainTable
-            buttonOnClick={() => {}}
-            buttonText={'Edit'}
-            buttonIsDisclosure={false}
-            darkMode={true}
-          />
-        }
-        tableTitle="Tables"
-        tableDescription="This is a test description."
-      />
+      {tableData.loading ? (
+        <> </>
+      ) : (
+        <MainTable
+          tableData={tableData}
+          buttonOnClick={() => {}}
+          buttonText={'Columns'}
+          buttonIsDisclosure={true}
+          buttonDisclosureContent={
+            <MainTable
+              tableData={tableData}
+              buttonOnClick={() => {}}
+              buttonText={'Edit'}
+              buttonIsDisclosure={false}
+              darkMode={true}
+            />
+          }
+          tableTitle="Tables"
+          tableDescription="This is a test description."
+          darkMode={false}
+        />
+      )}
     </div>
   );
 }

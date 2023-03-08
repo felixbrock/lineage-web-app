@@ -47,6 +47,7 @@ import SearchBox from '../lineage/components/search-box';
 import Navbar from '../../components/navbar';
 import LoadingScreen from '../../components/loading-screen';
 import Scheduler, { SchedulerState } from './components/scheduler/scheduler';
+import CustomScheduler from './components/scheduler/custom/custom-scheduler';
 
 const showRealData = true;
 
@@ -707,52 +708,46 @@ export default (): ReactElement => {
   const handleGoSettingsButtonClick = (event: any) => {
     const id = event.target.id as string;
     const props = id.split('--');
-    console.log(props);
   };
 
-  const testSuiteSettingsButton =
-    (target: { id: string; matId?: string }, testType: TestType) => () => {
-      let testConfig: { testSuiteId?: string } | undefined;
-      if (target.matId) {
-        const columnTestConfig = testSelection[
-          target.matId
-        ].columnTestConfigs.find((el) => el.id === target.id);
-        if (!columnTestConfig) throw new Error('Test config not found');
+  const testSuiteSettingsButton = (
+    target: { id: string; matId?: string },
+    testType: TestType
+  ) => {
+    let testConfig: { testSuiteId?: string } | undefined;
+    if (target.matId) {
+      const columnTestConfig = testSelection[
+        target.matId
+      ].columnTestConfigs.find((el) => el.id === target.id);
+      if (!columnTestConfig) throw new Error('Test config not found');
 
-        testConfig = columnTestConfig.testConfigs.find(
-          (el) => el.type === testType
-        );
-        if (!testConfig) throw new Error('Test config not found');
-      } else {
-        const matTestConfig = testSelection[target.id];
-        if (!matTestConfig) throw new Error('Test config not found');
+      testConfig = columnTestConfig.testConfigs.find(
+        (el) => el.type === testType
+      );
+      if (!testConfig) throw new Error('Test config not found');
+    } else {
+      const matTestConfig = testSelection[target.id];
+      if (!matTestConfig) throw new Error('Test config not found');
 
-        testConfig = matTestConfig.materializationTestConfigs.find(
-          (el) => el.type === testType
-        );
-        if (!testConfig) throw new Error('Test config not found');
-      }
+      testConfig = matTestConfig.materializationTestConfigs.find(
+        (el) => el.type === testType
+      );
+      if (!testConfig) throw new Error('Test config not found');
+    }
 
-      const button =
-        testConfig && testConfig.testSuiteId ? (
-          <button
-            id={`${testType}--${testConfig.testSuiteId}--settings`}
-            className=" mx-2 rounded-full bg-violet-500 px-2 py-1 text-center  font-bold   text-white hover:bg-violet-700 "
-            onClick={handleGoSettingsButtonClick}
-          >
-            <GoSettings />
-          </button>
-        ) : (
-          <button
-            className=" mx-2 rounded-full bg-violet-500 px-2 py-1 text-center  font-bold   text-white hover:bg-violet-700 "
-            disabled={true}
-          >
-            <GoSettings />
-          </button>
-        );
+    const button = (
+      <button
+        id={`${testType}--${testConfig.testSuiteId}--settings`}
+        className=" mx-2 rounded-full bg-violet-500 px-2 py-1 text-center  font-bold   text-white hover:bg-violet-700 "
+        onClick={handleGoSettingsButtonClick}
+        hidden={!(testConfig && testConfig.testSuiteId)}
+      >
+        <GoSettings />
+      </button>
+    );
 
-      return button;
-    };
+    return button;
+  };
 
   const handleMatTestButtonClick = async (event: any) => {
     const id = event.target.id as string;
@@ -1765,10 +1760,12 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestButtonClick}
             />
+            <p>test</p>
             {testSuiteSettingsButton(
               { id: props.materializationId },
               materializationRowCountType
             )}
+            <p>test</p>
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
             <Button
@@ -2217,6 +2214,11 @@ export default (): ReactElement => {
         closeCallback={closeSchedulerCallback}
         createdScheduleCallback={createdScheduleCallback}
         cronExpression={schedulerProps.cronExp}
+      />
+      <CustomScheduler
+        expressionParts={schedulerProps.expressionParts}
+        onBlurCallback={onBlurCallback}
+        onChangeCallback={onChangeCallback}
       />
     </ThemeProvider>
   );

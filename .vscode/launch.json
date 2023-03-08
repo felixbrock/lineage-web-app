@@ -2,9 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "msedge",
+      "type": "chrome",
       "request": "launch",
-      "name": "Launch Edge against localhost",
+      "name": "Debug in Brave",
+      "runtimeExecutable": "/usr/bin/brave-browser",
       "url": "http://localhost:3006",
       "webRoot": "${workspaceFolder}"
     }

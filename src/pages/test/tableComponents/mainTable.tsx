@@ -54,14 +54,12 @@ export function SchemaComponent({
   if (darkMode) selectionTextColor = 'text-white';
   if (darkMode) buttonTextColor = 'text-white';
 
-
   let columns: any;
   if (schemaData.tables) {
-      columns = Array.from(schemaData.tables)
+    columns = Array.from(schemaData.tables);
   } else {
-      columns = Array.from(schemaData.columns)
+    columns = Array.from(schemaData.columns);
   }
-
 
   return (
     <>
@@ -71,9 +69,10 @@ export function SchemaComponent({
             <>
               <tr
                 key={tableId}
-                className={
-                  ids.includes(tableId) ? selectionBgColor : undefined
-                }
+                className={classNames(
+                  ids.includes(tableId) ? selectionBgColor : '',
+                  'relative left-6 border border-gray-100'
+                )}
               >
                 <td className="relative w-16 px-8 sm:w-12 sm:px-6">
                   {ids.includes(tableId) && (
@@ -97,9 +96,7 @@ export function SchemaComponent({
                   className={classNames(
                     'hover:' + bgColor,
                     'max-w-[12rem] truncate py-4 pr-3 text-sm font-medium hover:absolute hover:z-10 hover:mt-4 hover:-ml-1.5 hover:max-w-[50rem] hover:p-2 hover:drop-shadow-xl',
-                    ids.includes(tableId)
-                      ? selectionTextColor
-                      : textColor
+                    ids.includes(tableId) ? selectionTextColor : textColor
                   )}
                 >
                   {tableData.name}
@@ -114,7 +111,7 @@ export function SchemaComponent({
                     {<OptionMenu />}
                   </td>
                 )}
-                <td className="min-w-[6rem] whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium sm:pr-3">
+                <td className="relative right-6 min-w-[6rem] whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium sm:pr-3">
                   {buttonIsDisclosure ? (
                     <Disclosure.Button className={buttonTextColor}>
                       {buttonText}
@@ -128,16 +125,16 @@ export function SchemaComponent({
               </tr>
               <Disclosure.Panel as="tr">
                 <td colSpan={12}>
-                {buttonIsDisclosure && (
-            <MainTable
-              tableData={{loading: false, tableData: tableData}}
-              buttonOnClick={() => {}}
-              buttonText={'Edit'}
-              buttonIsDisclosure={false}
-              darkMode={true}
-            />
-            )}
-            </td>
+                  {buttonIsDisclosure && (
+                    <MainTable
+                      tableData={{ loading: false, tableData: tableData }}
+                      buttonOnClick={() => {}}
+                      buttonText={'Edit'}
+                      buttonIsDisclosure={false}
+                      darkMode={true}
+                    />
+                  )}
+                </td>
               </Disclosure.Panel>
             </>
           )}
@@ -174,27 +171,27 @@ export default function MainTable({
   const [ids, setIds] = useState([]);
 
   function calculateMaxSelected(tableData: TableData) {
-      // implement
-      if (tableData.columns) return Array.from(tableData.columns.keys())
+    // implement
+    if (tableData.columns) return Array.from(tableData.columns.keys());
 
     let tableIds: string[] = [];
 
-
     tableData.forEach((database) => {
-        database.schemas.forEach((schema) => {
-            tableIds = [...tableIds, ...Array.from(schema.tables.keys())]
-        })
-    })
-    return tableIds
-
+      database.schemas.forEach((schema) => {
+        tableIds = [...tableIds, ...Array.from(schema.tables.keys())];
+      });
+    });
+    return tableIds;
   }
 
-  const elementIds = useMemo(() => calculateMaxSelected(tableData.tableData), [tableData])
-  const maxSelected = elementIds.length
+  const elementIds = useMemo(
+    () => calculateMaxSelected(tableData.tableData),
+    [tableData]
+  );
+  const maxSelected = elementIds.length;
 
   useLayoutEffect(() => {
-    const isIndeterminate =
-      ids.length > 0 && ids.length < maxSelected;
+    const isIndeterminate = ids.length > 0 && ids.length < maxSelected;
     setChecked(ids.length === maxSelected);
     setIndeterminate(isIndeterminate);
     checkbox.current.indeterminate = isIndeterminate;
@@ -249,10 +246,7 @@ export default function MainTable({
               <table className="min-w-full table-fixed divide-y divide-gray-300 break-normal">
                 <thead>
                   <tr>
-                    <th
-                      scope="col"
-                      className="relative w-16 px-8 sm:w-12 sm:px-6"
-                    >
+                    <th scope="col" className="relative w-12 px-8">
                       <input
                         type="checkbox"
                         className="absolute left-6 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito sm:left-4"
@@ -266,7 +260,7 @@ export default function MainTable({
                         key={heading}
                         scope="col"
                         className={classNames(
-                          'px-3 py-3.5 text-left text-sm font-semibold',
+                          'px-3 py-3.5 pl-6 text-left text-sm font-semibold',
                           textColor
                         )}
                       >
@@ -281,38 +275,53 @@ export default function MainTable({
                     </th>
                   </tr>
                 </thead>
-                <tbody className={classNames('divide-y divide-gray-200')}>
-                {console.log(tableData.tableData.columns)}
-                {tableData.tableData.columns ? (
-                                        <SchemaComponent
-                                          schemaData={tableData.tableData}
-                                          textColor={textColor}
-                                          bgColor={bgColor}
-                                          darkMode={darkMode}
-                                          ids={ids}
-                                          setIds={setIds}
-                                          buttonText={buttonText}
-                                          buttonOnClick={buttonOnClick}
-                                          buttonIsDisclosure={
-                                            buttonIsDisclosure
-                                          }
-                                          buttonDisclosureContent={
-                                            buttonDisclosureContent
-                                          }
-                                        />
-                ) : (
+                <tbody className={classNames('')}>
+                  {console.log(tableData.tableData.columns)}
+                  {tableData.tableData.columns ? (
+                    <SchemaComponent
+                      schemaData={tableData.tableData}
+                      textColor={textColor}
+                      bgColor={bgColor}
+                      darkMode={darkMode}
+                      ids={ids}
+                      setIds={setIds}
+                      buttonText={buttonText}
+                      buttonOnClick={buttonOnClick}
+                      buttonIsDisclosure={buttonIsDisclosure}
+                      buttonDisclosureContent={buttonDisclosureContent}
+                    />
+                  ) : (
                     <>
                       {Array.from(tableData.tableData).map(
                         ([databaseName, database]) => {
                           return (
                             <>
-                              <h1>{databaseName}</h1>
+                              <div
+                                key={databaseName}
+                                className="relative h-6 w-full"
+                              >
+                                <h1 className="absolute w-64">
+                                  Database: {databaseName}
+                                </h1>
+                              </div>
                               <Fragment key={databaseName}>
                                 {Array.from(database.schemas).map(
                                   ([schemaName, schema]) => {
                                     return (
                                       <>
-                                        <div key={schemaName}>{schemaName}</div>
+                                        <div className="relative ml-1">
+                                          <div className="absolute h-3 w-px bg-gray-800"></div>
+                                          <div className="absolute mt-3 h-px w-4 bg-gray-800"></div>
+                                        </div>
+                                        <div
+                                          key={schemaName}
+                                          className="relative h-6 w-full"
+                                        >
+                                          <h1 className="absolute left-6 w-64">
+                                            Schema: {schemaName}
+                                          </h1>
+                                        </div>
+                                        {/**<div className="absolute left-8 h-[6.6rem] w-px bg-black"></div>**/}
                                         <SchemaComponent
                                           schemaData={schema}
                                           textColor={textColor}
@@ -339,7 +348,7 @@ export default function MainTable({
                         }
                       )}
                     </>
-                        )}
+                  )}
                 </tbody>
               </table>
             </div>

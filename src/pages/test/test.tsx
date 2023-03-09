@@ -979,7 +979,7 @@ export default (): ReactElement => {
             materializationType: parseMaterializationType(materalization.type),
             targetResourceId: materalization.id,
             type,
-            cron: testSelectionLocal[matId].cron || buildCronExpression('1h'),
+            cron: testSelectionLocal[matId].cron || buildCronExpression('3h'),
             executionType:
               testSelectionLocal[matId].executionType || 'frequency',
           },
@@ -1044,7 +1044,7 @@ export default (): ReactElement => {
             materializationType: parseMaterializationType(materalization.type),
             targetResourceId: materalization.id,
             type,
-            cron: testSelectionLocal[matId].cron || buildCronExpression('1h'),
+            cron: testSelectionLocal[matId].cron || buildCronExpression('3h'),
             executionType:
               testSelectionLocal[matId].executionType || 'frequency',
           },
@@ -1453,7 +1453,7 @@ export default (): ReactElement => {
           id: column.id,
           type: column.dataType,
           label: columnLabel,
-          cron: suites.length ? suites[0].cron : buildCronExpression('1h'),
+          cron: suites.length ? suites[0].cron : buildCronExpression('3h'),
           executionType: suites.length ? suites[0].executionType : 'frequency',
           testConfigs: allowedTests.map((element): TestSuiteConfig => {
             const typeSpecificSuite = suites.find((el) => el.type === element);

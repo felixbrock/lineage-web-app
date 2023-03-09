@@ -79,7 +79,7 @@ export function MenuComponent() {
 
 export function OptionMenu() {
     return (
-        <div className='relative flex items-center justify-center'>
+        <div className='relative flex items-center justify-start'>
             <Toggle />
             <MenuComponent />
         </div>

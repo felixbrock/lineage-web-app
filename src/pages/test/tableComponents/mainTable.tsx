@@ -95,7 +95,7 @@ export function SchemaComponent({
                 <td
                   className={classNames(
                     'hover:' + bgColor,
-                    'max-w-[12rem] truncate py-4 pr-3 text-sm font-medium hover:absolute hover:z-10 hover:mt-4 hover:-ml-1.5 hover:max-w-[50rem] hover:p-2 hover:drop-shadow-xl',
+                    'max-w-[8rem] min-w-[8rem] truncate py-4 pr-3 text-sm font-medium hover:absolute hover:z-10 hover:mt-4 hover:-ml-1.5 hover:max-w-[50rem] hover:p-2 hover:drop-shadow-xl',
                     ids.includes(tableId) ? selectionTextColor : textColor
                   )}
                 >
@@ -249,19 +249,23 @@ export default function MainTable({
                     <th scope="col" className="relative w-12 px-8">
                       <input
                         type="checkbox"
-                        className="absolute left-6 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito sm:left-4"
+                        className={classNames(
+                          'absolute top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito',
+                          tableData.tableData.columns ? 'left-10' : 'left-6'
+                        )}
                         ref={checkbox}
                         checked={checked}
                         onChange={toggleAll}
                       />
                     </th>
-                    {tableHeadings.map((heading) => (
+                    {tableHeadings.map((heading, index) => (
                       <th
                         key={heading}
                         scope="col"
                         className={classNames(
-                          'px-3 py-3.5 pl-6 text-left text-sm font-semibold',
-                          textColor
+                          'px-3 py-3.5 text-left text-sm font-semibold',
+                          textColor,
+                          index == 0 ? 'pl-6' : 'relative left-6'
                         )}
                       >
                         {heading}

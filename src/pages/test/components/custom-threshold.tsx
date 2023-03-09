@@ -55,7 +55,10 @@ export default ({
   show: boolean;
   state: CustomThresholdState;
   target: { id: string; matId?: string };
-  testSuiteRep: { id: string; type: string };
+  testSuiteRep: {
+    id: string;
+    type: string;
+  };
   orgId: string;
   jwt: string;
   closeCallback: () => void;
@@ -349,7 +352,7 @@ export default ({
           );
 
         setTestHistory(
-          testHistories.length
+          testHistories.length && testHistories[0].historyDataSet.length
             ? testHistories[0].historyDataSet
             : Array(10).fill({
                 value: 0,

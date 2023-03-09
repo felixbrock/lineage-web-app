@@ -1,11 +1,15 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import appConfig from '../../config';
+import { CustomThreshold } from '../../pages/test/components/custom-threshold';
 import {
   ExecutionType,
   MaterializationType,
   TestType,
 } from '../../pages/test/test';
 import { QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
+
+export const customThresholdModes = ['absolute', 'relative'] as const;
+export type CustomThresholdMode = typeof customThresholdModes[number];
 
 interface PostAnomalyFeedbackDto {
   alertId: string;
@@ -29,9 +33,7 @@ interface CreateTestSuiteBaseProps {
   type: TestType;
 }
 
-export interface CreateQuantTestSuiteProps extends CreateTestSuiteBaseProps {
-  threshold: number;
-}
+export type CreateQuantTestSuiteProps = CreateTestSuiteBaseProps;
 
 export type CreateQualTestSuiteProps = CreateTestSuiteBaseProps;
 
@@ -42,22 +44,21 @@ interface BaseUpdateTestSuiteObjProps {
 }
 
 interface UpdateTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
-  threshold?: number;
+  customLowerThreshold?: CustomThreshold;
+  customUpperThreshold?: CustomThreshold;
   importanceThreshold?: number;
   boundsIntervalRelative?: number;
 }
 
-interface BaseUpdateTestSuiteObject {
+export interface UpdateTestSuiteObject {
   id: string;
-  props: BaseUpdateTestSuiteObjProps;
-}
-
-export interface UpdateTestSuiteObject
-  extends Omit<BaseUpdateTestSuiteObject, 'props'> {
   props: UpdateTestSuiteObjProps;
 }
 
-export type UpdateQualTestSuiteObject = BaseUpdateTestSuiteObject;
+export interface UpdateQualTestSuiteObject {
+  id: string;
+  props: BaseUpdateTestSuiteObjProps;
+}
 
 // TODO - Implement Interface regarding clean architecture
 export default class ObservabilityApiRepo {

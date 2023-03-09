@@ -16,6 +16,8 @@ export interface HistoryDataSet {
   valueLowerBound: number;
   valueUpperBound: number;
   value: number;
+  customLowerThreshold?: number;
+  customUpperThreshold?: number;
 }
 
 export interface TestHistoryEntry {
@@ -33,13 +35,18 @@ export const effectiveRateSampleDistributionData = [
 ].reverse();
 
 export const getDefaultYAxis = (
-  minBase: number,
-  maxBase: number
+  minMaxBase: [number, number],
+  cutMin: boolean,
+  cutMax: boolean
 ): YAXisComponentOption => ({
   type: 'value',
   boundaryGap: [0, '30%'],
-  min: `${minBase - (maxBase - minBase) * 0.5}`,
-  max: `${maxBase + (maxBase - minBase) * 0.5}`,
+  min: cutMin
+    ? `${minMaxBase[0] - (minMaxBase[1] - minMaxBase[0]) * 0.5}`
+    : minMaxBase[0],
+  max: cutMax
+    ? `${minMaxBase[1] + (minMaxBase[1] - minMaxBase[0]) * 0.5}`
+    : minMaxBase[1],
 });
 
 interface VisualPiece {
@@ -59,6 +66,42 @@ const isVisualPiece = (obj: unknown): obj is VisualPiece =>
 //     (el) => !!el && typeof el === 'object' && 'xAxis' in obj
 //   );
 
+const getGraphData = (data: HistoryDataSet[]) =>
+  data.reduce(
+    (
+      accumulation: {
+        xAxis: string[];
+        values: number[];
+        upperBounds: number[];
+        lowerBounds: number[];
+        customLowerThresholds: number[];
+        customUpperThresholds: number[];
+      },
+      el: HistoryDataSet
+    ) => {
+      const localAcc = accumulation;
+
+      localAcc.xAxis.push(el.timestamp);
+      localAcc.values.push(el.value);
+      localAcc.upperBounds.push(el.valueUpperBound);
+      localAcc.lowerBounds.push(el.valueLowerBound);
+      if (el.customLowerThreshold)
+        localAcc.customLowerThresholds.push(el.customLowerThreshold);
+      if (el.customUpperThreshold)
+        localAcc.customUpperThresholds.push(el.customUpperThreshold);
+
+      return localAcc;
+    },
+    {
+      xAxis: [],
+      values: [],
+      upperBounds: [],
+      lowerBounds: [],
+      customLowerThresholds: [],
+      customUpperThresholds: [],
+    }
+  );
+
 export const defaultOption = (
   yAxis: YAXisComponentOption,
   data: HistoryDataSet[]
@@ -69,33 +112,86 @@ export const defaultOption = (
       (el.userFeedbackIsAnomaly === -1 || el.userFeedbackIsAnomaly === 1)
   );
 
-  const { xAxis, values, upperBounds, lowerBounds } = data.reduce(
-    (
-      accumulation: {
-        xAxis: string[];
-        values: number[];
-        upperBounds: number[];
-        lowerBounds: number[];
+  const graphData = getGraphData(data);
+
+  const series: { type: 'line'; [key: string]: unknown }[] = [
+    {
+      name: 'Lower Threshold',
+      type: 'line',
+      smooth: true,
+      showSymbol: false,
+      lineStyle: {
+        type: 'dotted',
+        color: 'grey',
+        // width: 2
       },
-      el: HistoryDataSet
-    ) => {
-      const localAcc = accumulation;
-
-      localAcc.xAxis.push(el.timestamp);
-      localAcc.values.push(el.value);
-      localAcc.upperBounds.push(el.valueUpperBound);
-      localAcc.lowerBounds.push(el.valueLowerBound);
-
-      return localAcc;
+      itemStyle: {
+        color: 'grey',
+      },
+      data: graphData.lowerBounds,
     },
-    { xAxis: [], values: [], upperBounds: [], lowerBounds: [] }
-  );
+    {
+      name: 'Upper Threshold',
+      type: 'line',
+      smooth: true,
+      showSymbol: false,
+      lineStyle: {
+        type: 'dashed',
+        color: 'grey',
+        // width: 2
+      },
+      itemStyle: {
+        color: 'grey',
+      },
+      data: graphData.upperBounds,
+    },
+    {
+      name: 'Measurements',
+      type: 'line',
+      smooth: true,
+      lineStyle: {
+        color: '#6f47ef',
+        // width: 2
+      },
+      itemStyle: {
+        color: '#6f47ef',
+      },
+      areaStyle: hasAnomolies ? {} : undefined,
+      data: graphData.values,
+    },
+    {
+      name: 'Custom Upper Threshold',
+      type: 'line',
+      smooth: true,
+      lineStyle: {
+        color: '#31ad35',
+        // width: 2
+      },
+      itemStyle: {
+        color: '#31ad35',
+      },
+      data: graphData.customUpperThresholds,
+    },
+    {
+      name: 'Custom Lower Threshold',
+      type: 'line',
+      smooth: true,
+      lineStyle: {
+        color: '#3160ad',
+        // width: 2
+      },
+      itemStyle: {
+        color: '#3160ad',
+      },
+      data: graphData.customLowerThresholds,
+    },
+  ];
 
   return {
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: xAxis,
+      data: graphData.xAxis,
       min: 'dataMin',
       max: 'dataMax',
     },
@@ -125,52 +221,7 @@ export const defaultOption = (
             .filter(isVisualPiece),
         }
       : undefined,
-    series: [
-      {
-        name: 'Lower Threshold',
-        type: 'line',
-        smooth: true,
-        showSymbol: false,
-        lineStyle: {
-          type: 'dotted',
-          color: 'grey',
-          // width: 2
-        },
-        itemStyle: {
-          color: 'grey',
-        },
-        data: lowerBounds,
-      },
-      {
-        name: 'Upper Threshold',
-        type: 'line',
-        smooth: true,
-        showSymbol: false,
-        lineStyle: {
-          type: 'dashed',
-          color: 'grey',
-          // width: 2
-        },
-        itemStyle: {
-          color: 'grey',
-        },
-        data: upperBounds,
-      },
-      {
-        name: 'Measurements',
-        type: 'line',
-        smooth: true,
-        lineStyle: {
-          color: '#6f47ef',
-          // width: 2
-        },
-        itemStyle: {
-          color: '#6f47ef',
-        },
-        areaStyle: hasAnomolies ? {} : undefined,
-        data: values,
-      },
-    ],
+    series,
     tooltip: {
       trigger: 'axis',
     },

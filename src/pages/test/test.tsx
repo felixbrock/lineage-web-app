@@ -34,6 +34,7 @@ import Chip from '@mui/material/Chip';
 import TablePagination from '@mui/material/TablePagination';
 import ObservabilityApiRepo, {
   CreateQuantTestSuiteProps,
+  CustomThresholdMode,
   UpdateTestSuiteObject,
 } from '../../infrastructure/observability-api/observability-api-repo';
 import {
@@ -44,7 +45,10 @@ import AccountDto from '../../infrastructure/account-api/account-dto';
 import SearchBox from '../lineage/components/search-box';
 import Navbar from '../../components/navbar';
 import LoadingScreen from '../../components/loading-screen';
-import Scheduler, { SchedulerState } from './scheduler/scheduler';
+import Scheduler, { SchedulerState } from './components/scheduler/scheduler';
+import CustomThreshold, {
+  CustomThresholdState,
+} from './components/custom-threshold';
 
 const showRealData = true;
 
@@ -232,11 +236,20 @@ export const parseExecutionType = (executionType: unknown): ExecutionType => {
   throw new Error('Provision of invalid type');
 };
 
-interface TestSuiteConfig {
+interface BaseTestSuiteConfig {
   type: TestType;
   activated: boolean;
   testSuiteId?: string;
 }
+
+interface TestSuiteConfig extends BaseTestSuiteConfig {
+  customLowerThreshold?: number;
+  customUpperThreshold?: number;
+  customLowerThresholdMode: CustomThresholdMode;
+  customUpperThresholdMode: CustomThresholdMode;
+}
+
+type QualTestSuiteConfig = BaseTestSuiteConfig;
 
 interface ColumnTestConfig {
   id: string;
@@ -244,7 +257,6 @@ interface ColumnTestConfig {
   type: string;
   cron: string;
   executionType: ExecutionType;
-  threshold: number;
   testConfigs: TestSuiteConfig[];
   testsActivated: boolean;
 }
@@ -261,10 +273,10 @@ interface MaterializationTestsConfig {
   label: string;
   cron?: string;
   executionType?: ExecutionType;
-  threshold?: number;
   testDefinitionSummary: TestDefinitionSummary[];
   testsActivated: boolean;
   materializationTestConfigs: TestSuiteConfig[];
+  materializationQualTestConfigs: QualTestSuiteConfig[];
 }
 
 const theme = createTheme({
@@ -335,6 +347,177 @@ export default (): ReactElement => {
       state: 'saving',
       cronExp: expression,
     });
+  };
+
+  const [customThresholdState, setCustomThresholdState] = useState<{
+    show: boolean;
+    target?: {
+      target: {
+        id: string;
+        matId?: string;
+      };
+      testSuiteRep: {
+        id: string;
+        type: string;
+        state: CustomThresholdState;
+      };
+    };
+  }>({
+    show: false,
+  });
+
+  const closeCustomThresholdCallback = () => {
+    setCustomThresholdState({ ...customThresholdState, show: false });
+  };
+
+  const saveCustomThresholdCallback = async (
+    state: CustomThresholdState,
+    testSuiteId: string,
+    target: { id: string; matId?: string }
+  ): Promise<void> => {
+    await ObservabilityApiRepo.updateTestSuites(
+      [
+        {
+          id: testSuiteId,
+          props: {
+            customLowerThreshold: state.lower,
+            customUpperThreshold: state.upper,
+          },
+        },
+      ],
+      jwt
+    );
+
+    const testSelectionLocal = testSelection;
+
+    if (target.matId) {
+      const colConfigIndex = testSelectionLocal[
+        target.matId
+      ].columnTestConfigs.findIndex((col) => col.id === target.id);
+
+      if (colConfigIndex === -1)
+        throw new Error('Invalid target for custom threshold setting target');
+
+      const testConfigIndex = testSelectionLocal[
+        target.matId
+      ].columnTestConfigs[colConfigIndex].testConfigs.findIndex(
+        (config) => config.testSuiteId === testSuiteId
+      );
+
+      if (testConfigIndex === -1)
+        throw new Error('Invalid target for custom threshold setting target');
+
+      testSelectionLocal[target.matId].columnTestConfigs[
+        colConfigIndex
+      ].testConfigs[colConfigIndex].customLowerThreshold = state.lower.value;
+      testSelectionLocal[target.matId].columnTestConfigs[
+        colConfigIndex
+      ].testConfigs[colConfigIndex].customLowerThresholdMode = state.lower.mode;
+      testSelectionLocal[target.matId].columnTestConfigs[
+        colConfigIndex
+      ].testConfigs[colConfigIndex].customUpperThreshold = state.upper.value;
+      testSelectionLocal[target.matId].columnTestConfigs[
+        colConfigIndex
+      ].testConfigs[colConfigIndex].customUpperThresholdMode = state.upper.mode;
+    } else {
+      const testConfigIndex = testSelectionLocal[
+        target.id
+      ].materializationTestConfigs.findIndex(
+        (config) => config.testSuiteId === testSuiteId
+      );
+
+      if (testConfigIndex === -1)
+        throw new Error('Invalid target for custom threshold setting target');
+
+      testSelectionLocal[target.id].materializationTestConfigs[
+        testConfigIndex
+      ].customLowerThreshold = state.lower.value;
+
+      testSelectionLocal[target.id].materializationTestConfigs[
+        testConfigIndex
+      ].customLowerThresholdMode = state.lower.mode;
+
+      testSelectionLocal[target.id].materializationTestConfigs[
+        testConfigIndex
+      ].customUpperThreshold = state.upper.value;
+
+      testSelectionLocal[target.id].materializationTestConfigs[
+        testConfigIndex
+      ].customUpperThresholdMode = state.upper.mode;
+    }
+
+    setTestSelection({ ...testSelectionLocal });
+
+    setCustomThresholdState({
+      target: undefined,
+      show: false,
+    });
+  };
+
+  const handleShowCustomThreshold = (event: any) => {
+    if (customThresholdState.show)
+      setCustomThresholdState({
+        target: undefined,
+        show: false,
+      });
+    else {
+      const componentId = event.target.id;
+      const idEls = componentId.split('#$*');
+
+      const targetIdEls = idEls[1].split('.');
+
+      if (targetIdEls.lenth > 2 || targetIdEls.length === 0)
+        throw new Error('Invalid target for custom threshold setting target');
+
+      let testConfig:
+        | {
+            customLowerThreshold?: number;
+            customUpperThreshold?: number;
+            customLowerThresholdMode: CustomThresholdMode;
+            customUpperThresholdMode: CustomThresholdMode;
+          }
+        | undefined;
+      if (targetIdEls.length === 2) {
+        const target = testSelection[targetIdEls[0]].columnTestConfigs.find(
+          (col) => col.id === targetIdEls[1]
+        );
+
+        if (!target)
+          throw new Error('Invalid target for custom threshold setting target');
+
+        testConfig = target.testConfigs.find((test) => test.type === idEls[0]);
+      } else
+        testConfig = testSelection[
+          targetIdEls[0]
+        ].materializationTestConfigs.find((test) => test.type === idEls[0]);
+
+      if (!testConfig)
+        throw new Error('Invalid target for custom threshold setting target');
+
+      setCustomThresholdState({
+        target: {
+          target: {
+            id: targetIdEls.length === 2 ? targetIdEls[1] : targetIdEls[0],
+            matId: targetIdEls.length === 2 ? targetIdEls[0] : undefined,
+          },
+          testSuiteRep: {
+            id: idEls[2],
+            type: idEls[0],
+            state: {
+              lower: {
+                value: testConfig.customLowerThreshold,
+                mode: testConfig.customLowerThresholdMode,
+              },
+              upper: {
+                value: testConfig.customUpperThreshold,
+                mode: testConfig.customUpperThresholdMode,
+              },
+            },
+          },
+        },
+        show: true,
+      });
+    }
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -434,7 +617,7 @@ export default (): ReactElement => {
 
   const handleColumnFrequencyChange = (event: SelectChangeEvent<string>) => {
     const componentName = event.target.name;
-    const nameElements = componentName.split('--');
+    const nameElements = componentName.split('#$*');
     const target = { matId: nameElements[1], colId: nameElements[2] };
 
     const frequency = parseFrequency(event.target.value);
@@ -530,7 +713,7 @@ export default (): ReactElement => {
 
   const handleMatFrequencyChange = (event: SelectChangeEvent<string>) => {
     const componentName = event.target.name;
-    const nameElements = componentName.split('--');
+    const nameElements = componentName.split('#$*');
     const target = { matId: nameElements[1] };
 
     const frequency = parseFrequency(event.target.value);
@@ -575,7 +758,7 @@ export default (): ReactElement => {
 
   const handleTestSelectButtonClick = async (event: any) => {
     const id = event.target.id as string;
-    const props = id.split('--');
+    const props = id.split('#$*');
 
     const type = parseTestType(props[0]);
 
@@ -649,7 +832,7 @@ export default (): ReactElement => {
       testSelectionLocal[props[1]].columnTestConfigs[columnTestConfigIndex];
 
     const config = columnTestConfigs.testConfigs[testConfigIndex];
-    const testSuiteId = config.testSuiteId ? config.testSuiteId : undefined;
+    const testSuiteId = config.testSuiteId;
 
     if (!testSuiteId) {
       const materalization = materializations.find((el) => el.id === props[1]);
@@ -672,7 +855,6 @@ export default (): ReactElement => {
             targetResourceId: column.id,
             type,
             executionType: columnTestConfigs.executionType,
-            threshold: columnTestConfigs.threshold,
             cron: columnTestConfigs.cron,
           },
         ],
@@ -697,25 +879,71 @@ export default (): ReactElement => {
       );
   };
 
-  const handleMatTestButtonClick = async (event: any) => {
-    const id = event.target.id as string;
-    const props = id.split('--');
+  const testSuiteSettingsButton = (
+    target: { id: string; matId?: string },
+    testType: TestType
+  ) => {
+    let testConfig:
+      | {
+          testSuiteId?: string;
+          customLowerThreshold?: number;
+          customUpperThreshold?: number;
+        }
+      | undefined;
+    if (target.matId) {
+      const columnTestConfig = testSelection[
+        target.matId
+      ].columnTestConfigs.find((el) => el.id === target.id);
+      if (!columnTestConfig) throw new Error('Test config not found');
 
-    const type = parseTestType(props[0]);
+      testConfig = columnTestConfig.testConfigs.find(
+        (el) => el.type === testType
+      );
+      if (!testConfig) throw new Error('Test config not found');
+    } else {
+      const matTestConfig = testSelection[target.id];
+      if (!matTestConfig) throw new Error('Test config not found');
 
+      testConfig = matTestConfig.materializationTestConfigs.find(
+        (el) => el.type === testType
+      );
+      if (!testConfig) throw new Error('Test config not found');
+    }
+
+    const button = (
+      <button
+        id={`${testType}#$*${
+          target.matId ? `${target.matId}.${target.id}` : `${target.id}`
+        }#$*${testConfig.testSuiteId}#$*settings`}
+        className={`text m-1 rounded-full p-1   font-bold  ${
+          testConfig.customLowerThreshold || testConfig.customUpperThreshold
+            ? 'bg-violet-300 hover:bg-white'
+            : 'hover:bg-violet-300'
+        }`}
+        onClick={handleShowCustomThreshold}
+        hidden={!(testConfig && testConfig.testSuiteId)}
+      >
+        ...
+      </button>
+    );
+
+    return button;
+  };
+
+  const changeMatQualTestState = async (matId: string, type: TestType) => {
     const testSelectionLocal = testSelection;
 
     const testIndex = testSelectionLocal[
-      props[1]
-    ].materializationTestConfigs.findIndex((el) => el.type === type);
+      matId
+    ].materializationQualTestConfigs.findIndex((el) => el.type === type);
 
     if (testIndex === -1) throw new Error('Mat test config not found');
 
     const invertedValueActivated =
-      !testSelectionLocal[props[1]].materializationTestConfigs[testIndex]
+      !testSelectionLocal[matId].materializationQualTestConfigs[testIndex]
         .activated;
 
-    testSelectionLocal[props[1]].materializationTestConfigs[
+    testSelectionLocal[matId].materializationQualTestConfigs[
       testIndex
     ].activated = invertedValueActivated;
 
@@ -723,89 +951,130 @@ export default (): ReactElement => {
     setTestSelection({ ...testSelectionLocal });
 
     const matTestConfig =
-      testSelectionLocal[props[1]].materializationTestConfigs[testIndex];
+      testSelectionLocal[matId].materializationQualTestConfigs[testIndex];
     if (matTestConfig.testSuiteId) {
       const testSuiteId = matTestConfig.testSuiteId;
 
-      if (type === 'MaterializationSchemaChange')
-        ObservabilityApiRepo.updateQualTestSuites(
-          [{ id: testSuiteId, props: { activated: invertedValueActivated } }],
-          jwt
-        );
-      else
-        ObservabilityApiRepo.updateTestSuites(
-          [{ id: testSuiteId, props: { activated: invertedValueActivated } }],
-          jwt
-        );
+      ObservabilityApiRepo.updateQualTestSuites(
+        [{ id: testSuiteId, props: { activated: invertedValueActivated } }],
+        jwt
+      );
 
       setTestSelection({ ...testSelectionLocal });
       return;
     }
 
-    const materalization = materializations.find((el) => el.id === props[1]);
+    const materalization = materializations.find((el) => el.id === matId);
 
     if (!materalization) throw new Error('Materialization not found');
 
-    let testSuite: TestSuiteDto | QualTestSuiteDto;
-    if (type === 'MaterializationSchemaChange')
-      testSuite = (
-        await ObservabilityApiRepo.postQualTestSuites(
-          [
-            {
-              activated: invertedValueActivated,
-              databaseName: materalization.databaseName,
-              schemaName: materalization.schemaName,
-              materializationName: materalization.name,
-              materializationType: parseMaterializationType(
-                materalization.type
-              ),
-              targetResourceId: materalization.id,
-              type,
-              cron:
-                testSelectionLocal[props[1]].cron || buildCronExpression('1h'),
-              executionType:
-                testSelectionLocal[props[1]].executionType || 'frequency',
-            },
-          ],
-          jwt
-        )
-      )[0];
-    else
-      testSuite = (
-        await ObservabilityApiRepo.postTestSuites(
-          [
-            {
-              activated: invertedValueActivated,
-              databaseName: materalization.databaseName,
-              schemaName: materalization.schemaName,
-              materializationName: materalization.name,
-              materializationType: parseMaterializationType(
-                materalization.type
-              ),
-              targetResourceId: materalization.id,
-              type,
-              cron:
-                testSelectionLocal[props[1]].cron || buildCronExpression('1h'),
-              threshold: testSelectionLocal[props[1]].threshold || 3,
-              executionType:
-                testSelectionLocal[props[1]].executionType || 'frequency',
-            },
-          ],
-          jwt
-        )
-      )[0];
+    const testSuite = (
+      await ObservabilityApiRepo.postQualTestSuites(
+        [
+          {
+            activated: invertedValueActivated,
+            databaseName: materalization.databaseName,
+            schemaName: materalization.schemaName,
+            materializationName: materalization.name,
+            materializationType: parseMaterializationType(materalization.type),
+            targetResourceId: materalization.id,
+            type,
+            cron: testSelectionLocal[matId].cron || buildCronExpression('1h'),
+            executionType:
+              testSelectionLocal[matId].executionType || 'frequency',
+          },
+        ],
+        jwt
+      )
+    )[0];
 
-    testSelectionLocal[props[1]].materializationTestConfigs[testIndex] = {
-      ...testSelectionLocal[props[1]].materializationTestConfigs[testIndex],
+    testSelectionLocal[matId].materializationTestConfigs[testIndex] = {
+      ...testSelectionLocal[matId].materializationTestConfigs[testIndex],
       testSuiteId: testSuite.id,
     };
 
     setTestSelection({ ...testSelectionLocal });
   };
 
+  const changeMatQuantTestState = async (matId: string, type: TestType) => {
+    const testSelectionLocal = testSelection;
+
+    const testIndex = testSelectionLocal[
+      matId
+    ].materializationTestConfigs.findIndex((el) => el.type === type);
+
+    if (testIndex === -1) throw new Error('Mat test config not found');
+
+    const invertedValueActivated =
+      !testSelectionLocal[matId].materializationTestConfigs[testIndex]
+        .activated;
+
+    testSelectionLocal[matId].materializationTestConfigs[testIndex].activated =
+      invertedValueActivated;
+
+    // to give instant feedback to user that test was activated/deactivated
+    setTestSelection({ ...testSelectionLocal });
+
+    const matTestConfig =
+      testSelectionLocal[matId].materializationTestConfigs[testIndex];
+    if (matTestConfig.testSuiteId) {
+      const testSuiteId = matTestConfig.testSuiteId;
+
+      ObservabilityApiRepo.updateTestSuites(
+        [{ id: testSuiteId, props: { activated: invertedValueActivated } }],
+        jwt
+      );
+
+      setTestSelection({ ...testSelectionLocal });
+      return;
+    }
+
+    const materalization = materializations.find((el) => el.id === matId);
+
+    if (!materalization) throw new Error('Materialization not found');
+
+    const testSuite = (
+      await ObservabilityApiRepo.postTestSuites(
+        [
+          {
+            activated: invertedValueActivated,
+            databaseName: materalization.databaseName,
+            schemaName: materalization.schemaName,
+            materializationName: materalization.name,
+            materializationType: parseMaterializationType(materalization.type),
+            targetResourceId: materalization.id,
+            type,
+            cron: testSelectionLocal[matId].cron || buildCronExpression('1h'),
+            executionType:
+              testSelectionLocal[matId].executionType || 'frequency',
+          },
+        ],
+        jwt
+      )
+    )[0];
+
+    testSelectionLocal[matId].materializationTestConfigs[testIndex] = {
+      ...testSelectionLocal[matId].materializationTestConfigs[testIndex],
+      testSuiteId: testSuite.id,
+    };
+
+    setTestSelection({ ...testSelectionLocal });
+  };
+
+  const handleMatTestButtonClick = async (event: any) => {
+    const id = event.target.id as string;
+    const props = id.split('#$*');
+
+    const type = parseTestType(props[0]);
+
+    if (type === 'MaterializationSchemaChange')
+      changeMatQualTestState(props[1], type);
+    else changeMatQuantTestState(props[1], type);
+  };
+
   const handleMatLevelColumnTestButtonClick = async (event: any) => {
     const id = event.target.id as string;
-    const props = id.split('--');
+    const props = id.split('#$*');
 
     const type = parseTestType(props[0]);
 
@@ -883,13 +1152,14 @@ export default (): ReactElement => {
           targetResourceId: column.id,
           type,
           cron: config.cron,
-          threshold: config.threshold,
           executionType: config.executionType,
         });
       } else
         updateObjects.push({
           id: testConfig.testSuiteId,
-          props: { activated: newActivatedValue },
+          props: {
+            activated: newActivatedValue,
+          },
         });
     });
 
@@ -982,7 +1252,7 @@ export default (): ReactElement => {
           <FormControl sx={{ m: 1, maxwidth: 100 }} size="small">
             <Select
               autoWidth={true}
-              name={`frequency--${materializationId}--${columnId}`}
+              name={`frequency#$*${materializationId}#$*${columnId}`}
               disabled={
                 !getColumnTestConfig(materializationId, columnId).testsActivated
               }
@@ -1008,20 +1278,26 @@ export default (): ReactElement => {
 
         <TableCell sx={tableCellSx} align="left">
           {allowedTestTypes.includes('ColumnFreshness') ? (
-            <Button
-              id={`${columnFreshnessType}--${materializationId}--${columnId}`}
-              size="large"
-              variant="contained"
-              color={
-                getTestConfig(
-                  getColumnTestConfig(materializationId, columnId),
-                  columnFreshnessType
-                ).activated
-                  ? 'primary'
-                  : 'info'
-              }
-              onClick={handleTestSelectButtonClick}
-            />
+            <>
+              <Button
+                id={`${columnFreshnessType}#$*${materializationId}#$*${columnId}`}
+                size="large"
+                variant="contained"
+                color={
+                  getTestConfig(
+                    getColumnTestConfig(materializationId, columnId),
+                    columnFreshnessType
+                  ).activated
+                    ? 'primary'
+                    : 'info'
+                }
+                onClick={handleTestSelectButtonClick}
+              />
+              {testSuiteSettingsButton(
+                { id: columnId, matId: materializationId },
+                columnFreshnessType
+              )}
+            </>
           ) : (
             <></>
           )}
@@ -1029,20 +1305,26 @@ export default (): ReactElement => {
 
         <TableCell sx={tableCellSx} align="left">
           {allowedTestTypes.includes('ColumnCardinality') ? (
-            <Button
-              id={`${columnCardinalityType}--${materializationId}--${columnId}`}
-              size="large"
-              variant="contained"
-              color={
-                getTestConfig(
-                  getColumnTestConfig(materializationId, columnId),
-                  columnCardinalityType
-                ).activated
-                  ? 'primary'
-                  : 'info'
-              }
-              onClick={handleTestSelectButtonClick}
-            />
+            <>
+              <Button
+                id={`${columnCardinalityType}#$*${materializationId}#$*${columnId}`}
+                size="large"
+                variant="contained"
+                color={
+                  getTestConfig(
+                    getColumnTestConfig(materializationId, columnId),
+                    columnCardinalityType
+                  ).activated
+                    ? 'primary'
+                    : 'info'
+                }
+                onClick={handleTestSelectButtonClick}
+              />
+              {testSuiteSettingsButton(
+                { id: columnId, matId: materializationId },
+                columnCardinalityType
+              )}
+            </>
           ) : (
             <></>
           )}
@@ -1050,20 +1332,26 @@ export default (): ReactElement => {
 
         <TableCell sx={tableCellSx} align="left">
           {allowedTestTypes.includes('ColumnNullness') ? (
-            <Button
-              id={`${columnNullnessType}--${materializationId}--${columnId}`}
-              size="large"
-              variant="contained"
-              color={
-                getTestConfig(
-                  getColumnTestConfig(materializationId, columnId),
-                  columnNullnessType
-                ).activated
-                  ? 'primary'
-                  : 'info'
-              }
-              onClick={handleTestSelectButtonClick}
-            />
+            <>
+              <Button
+                id={`${columnNullnessType}#$*${materializationId}#$*${columnId}`}
+                size="large"
+                variant="contained"
+                color={
+                  getTestConfig(
+                    getColumnTestConfig(materializationId, columnId),
+                    columnNullnessType
+                  ).activated
+                    ? 'primary'
+                    : 'info'
+                }
+                onClick={handleTestSelectButtonClick}
+              />
+              {testSuiteSettingsButton(
+                { id: columnId, matId: materializationId },
+                columnNullnessType
+              )}
+            </>
           ) : (
             <></>
           )}
@@ -1071,20 +1359,26 @@ export default (): ReactElement => {
 
         <TableCell sx={tableCellSx} align="left">
           {allowedTestTypes.includes('ColumnUniqueness') ? (
-            <Button
-              id={`${columnUniquenessType}--${materializationId}--${columnId}`}
-              size="large"
-              variant="contained"
-              color={
-                getTestConfig(
-                  getColumnTestConfig(materializationId, columnId),
-                  columnUniquenessType
-                ).activated
-                  ? 'primary'
-                  : 'info'
-              }
-              onClick={handleTestSelectButtonClick}
-            />
+            <>
+              <Button
+                id={`${columnUniquenessType}#$*${materializationId}#$*${columnId}`}
+                size="large"
+                variant="contained"
+                color={
+                  getTestConfig(
+                    getColumnTestConfig(materializationId, columnId),
+                    columnUniquenessType
+                  ).activated
+                    ? 'primary'
+                    : 'info'
+                }
+                onClick={handleTestSelectButtonClick}
+              />
+              {testSuiteSettingsButton(
+                { id: columnId, matId: materializationId },
+                columnUniquenessType
+              )}
+            </>
           ) : (
             <></>
           )}
@@ -1092,20 +1386,26 @@ export default (): ReactElement => {
 
         <TableCell sx={tableCellSx} align="left">
           {allowedTestTypes.includes('ColumnDistribution') ? (
-            <Button
-              id={`${columnDistributionType}--${materializationId}--${columnId}`}
-              size="large"
-              variant="contained"
-              color={
-                getTestConfig(
-                  getColumnTestConfig(materializationId, columnId),
-                  columnDistributionType
-                ).activated
-                  ? 'primary'
-                  : 'info'
-              }
-              onClick={handleTestSelectButtonClick}
-            />
+            <>
+              <Button
+                id={`${columnDistributionType}#$*${materializationId}#$*${columnId}`}
+                size="large"
+                variant="contained"
+                color={
+                  getTestConfig(
+                    getColumnTestConfig(materializationId, columnId),
+                    columnDistributionType
+                  ).activated
+                    ? 'primary'
+                    : 'info'
+                }
+                onClick={handleTestSelectButtonClick}
+              />
+              {testSuiteSettingsButton(
+                { id: columnId, matId: materializationId },
+                columnDistributionType
+              )}
+            </>
           ) : (
             <></>
           )}
@@ -1155,7 +1455,6 @@ export default (): ReactElement => {
           label: columnLabel,
           cron: suites.length ? suites[0].cron : buildCronExpression('1h'),
           executionType: suites.length ? suites[0].executionType : 'frequency',
-          threshold: suites.length ? suites[0].threshold : 3,
           testConfigs: allowedTests.map((element): TestSuiteConfig => {
             const typeSpecificSuite = suites.find((el) => el.type === element);
 
@@ -1163,6 +1462,8 @@ export default (): ReactElement => {
               return {
                 type: element,
                 activated: false,
+                customLowerThresholdMode: 'absolute',
+                customUpperThresholdMode: 'absolute',
               };
 
             if (!testsActivated && typeSpecificSuite.activated)
@@ -1172,6 +1473,12 @@ export default (): ReactElement => {
               type: element,
               activated: typeSpecificSuite.activated,
               testSuiteId: typeSpecificSuite.id,
+              customLowerThreshold: typeSpecificSuite.customLowerThreshold,
+              customUpperThreshold: typeSpecificSuite.customUpperThreshold,
+              customLowerThresholdMode:
+                typeSpecificSuite.customLowerThresholdMode,
+              customUpperThresholdMode:
+                typeSpecificSuite.customUpperThresholdMode,
             };
           }),
           testsActivated,
@@ -1261,13 +1568,6 @@ export default (): ReactElement => {
             .map((el) => el.cron)
         )
       );
-      const uniqueThresholdValues = Array.from(
-        new Set(
-          columnTestConfigs
-            .filter((el) => el.testsActivated)
-            .map((el) => el.threshold)
-        )
-      );
 
       const materializationSuites = testSuites.filter(
         (el) => el.target.targetResourceId === materialization.id
@@ -1312,10 +1612,6 @@ export default (): ReactElement => {
         navExpanded: false,
         columnTestConfigs: columnTestConfigs,
         cron: uniqueCronValues.length === 1 ? uniqueCronValues[0] : undefined,
-        threshold:
-          uniqueThresholdValues.length === 1
-            ? uniqueThresholdValues[0]
-            : undefined,
         testDefinitionSummary,
         testsActivated: false,
         materializationTestConfigs: [
@@ -1327,6 +1623,18 @@ export default (): ReactElement => {
             testSuiteId: matColumnCountMatches.length
               ? matColumnCountMatches[0].id
               : undefined,
+            customLowerThresholdMode: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customLowerThresholdMode
+              : 'absolute',
+            customUpperThresholdMode: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customUpperThresholdMode
+              : 'absolute',
+            customLowerThreshold: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customLowerThreshold
+              : undefined,
+            customUpperThreshold: matColumnCountMatches.length
+              ? matColumnCountMatches[0].customUpperThreshold
+              : undefined,
           },
           {
             type: 'MaterializationRowCount',
@@ -1335,6 +1643,18 @@ export default (): ReactElement => {
               : false,
             testSuiteId: matRowCountMatches.length
               ? matRowCountMatches[0].id
+              : undefined,
+            customLowerThresholdMode: matRowCountMatches.length
+              ? matRowCountMatches[0].customLowerThresholdMode
+              : 'absolute',
+            customUpperThresholdMode: matRowCountMatches.length
+              ? matRowCountMatches[0].customUpperThresholdMode
+              : 'absolute',
+            customLowerThreshold: matRowCountMatches.length
+              ? matRowCountMatches[0].customLowerThreshold
+              : undefined,
+            customUpperThreshold: matRowCountMatches.length
+              ? matRowCountMatches[0].customUpperThreshold
               : undefined,
           },
           {
@@ -1345,7 +1665,21 @@ export default (): ReactElement => {
             testSuiteId: matFreshnessMatches.length
               ? matFreshnessMatches[0].id
               : undefined,
+            customLowerThresholdMode: matFreshnessMatches.length
+              ? matFreshnessMatches[0].customLowerThresholdMode
+              : 'absolute',
+            customUpperThresholdMode: matFreshnessMatches.length
+              ? matFreshnessMatches[0].customUpperThresholdMode
+              : 'absolute',
+            customLowerThreshold: matFreshnessMatches.length
+              ? matFreshnessMatches[0].customLowerThreshold
+              : undefined,
+            customUpperThreshold: matFreshnessMatches.length
+              ? matFreshnessMatches[0].customUpperThreshold
+              : undefined,
           },
+        ],
+        materializationQualTestConfigs: [
           {
             type: 'MaterializationSchemaChange',
             activated: matSchemaChangeMatches.length
@@ -1364,10 +1698,11 @@ export default (): ReactElement => {
     return testSelectionStructure;
   };
 
-  const getMatTestConfig = (matId: string, testType: TestType) => {
-    const config = testSelection[matId].materializationTestConfigs.find(
-      (el) => el.type === testType
-    );
+  const getMatTestConfig = <T extends { type: TestType }>(
+    testType: TestType,
+    configs: T[]
+  ) => {
+    const config = configs.find((el) => el.type === testType);
 
     if (!config) throw new Error('Mat test config not found.');
 
@@ -1433,22 +1768,25 @@ export default (): ReactElement => {
       props.materializationId,
       columnNullnessType
     );
+    const matQualTestConfigs =
+      testSelection[props.materializationId].materializationQualTestConfigs;
+    const matQuantTestConfigs =
+      testSelection[props.materializationId].materializationTestConfigs;
+
     const materializationColumnCountConfig: TestSuiteConfig = getMatTestConfig(
-      props.materializationId,
-      materializationColumnCountType
+      materializationColumnCountType,
+      matQuantTestConfigs
     );
     const materializationRowCountConfig: TestSuiteConfig = getMatTestConfig(
-      props.materializationId,
-      materializationRowCountType
+      materializationRowCountType,
+      matQuantTestConfigs
     );
     const materializationFreshnessConfig: TestSuiteConfig = getMatTestConfig(
-      props.materializationId,
-      materializationFreshnessType
+      materializationFreshnessType,
+      matQuantTestConfigs
     );
-    const materializationSchemaChangeConfig: TestSuiteConfig = getMatTestConfig(
-      props.materializationId,
-      materializationSchemaChangeType
-    );
+    const materializationSchemaChangeConfig: QualTestSuiteConfig =
+      getMatTestConfig(materializationSchemaChangeType, matQualTestConfigs);
 
     const cron = testSelection[props.materializationId].cron;
 
@@ -1461,7 +1799,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="center">
             <FormControl sx={{ m: 1 }} size="small">
               <Select
-                name={`frequency--${props.materializationId}`}
+                name={`frequency#$*${props.materializationId}`}
                 disabled={
                   !testSelection[
                     props.materializationId
@@ -1487,7 +1825,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="left">
             {columnFreshnessSummary.totalCount ? (
               <Button
-                id={`${columnFreshnessType}--${props.materializationId}`}
+                id={`${columnFreshnessType}#$*${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
@@ -1517,7 +1855,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="left">
             {columnCardinalitySummary.totalCount ? (
               <Button
-                id={`${columnCardinalityType}--${props.materializationId}`}
+                id={`${columnCardinalityType}#$*${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
@@ -1549,7 +1887,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="left">
             {columnNullnessSummary.totalCount ? (
               <Button
-                id={`${columnNullnessType}--${props.materializationId}`}
+                id={`${columnNullnessType}#$*${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
@@ -1579,7 +1917,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="left">
             {columnUniquenessSummary.totalCount ? (
               <Button
-                id={`${columnUniquenessType}--${props.materializationId}`}
+                id={`${columnUniquenessType}#$*${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
@@ -1611,7 +1949,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="left">
             {columnDistributionSummary.totalCount ? (
               <Button
-                id={`${columnDistributionType}--${props.materializationId}`}
+                id={`${columnDistributionType}#$*${props.materializationId}`}
                 size="large"
                 variant="contained"
                 color={
@@ -1644,18 +1982,22 @@ export default (): ReactElement => {
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
             <Button
-              id={`${materializationRowCountType}--${props.materializationId}`}
-              size="large"
+              id={`${materializationRowCountType}#$*${props.materializationId}`}
+              size="medium"
               variant="contained"
               color={
                 materializationRowCountConfig.activated ? 'primary' : 'info'
               }
               onClick={handleMatTestButtonClick}
             />
+            {testSuiteSettingsButton(
+              { id: props.materializationId },
+              materializationRowCountType
+            )}
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
             <Button
-              id={`${materializationColumnCountType}--${props.materializationId}`}
+              id={`${materializationColumnCountType}#$*${props.materializationId}`}
               size="large"
               variant="contained"
               color={
@@ -1663,10 +2005,14 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestButtonClick}
             />
+            {testSuiteSettingsButton(
+              { id: props.materializationId },
+              materializationColumnCountType
+            )}
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
             <Button
-              id={`${materializationFreshnessType}--${props.materializationId}`}
+              id={`${materializationFreshnessType}#$*${props.materializationId}`}
               size="large"
               variant="contained"
               color={
@@ -1674,10 +2020,14 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestButtonClick}
             />
+            {testSuiteSettingsButton(
+              { id: props.materializationId },
+              materializationFreshnessType
+            )}
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
             <Button
-              id={`${materializationSchemaChangeType}--${props.materializationId}`}
+              id={`${materializationSchemaChangeType}#$*${props.materializationId}`}
               size="large"
               variant="contained"
               color={
@@ -2101,6 +2451,20 @@ export default (): ReactElement => {
         createdScheduleCallback={createdScheduleCallback}
         cronExpression={schedulerProps.cronExp}
       />
+      {account && customThresholdState.target && customThresholdState.show ? (
+        <CustomThreshold
+          closeCallback={closeCustomThresholdCallback}
+          savedScheduleCallback={saveCustomThresholdCallback}
+          show={customThresholdState.show}
+          state={customThresholdState.target.testSuiteRep.state}
+          target={customThresholdState.target.target}
+          testSuiteRep={customThresholdState.target.testSuiteRep}
+          jwt={jwt}
+          orgId={account?.organizationId}
+        />
+      ) : (
+        <></>
+      )}
     </ThemeProvider>
   );
 };

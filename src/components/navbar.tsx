@@ -11,7 +11,7 @@ type SnapshotState = 'loading' | 'creating' | 'available' | 'not available';
 
 const navigation = [
   { name: 'Lineage', href: '/lineage', current: true },
-  { name: 'Tests', href: '/test', current: false },
+  { name: 'Anomaly Monitors', href: '/test', current: false },
 ];
 const subNavigation = [
   { name: 'Overview', isShown: true, toggle: () => {} },

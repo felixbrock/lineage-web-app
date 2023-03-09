@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import appConfig from '../../config';
+import { CustomThreshold } from '../../pages/test/components/custom-threshold';
 import {
   ExecutionType,
   MaterializationType,
@@ -43,8 +44,8 @@ interface BaseUpdateTestSuiteObjProps {
 }
 
 interface UpdateTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
-  customLowerThreshold?: { value: number; mode: CustomThresholdMode };
-  customUpperThreshold?: { value: number; mode: CustomThresholdMode };
+  customLowerThreshold?: CustomThreshold;
+  customUpperThreshold?: CustomThreshold;
   importanceThreshold?: number;
   boundsIntervalRelative?: number;
 }

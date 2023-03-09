@@ -666,100 +666,19 @@ export default (): ReactElement => {
     let testHistory: { [testSuiteId: string]: TestHistoryEntry };
     IntegrationApiRepo.querySnowflake(testSuiteQuery, jwt)
       .then((results) => {
-        testHistory = results[account.organizationId].reduce(
-          (
-            accumulation: { [testSuiteId: string]: TestHistoryEntry },
-            el: { [key: string]: unknown }
-          ): { [testSuiteId: string]: TestHistoryEntry } => {
-            const localAcc = accumulation;
+        const reps = results[account.organizationId].map((el: any) => ({
+          testSuiteId: el.ID,
+          testType: el.TEST_TYPE,
+        }));
 
-            const { ID: id, TEST_TYPE: testType } = el;
-
-            if (typeof id !== 'string' || typeof testType !== 'string')
-              throw new Error('Receive unexpected types');
-
-            localAcc[id] = { testSuiteId: id, testType, historyDataSet: [] };
-
-            return localAcc;
-          },
-          {}
+        return IntegrationApiRepo.getSelectionTestHistories(
+          reps,
+          account.organizationId,
+          jwt
         );
-
-        const whereCondition = `array_contains(test_history.test_suite_id::variant, array_construct(${Object.values(
-          testHistory
-        )
-          .map((el) => `'${el.testSuiteId}'`)
-          .join(', ')}))`;
-
-        const testHistoryQuery = `
-        select 
-          test_history.test_suite_id as test_suite_id,
-          test_history.value as value,
-          test_executions.executed_on as executed_on,
-          test_results.expected_value_upper_bound as value_upper_bound,
-          test_results.expected_value_lower_bound as value_lower_bound,
-          test_history.is_anomaly as is_anomaly,
-          test_history.user_feedback_is_anomaly as user_feedback_is_anomaly 
-        from cito.observability.test_history as test_history
-        inner join cito.observability.test_executions as test_executions
-          on test_history.execution_id = test_executions.id
-        left join cito.observability.test_results as test_results
-          on test_history.execution_id = test_results.execution_id
-        where ${whereCondition}
-        order by test_executions.executed_on desc limit 200;`;
-
-        return IntegrationApiRepo.querySnowflake(testHistoryQuery, jwt);
       })
-      .then((testHistoryResults) => {
-        const results: { [key: string]: unknown }[] =
-          testHistoryResults[account.organizationId].reverse();
-
-        results.forEach((el: { [key: string]: unknown }) => {
-          const {
-            VALUE: value,
-            TEST_SUITE_ID: testSuiteId,
-            EXECUTED_ON: executedOn,
-            VALUE_UPPER_BOUND: valueUpperBound,
-            VALUE_LOWER_BOUND: valueLowerBound,
-            IS_ANOMALY: isAnomaly,
-            USER_FEEDBACK_IS_ANOMALY: userFeedbackIsAnomaly,
-          } = el;
-
-          const isOptionalOfType = <T,>(
-            val: unknown,
-            targetType:
-              | 'string'
-              | 'number'
-              | 'bigint'
-              | 'boolean'
-              | 'symbol'
-              | 'undefined'
-              | 'object'
-              | 'function'
-          ): val is T => val === null || typeof val === targetType;
-
-          if (
-            typeof value !== 'number' ||
-            typeof testSuiteId !== 'string' ||
-            typeof executedOn !== 'string' ||
-            typeof isAnomaly !== 'boolean' ||
-            typeof userFeedbackIsAnomaly !== 'number' ||
-            !isOptionalOfType<number>(valueLowerBound, 'number') ||
-            !isOptionalOfType<number>(valueUpperBound, 'number')
-          )
-            throw new Error('Received unexpected type');
-
-          testHistory[testSuiteId].historyDataSet.push({
-            isAnomaly,
-            userFeedbackIsAnomaly,
-            timestamp: executedOn,
-            valueLowerBound,
-            valueUpperBound,
-            value,
-          });
-        });
-
-        setSelectionTests(Object.values(testHistory));
+      .then((selectionTestHistories) => {
+        setSelectionTests(selectionTestHistories);
 
         const whereCondition = `array_contains(test_alerts.test_suite_id::variant, array_construct(${Object.values(
           testHistory

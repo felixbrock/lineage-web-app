@@ -1238,10 +1238,42 @@ export default (): ReactElement => {
     const allowedTestTypes = getAllowedTestTypes(columnType);
 
     const columnFreshnessType: TestType = 'ColumnFreshness';
+    const freshnessActivated =
+      allowedTestTypes.includes(columnFreshnessType) &&
+      getTestConfig(
+        getColumnTestConfig(materializationId, columnId),
+        columnFreshnessType
+      ).activated;
+
     const columnCardinalityType: TestType = 'ColumnCardinality';
+    const cardinalityActivated =
+      allowedTestTypes.includes(columnCardinalityType) &&
+      getTestConfig(
+        getColumnTestConfig(materializationId, columnId),
+        columnCardinalityType
+      ).activated;
+
     const columnUniquenessType: TestType = 'ColumnUniqueness';
+    const uniquenessActivated =
+      allowedTestTypes.includes(columnUniquenessType) &&
+      getTestConfig(
+        getColumnTestConfig(materializationId, columnId),
+        columnUniquenessType
+      ).activated;
+
     const columnDistributionType: TestType = 'ColumnDistribution';
+    const distributionActivated =
+      allowedTestTypes.includes(columnDistributionType) &&
+      getTestConfig(
+        getColumnTestConfig(materializationId, columnId),
+        columnDistributionType
+      ).activated;
+
     const columnNullnessType: TestType = 'ColumnNullness';
+    const nullnessActivated = getTestConfig(
+      getColumnTestConfig(materializationId, columnId),
+      columnNullnessType
+    ).activated;
 
     return (
       <TableRow>
@@ -1277,25 +1309,22 @@ export default (): ReactElement => {
         </TableCell>
 
         <TableCell sx={tableCellSx} align="left">
-          {allowedTestTypes.includes('ColumnFreshness') ? (
+          {allowedTestTypes.includes(columnFreshnessType) ? (
             <>
               <Button
                 id={`${columnFreshnessType}#$*${materializationId}#$*${columnId}`}
                 size="large"
                 variant="contained"
-                color={
-                  getTestConfig(
-                    getColumnTestConfig(materializationId, columnId),
-                    columnFreshnessType
-                  ).activated
-                    ? 'primary'
-                    : 'info'
-                }
+                color={freshnessActivated ? 'primary' : 'info'}
                 onClick={handleTestSelectButtonClick}
               />
-              {testSuiteSettingsButton(
-                { id: columnId, matId: materializationId },
-                columnFreshnessType
+              {freshnessActivated ? (
+                testSuiteSettingsButton(
+                  { id: columnId, matId: materializationId },
+                  columnFreshnessType
+                )
+              ) : (
+                <></>
               )}
             </>
           ) : (
@@ -1304,25 +1333,22 @@ export default (): ReactElement => {
         </TableCell>
 
         <TableCell sx={tableCellSx} align="left">
-          {allowedTestTypes.includes('ColumnCardinality') ? (
+          {allowedTestTypes.includes(columnCardinalityType) ? (
             <>
               <Button
                 id={`${columnCardinalityType}#$*${materializationId}#$*${columnId}`}
                 size="large"
                 variant="contained"
-                color={
-                  getTestConfig(
-                    getColumnTestConfig(materializationId, columnId),
-                    columnCardinalityType
-                  ).activated
-                    ? 'primary'
-                    : 'info'
-                }
+                color={cardinalityActivated ? 'primary' : 'info'}
                 onClick={handleTestSelectButtonClick}
               />
-              {testSuiteSettingsButton(
-                { id: columnId, matId: materializationId },
-                columnCardinalityType
+              {cardinalityActivated ? (
+                testSuiteSettingsButton(
+                  { id: columnId, matId: materializationId },
+                  columnCardinalityType
+                )
+              ) : (
+                <></>
               )}
             </>
           ) : (
@@ -1331,25 +1357,22 @@ export default (): ReactElement => {
         </TableCell>
 
         <TableCell sx={tableCellSx} align="left">
-          {allowedTestTypes.includes('ColumnNullness') ? (
+          {allowedTestTypes.includes(columnNullnessType) ? (
             <>
               <Button
                 id={`${columnNullnessType}#$*${materializationId}#$*${columnId}`}
                 size="large"
                 variant="contained"
-                color={
-                  getTestConfig(
-                    getColumnTestConfig(materializationId, columnId),
-                    columnNullnessType
-                  ).activated
-                    ? 'primary'
-                    : 'info'
-                }
+                color={nullnessActivated ? 'primary' : 'info'}
                 onClick={handleTestSelectButtonClick}
               />
-              {testSuiteSettingsButton(
-                { id: columnId, matId: materializationId },
-                columnNullnessType
+              {nullnessActivated ? (
+                testSuiteSettingsButton(
+                  { id: columnId, matId: materializationId },
+                  columnNullnessType
+                )
+              ) : (
+                <></>
               )}
             </>
           ) : (
@@ -1358,25 +1381,22 @@ export default (): ReactElement => {
         </TableCell>
 
         <TableCell sx={tableCellSx} align="left">
-          {allowedTestTypes.includes('ColumnUniqueness') ? (
+          {allowedTestTypes.includes(columnUniquenessType) ? (
             <>
               <Button
                 id={`${columnUniquenessType}#$*${materializationId}#$*${columnId}`}
                 size="large"
                 variant="contained"
-                color={
-                  getTestConfig(
-                    getColumnTestConfig(materializationId, columnId),
-                    columnUniquenessType
-                  ).activated
-                    ? 'primary'
-                    : 'info'
-                }
+                color={uniquenessActivated ? 'primary' : 'info'}
                 onClick={handleTestSelectButtonClick}
               />
-              {testSuiteSettingsButton(
-                { id: columnId, matId: materializationId },
-                columnUniquenessType
+              {uniquenessActivated ? (
+                testSuiteSettingsButton(
+                  { id: columnId, matId: materializationId },
+                  columnUniquenessType
+                )
+              ) : (
+                <></>
               )}
             </>
           ) : (
@@ -1391,19 +1411,16 @@ export default (): ReactElement => {
                 id={`${columnDistributionType}#$*${materializationId}#$*${columnId}`}
                 size="large"
                 variant="contained"
-                color={
-                  getTestConfig(
-                    getColumnTestConfig(materializationId, columnId),
-                    columnDistributionType
-                  ).activated
-                    ? 'primary'
-                    : 'info'
-                }
+                color={distributionActivated ? 'primary' : 'info'}
                 onClick={handleTestSelectButtonClick}
               />
-              {testSuiteSettingsButton(
-                { id: columnId, matId: materializationId },
-                columnDistributionType
+              {distributionActivated ? (
+                testSuiteSettingsButton(
+                  { id: columnId, matId: materializationId },
+                  columnDistributionType
+                )
+              ) : (
+                <></>
               )}
             </>
           ) : (
@@ -1983,7 +2000,7 @@ export default (): ReactElement => {
           <TableCell sx={tableCellSx} align="left">
             <Button
               id={`${materializationRowCountType}#$*${props.materializationId}`}
-              size="medium"
+              size="large"
               variant="contained"
               color={
                 materializationRowCountConfig.activated ? 'primary' : 'info'

@@ -10,7 +10,7 @@ type SnapshotState = 'loading' | 'creating' | 'available' | 'not available';
 
 const navigation = [
   { name: 'Lineage', href: '/lineage', current: true },
-  { name: 'Tests', href: '/test', current: false },
+  { name: 'Anomaly Monitors', href: '/test', current: false },
   { name: 'Alert Center', href: '/alert-center', current: false },
 ];
 const subNavigation = [

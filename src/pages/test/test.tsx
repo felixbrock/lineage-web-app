@@ -1270,10 +1270,12 @@ export default (): ReactElement => {
       ).activated;
 
     const columnNullnessType: TestType = 'ColumnNullness';
-    const nullnessActivated = getTestConfig(
-      getColumnTestConfig(materializationId, columnId),
-      columnNullnessType
-    ).activated;
+    const nullnessActivated =
+      allowedTestTypes.includes(columnNullnessType) &&
+      getTestConfig(
+        getColumnTestConfig(materializationId, columnId),
+        columnNullnessType
+      ).activated;
 
     return (
       <TableRow>
@@ -2007,9 +2009,13 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestButtonClick}
             />
-            {testSuiteSettingsButton(
-              { id: props.materializationId },
-              materializationRowCountType
+            {materializationRowCountConfig.activated ? (
+              testSuiteSettingsButton(
+                { id: props.materializationId },
+                materializationRowCountType
+              )
+            ) : (
+              <></>
             )}
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
@@ -2022,9 +2028,13 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestButtonClick}
             />
-            {testSuiteSettingsButton(
-              { id: props.materializationId },
-              materializationColumnCountType
+            {materializationColumnCountConfig.activated ? (
+              testSuiteSettingsButton(
+                { id: props.materializationId },
+                materializationColumnCountType
+              )
+            ) : (
+              <></>
             )}
           </TableCell>
           <TableCell sx={tableCellSx} align="left">
@@ -2037,9 +2047,13 @@ export default (): ReactElement => {
               }
               onClick={handleMatTestButtonClick}
             />
-            {testSuiteSettingsButton(
-              { id: props.materializationId },
-              materializationFreshnessType
+            {materializationFreshnessConfig.activated ? (
+              testSuiteSettingsButton(
+                { id: props.materializationId },
+                materializationFreshnessType
+              )
+            ) : (
+              <></>
             )}
           </TableCell>
           <TableCell sx={tableCellSx} align="left">

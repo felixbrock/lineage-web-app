@@ -409,16 +409,18 @@ export default (): ReactElement => {
 
       testSelectionLocal[target.matId].columnTestConfigs[
         colConfigIndex
-      ].testConfigs[colConfigIndex].customLowerThreshold = state.lower.value;
+      ].testConfigs[testConfigIndex].customLowerThreshold = state.lower.value;
       testSelectionLocal[target.matId].columnTestConfigs[
         colConfigIndex
-      ].testConfigs[colConfigIndex].customLowerThresholdMode = state.lower.mode;
+      ].testConfigs[testConfigIndex].customLowerThresholdMode =
+        state.lower.mode;
       testSelectionLocal[target.matId].columnTestConfigs[
         colConfigIndex
-      ].testConfigs[colConfigIndex].customUpperThreshold = state.upper.value;
+      ].testConfigs[testConfigIndex].customUpperThreshold = state.upper.value;
       testSelectionLocal[target.matId].columnTestConfigs[
         colConfigIndex
-      ].testConfigs[colConfigIndex].customUpperThresholdMode = state.upper.mode;
+      ].testConfigs[testConfigIndex].customUpperThresholdMode =
+        state.upper.mode;
     } else {
       const testConfigIndex = testSelectionLocal[
         target.id

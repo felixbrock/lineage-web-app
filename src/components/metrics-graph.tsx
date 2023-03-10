@@ -164,6 +164,7 @@ export const defaultOption = (
       type: 'line',
       smooth: true,
       lineStyle: {
+        type: 'dashed',
         color: '#31ad35',
         // width: 2
       },
@@ -177,6 +178,7 @@ export const defaultOption = (
       type: 'line',
       smooth: true,
       lineStyle: {
+        type: 'dotted',
         color: '#3160ad',
         // width: 2
       },

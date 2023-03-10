@@ -666,10 +666,12 @@ export default (): ReactElement => {
     let testHistory: { [testSuiteId: string]: TestHistoryEntry };
     IntegrationApiRepo.querySnowflake(testSuiteQuery, jwt)
       .then((results) => {
-        const reps = results[account.organizationId].map((el: any) => ({
-          testSuiteId: el.ID,
-          testType: el.TEST_TYPE,
-        }));
+        const reps = results[account.organizationId].map(
+          (el: any): { id: string; type: string } => ({
+            id: el.ID,
+            type: el.TEST_TYPE,
+          })
+        );
 
         return IntegrationApiRepo.getSelectionTestHistories(
           reps,

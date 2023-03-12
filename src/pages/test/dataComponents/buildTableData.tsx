@@ -10,6 +10,8 @@ interface Test {
   active: boolean;
   cron: string;
   threshold: string;
+  frequencyRange?: [number, number];
+  activeChildren?: number;
 }
 
 interface Column {
@@ -38,6 +40,21 @@ interface Database {
 }
 
 export type TableData = Map<string, Database>;
+
+function cronNumber(cron: string): number {
+  const cronParts = {
+    '* * * ? *': 1,
+    '*/3 * * ? *': 3,
+    '*/6 * * ? *': 6,
+    '*/12 * * ? *': 12,
+    '* * ? *': 24,
+  };
+
+  for (const [cronPart, numberInH] of Object.entries(cronParts)) {
+    if (cron.includes(cronPart)) return numberInH;
+  }
+  return 0; // custom
+}
 
 // Optimize by returning all objects as maps with id as key
 // Optimize by having the test only target one id (not columnName, databaseName ...)
@@ -141,8 +158,53 @@ export function buildTableData(
 
       tableObject.tests = tableTests?.tests ?? [];
       tableObject.columns = tableColumns ?? new Map();
-      //      if (tableTests) tableObject['tests'] = tableTests.tests;
-      //      if (tableColumns) tableObject['columns'] = tableColumns;
+
+      // add table summaries
+      tableObject.columns?.forEach((column, key) => {
+        if (column.tests.length === 0) return;
+        column.tests.forEach((columnTest) => {
+          const tableTest = tableObject.tests.find(
+            (tableTest) => tableTest.name === columnTest.name
+          );
+
+          const numericalFrequency = cronNumber(columnTest.cron);
+
+          if (tableTest) {
+            if (columnTest.active) tableTest.activeChildren++;
+            if (tableTest.cron === 'custom') return;
+            if (numericalFrequency === 0) {
+              tableTest.cron = 'custom';
+              tableTest.frequencyRange = undefined;
+              return;
+            }
+
+            if (tableTest.frequencyRange) {
+              const numericalFrequency = cronNumber(columnTest.cron);
+
+              if (tableTest.frequencyRange[0] > numericalFrequency) {
+                tableTest.frequencyRange[0] = numericalFrequency;
+              }
+              if (tableTest.frequencyRange[1] < numericalFrequency) {
+                tableTest.frequencyRange[1] = numericalFrequency;
+              }
+            }
+          } else {
+            const testSummary: Test = {
+              name: columnTest.name,
+              active: false,
+              cron: numericalFrequency === 0 ? 'custom' : '',
+              threshold: '',
+              activeChildren: columnTest.active ? 1 : 0,
+              frequencyRange:
+                numericalFrequency === 0
+                  ? undefined
+                  : [numericalFrequency, numericalFrequency],
+            };
+
+            tableObject.tests.push(testSummary);
+          }
+        });
+      });
 
       const schemaObject: Schema = {
         tables: new Map([[mat.id, tableObject]]),
@@ -166,4 +228,17 @@ export function buildTableData(
 
   const tableData = mapTables(allTableTests);
   return tableData;
+}
+
+/////
+interface Test2 {
+  att: number;
+  arr?: [number, number];
+}
+
+function testTest(foo: Test2) {
+  if (foo.arr?.length === 2) {
+    const f1 = foo.arr[0];
+    const f2 = foo.arr[1];
+  }
 }

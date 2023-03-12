@@ -1,8 +1,9 @@
 import { Disclosure } from '@headlessui/react';
 
 import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Schema, TableData } from '../dataComponents/buildTableData';
+import { Schema, Table, TableData } from '../dataComponents/buildTableData';
 import { OptionMenu } from './optionMenu';
+import Toggle from './toggle';
 
 const tableHeadings = [
   'Table Name',
@@ -17,8 +18,99 @@ const tableHeadings = [
   'Schema Change',
 ];
 
+function ButtonLegend() {
+  return (
+    <div className="absolute top-0 right-12 flex items-center justify-center">
+      <h1>All On, Same Frequency</h1>
+      <Toggle active={true} hasOnChildren={false} frequencyRange={[1, 1]} />
+      <h1>All On, Different Frequency</h1>
+      <Toggle active={true} hasOnChildren={false} frequencyRange={[1, 12]} />
+      <h1>Some On, Same Frequency</h1>
+      <Toggle active={false} hasOnChildren={true} frequencyRange={[24, 24]} />
+      <h1>Some On, Different Frequency</h1>
+      <Toggle active={false} hasOnChildren={true} frequencyRange={[3, 6]} />
+      <h1>All Off</h1>
+      <Toggle active={false} hasOnChildren={false} frequencyRange={[1, 24]} />
+    </div>
+  );
+}
+
+export const testTypes: { [name: string]: string } = {
+  'Column Freshness': 'ColumnFreshness',
+  Cardinality: 'ColumnCardinality',
+  Nullness: 'ColumnNullness',
+  Uniqueness: 'ColumnUniqueness',
+  Distribution: 'ColumnDistribution',
+  'Row Count': 'MaterializationRowCount',
+  'Column Count': 'MaterializationColumnCount',
+  'Table Freshness': 'MaterializationFreshness',
+  'Schema Change': 'MaterializationSchemaChange',
+};
+
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
+}
+
+function TestMenus({ testData, textColor, columnChildren, columnLevel }: any) {
+  // use tableHeadings so that order is persistent for changes (one source of truth)
+
+  return (
+    <>
+      {tableHeadings.map((heading: string) => {
+        if (!testTypes[heading]) return;
+
+        const testsOnlyForTables = [
+          'MaterializationRowCount',
+          'MaterializationColumnCount',
+          'MaterializationFreshness',
+          'MaterializationSchemaChange',
+        ];
+
+        const test = testData.find(
+          (test: any) => test.name === testTypes[heading]
+        );
+
+        if (test && test?.active === false) {
+          test.active = test?.activeChildren === columnChildren ? true : false;
+        }
+
+        const activeChildren = test?.active
+          ? columnChildren
+          : test?.activeChildren ?? 0;
+
+        const optionMenu = (
+          <OptionMenu
+            cron={test?.cron ?? ''}
+            active={test?.active ?? false}
+            threshold={test?.threshold ?? ''}
+            frequencyRange={test?.frequencyRange}
+            activeChildren={`${activeChildren}/${columnChildren}`}
+            hasOnChildren={test?.activeChildren > 0 && !test?.active}
+            optionsMenuColor={textColor}
+            columnLevel={columnLevel}
+          />
+        );
+        return (
+          <>
+            <td
+              className={classNames(
+                'w-96 whitespace-nowrap px-3 text-sm'
+              )}
+            >
+              {columnLevel &&
+              testsOnlyForTables.includes(testTypes[heading]) ? (
+                // render option Menu with 0 opacity to keey alignment
+                // also easier for future design changes
+                <div className="opacity-0">{optionMenu}</div>
+              ) : (
+                <>{optionMenu}</>
+              )}
+            </td>
+          </>
+        );
+      })}
+    </>
+  );
 }
 
 type SchemaComponent = {
@@ -26,12 +118,10 @@ type SchemaComponent = {
   textColor: string;
   bgColor: string;
   darkMode: boolean;
-  buttonOnClick: () => void;
   buttonText: string;
-  buttonIsDisclosure: boolean;
-  buttonDisclosureContent?: JSX.Element;
   ids: any;
   setIds: any;
+  columnLevel: boolean;
 };
 
 export function SchemaComponent({
@@ -39,12 +129,10 @@ export function SchemaComponent({
   textColor,
   bgColor,
   darkMode,
-  buttonOnClick,
   buttonText,
-  buttonIsDisclosure,
-  buttonDisclosureContent,
   ids,
   setIds,
+  columnLevel
 }: SchemaComponent) {
   let selectionBgColor = 'bg-gray-50';
   let selectionTextColor = 'text-cito';
@@ -63,7 +151,7 @@ export function SchemaComponent({
 
   return (
     <>
-      {columns.map(([tableId, tableData]) => (
+      {columns.map(([tableId, tableData]: [string, any]) => (
         <Disclosure>
           {({ open }) => (
             <>
@@ -71,7 +159,7 @@ export function SchemaComponent({
                 key={tableId}
                 className={classNames(
                   ids.includes(tableId) ? selectionBgColor : '',
-                  'relative left-6 border border-gray-100'
+                  'relative left-6 border border-gray-100 h-14'
                 )}
               >
                 <td className="relative w-16 px-8 sm:w-12 sm:px-6">
@@ -95,43 +183,38 @@ export function SchemaComponent({
                 <td
                   className={classNames(
                     'hover:' + bgColor,
-                    'max-w-[8rem] min-w-[8rem] truncate py-4 pr-3 text-sm font-medium hover:absolute hover:z-10 hover:mt-4 hover:-ml-1.5 hover:max-w-[50rem] hover:p-2 hover:drop-shadow-xl',
+                    'min-w-[8rem] max-w-[8rem] py-4 pr-3 relative',
                     ids.includes(tableId) ? selectionTextColor : textColor
                   )}
                 >
+                <div className={classNames('flex justify-start items-center hover:absolute hover:inset-y-0 hover:z-50', 'hover:' + bgColor)}>
+                <h1 className='truncate text-sm font-medium'>
                   {tableData.name}
+                  </h1>
+                  </div>
                 </td>
-                {Array(8 + 1).fill(
-                  <td
-                    className={classNames(
-                      'w-96 whitespace-nowrap px-3 text-sm',
-                      textColor
-                    )}
-                  >
-                    {<OptionMenu />}
-                  </td>
-                )}
+                <TestMenus
+                  testData={tableData.tests}
+                  textColor={textColor}
+                  columnChildren={tableData.columns?.size}
+                  columnLevel={columnLevel}
+                />
                 <td className="relative right-6 min-w-[6rem] whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium sm:pr-3">
-                  {buttonIsDisclosure ? (
+                  {!columnLevel && (
                     <Disclosure.Button className={buttonTextColor}>
                       {buttonText}
                     </Disclosure.Button>
-                  ) : (
-                    <button onClick={buttonOnClick} className={buttonTextColor}>
-                      {buttonText}
-                    </button>
                   )}
                 </td>
               </tr>
               <Disclosure.Panel as="tr">
                 <td colSpan={12}>
-                  {buttonIsDisclosure && (
+                  {!columnLevel && (
                     <MainTable
                       tableData={{ loading: false, tableData: tableData }}
-                      buttonOnClick={() => {}}
                       buttonText={'Edit'}
-                      buttonIsDisclosure={false}
                       darkMode={true}
+                      columnLevel={true}
                     />
                   )}
                 </td>
@@ -145,25 +228,21 @@ export function SchemaComponent({
 }
 
 type MainTableProps = {
-  tableData: { loading: boolean; tableData: TableData };
-  buttonOnClick: () => void;
+  tableData: { loading: boolean; tableData: TableData | Table};
   buttonText: string;
-  buttonIsDisclosure: boolean;
-  buttonDisclosureContent?: JSX.Element;
   tableTitle?: string;
   tableDescription?: string;
   darkMode: boolean;
+  columnLevel: boolean;
 };
 
 export default function MainTable({
   tableData,
-  buttonOnClick,
   buttonText,
-  buttonIsDisclosure,
-  buttonDisclosureContent,
   tableTitle,
   tableDescription,
   darkMode,
+  columnLevel,
 }: MainTableProps) {
   const checkbox = useRef();
   const [checked, setChecked] = useState(false);
@@ -172,7 +251,7 @@ export default function MainTable({
 
   function calculateMaxSelected(tableData: TableData) {
     // implement
-    if (tableData.columns) return Array.from(tableData.columns.keys());
+    if (columnLevel) return Array.from(tableData.columns.keys());
 
     let tableIds: string[] = [];
 
@@ -214,12 +293,13 @@ export default function MainTable({
   return (
     <div className="w-full">
       {(tableTitle || tableDescription) && (
-        <div className="pl-4 sm:flex sm:items-center">
+        <div className="relative pl-4 sm:flex sm:items-center">
           <div className="sm:flex-auto">
             <h1 className="text-base font-semibold leading-6 text-gray-900">
               {tableTitle}
             </h1>
             <p className="mt-2 text-sm text-gray-700">{tableDescription}</p>
+            <ButtonLegend />
           </div>
         </div>
       )}
@@ -251,7 +331,7 @@ export default function MainTable({
                         type="checkbox"
                         className={classNames(
                           'absolute top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito',
-                          tableData.tableData.columns ? 'left-10' : 'left-6'
+                          columnLevel ? 'left-10' : 'left-6'
                         )}
                         ref={checkbox}
                         checked={checked}
@@ -280,8 +360,7 @@ export default function MainTable({
                   </tr>
                 </thead>
                 <tbody className={classNames('')}>
-                  {console.log(tableData.tableData.columns)}
-                  {tableData.tableData.columns ? (
+                  {columnLevel ? (
                     <SchemaComponent
                       schemaData={tableData.tableData}
                       textColor={textColor}
@@ -290,9 +369,7 @@ export default function MainTable({
                       ids={ids}
                       setIds={setIds}
                       buttonText={buttonText}
-                      buttonOnClick={buttonOnClick}
-                      buttonIsDisclosure={buttonIsDisclosure}
-                      buttonDisclosureContent={buttonDisclosureContent}
+                                          columnLevel={columnLevel}
                     />
                   ) : (
                     <>
@@ -334,13 +411,7 @@ export default function MainTable({
                                           ids={ids}
                                           setIds={setIds}
                                           buttonText={buttonText}
-                                          buttonOnClick={buttonOnClick}
-                                          buttonIsDisclosure={
-                                            buttonIsDisclosure
-                                          }
-                                          buttonDisclosureContent={
-                                            buttonDisclosureContent
-                                          }
+                                          columnLevel={columnLevel}
                                         />
                                       </>
                                     );

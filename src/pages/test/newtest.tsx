@@ -39,7 +39,7 @@ export default function NewTest() {
   }, [mats, cols, testSuite, testQualSuite]);
 
   return (
-    <div className="h-screen w-full">
+    <div className="h-screen w-full overflow-y-auto">
       <Navbar current="tests" jwt={undefined} />
       <div className="items-top relative flex h-20 justify-center">
         <div className="relative mt-2 w-1/4">
@@ -55,21 +55,11 @@ export default function NewTest() {
       ) : (
         <MainTable
           tableData={tableData}
-          buttonOnClick={() => {}}
           buttonText={'Columns'}
-          buttonIsDisclosure={true}
-          buttonDisclosureContent={
-            <MainTable
-              tableData={tableData}
-              buttonOnClick={() => {}}
-              buttonText={'Edit'}
-              buttonIsDisclosure={false}
-              darkMode={true}
-            />
-          }
           tableTitle="Tables"
           tableDescription="This is a test description."
           darkMode={false}
+          columnLevel={false}
         />
       )}
     </div>

@@ -6,6 +6,7 @@ import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { RiRefreshLine } from 'react-icons/ri';
 import LineageApiRepository from '../infrastructure/lineage-api/lineage/lineage-api-repository';
+import IntegrationApiRepo from '../infrastructure/integration-api/integration-api-repo';
 
 type SnapshotState = 'loading' | 'creating' | 'available' | 'not available';
 
@@ -37,6 +38,8 @@ export default function Navbar({
   const [snapshotState, setSnapshotState] = useState<SnapshotState>('loading');
 
   const [snapshotInfo, setSnapshotInfo] = useState<string>('Loading...');
+
+  const [creditsUsed, setCreditsUsed] = useState<number>(0);
 
   // temp code because of launch
   if (current === 'lineage') {
@@ -98,7 +101,18 @@ export default function Navbar({
   useEffect(() => {
     if (!jwt) return;
 
-    LineageApiRepository.getLatest(jwt, true, 3)
+    const meteringQuery = `SELECT SUM(CREDITS_USED) AS TOTAL_CREDITS_USED
+FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY
+WHERE WAREHOUSE_NAME = 'CITO_WH'
+AND START_TIME >= DATEADD(HOUR, -24, CURRENT_TIMESTAMP());`;
+
+    IntegrationApiRepo.querySnowflake(meteringQuery, jwt)
+      .then((queryResult) => {
+        if (queryResult && queryResult.length !== 1)
+          throw new Error('Received unexpected metering data');
+
+        return LineageApiRepository.getLatest(jwt, true, 3);
+      })
       .then((snapshot) => {
         let state: SnapshotState = 'not available';
         if (!snapshot) {
@@ -236,6 +250,9 @@ export default function Navbar({
                             Sign out
                           </button>
                         )}
+                      </Menu.Item>
+                      <Menu.Item>
+                        <p>{}</p>
                       </Menu.Item>
                     </Menu.Items>
                   </Transition>

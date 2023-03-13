@@ -137,7 +137,20 @@ export default ({
       );
   };
 
-  const handleCustomLowerThresholdChange = (e: {
+  const handleCustomLowerThresholdOnChange = (e: {
+    target: { value: unknown };
+  }) => {
+    const { value } = e.target;
+    const numericValue = Number(value);
+    if (!value || Number.isNaN(numericValue)) {
+      setCustomLowerThreshold(undefined);
+      return;
+    }
+
+    setCustomLowerThreshold(numericValue);
+  };
+
+  const handleCustomLowerThresholdOnBlur = (e: {
     target: { value: unknown };
   }) => {
     const { value } = e.target;
@@ -189,7 +202,20 @@ export default ({
     } else throw new Error('Invalid threshold mode combination');
   };
 
-  const handleCustomUpperThresholdChange = (e: {
+  const handleCustomUpperThresholdOnChange = (e: {
+    target: { value: unknown };
+  }) => {
+    const { value } = e.target;
+    const numericValue = Number(value);
+    if (!value || Number.isNaN(numericValue)) {
+      setCustomUpperThreshold(undefined);
+      return;
+    }
+
+    setCustomUpperThreshold(numericValue);
+  };
+
+  const handleCustomUpperThresholdOnBlur = (e: {
     target: { value: unknown };
   }) => {
     const { value } = e.target;
@@ -434,7 +460,8 @@ export default ({
                             id="lower-threshold"
                             type="number"
                             value={customLowerThreshold}
-                            onChange={handleCustomLowerThresholdChange}
+                            onChange={handleCustomLowerThresholdOnChange}
+                            onBlur={handleCustomLowerThresholdOnBlur}
                           />
                         </div>
                       </div>
@@ -454,7 +481,8 @@ export default ({
                             id="upper-threshold"
                             type="number"
                             value={customUpperThreshold}
-                            onChange={handleCustomUpperThresholdChange}
+                            onChange={handleCustomUpperThresholdOnChange}
+                            onBlur={handleCustomUpperThresholdOnBlur}
                           />
                         </div>
                       </div>

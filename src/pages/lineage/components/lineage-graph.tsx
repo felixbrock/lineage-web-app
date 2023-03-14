@@ -338,6 +338,7 @@ export default ({
         },
         tableLevelLineagePlaceholder: {
           fill: hivediveBlue,
+          height: 50,
         },
       },
       defaultEdge: {

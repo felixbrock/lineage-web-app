@@ -744,16 +744,14 @@ export default ({
 
     const dashCombo = graphSourceData.dashboards.map(
       (dashboard): ComboConfig => ({
-        id: dashboard.url ? dashboard.url : '',
-        label: dashboard.name
-          ? dashboard.name
-          : fittingString(dashboard.url, 385, 18),
+        id: dashboard.url,
+        label: dashboard.name || fittingString(dashboard.url, 385, 18),
       })
     );
     const dashNodes = graphSourceData.dashboards.map(
       (dashboard): NodeConfig => ({
         id: dashboard.id,
-        label: dashboard.columnName,
+        label: dashboard.name || '',
         comboId: dashboard.url,
       })
     );

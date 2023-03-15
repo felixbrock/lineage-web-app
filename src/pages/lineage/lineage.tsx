@@ -347,18 +347,21 @@ export default (): ReactElement => {
     if (!mats || !cols || !dashboards || !dependencies)
       throw new Error('No data available');
 
-    const selectedMat = mats.find(
-      (el) =>
-        el.id ===
-        (selectedEl.type === 'combo' ? selectedEl.id : selectedEl.comboId)
-    );
-    if (!selectedMat) throw new Error('No selected materialization');
+    const comboId =
+      selectedEl.type === 'combo' ? selectedEl.id : selectedEl.comboId;
 
+    const selectedCombo = [...dashboards, ...mats].find(
+      (el) => el.id === comboId
+    );
+
+    if (!selectedCombo) throw new Error('No selected materialization');
+
+    const localSelectedCombo = selectedCombo;
     const selectedMatCols = cols.filter(
-      (c) => c.materializationId === selectedMat.id
+      (c) => c.materializationId === localSelectedCombo.id
     );
 
-    const relevantResources = getConnectedResources(selectedMat.id);
+    const relevantResources = getConnectedResources(selectedCombo.id);
 
     setSourceData({
       cols: selectedMatCols,
@@ -366,10 +369,24 @@ export default (): ReactElement => {
       mats,
     });
 
+    const isDashb = (obj: { id: string }): obj is DashboardDto =>
+      'url' in obj && 'name' in obj && 'id' in obj;
+
+    const graphDashbs = [...relevantResources.dashboards];
+    if (isDashb(selectedCombo)) graphDashbs.push(selectedCombo);
+    const isMat = (obj: { id: string }): obj is MaterializationDto =>
+      'relationName' in obj &&
+      'name' in obj &&
+      'schemaName' in obj &&
+      'databaseName' in obj &&
+      'type' in obj;
+    const graphMats = [...relevantResources.mats];
+    if (isMat(selectedCombo)) graphMats.push(selectedCombo);
+
     setGraphSourceData({
       cols: selectedMatCols.concat(relevantResources.cols),
-      dashboards: relevantResources.dashboards,
-      mats: [selectedMat, ...relevantResources.mats],
+      dashboards: graphDashbs,
+      mats: graphMats,
       dependencies: relevantResources.dependencies,
       selectedEl,
     });
@@ -519,16 +536,15 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!cols) return;
 
-    if (!mats || !mats.length || !dashboards)
-      throw new Error('No materializations found');
-
     if (cols.length) {
+      if (!mats || !mats.length || !dashboards)
+        throw new Error('No materializations found');
       defineSourceData({ id: mats[0].id, type: 'combo' });
     } else {
       setSourceData({
         cols: [],
-        dashboards,
-        mats,
+        dashboards: dashboards || [],
+        mats: mats || [],
       });
 
       setIsDataAvailable(false);
@@ -762,7 +778,7 @@ export default (): ReactElement => {
   const graphBuiltCallback = () => {
     const targetResourceId = searchParams.get('targetResourceId');
     if (targetResourceId)
-      simulateSideNavClick({ id: targetResourceId, type: 'node' });
+      simulateSideNavClick({ id: targetResourceId, type: 'combo' });
   };
 
   const getHistoryMinMax = (

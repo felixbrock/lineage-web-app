@@ -63,8 +63,8 @@ const buildSideNavColElement = (
   );
 };
 
-const buildSideNavMatElement = (
-  mat: MaterializationDto,
+const buildSideNavComboElement = (
+  mat: { id: string; name: string },
   cols: ColumnDto[],
   callback: {
     col: (event: SyntheticEvent, colId: string, matId: string) => void;
@@ -99,7 +99,8 @@ const buildSideNavElements = (
   data: SourceData,
   callback: {
     col: (event: SyntheticEvent, colId: string, matId: string) => void;
-    mat: (event: SyntheticEvent, matId: string) => void;
+    mat: (event: SyntheticEvent, id: string) => void;
+    dashb: (event: SyntheticEvent, id: string) => void;
   }
 ): ReactElement[] => {
   if (!data) throw new Error('Missing source data');
@@ -114,7 +115,7 @@ const buildSideNavElements = (
       const dbElement = <ListSubheader>{key}</ListSubheader>;
 
       const matElements = val
-        .map((el) => buildSideNavMatElement(el, data.cols, callback))
+        .map((el) => buildSideNavComboElement(el, data.cols, callback))
         .sort(compareReactElements);
 
       return (
@@ -128,7 +129,18 @@ const buildSideNavElements = (
     })
     .sort(compareReactElements);
 
-  return dbElements;
+  const dashboardElement = (
+    <li key={`section-Dashboards`}>
+      <ul>
+        <ListSubheader>Dashboards</ListSubheader>
+        {data.dashboards.map((el) =>
+          buildSideNavComboElement(el, data.cols, callback)
+        )}
+      </ul>
+    </li>
+  );
+
+  return [...dbElements, dashboardElement];
 };
 
 export default ({
@@ -147,19 +159,19 @@ export default ({
   );
   const [searchTerm, setSearchTerm] = useState('');
 
-  const handleNavMatClickEvent = (
+  const handleNavComboClickEvent = (
     event: React.SyntheticEvent,
-    matId: string
-  ) => {
-    navClickCallback({ id: matId, type: 'combo' });
-  };
-
-  const handleNavColClickEvent = (
-    event: React.SyntheticEvent,
-    colId: string,
     comboId: string
   ) => {
-    navClickCallback({ id: colId, type: 'node', comboId });
+    navClickCallback({ id: comboId, type: 'combo' });
+  };
+
+  const handleNavNodeClickEvent = (
+    event: React.SyntheticEvent,
+    nodeId: string,
+    comboId: string
+  ) => {
+    navClickCallback({ id: nodeId, type: 'node', comboId });
   };
 
   const handleSearchChange = (event: { target: { value: string } }) => {
@@ -170,8 +182,9 @@ export default ({
 
     if (!value) {
       const elements = buildSideNavElements(sourceData, {
-        col: handleNavColClickEvent,
-        mat: handleNavMatClickEvent,
+        col: handleNavNodeClickEvent,
+        mat: handleNavComboClickEvent,
+        dashb: handleNavComboClickEvent,
       });
       setSideNavMatElements(elements);
       return;
@@ -185,7 +198,11 @@ export default ({
 
     const elements = buildSideNavElements(
       { ...localSourceData, mats: matchingMats },
-      { col: handleNavColClickEvent, mat: handleNavMatClickEvent }
+      {
+        col: handleNavNodeClickEvent,
+        mat: handleNavComboClickEvent,
+        dashb: handleNavComboClickEvent,
+      }
     );
     setSideNavMatElements(elements);
   };
@@ -199,8 +216,9 @@ export default ({
     }
 
     const elements = buildSideNavElements(sourceData, {
-      col: handleNavColClickEvent,
-      mat: handleNavMatClickEvent,
+      col: handleNavNodeClickEvent,
+      mat: handleNavComboClickEvent,
+      dashb: handleNavComboClickEvent,
     });
     setSideNavMatElements(elements);
   }, [sourceData]);

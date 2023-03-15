@@ -311,6 +311,7 @@ export default ({
       defaultNode: {
         // size: [30, 20],
         type: 'rect',
+
         style: {
           width: 550,
           lineWidth: 1,
@@ -338,7 +339,6 @@ export default ({
         },
         tableLevelLineagePlaceholder: {
           fill: hivediveBlue,
-          height: 50,
         },
       },
       defaultEdge: {
@@ -450,7 +450,7 @@ export default ({
     const matCombo = materializationsToSearch.find((el) => el.id === comboId);
 
     const dashCombo = rawData.dashboards.find(
-      (dashboard) => dashboard.url === comboId
+      (dashboard) => dashboard.name === comboId
     );
 
     const combo = matCombo || dashCombo;
@@ -745,15 +745,15 @@ export default ({
 
     const dashCombo = graphSourceData.dashboards.map(
       (dashboard): ComboConfig => ({
-        id: dashboard.url,
-        label: dashboard.name || fittingString(dashboard.url, 385, 18),
+        id: dashboard.name,
+        label: fittingString(dashboard.url, 385, 18),
       })
     );
     const dashNodes = graphSourceData.dashboards.map(
       (dashboard): NodeConfig => ({
         id: dashboard.id,
-        label: dashboard.name || '',
-        comboId: dashboard.url,
+        label: `External Id: ${dashboard.name}`,
+        comboId: dashboard.name,
       })
     );
     const combos = matCombo.concat(dashCombo).sort(compare);
@@ -766,7 +766,7 @@ export default ({
     const tableLevelLineageFixNodes: NodeConfig[] = dataToAdjust.combos
       ? dataToAdjust.combos.map((combo) => ({
           id: `${combo.id}-${tableLevelLineageIdSuffix}`,
-          label: `<<<<< ${combo.label} >>>>>`,
+          label: `< ${combo.label} >`,
           comboId: combo.id,
         }))
       : [];

@@ -752,7 +752,7 @@ export default ({
     const dashNodes = graphSourceData.dashboards.map(
       (dashboard): NodeConfig => ({
         id: dashboard.id,
-        label: `External Id: ${dashboard.name}`,
+        label: dashboard.name,
         comboId: dashboard.name,
       })
     );

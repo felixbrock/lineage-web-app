@@ -5,7 +5,7 @@
       "type": "chrome",
       "request": "launch",
       "name": "Debug in Brave",
-      "runtimeExecutable": "/usr/bin/brave-browser",
+      "runtimeExecutable": "/bin/brave",
       "url": "http://localhost:3006",
       "webRoot": "${workspaceFolder}"
     }

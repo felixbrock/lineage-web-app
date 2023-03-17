@@ -1,5 +1,6 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import { AxiosRequestConfig } from 'axios';
 import appConfig from '../../../config';
+import getApiClient from '../../api-client';
 import { consumeStream, uint8ArrayToString, writeToCache } from '../../cache';
 import ColumnDto from './column-dto';
 
@@ -9,17 +10,12 @@ export default class ColumnsApiRepository {
 
   private static apiRoot = 'api';
 
-  private static baseUrl = appConfig.baseUrl.lineageService;
+  private static client = getApiClient(appConfig.baseUrl.lineageService);
 
-  static getBy = async (
-    params: URLSearchParams,
-    jwt: string
-  ): Promise<ColumnDto[]> => {
+  static getBy = async (params: URLSearchParams): Promise<ColumnDto[]> => {
     try {
       const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
         params,
-        baseURL: ColumnsApiRepository.baseUrl,
       };
       const url = `/${ColumnsApiRepository.apiRoot}/${ColumnsApiRepository.version}/columns`;
 
@@ -34,7 +30,7 @@ export default class ColumnsApiRepository {
         const mats = JSON.parse(uint8ArrayToString(data));
         return mats;
       } else {
-        const response = await axios.get(url, config);
+        const response = await this.client.get(url, config);
         const jsonResponse = response.data;
         if (response.status === 200) {
           await writeToCache(fullUrl, response, 'lineage');

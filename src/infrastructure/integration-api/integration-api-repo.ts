@@ -1,6 +1,7 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import { AxiosRequestConfig } from 'axios';
 import { TestHistoryEntry } from '../../components/metrics-graph';
 import appConfig from '../../config';
+import getApiClient from '../api-client';
 import GithubProfileDto from './github-profile-dto';
 import SlackConversationInfoDto from './slack-channel-info-dto';
 import SlackProfileDto from './slack-profile-dto';
@@ -48,19 +49,12 @@ export default class IntegrationApiRepo {
 
   private static apiRoot = 'api';
 
-  private static baseUrl = appConfig.baseUrl.integrationService;
+  private static client = getApiClient(appConfig.baseUrl.integrationService);
 
-  static getSlackProfile = async (
-    jwt: string
-  ): Promise<SlackProfileDto | null> => {
+  static getSlackProfile = async (): Promise<SlackProfileDto | null> => {
     try {
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.get(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/slack/profile`,
-        config
+      const response = await this.client.get(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/slack/profile`
       );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
@@ -71,20 +65,14 @@ export default class IntegrationApiRepo {
   };
 
   static postSlackProfile = async (
-    postSlackProfileDto: PostSlackProfileDto,
-    jwt: string
+    postSlackProfileDto: PostSlackProfileDto
   ): Promise<SlackProfileDto | undefined> => {
     try {
       const data = postSlackProfileDto;
 
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.post(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/slack/profile`,
-        data,
-        config
+      const response = await this.client.post(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/slack/profile`,
+        data
       );
       const jsonResponse = response.data;
       if (response.status === 201) return jsonResponse;
@@ -95,20 +83,14 @@ export default class IntegrationApiRepo {
   };
 
   static updateSlackProfile = async (
-    updateSlackProfileDto: UpdateSlackProfileDto,
-    jwt: string
+    updateSlackProfileDto: UpdateSlackProfileDto
   ): Promise<unknown> => {
     try {
       const data = updateSlackProfileDto;
 
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.patch(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/slack/profile`,
-        data,
-        config
+      const response = await this.client.patch(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/slack/profile`,
+        data
       );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
@@ -119,19 +101,15 @@ export default class IntegrationApiRepo {
   };
 
   static getSlackConversations = async (
-    params: URLSearchParams,
-    jwt: string
+    params: URLSearchParams
   ): Promise<SlackConversationInfoDto[]> => {
     try {
       const config: AxiosRequestConfig = {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
         params,
       };
 
-      const response = await axios.get(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/slack/conversations`,
+      const response = await this.client.get(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/slack/conversations`,
         config
       );
       const jsonResponse = response.data;
@@ -148,20 +126,12 @@ export default class IntegrationApiRepo {
   static joinSlackConversation = async (
     oldChannelId: string,
     newChannelId: string,
-    accessToken: string,
-    jwt: string
+    accessToken: string
   ): Promise<undefined> => {
     try {
-      const config: AxiosRequestConfig = {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-      };
-
-      const response = await axios.post(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/slack/conversation/join`,
-        { oldChannelId, newChannelId, accessToken },
-        config
+      const response = await this.client.post(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/slack/conversation/join`,
+        { oldChannelId, newChannelId, accessToken }
       );
       const jsonResponse = response.data;
       if (response.status !== 201) throw new Error(jsonResponse.message);
@@ -174,20 +144,12 @@ export default class IntegrationApiRepo {
   };
 
   static postGithubProfile = async (
-    postGithubProfileDto: PostGithubProfileDto,
-    jwt: string
+    postGithubProfileDto: PostGithubProfileDto
   ): Promise<string> => {
     try {
-      const config: AxiosRequestConfig = {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-      };
-
-      const response = await axios.post(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/github/profile`,
-        postGithubProfileDto,
-        config
+      const response = await this.client.post(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/github/profile`,
+        postGithubProfileDto
       );
       const jsonResponse = response.data;
       if (response.status !== 201) throw new Error(jsonResponse.message);
@@ -201,20 +163,14 @@ export default class IntegrationApiRepo {
   };
 
   static updateGithubProfile = async (
-    updateGithubProfileDto: UpdateGithubProfileDto,
-    jwt: string
+    updateGithubProfileDto: UpdateGithubProfileDto
   ): Promise<unknown> => {
     try {
       const data = updateGithubProfileDto;
 
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.patch(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/github/profile`,
-        data,
-        config
+      const response = await this.client.patch(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/github/profile`,
+        data
       );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
@@ -225,21 +181,16 @@ export default class IntegrationApiRepo {
   };
 
   static getGithubProfile = async (
-    params: URLSearchParams,
-    jwt: string
+    params: URLSearchParams
   ): Promise<GithubProfileDto | undefined> => {
     try {
-      const configuration: AxiosRequestConfig = {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-          'Content-Type': 'application/json',
-        },
+      const config: AxiosRequestConfig = {
         params,
       };
 
-      const response = await axios.get(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/github/profile`,
-        configuration
+      const response = await this.client.get(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/github/profile`,
+        config
       );
 
       const jsonResponse = response.data;
@@ -252,21 +203,11 @@ export default class IntegrationApiRepo {
     }
   };
 
-  static getAccessToken = async (
-    code: string,
-    jwt: string
-  ): Promise<string> => {
+  static getAccessToken = async (code: string): Promise<string> => {
     try {
-      const config: AxiosRequestConfig = {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-      };
-
-      const response = await axios.post(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/github/token`,
-        { code },
-        config
+      const response = await this.client.post(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/github/token`,
+        { code }
       );
       const jsonResponse = response.data;
       if (response.status !== 201) throw new Error(jsonResponse.message);
@@ -280,41 +221,29 @@ export default class IntegrationApiRepo {
     }
   };
 
-  static getSnowflakeProfile = async (
-    jwt: string
-  ): Promise<SnowflakeProfileDto | null> => {
-    try {
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.get(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/snowflake/profile`,
-        config
-      );
-      const jsonResponse = response.data;
-      if (response.status === 200) return jsonResponse;
-      throw new Error(jsonResponse);
-    } catch (error: any) {
-      return Promise.reject(new Error(error.response.data.message));
-    }
-  };
+  static getSnowflakeProfile =
+    async (): Promise<SnowflakeProfileDto | null> => {
+      try {
+        const response = await this.client.get(
+          `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/snowflake/profile`
+        );
+        const jsonResponse = response.data;
+        if (response.status === 200) return jsonResponse;
+        throw new Error(jsonResponse);
+      } catch (error: any) {
+        return Promise.reject(new Error(error.response.data.message));
+      }
+    };
 
   static updateSnowflakeProfile = async (
-    updateSnowflakeProfileDto: UpdateSnowflakeProfileDto,
-    jwt: string
+    updateSnowflakeProfileDto: UpdateSnowflakeProfileDto
   ): Promise<unknown> => {
     try {
       const data = updateSnowflakeProfileDto;
 
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.patch(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/snowflake/profile`,
-        data,
-        config
+      const response = await this.client.patch(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/snowflake/profile`,
+        data
       );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
@@ -325,20 +254,14 @@ export default class IntegrationApiRepo {
   };
 
   static postSnowflakeProfile = async (
-    postSnowflakeProfileDto: PostSnowflakeProfileDto,
-    jwt: string
+    postSnowflakeProfileDto: PostSnowflakeProfileDto
   ): Promise<unknown> => {
     try {
       const data = postSnowflakeProfileDto;
 
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.post(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/snowflake/profile`,
-        data,
-        config
+      const response = await this.client.post(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/snowflake/profile`,
+        data
       );
       const jsonResponse = response.data;
       if (response.status === 201) return jsonResponse;
@@ -348,16 +271,11 @@ export default class IntegrationApiRepo {
     }
   };
 
-  static postSnowflakeEnvironment = async (jwt: string): Promise<unknown> => {
+  static postSnowflakeEnvironment = async (): Promise<unknown> => {
     try {
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.post(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/snowflake/init`,
-        undefined,
-        config
+      const response = await this.client.post(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/snowflake/init`,
+        undefined
       );
       const jsonResponse = response.data;
       if (response.status === 201) return jsonResponse;
@@ -367,20 +285,13 @@ export default class IntegrationApiRepo {
     }
   };
 
-  static querySnowflake = async (query: string, jwt: string): Promise<any> => {
+  static querySnowflake = async (query: string): Promise<any> => {
     try {
-      const config: AxiosRequestConfig = {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-      };
-
-      const response = await axios.post(
-        `${IntegrationApiRepo.baseUrl}/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/snowflake/query`,
+      const response = await this.client.post(
+        `/${IntegrationApiRepo.apiRoot}/${IntegrationApiRepo.version}/snowflake/query`,
         {
           query,
-        },
-        config
+        }
       );
       const jsonResponse = response.data;
       if (response.status !== 201) throw new Error(jsonResponse.message);
@@ -398,8 +309,7 @@ export default class IntegrationApiRepo {
       id: string;
       type: string;
     }[],
-    orgId: string,
-    jwt: string
+    orgId: string
   ): Promise<TestHistoryEntry[]> => {
     const testHistory = testSuiteReps.reduce(
       (
@@ -443,8 +353,7 @@ export default class IntegrationApiRepo {
     order by test_executions.executed_on desc limit 200;`;
 
     const testHistoryResults = await IntegrationApiRepo.querySnowflake(
-      testHistoryQuery,
-      jwt
+      testHistoryQuery
     );
 
     const results: { [key: string]: unknown }[] =

@@ -12,7 +12,6 @@ export default (): ReactElement => {
 
   const [account, setAccount] = useState<AccountDto>();
   const [user, setUser] = useState<any>();
-  const [jwt, setJwt] = useState('');
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,17 +36,14 @@ export default (): ReactElement => {
         'Expected importance, boundsIntervalRelative and testSuiteId value for reported false-positive '
       );
 
-    ObservabilityApiRepo.adjustDetectedAnomaly(
-      {
-        alertId,
-        userFeedbackIsAnomaly,
-        testType,
-        importance: importance || undefined,
-        boundsIntervalRelative: boundsIntervalRelative || undefined,
-        testSuiteId: testSuiteId || undefined,
-      },
-      jwt
-    )
+    ObservabilityApiRepo.adjustDetectedAnomaly({
+      alertId,
+      userFeedbackIsAnomaly,
+      testType,
+      importance: importance || undefined,
+      boundsIntervalRelative: boundsIntervalRelative || undefined,
+      testSuiteId: testSuiteId || undefined,
+    })
       .then(() => {
         setIsLoading(false);
       })
@@ -60,7 +56,6 @@ export default (): ReactElement => {
 
   const handleFeedback = () => {
     setUser(undefined);
-    setJwt('');
     setAccount(undefined);
 
     Auth.currentAuthenticatedUser()
@@ -77,15 +72,7 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!user) return;
 
-    Auth.currentSession()
-      .then((session) => {
-        const accessToken = session.getAccessToken();
-
-        const token = accessToken.getJwtToken();
-        setJwt(token);
-
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
-      })
+    AccountApiRepository.getBy(new URLSearchParams({}))
       .then((accounts) => {
         if (!accounts.length) throw new Error(`No accounts found for user`);
 
@@ -105,14 +92,12 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!account) return;
 
-    if (!jwt) throw new Error('No user authorization found');
-
     handleUserFeedback();
   }, [account]);
 
   return (
     <>
-      <Navbar current="tests" jwt={jwt} />
+      <Navbar current="tests" />
       <div className="fixed flex h-full w-full items-center justify-center">
         {isLoading ? (
           <LoadingScreen tailwindCss="flex w-full items-center justify-center" />

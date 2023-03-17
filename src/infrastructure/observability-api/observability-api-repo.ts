@@ -1,4 +1,3 @@
-import axios, { AxiosRequestConfig } from 'axios';
 import appConfig from '../../config';
 import { CustomThreshold } from '../../pages/test/components/custom-threshold';
 import {
@@ -6,6 +5,7 @@ import {
   MaterializationType,
   TestType,
 } from '../../pages/test/test';
+import getApiClient from '../api-client';
 import { QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
 
 export const customThresholdModes = ['absolute', 'relative'] as const;
@@ -66,23 +66,17 @@ export default class ObservabilityApiRepo {
 
   private static apiRoot = 'api';
 
-  private static baseUrl = appConfig.baseUrl.observabilityService;
+  private static client = getApiClient(appConfig.baseUrl.observabilityService);
 
   static postTestSuites = async (
-    props: CreateQuantTestSuiteProps[],
-    jwt: string
+    props: CreateQuantTestSuiteProps[]
   ): Promise<TestSuiteDto[]> => {
     try {
       const payload = { createObjects: props };
 
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.post(
-        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-suites`,
-        payload,
-        config
+      const response = await this.client.post(
+        `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-suites`,
+        payload
       );
       const jsonResponse = response.data;
       if (response.status === 201) return jsonResponse;
@@ -93,20 +87,14 @@ export default class ObservabilityApiRepo {
   };
 
   static postQualTestSuites = async (
-    postTestSuiteObjects: CreateQualTestSuiteProps[],
-    jwt: string
+    postTestSuiteObjects: CreateQualTestSuiteProps[]
   ): Promise<QualTestSuiteDto[]> => {
     try {
       const payload = { createObjects: postTestSuiteObjects };
 
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.post(
-        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/qual-test-suites`,
-        payload,
-        config
+      const response = await this.client.post(
+        `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/qual-test-suites`,
+        payload
       );
       const jsonResponse = response.data;
       if (response.status === 201) return jsonResponse;
@@ -117,20 +105,14 @@ export default class ObservabilityApiRepo {
   };
 
   static updateTestSuites = async (
-    updateObjects: UpdateTestSuiteObject[],
-    jwt: string
+    updateObjects: UpdateTestSuiteObject[]
   ): Promise<void> => {
     try {
       const payload = { updateObjects };
 
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.patch(
-        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-suites`,
-        payload,
-        config
+      const response = await this.client.patch(
+        `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-suites`,
+        payload
       );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
@@ -141,20 +123,14 @@ export default class ObservabilityApiRepo {
   };
 
   static updateQualTestSuites = async (
-    updateObjects: UpdateQualTestSuiteObject[],
-    jwt: string
+    updateObjects: UpdateQualTestSuiteObject[]
   ): Promise<void> => {
     try {
       const payload = { updateObjects };
 
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.patch(
-        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/qual-test-suites`,
-        payload,
-        config
+      const response = await this.client.patch(
+        `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/qual-test-suites`,
+        payload
       );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
@@ -164,15 +140,10 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  static getTestSuites = async (jwt: string): Promise<TestSuiteDto[]> => {
+  static getTestSuites = async (): Promise<TestSuiteDto[]> => {
     try {
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.get(
-        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-suites`,
-        config
+      const response = await this.client.get(
+        `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/test-suites`
       );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
@@ -182,17 +153,10 @@ export default class ObservabilityApiRepo {
     }
   };
 
-  static getQualTestSuites = async (
-    jwt: string
-  ): Promise<QualTestSuiteDto[]> => {
+  static getQualTestSuites = async (): Promise<QualTestSuiteDto[]> => {
     try {
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.get(
-        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/qual-test-suites`,
-        config
+      const response = await this.client.get(
+        `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/qual-test-suites`
       );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
@@ -203,8 +167,7 @@ export default class ObservabilityApiRepo {
   };
 
   static adjustDetectedAnomaly = async (
-    postAnomalyFeedbackDto: PostAnomalyFeedbackDto,
-    jwt: string
+    postAnomalyFeedbackDto: PostAnomalyFeedbackDto
   ): Promise<unknown> => {
     try {
       const data = {
@@ -216,14 +179,9 @@ export default class ObservabilityApiRepo {
         boundsIntervalRelative: postAnomalyFeedbackDto.boundsIntervalRelative,
       };
 
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.post(
-        `${ObservabilityApiRepo.baseUrl}/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/anomaly/feedback`,
-        data,
-        config
+      const response = await this.client.post(
+        `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/anomaly/feedback`,
+        data
       );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;

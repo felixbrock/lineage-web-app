@@ -11,12 +11,10 @@ export default () => {
   const { code, state } = useParams();
 
   const [user, setUser] = useState<string>();
-  const [jwt, setJwt] = useState<any>();
   const [organizationId, setOrganizationId] = useState<string>();
 
   const renderSlackRedirect = () => {
     setUser(undefined);
-    setJwt('');
     setOrganizationId('');
 
     Auth.currentAuthenticatedUser()
@@ -35,15 +33,7 @@ export default () => {
   useEffect(() => {
     if (!user) return;
 
-    Auth.currentSession()
-      .then((session) => {
-        const accessToken = session.getAccessToken();
-
-        const token = accessToken.getJwtToken();
-        setJwt(token);
-
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
-      })
+    AccountApiRepository.getBy(new URLSearchParams({}))
       .then((accounts) => {
         if (!accounts.length) throw new Error(`No accounts found for user`);
 
@@ -60,8 +50,6 @@ export default () => {
   useEffect(() => {
     if (!organizationId) return;
 
-    if (!jwt) throw new Error('No user authorization found');
-
     if (!code) throw new Error('Did not receive a temp auth code from Slack');
     if (state !== organizationId)
       throw new Error(
@@ -75,11 +63,11 @@ export default () => {
         accessToken = res;
         sessionStorage.setItem('slack-access-token', accessToken);
 
-        return IntegrationApiRepo.getSlackProfile(jwt);
+        return IntegrationApiRepo.getSlackProfile();
       })
       .then((slackProfile) => {
         if (slackProfile)
-          return IntegrationApiRepo.updateSlackProfile({ accessToken }, jwt);
+          return IntegrationApiRepo.updateSlackProfile({ accessToken });
         return Promise.resolve();
       })
       .then(() =>

@@ -12,7 +12,6 @@ import IntegrationApiRepo from '../../../infrastructure/integration-api/integrat
 
 interface GithubProps {
   organizationId: string;
-  jwt: string;
 }
 
 interface RepoNameResult {
@@ -20,7 +19,7 @@ interface RepoNameResult {
   checked: boolean;
 }
 
-export default ({ organizationId, jwt }: GithubProps): ReactElement => {
+export default ({ organizationId }: GithubProps): ReactElement => {
   const [repoNameResult, setRepoNameResult] = useState<RepoNameResult>({
     repoNames: [],
     checked: false,
@@ -51,8 +50,7 @@ export default ({ organizationId, jwt }: GithubProps): ReactElement => {
         });
     } else {
       IntegrationApiRepo.getGithubProfile(
-        new URLSearchParams({ organizationId }),
-        jwt
+        new URLSearchParams({ organizationId })
       )
         .then((profile) => {
           if (profile)
@@ -74,23 +72,16 @@ export default ({ organizationId, jwt }: GithubProps): ReactElement => {
 
     if (installationId && accessToken)
       IntegrationApiRepo.getGithubProfile(
-        new URLSearchParams({ organizationId }),
-        jwt
+        new URLSearchParams({ organizationId })
       )
         .then((profile) => {
           if (profile)
-            return IntegrationApiRepo.updateGithubProfile(
-              { installationId },
-              jwt
-            );
-          return IntegrationApiRepo.postGithubProfile(
-            {
-              installationId,
-              organizationId,
-              repositoryNames: repoNameResult.repoNames,
-            },
-            jwt
-          );
+            return IntegrationApiRepo.updateGithubProfile({ installationId });
+          return IntegrationApiRepo.postGithubProfile({
+            installationId,
+            organizationId,
+            repositoryNames: repoNameResult.repoNames,
+          });
         })
         .then(() => {
           sessionStorage.removeItem('github-access-token');

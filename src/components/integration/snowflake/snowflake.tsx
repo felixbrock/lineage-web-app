@@ -4,14 +4,10 @@ import { ReactElement, useEffect, useState } from 'react';
 import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
 
 interface SnowflakeProps {
-  jwt: string;
   parentHandleSaveClick: () => unknown;
 }
 
-export default ({
-  jwt,
-  parentHandleSaveClick,
-}: SnowflakeProps): ReactElement => {
+export default ({ parentHandleSaveClick }: SnowflakeProps): ReactElement => {
   const [buttonText, setButtonText] = useState('Save');
   const [form, setForm] = useState({
     accountId: '',
@@ -21,21 +17,20 @@ export default ({
   });
 
   const handleSaveClick = async (): Promise<void> => {
-    const snowflakeProfile = await IntegrationApiRepo.getSnowflakeProfile(jwt);
+    const snowflakeProfile = await IntegrationApiRepo.getSnowflakeProfile();
 
-    if (!snowflakeProfile)
-      await IntegrationApiRepo.postSnowflakeProfile(form, jwt);
-    else await IntegrationApiRepo.updateSnowflakeProfile(form, jwt);
+    if (!snowflakeProfile) await IntegrationApiRepo.postSnowflakeProfile(form);
+    else await IntegrationApiRepo.updateSnowflakeProfile(form);
 
     setButtonText('Saved');
 
     parentHandleSaveClick();
 
-    await IntegrationApiRepo.postSnowflakeEnvironment(jwt);
+    await IntegrationApiRepo.postSnowflakeEnvironment();
   };
 
   useEffect(() => {
-    IntegrationApiRepo.getSnowflakeProfile(jwt)
+    IntegrationApiRepo.getSnowflakeProfile()
       .then((res) => {
         if (!res) return;
 

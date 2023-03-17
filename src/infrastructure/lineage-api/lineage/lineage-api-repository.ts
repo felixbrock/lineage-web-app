@@ -1,5 +1,6 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import { AxiosRequestConfig } from 'axios';
 import appConfig from '../../../config';
+import getApiClient from '../../api-client';
 import LineageDto from './lineage-dto';
 
 // TODO - Implement Interface regarding clean architecture
@@ -8,20 +9,12 @@ export default class LineageApiRepository {
 
   private static apiRoot = 'api';
 
-  private static baseUrl = appConfig.baseUrl.lineageService;
+  private static client = getApiClient(appConfig.baseUrl.lineageService);
 
-  static getOne = async (
-    id: string,
-    jwt: string
-  ): Promise<LineageDto | null> => {
+  static getOne = async (id: string): Promise<LineageDto | null> => {
     try {
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.get(
-        `${LineageApiRepository.baseUrl}/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/${id}`,
-        config
+      const response = await this.client.get(
+        `/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/${id}`
       );
       const jsonResponse = response.data;
       if (response.status === 200) return jsonResponse;
@@ -32,7 +25,6 @@ export default class LineageApiRepository {
   };
 
   static getLatest = async (
-    jwt: string,
     tolerateIncomplete: boolean,
     minuteTolerance?: number
   ): Promise<LineageDto | null> => {
@@ -46,12 +38,11 @@ export default class LineageApiRepository {
       }
 
       const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
         params,
       };
 
-      const response = await axios.get(
-        `${LineageApiRepository.baseUrl}/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/`,
+      const response = await this.client.get(
+        `/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/`,
         config
       );
       const jsonResponse = response.data;
@@ -62,16 +53,11 @@ export default class LineageApiRepository {
     }
   };
 
-  static create = async (jwt: string) => {
+  static create = async () => {
     try {
-      const config: AxiosRequestConfig = {
-        headers: { Authorization: `Bearer ${jwt}` },
-      };
-
-      const response = await axios.post(
-        `${LineageApiRepository.baseUrl}/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/`,
-        undefined,
-        config
+      const response = await this.client.post(
+        `/${LineageApiRepository.apiRoot}/${LineageApiRepository.version}/lineage/`,
+        undefined
       );
       const jsonResponse = response.data;
       if (response.status === 201) return jsonResponse;

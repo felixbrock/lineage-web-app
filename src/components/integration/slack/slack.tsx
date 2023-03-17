@@ -26,10 +26,9 @@ const buildOAuthUrl = (organizationId: string) => {
 
 interface SlackProps {
   organizationId: string;
-  jwt: string;
 }
 
-export default ({ organizationId, jwt }: SlackProps): ReactElement => {
+export default ({ organizationId }: SlackProps): ReactElement => {
   const [channels, setChannels] = useState<SlackConversationInfoDto[]>([]);
   const [selectedChannelId, setSelectedChannelId] = useState('');
   const [selectElements, setSelectElements] = useState<ReactElement[]>([]);
@@ -50,21 +49,18 @@ export default ({ organizationId, jwt }: SlackProps): ReactElement => {
       await IntegrationApiRepo.joinSlackConversation(
         oldChannelId,
         channelId,
-        accessToken,
-        jwt
+        accessToken
       );
 
     if (profile) {
-      await IntegrationApiRepo.updateSlackProfile(
-        { channelId, channelName },
-        jwt
-      );
+      await IntegrationApiRepo.updateSlackProfile({ channelId, channelName });
       setProfile({ ...profile, channelId, channelName });
     } else if (accessToken) {
-      const slackProfile = await IntegrationApiRepo.postSlackProfile(
-        { accessToken, channelId, channelName },
-        jwt
-      );
+      const slackProfile = await IntegrationApiRepo.postSlackProfile({
+        accessToken,
+        channelId,
+        channelName,
+      });
       if (!slackProfile)
         throw new Error('Did not receive slack profile after creating it');
       setProfile(slackProfile);
@@ -82,12 +78,11 @@ export default ({ organizationId, jwt }: SlackProps): ReactElement => {
     IntegrationApiRepo.getSlackConversations(
       new URLSearchParams(
         slackAccessToken ? { accessToken: slackAccessToken } : {}
-      ),
-      jwt
+      )
     )
       .then((res) => {
         setChannels(res);
-        return IntegrationApiRepo.getSlackProfile(jwt);
+        return IntegrationApiRepo.getSlackProfile();
       })
       .then((res) => {
         if (res) {

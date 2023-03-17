@@ -103,7 +103,6 @@ export default (): ReactElement => {
 
   const [account, setAccount] = useState<AccountDto>();
   const [user, setUser] = useState<any>();
-  const [jwt, setJwt] = useState('');
 
   const [sql, setSQL] = useState('');
   const [selectionTests, setSelectionTests] = useState<TestHistoryEntry[]>([]);
@@ -398,7 +397,7 @@ export default (): ReactElement => {
     if (!logicId) return;
 
     if (appConfig.react.showRealData) {
-      const logicDto = await LogicApiRepository.getOne(logicId, jwt);
+      const logicDto = await LogicApiRepository.getOne(logicId);
 
       if (!logicDto)
         throw new ReferenceError('Not able to retrieve logic object');
@@ -437,7 +436,6 @@ export default (): ReactElement => {
 
   const renderLineage = () => {
     setUser(undefined);
-    setJwt('');
     setAccount(undefined);
 
     Auth.currentAuthenticatedUser()
@@ -457,17 +455,7 @@ export default (): ReactElement => {
 
   useEffect(() => {
     if (!user) return;
-    let token: string;
-    Auth.currentSession()
-      .then((session) => {
-        const accessToken = session.getAccessToken();
-
-        token = accessToken.getJwtToken();
-
-        setJwt(token);
-
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
-      })
+    AccountApiRepository.getBy(new URLSearchParams({}))
       .then((accounts) => {
         if (!accounts.length) throw new Error(`No accounts found for user`);
 
@@ -500,8 +488,8 @@ export default (): ReactElement => {
     window.history.replaceState({}, document.title);
   };
 
-  const createIntegrationTabs = () => {
-    if (!jwt || !account) throw new Error('No user authorization found');
+  const createIntegrationTabs = async () => {
+    if (!account) throw new Error('No user authorization found');
 
     setIntegrations([
       ...[
@@ -510,7 +498,6 @@ export default (): ReactElement => {
           icon: SiSnowflake,
           tabContentJsx: (
             <Snowflake
-              jwt={jwt}
               parentHandleSaveClick={() => setSnackbarOpen(true)}
             ></Snowflake>
           ),
@@ -519,14 +506,14 @@ export default (): ReactElement => {
           name: 'GitHub',
           icon: FaGithub,
           tabContentJsx: (
-            <Github organizationId={account.organizationId} jwt={jwt}></Github>
+            <Github organizationId={account.organizationId}></Github>
           ),
         },
         {
           name: 'Slack',
           icon: FaSlack,
           tabContentJsx: (
-            <Slack organizationId={account.organizationId} jwt={jwt}></Slack>
+            <Slack organizationId={account.organizationId}></Slack>
           ),
         },
       ],
@@ -551,109 +538,107 @@ export default (): ReactElement => {
     }
   }, [cols]);
 
-  useEffect(() => {
-    if (!jwt) return;
+  const loadData = async () => {
+    try {
+      const matDtos = await MaterializationsApiRepository.getBy(
+        new URLSearchParams({})
+      );
 
-    let matsAvailable = false;
-    MaterializationsApiRepository.getBy(new URLSearchParams({}), jwt)
-      .then((matDtos) => {
-        if (matDtos.length) matsAvailable = true;
-        setMats(matDtos);
-        return DependenciesApiRepository.getBy(new URLSearchParams({}), jwt);
-      })
-      .then((dependencyDtos) => {
-        setDependencies(dependencyDtos);
+      setMats(matDtos);
+      const dependencyDtos = await DependenciesApiRepository.getBy(
+        new URLSearchParams({})
+      );
 
-        return DashboardsApiRepository.getBy(new URLSearchParams({}), jwt);
-      })
-      .then((dashboardDtos) => {
-        setDashboards(dashboardDtos);
-        if (matsAvailable)
-          return ColumnsApiRepository.getBy(new URLSearchParams({}), jwt);
-      })
-      .then((colDtos) => {
-        setCols(colDtos || []);
-      })
-      .catch((error) => {
-        console.log(error);
+      setDependencies(dependencyDtos);
 
-        setLineage(defaultErrorLineage);
-        setSourceData({
-          cols: defaultErrorColumns,
-          dashboards: deafultErrorDashboards,
-          mats: defaultErrorMaterializations,
-        });
-        setGraphSourceData({
-          cols: [],
-          dashboards: [],
-          dependencies: [],
-          mats: [],
-        });
+      const dashboardDtos = await DashboardsApiRepository.getBy(
+        new URLSearchParams({})
+      );
 
-        setIsDataAvailable(false);
+      setDashboards(dashboardDtos);
+
+      const colDtos = matDtos.length
+        ? await ColumnsApiRepository.getBy(new URLSearchParams({}))
+        : [];
+      setCols(colDtos);
+    } catch (error) {
+      console.log(error);
+
+      setLineage(defaultErrorLineage);
+      setSourceData({
+        cols: defaultErrorColumns,
+        dashboards: deafultErrorDashboards,
+        mats: defaultErrorMaterializations,
       });
+      setGraphSourceData({
+        cols: [],
+        dashboards: [],
+        dependencies: [],
+        mats: [],
+      });
+
+      setIsDataAvailable(false);
+    }
     // }
 
     handleRedirect();
     setIsLoading(false);
-  }, [lineage]);
+  };
 
   useEffect(() => {
-    if (!account) return;
+    loadData();
+  }, [lineage]);
 
-    if (!jwt) throw new Error('No user authorization found');
+  const loadLineage = async () => {
+    try {
+      const latestLineage = await LineageApiRepository.getLatest(false);
 
-    if (lineage) return;
+      if (!latestLineage)
+        throw new TypeError('Queried lineage object not found');
+
+      const sessionStorageLineageStr = sessionStorage.getItem('lineage');
+      const sessionStorageLineage: LineageDto | undefined =
+        sessionStorageLineageStr
+          ? JSON.parse(sessionStorageLineageStr)
+          : undefined;
+
+      if (
+        sessionStorageLineage &&
+        sessionStorageLineage.createdAt === latestLineage.createdAt
+      )
+        setLineage(sessionStorageLineage);
+      else {
+        setLineage(latestLineage);
+        sessionStorage.clear();
+        await caches.delete('lineage');
+      }
+
+      if (!sessionStorage.getItem('lineage'))
+        sessionStorage.setItem('lineage', JSON.stringify(latestLineage));
+    } catch (error) {
+      console.log(error);
+      sessionStorage.clear();
+      caches.delete('lineage');
+
+      setLineage(defaultErrorLineage);
+      setSourceData({
+        cols: defaultErrorColumns,
+        dashboards: deafultErrorDashboards,
+        mats: defaultErrorMaterializations,
+      });
+
+      setIsDataAvailable(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!account || lineage) return;
 
     toggleShowSideNav();
-    createIntegrationTabs();
+    createIntegrationTabs().then(() => {});
 
-    if (appConfig.react.showRealData) {
-      let localLineage: LineageDto;
-      LineageApiRepository.getLatest(jwt, false)
-        // LineageApiRepository.getOne('633c7c5be2f3d7a22896fb62', jwt)
-        .then((latestLineage) => {
-          if (!latestLineage)
-            throw new TypeError('Queried lineage object not found');
-
-          localLineage = latestLineage;
-
-          const sessionStorageLineageStr = sessionStorage.getItem('lineage');
-          const sessionStorageLineage: LineageDto | undefined =
-            sessionStorageLineageStr
-              ? JSON.parse(sessionStorageLineageStr)
-              : undefined;
-
-          if (
-            sessionStorageLineage &&
-            sessionStorageLineage.createdAt === localLineage.createdAt
-          )
-            setLineage(sessionStorageLineage);
-          else {
-            setLineage(localLineage);
-            sessionStorage.clear();
-            return caches.delete('lineage');
-          }
-        })
-        .then(() => {
-          if (!sessionStorage.getItem('lineage'))
-            sessionStorage.setItem('lineage', JSON.stringify(localLineage));
-        })
-        .catch((error) => {
-          console.log(error);
-          sessionStorage.clear();
-          caches.delete('lineage');
-
-          setLineage(defaultErrorLineage);
-          setSourceData({
-            cols: defaultErrorColumns,
-            dashboards: deafultErrorDashboards,
-            mats: defaultErrorMaterializations,
-          });
-
-          setIsDataAvailable(false);
-        });
-    } else {
+    if (appConfig.react.showRealData) loadLineage();
+    else {
       setLineage({
         id: 'todo',
         createdAt: '',
@@ -680,7 +665,7 @@ export default (): ReactElement => {
      where target_resource_id = '${binds[0]}' and activated = ${binds[1]} and deleted_at is null`;
 
     let testHistory: { [testSuiteId: string]: TestHistoryEntry };
-    IntegrationApiRepo.querySnowflake(testSuiteQuery, jwt)
+    IntegrationApiRepo.querySnowflake(testSuiteQuery)
       .then((results) => {
         const reps = results[account.organizationId].map(
           (el: any): { id: string; type: string } => ({
@@ -691,8 +676,7 @@ export default (): ReactElement => {
 
         return IntegrationApiRepo.getSelectionTestHistories(
           reps,
-          account.organizationId,
-          jwt
+          account.organizationId
         );
       })
       .then((selectionTestHistories) => {
@@ -714,7 +698,7 @@ export default (): ReactElement => {
         order by test_executions.executed_on desc
         limit 200;`;
 
-        return IntegrationApiRepo.querySnowflake(alertQuery, jwt);
+        return IntegrationApiRepo.querySnowflake(alertQuery);
       })
       .then((alertHistoryResults) => {
         const results = alertHistoryResults[account.organizationId];
@@ -808,7 +792,6 @@ export default (): ReactElement => {
           }}
           isRightPanelShown={isRightPanelShown}
           setIsRightPanelShown={setIsRightPanelShown}
-          jwt={jwt}
         />
         {!isDataAvailable && (
           <EmptyStateIntegrations onClick={handleSidePanelTabIndexChange} />

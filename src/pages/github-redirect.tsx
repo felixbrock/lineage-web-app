@@ -10,12 +10,10 @@ export default () => {
   const { code, installationId, state } = useParams();
 
   const [user, setUser] = useState<string>();
-  const [jwt, setJwt] = useState<any>();
   const [organizationId, setOrganizationId] = useState<string>();
 
   const renderGithubRedirect = () => {
     setUser(undefined);
-    setJwt('');
     setOrganizationId('');
 
     Auth.currentAuthenticatedUser()
@@ -34,15 +32,7 @@ export default () => {
   useEffect(() => {
     if (!user) return;
 
-    Auth.currentSession()
-      .then((session) => {
-        const accessToken = session.getAccessToken();
-
-        const token = accessToken.getJwtToken();
-        setJwt(token);
-
-        return AccountApiRepository.getBy(new URLSearchParams({}), token);
-      })
+    AccountApiRepository.getBy(new URLSearchParams({}))
       .then((accounts) => {
         if (!accounts.length) throw new Error(`No accounts found for user`);
 
@@ -59,8 +49,6 @@ export default () => {
   useEffect(() => {
     if (!organizationId) return;
 
-    if (!jwt) throw new Error('No user authorization found');
-
     if (!code) throw new Error('Did not receive a temp auth code from Github');
 
     if (!installationId)
@@ -71,7 +59,7 @@ export default () => {
         `Detected potential forgery attack with received state ${state}`
       );
 
-    IntegrationApiRepo.getAccessToken(code, jwt)
+    IntegrationApiRepo.getAccessToken(code)
       .then((accessToken) => {
         sessionStorage.setItem('github-installation-id', installationId);
         sessionStorage.setItem('github-access-token', accessToken);

@@ -48,7 +48,7 @@ export default ({
   target,
   testSuiteRep,
   orgId,
-  jwt,
+
   closeCallback,
   savedScheduleCallback,
 }: {
@@ -60,7 +60,6 @@ export default ({
     type: string;
   };
   orgId: string;
-  jwt: string;
   closeCallback: () => void;
   savedScheduleCallback: (
     state: CustomThresholdState,
@@ -359,7 +358,7 @@ export default ({
   useEffect(() => {
     if (!show) return;
 
-    IntegrationApiRepo.getSelectionTestHistories([testSuiteRep], orgId, jwt)
+    IntegrationApiRepo.getSelectionTestHistories([testSuiteRep], orgId)
       .then((testHistories) => {
         if (!testHistories || !testHistories.length) {
           if (state.lower.mode === 'relative') {

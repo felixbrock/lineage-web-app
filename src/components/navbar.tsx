@@ -28,7 +28,6 @@ export default function Navbar({
   toggleRightPanelFunctions,
   isRightPanelShown,
   setIsRightPanelShown,
-  jwt,
 }: {
   [key: string]: any;
 }) {
@@ -64,17 +63,12 @@ export default function Navbar({
   };
 
   const handleLineageSnapshotRefresh = () => {
-    if (!jwt) {
-      console.error('jwt missing. Cannot create new lineage snapshot');
-      return;
-    }
-
     if (snapshotState === 'loading' || snapshotState === 'creating') return;
 
     const state: SnapshotState = 'creating';
     setSnapshotState(state);
     setSnapshotInfo(getSnapshotInfo(state));
-    LineageApiRepository.create(jwt);
+    LineageApiRepository.create();
   };
 
   function toggleRightPanel() {
@@ -96,9 +90,7 @@ export default function Navbar({
   subNavigation[1].isShown = isRightPanelShown;
 
   useEffect(() => {
-    if (!jwt) return;
-
-    LineageApiRepository.getLatest(jwt, true, 3)
+    LineageApiRepository.getLatest(true, 3)
       .then((snapshot) => {
         let state: SnapshotState = 'not available';
         if (!snapshot) {
@@ -126,7 +118,7 @@ export default function Navbar({
         setSnapshotInfo(getSnapshotInfo(state));
         console.error(err);
       });
-  }, [jwt]);
+  }, []);
 
   return (
     <Disclosure as="nav" className="relative z-50 bg-gray-800">

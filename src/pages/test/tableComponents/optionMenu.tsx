@@ -7,6 +7,7 @@ import {
   PlayCircleIcon,
 } from '@heroicons/react/20/solid';
 import FrequencyDropdown from './frequencyDropdown';
+import { Test } from '../dataComponents/buildTableData';
 
 const callsToAction = [
   { name: 'Watch demo', href: '#', icon: PlayCircleIcon },
@@ -22,27 +23,30 @@ function Threshold() {
 }
 
 export function MenuComponent({
-  cron,
-  threshold,
+  testState,
   activeChildren,
-  frequencyRange,
-optionsMenuColor,
-columnLevel,
-active,
+  optionsMenuColor,
+  columnLevel,
+  newTestState,
+  setNewTestState,
+  elementId,
 }: {
-  cron: string;
-  threshold: string;
+  testState: Test;
   activeChildren: string;
-  frequencyRange: number[];
-optionsMenuColor: string;
-columnLevel: boolean;
-active: boolean;
+  optionsMenuColor: string;
+  columnLevel: boolean;
+  newTestState: any;
+  setNewTestState: any;
+  elementId: string;
 }) {
-    console.log('omc', optionsMenuColor)
+  const { id, active, cron, frequencyRange, threshold } = testState;
   return (
     <Popover className="relative">
       <Popover.Button className="flex">
-        <EllipsisVerticalIcon className={"h-5 w-5 "+optionsMenuColor} aria-hidden="true" />
+        <EllipsisVerticalIcon
+          className={'h-5 w-5 ' + optionsMenuColor}
+          aria-hidden="true"
+        />
       </Popover.Button>
 
       <Transition
@@ -60,16 +64,25 @@ active: boolean;
               <div className="flex items-center justify-center rounded-lg p-4 hover:bg-gray-50">
                 <div className="absolute">
                   <FrequencyDropdown
+                  testState={testState}
                     cron={cron}
                     frequencyRange={frequencyRange}
+                    columnLevel={columnLevel}
+                    newTestState={newTestState}
+                    setNewTestState={setNewTestState}
+                    elementId={elementId}
                   />
                 </div>
               </div>
               <div className="flex items-center justify-center rounded-lg p-4 hover:bg-gray-50">
-              {columnLevel ? (
-              active ? <h1>Active</h1> : <h1>Deactive</h1>
-              ) : (
-                <TestCounter activeChildren={activeChildren} />
+                {columnLevel ? (
+                  active ? (
+                    <h1>Active</h1>
+                  ) : (
+                    <h1>Deactive</h1>
+                  )
+                ) : (
+                  <TestCounter activeChildren={activeChildren} />
                 )}
               </div>
               <div className="flex items-center justify-center rounded-lg p-4 hover:bg-gray-50">
@@ -99,35 +112,44 @@ active: boolean;
 }
 
 export function OptionMenu({
-  cron,
-  active,
-  threshold,
-  frequencyRange,
+  testState,
   activeChildren,
   hasOnChildren,
-optionsMenuColor,
-columnLevel,
+  optionsMenuColor,
+  columnLevel,
+  elementId,
+  setTestState,
+  newTestState,
+  setNewTestState,
 }: {
-  cron: string;
-  active: boolean;
-  threshold: string;
-  frequencyRange: number[];
+  testState: Test;
   activeChildren: string;
   hasOnChildren: boolean;
-optionsMenuColor: string;
-columnLevel: boolean;
+  optionsMenuColor: string;
+  columnLevel: boolean;
+  elementId: string;
+  setTestState: any;
+  newTestState: any;
+  setNewTestState: any;
 }) {
   return (
     <div className="relative flex items-center justify-start">
-      <Toggle active={active} hasOnChildren={hasOnChildren} frequencyRange={frequencyRange} cron={cron}/>
+      <Toggle
+        testState={testState}
+        hasOnChildren={hasOnChildren}
+        columnLevel={columnLevel}
+        elementId={elementId}
+        newTestState={newTestState}
+        setNewTestState={setNewTestState}
+      />
       <MenuComponent
-        cron={cron}
-        threshold={threshold}
-        frequencyRange={frequencyRange}
+        testState={testState}
         activeChildren={activeChildren}
-optionsMenuColor={optionsMenuColor}
-columnLevel={columnLevel}
-active={active}
+        optionsMenuColor={optionsMenuColor}
+        columnLevel={columnLevel}
+        newTestState={newTestState}
+        setNewTestState={setNewTestState}
+        elementId={elementId}
       />
     </div>
   );

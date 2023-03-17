@@ -32,7 +32,7 @@ export function useApiRepository(
     }
   }, [jwt]);
 
-  return dtos;
+  return [dtos, setDtos];
 }
 
 export function useAccount() {
@@ -85,4 +85,3 @@ export function useAccount() {
 
   return [jwt, account];
 }
-

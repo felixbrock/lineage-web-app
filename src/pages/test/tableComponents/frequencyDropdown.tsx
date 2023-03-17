@@ -1,6 +1,35 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useContext, useState } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
+import { Frequency } from '../test';
+import { changeTest } from '../dataComponents/handleTestData';
+import { Test } from '../dataComponents/buildTableData';
+import { TableContext } from '../newtest';
+
+const buildCronExpression = (frequency: Frequency) => {
+  const currentDate = new Date();
+  const currentMinutes = currentDate.getUTCMinutes();
+  const currentHours = currentDate.getUTCHours();
+
+  switch (frequency) {
+    case '1h':
+      return `${currentMinutes} * * * ? *`;
+
+    case '3h':
+      return `${currentMinutes} */3 * * ? *`;
+
+    case '6h':
+      return `${currentMinutes} */6 * * ? *`;
+
+    case '12h':
+      return `${currentMinutes} */12 * * ? *`;
+
+    case '24h':
+      return `${currentMinutes} ${currentHours} * * ? *`;
+    default:
+      throw new Error('Unhandled frequency type');
+  }
+};
 
 const frequencies = {
   '1h': '1h',
@@ -57,16 +86,25 @@ const getFrequency = (cron: string) => {
 };
 
 export default function FrequencyDropdown({
+  testState,
   cron,
   frequencyRange,
+  columnLevel,
+  newTestState,
+  setNewTestState,
+  elementId,
 }: {
+  testState: Test;
   cron: string;
   frequencyRange: number[];
+  columnLevel: boolean;
+  newTestState: any;
+  setNewTestState: any;
+  elementId: string;
 }) {
-  const defaultFrequency = '25 * * * ? *';
   let frequency;
   if (!frequencyRange) {
-    frequency = frequencies[getFrequency(cron || defaultFrequency)];
+    frequency = frequencies[getFrequency(cron || newTestState.newFrequency)];
   } else {
     if (frequencyRange[0] === frequencyRange[1]) {
       frequency = frequencyRange[0] + 'h';
@@ -74,10 +112,30 @@ export default function FrequencyDropdown({
       frequency = `${frequencyRange[0]}h - ${frequencyRange[1]}h`;
     }
   }
+
+  const tableContextData = useContext(TableContext);
   const [selected, setSelected] = useState(frequency);
 
+  function changeFrequencySelection(value: string) {
+    setSelected(value);
+    let newFrequency;
+    if (value === 'Custom') {
+      newFrequency = 'custom';
+    } else {
+      newFrequency = buildCronExpression(value);
+    }
+    setNewTestState({ ...newTestState, newFrequency: newFrequency });
+    changeTest(
+      elementId,
+      { ...newTestState, newFrequency: newFrequency },
+      columnLevel,
+      testState,
+      tableContextData
+    );
+  }
+
   return (
-    <Listbox value={selected} onChange={setSelected}>
+    <Listbox value={selected} onChange={changeFrequencySelection}>
       {({ open }) => (
         <>
           <div className="relative">

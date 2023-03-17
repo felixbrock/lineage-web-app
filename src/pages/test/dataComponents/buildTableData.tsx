@@ -5,7 +5,8 @@ import {
   TestSuiteDto,
 } from '../../../infrastructure/observability-api/test-suite-dto';
 
-interface Test {
+export interface Test {
+  id: string;
   name: string;
   active: boolean;
   cron: string;
@@ -87,6 +88,7 @@ export function buildTableData(
       const testTargetId = test.target.targetResourceId;
 
       const testInfo: Test = {
+        id: test.id,
         name: test.type,
         cron: test.cron,
         active: test.activated,
@@ -190,6 +192,7 @@ export function buildTableData(
             }
           } else {
             const testSummary: Test = {
+              id: 'testSummary',
               name: columnTest.name,
               active: false,
               cron: numericalFrequency === 0 ? 'custom' : '',
@@ -228,17 +231,4 @@ export function buildTableData(
 
   const tableData = mapTables(allTableTests);
   return tableData;
-}
-
-/////
-interface Test2 {
-  att: number;
-  arr?: [number, number];
-}
-
-function testTest(foo: Test2) {
-  if (foo.arr?.length === 2) {
-    const f1 = foo.arr[0];
-    const f2 = foo.arr[1];
-  }
 }

@@ -1,7 +1,12 @@
 import { Disclosure } from '@headlessui/react';
 
 import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Schema, Table, TableData } from '../dataComponents/buildTableData';
+import {
+  Schema,
+  Table,
+  TableData,
+  Test,
+} from '../dataComponents/buildTableData';
 import { OptionMenu } from './optionMenu';
 import Toggle from './toggle';
 
@@ -20,17 +25,60 @@ const tableHeadings = [
 
 function ButtonLegend() {
   return (
-    <div className="absolute top-0 right-12 flex items-center justify-center">
-      <h1>All On, Same Frequency</h1>
-      <Toggle active={true} hasOnChildren={false} frequencyRange={[1, 1]} />
-      <h1>All On, Different Frequency</h1>
-      <Toggle active={true} hasOnChildren={false} frequencyRange={[1, 12]} />
-      <h1>Some On, Same Frequency</h1>
-      <Toggle active={false} hasOnChildren={true} frequencyRange={[24, 24]} />
-      <h1>Some On, Different Frequency</h1>
-      <Toggle active={false} hasOnChildren={true} frequencyRange={[3, 6]} />
-      <h1>All Off</h1>
-      <Toggle active={false} hasOnChildren={false} frequencyRange={[1, 24]} />
+    <div className="absolute -top-8 right-12 flex items-center justify-center">
+      <table className="border-separate border-spacing-2 border border-slate-500">
+        <thead>
+          <tr>
+            <th></th>
+            <th>On</th>
+            <th>Some On</th>
+            <th>Off</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Frequency Same</td>
+            <td>
+              <Toggle
+                active={true}
+                hasOnChildren={false}
+                frequencyRange={[1, 1]}
+              />
+            </td>
+            <td>
+              <Toggle
+                active={false}
+                hasOnChildren={true}
+                frequencyRange={[24, 24]}
+              />
+            </td>
+            <td>
+              <Toggle
+                active={false}
+                hasOnChildren={false}
+                frequencyRange={[1, 24]}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Frequency Different</td>
+            <td>
+              <Toggle
+                active={true}
+                hasOnChildren={false}
+                frequencyRange={[1, 12]}
+              />
+            </td>
+            <td>
+              <Toggle
+                active={false}
+                hasOnChildren={true}
+                frequencyRange={[3, 6]}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -51,62 +99,104 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
 }
 
-function TestMenus({ testData, textColor, columnChildren, columnLevel }: any) {
+function TestMenu({
+  testData,
+  textColor,
+  columnChildren,
+  columnLevel,
+  parentElementId,
+  heading,
+}: any) {
+  const testsOnlyForTables = [
+    'MaterializationRowCount',
+    'MaterializationColumnCount',
+    'MaterializationFreshness',
+    'MaterializationSchemaChange',
+  ];
+
+  let test: Test = testData.find(
+    (test: any) => test.name === testTypes[heading]
+  );
+
+  if (test && test?.active === false) {
+    test.active = test?.activeChildren === columnChildren ? true : false;
+  }
+
+  const activeChildren = test?.active
+    ? columnChildren
+    : test?.activeChildren ?? 0;
+
+  if (!test) {
+    test = {
+      id: 'newtest',
+      name: testTypes[heading],
+      active: false,
+      threshold: '',
+      cron: '',
+      activeChildren: undefined,
+    };
+  }
+
+  const [testState, setTestState] = useState(test)
+
+  let newFrequency;
+  if(!test.frequencyRange) {
+      // default Frequency
+      newFrequency = test.cron || '25 * * * ? *';
+
+  }
+  const [newTestState, setNewTestState] = useState({newActivatedState: test.active, newFrequency: newFrequency})
+
+  const optionMenu = (
+    <OptionMenu
+      testState={testState}
+      setTestState={setTestState}
+      activeChildren={`${activeChildren}/${columnChildren}`}
+      hasOnChildren={test?.activeChildren > 0 && !test?.active}
+      optionsMenuColor={textColor}
+      columnLevel={columnLevel}
+      elementId={parentElementId}
+      newTestState={newTestState}
+      setNewTestState={setNewTestState}
+    />
+  );
+  return (
+    <>
+      <td className={classNames('w-96 whitespace-nowrap px-3 text-sm')}>
+        {columnLevel && testsOnlyForTables.includes(testTypes[heading]) ? (
+          // render option Menu with 0 opacity to keey alignment
+          // also easier for future design changes
+          <div className="opacity-0">{optionMenu}</div>
+        ) : (
+          <>{optionMenu}</>
+        )}
+      </td>
+    </>
+  );
+}
+
+function TestMenus({
+  testData,
+  textColor,
+  columnChildren,
+  columnLevel,
+  parentElementId,
+}: any) {
   // use tableHeadings so that order is persistent for changes (one source of truth)
 
   return (
     <>
       {tableHeadings.map((heading: string) => {
         if (!testTypes[heading]) return;
-
-        const testsOnlyForTables = [
-          'MaterializationRowCount',
-          'MaterializationColumnCount',
-          'MaterializationFreshness',
-          'MaterializationSchemaChange',
-        ];
-
-        const test = testData.find(
-          (test: any) => test.name === testTypes[heading]
-        );
-
-        if (test && test?.active === false) {
-          test.active = test?.activeChildren === columnChildren ? true : false;
-        }
-
-        const activeChildren = test?.active
-          ? columnChildren
-          : test?.activeChildren ?? 0;
-
-        const optionMenu = (
-          <OptionMenu
-            cron={test?.cron ?? ''}
-            active={test?.active ?? false}
-            threshold={test?.threshold ?? ''}
-            frequencyRange={test?.frequencyRange}
-            activeChildren={`${activeChildren}/${columnChildren}`}
-            hasOnChildren={test?.activeChildren > 0 && !test?.active}
-            optionsMenuColor={textColor}
-            columnLevel={columnLevel}
-          />
-        );
         return (
-          <>
-            <td
-              className={classNames(
-                'w-96 whitespace-nowrap px-3 text-sm'
-              )}
-            >
-              {columnLevel &&
-              testsOnlyForTables.includes(testTypes[heading]) ? (
-                // render option Menu with 0 opacity to keey alignment
-                // also easier for future design changes
-                <div className="opacity-0">{optionMenu}</div>
-              ) : (
-                <>{optionMenu}</>
-              )}
-            </td>
-          </>
+          <TestMenu
+            testData={testData}
+            heading={heading}
+            columnLevel={columnLevel}
+            textColor={textColor}
+            columnChildren={columnChildren}
+            parentElementId={parentElementId}
+          />
         );
       })}
     </>
@@ -132,7 +222,7 @@ export function SchemaComponent({
   buttonText,
   ids,
   setIds,
-  columnLevel
+  columnLevel,
 }: SchemaComponent) {
   let selectionBgColor = 'bg-gray-50';
   let selectionTextColor = 'text-cito';
@@ -159,7 +249,7 @@ export function SchemaComponent({
                 key={tableId}
                 className={classNames(
                   ids.includes(tableId) ? selectionBgColor : '',
-                  'relative left-6 border border-gray-100 h-14'
+                  'relative left-6 h-14 border border-gray-100'
                 )}
               >
                 <td className="relative w-16 px-8 sm:w-12 sm:px-6">
@@ -183,14 +273,19 @@ export function SchemaComponent({
                 <td
                   className={classNames(
                     'hover:' + bgColor,
-                    'min-w-[8rem] max-w-[8rem] py-4 pr-3 relative',
+                    'relative min-w-[8rem] max-w-[8rem] py-4 pr-3',
                     ids.includes(tableId) ? selectionTextColor : textColor
                   )}
                 >
-                <div className={classNames('flex justify-start items-center hover:absolute hover:inset-y-0 hover:z-50', 'hover:' + bgColor)}>
-                <h1 className='truncate text-sm font-medium'>
-                  {tableData.name}
-                  </h1>
+                  <div
+                    className={classNames(
+                      'flex items-center justify-start hover:absolute hover:inset-y-0 hover:z-50',
+                      'hover:' + bgColor
+                    )}
+                  >
+                    <h1 className="truncate text-sm font-medium">
+                      {tableData.name}
+                    </h1>
                   </div>
                 </td>
                 <TestMenus
@@ -198,6 +293,7 @@ export function SchemaComponent({
                   textColor={textColor}
                   columnChildren={tableData.columns?.size}
                   columnLevel={columnLevel}
+                  parentElementId={tableId}
                 />
                 <td className="relative right-6 min-w-[6rem] whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium sm:pr-3">
                   {!columnLevel && (
@@ -228,7 +324,7 @@ export function SchemaComponent({
 }
 
 type MainTableProps = {
-  tableData: { loading: boolean; tableData: TableData | Table};
+  tableData: { loading: boolean; tableData: TableData | Table };
   buttonText: string;
   tableTitle?: string;
   tableDescription?: string;
@@ -299,7 +395,6 @@ export default function MainTable({
               {tableTitle}
             </h1>
             <p className="mt-2 text-sm text-gray-700">{tableDescription}</p>
-            <ButtonLegend />
           </div>
         </div>
       )}
@@ -369,7 +464,7 @@ export default function MainTable({
                       ids={ids}
                       setIds={setIds}
                       buttonText={buttonText}
-                                          columnLevel={columnLevel}
+                      columnLevel={columnLevel}
                     />
                   ) : (
                     <>

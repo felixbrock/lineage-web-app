@@ -1,15 +1,28 @@
 import { Disclosure } from '@headlessui/react';
 
-import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useContext, useLayoutEffect, useRef, useState } from 'react';
 import {
-  Schema,
+  DEFAULT_FREQUENCY,
+  HARDCODED_THRESHOLD,
+  Level,
+  testsOnlyForTables,
+} from '../config';
+import {
+  Column,
+  Columns,
   Table,
   TableData,
+  Tables,
   Test,
 } from '../dataComponents/buildTableData';
+import { TableContext } from '../newtest';
+import {getFrequency } from '../utils/cron';
+import { classNames } from '../utils/tailwind';
 import { OptionMenu } from './optionMenu';
 import Toggle from './toggle';
 
+// this object controls the order of table columns
+// changes are respected by the test columns
 const tableHeadings = [
   'Table Name',
   'Column Freshness',
@@ -22,6 +35,18 @@ const tableHeadings = [
   'Table Freshness',
   'Schema Change',
 ];
+
+export const testTypes: { [name: string]: string } = {
+  'Column Freshness': 'ColumnFreshness',
+  Cardinality: 'ColumnCardinality',
+  Nullness: 'ColumnNullness',
+  Uniqueness: 'ColumnUniqueness',
+  Distribution: 'ColumnDistribution',
+  'Row Count': 'MaterializationRowCount',
+  'Column Count': 'MaterializationColumnCount',
+  'Table Freshness': 'MaterializationFreshness',
+  'Schema Change': 'MaterializationSchemaChange',
+};
 
 function ButtonLegend() {
   return (
@@ -83,93 +108,42 @@ function ButtonLegend() {
   );
 }
 
-export const testTypes: { [name: string]: string } = {
-  'Column Freshness': 'ColumnFreshness',
-  Cardinality: 'ColumnCardinality',
-  Nullness: 'ColumnNullness',
-  Uniqueness: 'ColumnUniqueness',
-  Distribution: 'ColumnDistribution',
-  'Row Count': 'MaterializationRowCount',
-  'Column Count': 'MaterializationColumnCount',
-  'Table Freshness': 'MaterializationFreshness',
-  'Schema Change': 'MaterializationSchemaChange',
-};
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
+export interface NewTestState {
+  newActivatedState: boolean;
+  newFrequency: string;
 }
 
 function TestMenu({
-  testData,
-  textColor,
-  columnChildren,
-  columnLevel,
+  test,
   parentElementId,
-  heading,
-}: any) {
-  const testsOnlyForTables = [
-    'MaterializationRowCount',
-    'MaterializationColumnCount',
-    'MaterializationFreshness',
-    'MaterializationSchemaChange',
-  ];
+  level,
+}: {
+  test: Test;
+  parentElementId: string;
+  level: Level;
+}) {
+  const [newTestState, setNewTestState] = useState<NewTestState>({
+    newActivatedState: test.active,
+    newFrequency: test.cron,
+  });
 
-  let test: Test = testData.find(
-    (test: any) => test.name === testTypes[heading]
-  );
+  // render option Menu with 0 opacity to keep alignment
+  // also easier for future design changes
+  const hidden: boolean =
+    level === 'column' && testsOnlyForTables.includes(test.type);
 
-  if (test && test?.active === false) {
-    test.active = test?.activeChildren === columnChildren ? true : false;
-  }
-
-  const activeChildren = test?.active
-    ? columnChildren
-    : test?.activeChildren ?? 0;
-
-  if (!test) {
-    test = {
-      id: 'newtest',
-      name: testTypes[heading],
-      active: false,
-      threshold: '',
-      cron: '',
-      activeChildren: undefined,
-    };
-  }
-
-  const [testState, setTestState] = useState(test)
-
-  let newFrequency;
-  if(!test.frequencyRange) {
-      // default Frequency
-      newFrequency = test.cron || '25 * * * ? *';
-
-  }
-  const [newTestState, setNewTestState] = useState({newActivatedState: test.active, newFrequency: newFrequency})
-
-  const optionMenu = (
-    <OptionMenu
-      testState={testState}
-      setTestState={setTestState}
-      activeChildren={`${activeChildren}/${columnChildren}`}
-      hasOnChildren={test?.activeChildren > 0 && !test?.active}
-      optionsMenuColor={textColor}
-      columnLevel={columnLevel}
-      elementId={parentElementId}
-      newTestState={newTestState}
-      setNewTestState={setNewTestState}
-    />
-  );
   return (
     <>
       <td className={classNames('w-96 whitespace-nowrap px-3 text-sm')}>
-        {columnLevel && testsOnlyForTables.includes(testTypes[heading]) ? (
-          // render option Menu with 0 opacity to keey alignment
-          // also easier for future design changes
-          <div className="opacity-0">{optionMenu}</div>
-        ) : (
-          <>{optionMenu}</>
-        )}
+        <div className={hidden ? 'opacity-0' : ''}>
+          <OptionMenu
+            test={test}
+            newTestState={newTestState}
+            setNewTestState={setNewTestState}
+            parentElementId={parentElementId}
+            level={level}
+          />
+        </div>
       </td>
     </>
   );
@@ -177,351 +151,417 @@ function TestMenu({
 
 function TestMenus({
   testData,
-  textColor,
-  columnChildren,
-  columnLevel,
+  level,
   parentElementId,
-}: any) {
-  // use tableHeadings so that order is persistent for changes (one source of truth)
-
+  totalChildren,
+}: {
+  testData: Test[];
+  level: Level;
+  parentElementId: string;
+  totalChildren?: number;
+}) {
   return (
     <>
-      {tableHeadings.map((heading: string) => {
-        if (!testTypes[heading]) return;
-        return (
-          <TestMenu
-            testData={testData}
-            heading={heading}
-            columnLevel={columnLevel}
-            textColor={textColor}
-            columnChildren={columnChildren}
-            parentElementId={parentElementId}
-          />
+      {tableHeadings.map((heading: string, index) => {
+        // use tableHeadings so that order is persistent for changes
+        const testType = testTypes[heading];
+
+        if (!testType) return;
+
+        let test: Test | undefined = testData.find(
+          (test) => test.type === testType
         );
+
+        // create empty tests for correct display
+        if (!test) {
+          if (level === 'table') {
+            totalChildren = totalChildren as number;
+            let cron: string;
+            let hasSummary: boolean;
+
+            if (testsOnlyForTables.includes(testType)) {
+              cron = DEFAULT_FREQUENCY;
+              hasSummary = false;
+            } else {
+              cron = '';
+              hasSummary = true;
+            }
+
+            test = {
+              id: 'newTest',
+              type: testType,
+              active: false,
+              cron: DEFAULT_FREQUENCY,
+              threshold: HARDCODED_THRESHOLD,
+              ...(hasSummary && {
+                summary: {
+                  activeChildren: 0,
+                  totalChildren: totalChildren,
+                  frequencyRange: [
+                    getFrequency(DEFAULT_FREQUENCY),
+                    getFrequency(DEFAULT_FREQUENCY),
+                  ],
+                },
+              }),
+            };
+          }
+
+          if (level === 'column') {
+            test = {
+              id: 'newTest',
+              type: testType,
+              active: false,
+              cron: DEFAULT_FREQUENCY,
+              threshold: HARDCODED_THRESHOLD,
+            };
+          }
+        }
+
+        if (test)
+          return (
+            <Fragment key={parentElementId+index}>
+              <TestMenu
+                level={level}
+                test={test}
+                parentElementId={parentElementId}
+              />
+            </Fragment>
+          );
+        return new Error('No test found or created');
       })}
     </>
   );
 }
 
-type SchemaComponent = {
-  schemaData: Schema;
-  textColor: string;
-  bgColor: string;
-  darkMode: boolean;
+type ColumnComponent = {
+  columns: Tables | Columns;
+  ids: string[];
+  setIds: React.Dispatch<React.SetStateAction<string[]>>;
   buttonText: string;
-  ids: any;
-  setIds: any;
-  columnLevel: boolean;
+  level: Level;
 };
 
-export function SchemaComponent({
-  schemaData,
-  textColor,
-  bgColor,
-  darkMode,
-  buttonText,
+export function ColumnComponent({
+  columns,
   ids,
   setIds,
-  columnLevel,
-}: SchemaComponent) {
-  let selectionBgColor = 'bg-gray-50';
-  let selectionTextColor = 'text-cito';
-  let buttonTextColor = 'text-cito';
-
-  if (darkMode) selectionBgColor = 'bg-gray-700';
-  if (darkMode) selectionTextColor = 'text-white';
-  if (darkMode) buttonTextColor = 'text-white';
-
-  let columns: any;
-  if (schemaData.tables) {
-    columns = Array.from(schemaData.tables);
-  } else {
-    columns = Array.from(schemaData.columns);
-  }
+  buttonText,
+  level,
+}: ColumnComponent) {
+  const tableContext = useContext(TableContext);
+  const currentTheme = tableContext.theme.currentTheme;
+  const tableColorConfig =
+    tableContext.theme.colorConfig[currentTheme].table[level];
+  const {
+    textColor,
+    buttonTextColor,
+    selectionBgColor,
+    selectionTextColor,
+    bgColor,
+  } = tableColorConfig;
 
   return (
     <>
-      {columns.map(([tableId, tableData]: [string, any]) => (
-        <Disclosure>
-          {({ open }) => (
-            <>
-              <tr
-                key={tableId}
-                className={classNames(
-                  ids.includes(tableId) ? selectionBgColor : '',
-                  'relative left-6 h-14 border border-gray-100'
-                )}
-              >
-                <td className="relative w-16 px-8 sm:w-12 sm:px-6">
-                  {ids.includes(tableId) && (
-                    <div className="absolute inset-y-0 left-0 w-0.5 bg-cito" />
-                  )}
-                  <input
-                    type="checkbox"
-                    className="absolute left-6 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito sm:left-4"
-                    value={tableData.name}
-                    checked={ids.includes(tableId)}
-                    onChange={(e) =>
-                      setIds(
-                        e.target.checked
-                          ? [...ids, tableId]
-                          : ids.filter((id: string) => id !== tableId)
-                      )
-                    }
-                  />
-                </td>
-                <td
-                  className={classNames(
-                    'hover:' + bgColor,
-                    'relative min-w-[8rem] max-w-[8rem] py-4 pr-3',
-                    ids.includes(tableId) ? selectionTextColor : textColor
-                  )}
-                >
-                  <div
+      {Array.from(columns).map(
+        ([columnId, columnData]: [string, Table | Column]) => {
+          let totalChildren: number | undefined = undefined;
+          if (level === 'table') {
+            const cData = columnData as Table;
+            totalChildren = cData.columns.size;
+          }
+
+          return (
+            <Disclosure key={columnId}>
+              {({ open }) => (
+                <>
+                  <tr
+                    key={columnId}
                     className={classNames(
-                      'flex items-center justify-start hover:absolute hover:inset-y-0 hover:z-50',
-                      'hover:' + bgColor
+                      ids.includes(columnId) ? selectionBgColor : '',
+                      'relative left-6 h-14 border border-gray-100'
                     )}
                   >
-                    <h1 className="truncate text-sm font-medium">
-                      {tableData.name}
-                    </h1>
-                  </div>
-                </td>
-                <TestMenus
-                  testData={tableData.tests}
-                  textColor={textColor}
-                  columnChildren={tableData.columns?.size}
-                  columnLevel={columnLevel}
-                  parentElementId={tableId}
-                />
-                <td className="relative right-6 min-w-[6rem] whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium sm:pr-3">
-                  {!columnLevel && (
-                    <Disclosure.Button className={buttonTextColor}>
-                      {buttonText}
-                    </Disclosure.Button>
-                  )}
-                </td>
-              </tr>
-              <Disclosure.Panel as="tr">
-                <td colSpan={12}>
-                  {!columnLevel && (
-                    <MainTable
-                      tableData={{ loading: false, tableData: tableData }}
-                      buttonText={'Edit'}
-                      darkMode={true}
-                      columnLevel={true}
+                    <td className="relative w-16 px-8 sm:w-12 sm:px-6">
+                      {ids.includes(columnId) && (
+                        <div className="absolute inset-y-0 left-0 w-0.5 bg-cito" />
+                      )}
+                      <input
+                        type="checkbox"
+                        className="absolute left-6 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito sm:left-4"
+                        value={columnData.name}
+                        checked={ids.includes(columnId)}
+                        onChange={(e) =>
+                          setIds(
+                            e.target.checked
+                              ? [...ids, columnId]
+                              : ids.filter((id: string) => id !== columnId)
+                          )
+                        }
+                      />
+                    </td>
+                    <td
+                      className={classNames(
+                        'hover:' + bgColor,
+                        'relative min-w-[8rem] max-w-[8rem] py-4 pr-3',
+                        ids.includes(columnId) ? selectionTextColor : textColor
+                      )}
+                    >
+                      <div
+                        className={classNames(
+                          'flex items-center justify-start hover:absolute hover:inset-y-0 hover:z-50',
+                          'hover:' + bgColor
+                        )}
+                      >
+                        <h1 className="truncate text-sm font-medium">
+                          {columnData.name}
+                        </h1>
+                      </div>
+                    </td>
+                    <TestMenus
+                      testData={columnData.tests}
+                      parentElementId={columnId}
+                      level={level}
+                      totalChildren={totalChildren}
                     />
-                  )}
-                </td>
-              </Disclosure.Panel>
-            </>
-          )}
-        </Disclosure>
-      ))}
+                    <td className="relative right-6 min-w-[6rem] whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium sm:pr-3">
+                      {buttonText && (
+                        <Disclosure.Button className={buttonTextColor}>
+                          {buttonText}
+                        </Disclosure.Button>
+                      )}
+                    </td>
+                  </tr>
+                  <Disclosure.Panel as="tr">
+                    <td colSpan={12}>
+                      {level === 'table' && (
+                        <DataTable
+                          tableData={columnData as Table}
+                          buttonText={''}
+                          level={'column'}
+                        />
+                      )}
+                    </td>
+                  </Disclosure.Panel>
+                </>
+              )}
+            </Disclosure>
+          );
+        }
+      )}
     </>
   );
 }
 
-type MainTableProps = {
-  tableData: { loading: boolean; tableData: TableData | Table };
+type DataTableProps = {
+  tableData: TableData | Table;
   buttonText: string;
   tableTitle?: string;
   tableDescription?: string;
-  darkMode: boolean;
-  columnLevel: boolean;
+  level: 'database' | 'schema' | 'table' | 'column';
 };
 
-export default function MainTable({
+export function DataTable({
   tableData,
   buttonText,
   tableTitle,
   tableDescription,
-  darkMode,
-  columnLevel,
-}: MainTableProps) {
-  const checkbox = useRef();
-  const [checked, setChecked] = useState(false);
-  const [indeterminate, setIndeterminate] = useState(false);
+  level,
+}: DataTableProps) {
+  // columns are the ui columns, not the Snowflake columns
+  // table is the ui table, not the Snowflake table/mat
+
   const [ids, setIds] = useState([]);
+  const allIdsToSelect: string[] = [];
+  let columnComponent = <></>;
 
-  function calculateMaxSelected(tableData: TableData) {
-    // implement
-    if (columnLevel) return Array.from(tableData.columns.keys());
-
-    let tableIds: string[] = [];
+  if (level === 'table') {
+    tableData = tableData as TableData;
 
     tableData.forEach((database) => {
       database.schemas.forEach((schema) => {
-        tableIds = [...tableIds, ...Array.from(schema.tables.keys())];
+        allIdsToSelect.push(...Array.from(schema.tables.keys()));
       });
     });
-    return tableIds;
+
+    columnComponent = (
+      <>
+        {Array.from(tableData).map(([databaseName, database], index) => {
+          return (
+            <Fragment key={databaseName + index}>
+              <div className="relative h-6 w-full">
+                <h1 className="absolute w-64">Database: {databaseName}</h1>
+              </div>
+              <>
+                {Array.from(database.schemas).map(
+                  ([schemaName, schema], index) => {
+                    return (
+                      <Fragment key={schemaName + index}>
+                        <div className="relative ml-1">
+                          <div className="absolute h-3 w-px bg-gray-800"></div>
+                          <div className="absolute mt-3 h-px w-4 bg-gray-800"></div>
+                        </div>
+                        <div className="relative h-6 w-full">
+                          <h1 className="absolute left-6 w-64">
+                            Schema: {schemaName}
+                          </h1>
+                        </div>
+                        <ColumnComponent
+                          columns={schema.tables}
+                          ids={ids}
+                          // @ts-ignore tailwind
+                          setIds={setIds}
+                          buttonText={buttonText}
+                          level={level}
+                        />
+                      </Fragment>
+                    );
+                  }
+                )}
+              </>
+            </Fragment>
+          );
+        })}
+      </>
+    );
   }
 
-  const elementIds = useMemo(
-    () => calculateMaxSelected(tableData.tableData),
-    [tableData]
+  if (level === 'column') {
+    tableData = tableData as Table;
+    allIdsToSelect.push(...Array.from(tableData.columns.keys()));
+    columnComponent = (
+      <ColumnComponent
+        columns={tableData.columns}
+        ids={ids}
+        setIds={setIds}
+        buttonText={buttonText}
+        level={level}
+      />
+    );
+  }
+
+  return (
+    <>
+      <div className="w-full">
+        {(tableTitle || tableDescription) && (
+          <div className="relative pl-4 sm:flex sm:items-center">
+            <div className="sm:flex-auto">
+              <h1 className="text-base font-semibold leading-6 text-gray-900">
+                {tableTitle}
+              </h1>
+              <p className="mt-2 text-sm text-gray-700">{tableDescription}</p>
+            </div>
+          </div>
+        )}
+        <TableComponent
+          ids={ids}
+          setIds={setIds}
+          allIdsToSelect={allIdsToSelect}
+          level={level}
+        >
+          {columnComponent}
+        </TableComponent>
+      </div>
+    </>
   );
-  const maxSelected = elementIds.length;
+}
+
+interface TableComponentProps {
+  ids: string[];
+  setIds: React.Dispatch<React.SetStateAction<string[]>>;
+  allIdsToSelect: string[];
+  level: Level;
+  children: JSX.Element;
+}
+
+function TableComponent({
+  ids,
+  setIds,
+  allIdsToSelect,
+  level,
+  children,
+}: TableComponentProps) {
+  const tableContext = useContext(TableContext);
+  const checkbox = useRef();
+  const [checked, setChecked] = useState(false);
+  const [indeterminate, setIndeterminate] = useState(false);
 
   useLayoutEffect(() => {
-    const isIndeterminate = ids.length > 0 && ids.length < maxSelected;
-    setChecked(ids.length === maxSelected);
+    const isIndeterminate =
+      ids.length > 0 && ids.length < allIdsToSelect.length;
+    setChecked(ids.length === allIdsToSelect.length);
     setIndeterminate(isIndeterminate);
+    //@ts-ignore // from tailwind
     checkbox.current.indeterminate = isIndeterminate;
   }, [ids]);
 
   function toggleAll() {
-    setIds(checked || indeterminate ? [] : elementIds);
+    //@ts-ignore // from tailwind
+    setIds(checked || indeterminate ? [] : allIdsToSelect);
     setChecked(!checked && !indeterminate);
     setIndeterminate(false);
   }
 
-  let textColor = 'text-gray-900';
-  let bgColor = 'bg-white';
-
-  if (darkMode) {
-    textColor = 'text-white';
-    bgColor = 'bg-cito';
-  }
+  const currentTheme = tableContext.theme.currentTheme;
+  const themeColorConfig =
+    tableContext.theme.colorConfig[currentTheme].table[level];
 
   return (
-    <div className="w-full">
-      {(tableTitle || tableDescription) && (
-        <div className="relative pl-4 sm:flex sm:items-center">
-          <div className="sm:flex-auto">
-            <h1 className="text-base font-semibold leading-6 text-gray-900">
-              {tableTitle}
-            </h1>
-            <p className="mt-2 text-sm text-gray-700">{tableDescription}</p>
-          </div>
-        </div>
-      )}
-      <div className={classNames('mt-8 flow-root', bgColor)}>
-        <div className="-my-2 -mx-6 overflow-x-auto lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <div className="relative">
-              {ids.length > 0 && (
-                <div
+    <div className={classNames('mt-8 flow-root', themeColorConfig.bgColor)}>
+      <div className="-my-2 -mx-6 overflow-x-auto lg:-mx-8">
+        <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+          <div className="relative">
+            {ids.length > 0 && (
+              <div
+                className={classNames(
+                  'absolute top-0 left-16 flex h-12 items-center space-x-3 sm:left-12'
+                )}
+              >
+                <button
+                  type="button"
                   className={classNames(
-                    'absolute top-0 left-16 flex h-12 items-center space-x-3 sm:left-12'
+                    'inline-flex items-center rounded border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30'
                   )}
                 >
-                  <button
-                    type="button"
-                    className={classNames(
-                      'inline-flex items-center rounded border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30'
-                    )}
-                  >
-                    Enable All Tests
-                  </button>
-                </div>
-              )}
-              <table className="min-w-full table-fixed divide-y divide-gray-300 break-normal">
-                <thead>
-                  <tr>
-                    <th scope="col" className="relative w-12 px-8">
-                      <input
-                        type="checkbox"
-                        className={classNames(
-                          'absolute top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito',
-                          columnLevel ? 'left-10' : 'left-6'
-                        )}
-                        ref={checkbox}
-                        checked={checked}
-                        onChange={toggleAll}
-                      />
-                    </th>
-                    {tableHeadings.map((heading, index) => (
-                      <th
-                        key={heading}
-                        scope="col"
-                        className={classNames(
-                          'px-3 py-3.5 text-left text-sm font-semibold',
-                          textColor,
-                          index == 0 ? 'pl-6' : 'relative left-6'
-                        )}
-                      >
-                        {heading}
-                      </th>
-                    ))}
-                    <th
-                      scope="col"
-                      className="relative py-3.5 pl-3 pr-6 sm:pr-3"
-                    >
-                      <span className="sr-only">Edit</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className={classNames('')}>
-                  {columnLevel ? (
-                    <SchemaComponent
-                      schemaData={tableData.tableData}
-                      textColor={textColor}
-                      bgColor={bgColor}
-                      darkMode={darkMode}
-                      ids={ids}
-                      setIds={setIds}
-                      buttonText={buttonText}
-                      columnLevel={columnLevel}
-                    />
-                  ) : (
-                    <>
-                      {Array.from(tableData.tableData).map(
-                        ([databaseName, database]) => {
-                          return (
-                            <>
-                              <div
-                                key={databaseName}
-                                className="relative h-6 w-full"
-                              >
-                                <h1 className="absolute w-64">
-                                  Database: {databaseName}
-                                </h1>
-                              </div>
-                              <Fragment key={databaseName}>
-                                {Array.from(database.schemas).map(
-                                  ([schemaName, schema]) => {
-                                    return (
-                                      <>
-                                        <div className="relative ml-1">
-                                          <div className="absolute h-3 w-px bg-gray-800"></div>
-                                          <div className="absolute mt-3 h-px w-4 bg-gray-800"></div>
-                                        </div>
-                                        <div
-                                          key={schemaName}
-                                          className="relative h-6 w-full"
-                                        >
-                                          <h1 className="absolute left-6 w-64">
-                                            Schema: {schemaName}
-                                          </h1>
-                                        </div>
-                                        {/**<div className="absolute left-8 h-[6.6rem] w-px bg-black"></div>**/}
-                                        <SchemaComponent
-                                          schemaData={schema}
-                                          textColor={textColor}
-                                          bgColor={bgColor}
-                                          darkMode={darkMode}
-                                          ids={ids}
-                                          setIds={setIds}
-                                          buttonText={buttonText}
-                                          columnLevel={columnLevel}
-                                        />
-                                      </>
-                                    );
-                                  }
-                                )}
-                              </Fragment>
-                            </>
-                          );
-                        }
+                  Enable All Tests
+                </button>
+              </div>
+            )}
+            <table className="min-w-full table-fixed divide-y divide-gray-300 break-normal">
+              <thead>
+                <tr>
+                  <th scope="col" className="relative w-12 px-8">
+                    <input
+                      type="checkbox"
+                      className={classNames(
+                        'absolute top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito',
+                        level === 'column' ? 'left-10' : 'left-6'
                       )}
-                    </>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                      //@ts-ignore tailwind
+                      ref={checkbox}
+                      checked={checked}
+                      onChange={toggleAll}
+                    />
+                  </th>
+                  {tableHeadings.map((heading, index) => (
+                    <th
+                      key={heading}
+                      scope="col"
+                      className={classNames(
+                        'px-3 py-3.5 text-left text-sm font-semibold',
+                        themeColorConfig.textColor,
+                        index == 0 ? 'pl-6' : 'relative left-6'
+                      )}
+                    >
+                      {heading}
+                    </th>
+                  ))}
+                  <th scope="col" className="relative py-3.5 pl-3 pr-6 sm:pr-3">
+                    <span className="sr-only">Edit</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className={classNames('')}>{children}</tbody>
+            </table>
           </div>
         </div>
       </div>

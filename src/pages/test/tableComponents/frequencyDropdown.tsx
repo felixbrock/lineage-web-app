@@ -1,146 +1,61 @@
 import { Fragment, useContext, useState } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
-import { Frequency } from '../test';
-import { changeTest } from '../dataComponents/handleTestData';
 import { Test } from '../dataComponents/buildTableData';
 import { TableContext } from '../newtest';
+import { NewTestState } from './mainTable';
+import { Level } from '../config';
+import { buildCronExpression, frequencies, getFrequency } from '../utils/cron';
+import { classNames } from '../utils/tailwind';
 
-const buildCronExpression = (frequency: Frequency) => {
-  const currentDate = new Date();
-  const currentMinutes = currentDate.getUTCMinutes();
-  const currentHours = currentDate.getUTCHours();
+function getShownFrequency(cron: string, test?: Test) {
+  if (cron === '' && test?.summary) {
+    const minFrequency = test.summary.frequencyRange[0];
+    const displayedMinFrequency =
+      minFrequency === 0 ? 'Custom' : minFrequency + 'h';
+    const maxFrequency = test.summary.frequencyRange[1];
+    const displayedMaxFrequency = maxFrequency + 'h';
 
-  switch (frequency) {
-    case '1h':
-      return `${currentMinutes} * * * ? *`;
-
-    case '3h':
-      return `${currentMinutes} */3 * * ? *`;
-
-    case '6h':
-      return `${currentMinutes} */6 * * ? *`;
-
-    case '12h':
-      return `${currentMinutes} */12 * * ? *`;
-
-    case '24h':
-      return `${currentMinutes} ${currentHours} * * ? *`;
-    default:
-      throw new Error('Unhandled frequency type');
+    return displayedMinFrequency + ' - ' + displayedMaxFrequency;
+  } else {
+    if (cron === 'custom') return 'Custom';
+    const numericalFrequency = getFrequency(cron);
+    if (numericalFrequency === 0) return 'Custom';
+    return numericalFrequency + 'h';
   }
-};
-
-const frequencies = {
-  '1h': '1h',
-  '3h': '3h',
-  '6h': '6h',
-  '12h': '12h',
-  '24h': '24h',
-  custom: 'Custom',
-};
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
 }
-
-const getFrequency = (cron: string) => {
-  if (cron === 'custom') return cron;
-  const parts = cron.split(' ');
-
-  if (parts.length !== 6)
-    throw new Error(
-      'Unexpected cron exp. format received. Expected 6 elements'
-    );
-
-  if (
-    !Number.isNaN(Number(parts[0])) &&
-    parts.slice(1).every((el) => el === '*' || el === '?')
-  )
-    return '1h';
-  if (
-    !Number.isNaN(Number(parts[0])) &&
-    parts[1] === '*/3' &&
-    parts.slice(2).every((el) => el === '*' || el === '?')
-  )
-    return '3h';
-  if (
-    !Number.isNaN(Number(parts[0])) &&
-    parts[1] === '*/6' &&
-    parts.slice(2).every((el) => el === '*' || el === '?')
-  )
-    return '6h';
-  if (
-    !Number.isNaN(Number(parts[0])) &&
-    parts[1] === '*/12' &&
-    parts.slice(2).every((el) => el === '*' || el === '?')
-  )
-    return '12h';
-  if (
-    !Number.isNaN(Number(parts[0])) &&
-    !Number.isNaN(Number(parts[1])) &&
-    parts.slice(2).every((el) => el === '*' || el === '?')
-  )
-    return '24h';
-  return 'custom';
-};
-
 export default function FrequencyDropdown({
-  testState,
-  cron,
-  frequencyRange,
-  columnLevel,
+  test,
   newTestState,
   setNewTestState,
-  elementId,
+  parentElementId,
+  level,
 }: {
-  testState: Test;
-  cron: string;
-  frequencyRange: number[];
-  columnLevel: boolean;
-  newTestState: any;
-  setNewTestState: any;
-  elementId: string;
+  test: Test;
+  newTestState: NewTestState;
+  setNewTestState: React.Dispatch<React.SetStateAction<NewTestState>>;
+  parentElementId: string;
+  level: Level;
 }) {
-  let frequency;
-  if (!frequencyRange) {
-    frequency = frequencies[getFrequency(cron || newTestState.newFrequency)];
-  } else {
-    if (frequencyRange[0] === frequencyRange[1]) {
-      frequency = frequencyRange[0] + 'h';
-    } else {
-      frequency = `${frequencyRange[0]}h - ${frequencyRange[1]}h`;
-    }
-  }
+  const tableContext = useContext(TableContext);
+  const [selected, setSelected] = useState(test.cron);
 
-  const tableContextData = useContext(TableContext);
-  const [selected, setSelected] = useState(frequency);
-
-  function changeFrequencySelection(value: string) {
-    setSelected(value);
-    let newFrequency;
-    if (value === 'Custom') {
-      newFrequency = 'custom';
-    } else {
-      newFrequency = buildCronExpression(value);
-    }
-    setNewTestState({ ...newTestState, newFrequency: newFrequency });
-    changeTest(
-      elementId,
-      { ...newTestState, newFrequency: newFrequency },
-      columnLevel,
-      testState,
-      tableContextData
-    );
+  function changeFrequencySelection(newCron: string) {
+    setSelected(newCron);
+    const updatedTestState = { ...newTestState, newFrequency: newCron }
+    setNewTestState(updatedTestState);
+    tableContext.handleTestChange(parentElementId, test, updatedTestState, level);
   }
 
   return (
-    <Listbox value={selected} onChange={changeFrequencySelection}>
+    <Listbox value={selected} disabled={test.id.includes('TEMP_ID')} onChange={changeFrequencySelection}>
       {({ open }) => (
         <>
           <div className="relative">
             <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-cito focus:outline-none focus:ring-1 focus:ring-cito sm:text-sm">
-              <span className="block truncate">{selected}</span>
+              <span className="block truncate">
+                {getShownFrequency(selected, test)}
+              </span>
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon
                   className="h-5 w-5 text-gray-400"
@@ -157,42 +72,51 @@ export default function FrequencyDropdown({
               leaveTo="opacity-0"
             >
               <Listbox.Options className="absolute z-40 mt-1 w-full min-w-[7rem] overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                {Object.values(frequencies).map((frequencyOption) => (
-                  <Listbox.Option
-                    key={frequencyOption}
-                    className={({ active }) =>
-                      classNames(
-                        active ? 'bg-cito text-white' : 'text-gray-900',
-                        'relative cursor-default select-none py-2 pl-3 pr-9'
-                      )
-                    }
-                    value={frequencyOption}
-                  >
-                    {({ selected, active }) => (
-                      <>
-                        <span
-                          className={classNames(
-                            selected ? 'font-semibold' : 'font-normal',
-                            'block truncate'
-                          )}
-                        >
-                          {frequencyOption}
-                        </span>
-
-                        {selected ? (
+                {Object.values(frequencies).map((frequencyOption) => {
+                  return (
+                    <Listbox.Option
+                      key={frequencyOption}
+                      className={({ active }) =>
+                        classNames(
+                          active ? 'bg-cito text-white' : 'text-gray-900',
+                          'relative cursor-default select-none py-2 pl-3 pr-9'
+                        )
+                      }
+                      value={buildCronExpression(frequencyOption)}
+                    >
+                      {({ selected, active }) => (
+                        <>
                           <span
                             className={classNames(
-                              active ? 'text-white' : 'text-cito',
-                              'absolute inset-y-0 right-0 flex items-center pr-4'
+                              selected ? 'font-semibold' : 'font-normal',
+                              'block truncate'
                             )}
                           >
-                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                            {frequencyOption === 0 ? (
+                              'Custom'
+                            ) : (
+                              <>{frequencyOption}h</>
+                            )}
                           </span>
-                        ) : null}
-                      </>
-                    )}
-                  </Listbox.Option>
-                ))}
+
+                          {selected ? (
+                            <span
+                              className={classNames(
+                                active ? 'text-white' : 'text-cito',
+                                'absolute inset-y-0 right-0 flex items-center pr-4'
+                              )}
+                            >
+                              <CheckIcon
+                                className="h-5 w-5"
+                                aria-hidden="true"
+                              />
+                            </span>
+                          ) : null}
+                        </>
+                      )}
+                    </Listbox.Option>
+                  );
+                })}
               </Listbox.Options>
             </Transition>
           </div>

@@ -1,30 +1,74 @@
 import Navbar from '../../components/navbar';
-import MainTable from './tableComponents/mainTable';
+import { XCircleIcon } from '@heroicons/react/20/solid';
+import { DataTable, NewTestState } from './tableComponents/mainTable';
 import SearchBox from '../lineage/components/search-box';
 import { useAccount, useApiRepository } from './dataComponents/useData';
 import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
 import ColumnsApiRepository from '../../infrastructure/lineage-api/columns/columns-api-repository';
 import ObservabilityApiRepo from '../../infrastructure/observability-api/observability-api-repo';
-import { createContext, Fragment, useEffect, useState } from 'react';
-import { buildTableData } from './dataComponents/buildTableData';
+import React, { createContext, Fragment, useEffect, useState } from 'react';
+import {
+  buildTableData,
+  TableData,
+  Test,
+} from './dataComponents/buildTableData';
 import { Dialog, Transition } from '@headlessui/react';
+import { changeTest } from './dataComponents/handleTestData';
+import { classNames } from './utils/tailwind';
+import { Theme, colorConfig, GlobalTableColorConfig, Level } from './config';
+import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
+import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
+import {
+  QualTestSuiteDto,
+  TestSuiteDto,
+} from '../../infrastructure/observability-api/test-suite-dto';
 
-const tableContextData = {
-  jwt: '',
-  mats: [],
-  setMats: () => {},
-  cols: [],
-  setCols: () => {},
-  testSuite: [],
-  setTestSuite: () => {},
-  testQualSuite: [],
-  setQualTestSuite: () => {},
+export interface AlertInfo {
+  show: boolean;
+  title: string;
+  description: string;
+}
+
+export interface CurrentTestStates {
+  tests: [TestSuiteDto[], React.Dispatch<React.SetStateAction<TestSuiteDto[]>>];
+  qualTests: [
+    QualTestSuiteDto[],
+    React.Dispatch<React.SetStateAction<QualTestSuiteDto[]>>
+  ];
+}
+
+interface TableContextProps {
+  theme: {
+    colorConfig: GlobalTableColorConfig;
+    currentTheme: Theme;
+    setCurrentTheme: React.Dispatch<React.SetStateAction<Theme>>;
+  };
+  handleTestChange: (
+    parentElementId: string,
+    test: Test,
+    newTestState: NewTestState,
+    level: Level
+  ) => Promise<void>;
+  setAlertInfo: React.Dispatch<React.SetStateAction<AlertInfo>>;
+}
+
+const tableContext: TableContextProps = {
+  theme: {
+    colorConfig: colorConfig,
+    currentTheme: colorConfig.defaultTheme,
+    setCurrentTheme: () => {},
+  },
+  handleTestChange: () => Promise.resolve(),
+  setAlertInfo: () => {},
 };
 
-export const TableContext = createContext(tableContextData);
+export const TableContext = createContext(tableContext);
 
 export default function NewTest() {
   const [jwt, account] = useAccount();
+  const [currentTheme, setCurrentTheme] = useState(
+    tableContext.theme.currentTheme
+  );
   const [mats, setMats] = useApiRepository(
     jwt,
     MaterializationsApiRepository.getBy,
@@ -34,47 +78,81 @@ export default function NewTest() {
   const [testSuite, setTestSuite] = useApiRepository(
     jwt,
     ObservabilityApiRepo.getTestSuites
-  );
+  ) as [TestSuiteDto[], React.Dispatch<React.SetStateAction<TestSuiteDto[]>>];
   const [testQualSuite, setTestQualSuite] = useApiRepository(
     jwt,
     ObservabilityApiRepo.getQualTestSuites
-  );
+  ) as [
+    QualTestSuiteDto[],
+    React.Dispatch<React.SetStateAction<QualTestSuiteDto[]>>
+  ];
 
-  const [tableData, setTableData] = useState({
+  const currentTestStates: CurrentTestStates = {
+    tests: [testSuite, setTestSuite],
+    qualTests: [testQualSuite, setTestQualSuite],
+  };
+
+  const [tableState, setTableState] = useState({
     loading: true,
     tableData: new Map(),
   });
 
+  const alertInfoInit: AlertInfo = {
+    show: false,
+    title: '',
+    description: '',
+  };
+  const [alertInfo, setAlertInfo] = useState(alertInfoInit);
+
   useEffect(() => {
     if (mats && cols && testSuite && testQualSuite) {
-      const start = performance.now();
-      setTableData({
+      setTableState({
         loading: false,
-        tableData: buildTableData(mats, cols, testSuite, testQualSuite),
+        tableData: buildTableData(
+          mats as MaterializationDto[],
+          cols as ColumnDto[],
+          testSuite as TestSuiteDto[],
+          testQualSuite as QualTestSuiteDto[]
+        ),
       });
-      const end = performance.now();
-      console.log(end - start);
     }
   }, [mats, cols, testSuite, testQualSuite]);
+
+  async function handleTestChange(
+    parentElementId: string,
+    test: Test,
+    newTestState: NewTestState,
+    level: Level
+  ): Promise<void> {
+    await changeTest(
+      parentElementId,
+      test,
+      newTestState,
+      currentTestStates,
+      level,
+      tableState.tableData,
+      jwt
+    );
+  }
+
+  console.log(tableState);
 
   return (
     <TableContext.Provider
       value={{
-        ...tableContextData,
-        jwt,
-        mats,
-        setMats,
-        cols,
-        setCols,
-        testSuite,
-        setTestSuite,
-        testQualSuite,
-        setTestQualSuite,
+        ...tableContext,
+        theme: {
+          ...tableContext.theme,
+          currentTheme: currentTheme,
+          setCurrentTheme: setCurrentTheme,
+        },
+        handleTestChange: handleTestChange,
+        setAlertInfo: setAlertInfo,
       }}
     >
       <div className="h-screen w-full overflow-y-auto">
-        <Navbar current="tests" jwt={undefined} />
-        <StatusOverlay />
+        <Navbar current="tests" jwt={jwt} />
+        <Alert alertInfo={alertInfo} setAlertInfo={setAlertInfo} />
         <div className="items-top relative flex h-20 justify-center">
           <div className="relative mt-2 w-1/4">
             <SearchBox
@@ -84,16 +162,15 @@ export default function NewTest() {
             />
           </div>
         </div>
-        {tableData.loading ? (
+        {tableState.loading ? (
           <> </>
         ) : (
-          <MainTable
-            tableData={tableData}
+          <DataTable
+            tableData={tableState.tableData as TableData}
             buttonText={'Columns'}
             tableTitle="Tables"
             tableDescription="This is a test description."
-            darkMode={false}
-            columnLevel={false}
+            level={'table'}
           />
         )}
       </div>
@@ -101,107 +178,63 @@ export default function NewTest() {
   );
 }
 
-interface Status {
-  status: 'loading' | 'error' | 'success';
-}
+import { XMarkIcon } from '@heroicons/react/20/solid';
 
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
-}
-
-function StatusOverlay() {
-  const [isOpen, setIsOpen] = useState(false);
-  const statusObject: Status = {
-    status: 'success',
-  };
-  const [status, setStatus] = useState(statusObject);
-
-  function closeModal() {
-    setIsOpen(false);
-  }
-
-  function openModal() {
-    setIsOpen(true);
-  }
-
+function Alert({
+  alertInfo,
+  setAlertInfo,
+}: {
+  alertInfo: AlertInfo;
+  setAlertInfo: React.Dispatch<React.SetStateAction<AlertInfo>>;
+}) {
   return (
     <>
-      <div className="fixed bottom-12 right-12 flex items-center justify-center">
-        <button
-          type="button"
-          onClick={openModal}
-          className={classNames(
-            status.status === 'loading' ? 'bg-gray-300' : '',
-            status.status === 'success' ? 'bg-cito' : '',
-            status.status === 'error' ? 'bg-red-300' : '',
-            'h-12 w-12 rounded-xl hover:bg-opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75'
-          )}
-        ></button>
-      </div>
-
-      <Transition appear show={isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={closeModal}>
-          <Transition.Child
+      {/* Global notification live region, render this permanently at the end of the document */}
+      <div
+        aria-live="assertive"
+        className="pointer-events-none fixed inset-0 top-16 z-50 flex items-end px-4 py-6 sm:items-start sm:p-6"
+      >
+        <div className="flex w-full flex-col items-center space-y-4 sm:items-end">
+          {/* Notification panel, dynamically insert this into the live region when it needs to be displayed */}
+          <Transition
+            show={alertInfo.show}
             as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
+            enter="transform ease-out duration-300 transition"
+            enterFrom="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+            enterTo="translate-y-0 opacity-100 sm:translate-x-0"
+            leave="transition ease-in duration-100"
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-black bg-opacity-25" />
-          </Transition.Child>
-
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                  <Dialog.Title
-                    as="h3"
-                    className="text-lg font-medium leading-6 text-gray-900"
-                  >
-                    Queue
-                  </Dialog.Title>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">
-                      Change Tests on Schema test_S
+            <div className="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-cito shadow-lg ring-1 ring-black ring-opacity-5">
+              <div className="p-4">
+                <div className="flex items-start">
+                  <div className="ml-3 w-0 flex-1 pt-0.5">
+                    <p className="text-sm font-medium text-white">
+                      {alertInfo.title}
+                    </p>
+                    <p className="mt-1 text-sm text-white">
+                      {alertInfo.description}
                     </p>
                   </div>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">
-                      Change Tests on Column NAME
-                    </p>
-                  </div>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">
-                      Change Tests on Database TEST_DB
-                    </p>
-                  </div>
-
-                  <div className="mt-4">
+                  <div className="ml-4 flex flex-shrink-0">
                     <button
                       type="button"
-                      className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                      onClick={closeModal}
+                      className="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                      onClick={() => {
+                        setAlertInfo({ ...alertInfo, show: false });
+                      }}
                     >
-                      Done
+                      <span className="sr-only">Close</span>
+                      <XMarkIcon className="h-5 w-5" aria-hidden="true" />
                     </button>
                   </div>
-                </Dialog.Panel>
-              </Transition.Child>
+                </div>
+              </div>
             </div>
-          </div>
-        </Dialog>
-      </Transition>
+          </Transition>
+        </div>
+      </div>
     </>
   );
 }

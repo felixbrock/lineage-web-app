@@ -2,6 +2,12 @@ import { Auth } from 'aws-amplify';
 import { useEffect, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import AccountApiRepository from '../../../infrastructure/account-api/account-api-repo';
+import ColumnDto from '../../../infrastructure/lineage-api/columns/column-dto';
+import MaterializationDto from '../../../infrastructure/lineage-api/materializations/materialization-dto';
+import {
+  QualTestSuiteDto,
+  TestSuiteDto,
+} from '../../../infrastructure/observability-api/test-suite-dto';
 
 export function useSessionStorageData(...storageItems: string[]) {
   let finalStorageObject: { [index: string]: any } = {};
@@ -14,12 +20,17 @@ export function useSessionStorageData(...storageItems: string[]) {
   return finalStorageObject;
 }
 
+type ApiRepositoryResults = MaterializationDto[] | ColumnDto[] | TestSuiteDto[] | QualTestSuiteDto[] | undefined
+
 export function useApiRepository(
   jwt: any,
   apiRepositoryCallback: any,
   urlSearchParams?: any
-) {
-  const [dtos, setDtos] = useState(undefined);
+): [
+  dtos: ApiRepositoryResults,
+  setDtos: React.Dispatch<React.SetStateAction<any>>
+] {
+  const [dtos, setDtos] = useState();
 
   useEffect(() => {
     if (!jwt) return;

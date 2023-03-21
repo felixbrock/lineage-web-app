@@ -24,7 +24,6 @@ export interface TestSuiteDto extends BaseTestSuiteDto {
   customLowerThresholdMode: CustomThresholdMode;
   customUpperThresholdMode: CustomThresholdMode;
   importanceThreshold: number;
-  boundsIntervalRelative: number;
 }
 
 export const instanceOfTestSuiteDto = (obj: unknown): obj is TestSuiteDto =>

@@ -27,13 +27,9 @@ export default (): ReactElement => {
 
     const testSuiteId = searchParams.get('testSuiteId');
     const importance = searchParams.get('importance');
-    const boundsIntervalRelative = searchParams.get('boundsIntervalRelative');
-    if (
-      userFeedbackIsAnomaly === '0' &&
-      !(importance || testSuiteId || boundsIntervalRelative)
-    )
+    if (userFeedbackIsAnomaly === '0' && !(importance || testSuiteId))
       throw new Error(
-        'Expected importance, boundsIntervalRelative and testSuiteId value for reported false-positive '
+        'Expected importance and testSuiteId value for reported false-positive '
       );
 
     ObservabilityApiRepo.adjustDetectedAnomaly({
@@ -41,7 +37,6 @@ export default (): ReactElement => {
       userFeedbackIsAnomaly,
       testType,
       importance: importance || undefined,
-      boundsIntervalRelative: boundsIntervalRelative || undefined,
       testSuiteId: testSuiteId || undefined,
     })
       .then(() => {

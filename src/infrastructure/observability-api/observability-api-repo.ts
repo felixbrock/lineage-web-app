@@ -17,7 +17,6 @@ interface PostAnomalyFeedbackDto {
   userFeedbackIsAnomaly: string;
   testSuiteId?: string;
   importance?: string;
-  boundsIntervalRelative?: string;
 }
 
 interface CreateTestSuiteBaseProps {
@@ -47,7 +46,6 @@ interface UpdateTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
   customLowerThreshold?: CustomThreshold;
   customUpperThreshold?: CustomThreshold;
   importanceThreshold?: number;
-  boundsIntervalRelative?: number;
 }
 
 export interface UpdateTestSuiteObject {
@@ -176,7 +174,6 @@ export default class ObservabilityApiRepo {
         userFeedbackIsAnomaly: postAnomalyFeedbackDto.userFeedbackIsAnomaly,
         testType: postAnomalyFeedbackDto.testType,
         importance: postAnomalyFeedbackDto.importance,
-        boundsIntervalRelative: postAnomalyFeedbackDto.boundsIntervalRelative,
       };
 
       const response = await this.client.post(

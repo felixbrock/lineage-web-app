@@ -39,8 +39,9 @@ export default function FrequencyDropdown({
   function changeFrequencySelection(newCron: string) {
     setSelected(newCron);
     tableContext.handleTestChange(
-      parentElementId,
-      test,
+      [parentElementId],
+      [test.type],
+      [test.id],
       {newFrequency: newCron, newActivatedState: undefined},
       level
     );

@@ -25,7 +25,18 @@ interface TestToCreate {
   testType: TestType;
 }
 
-function getParentInfo(tableData: TableData, parentElementId: string) {
+interface ParentInfo {
+  databaseName: string;
+  schemaName: string;
+  matName: string;
+  mat: Table | undefined;
+  col: Column | undefined;
+}
+
+function getParentInfo(
+  tableData: TableData,
+  parentElementId: string
+): ParentInfo {
   let databaseName = '';
   let schemaName = '';
   let matName = '';
@@ -76,7 +87,6 @@ async function createColumnTest(
   const { newFrequency, newActivatedState } = newTestState;
   const testsToCreateSnowflake: CreateQuantTestSuiteProps[] = [];
   const testsToCreateUI: TestSuiteDto[] = [];
-  const tempIds: string[] = [];
 
   tests.forEach(({ parentElementId, testType }) => {
     // this is unnecessary since the targetResourceId is already known but since the interface demands
@@ -114,7 +124,6 @@ async function createColumnTest(
     // create temp test for the ui
     // id will be added after api request gives the new id
     const tempId = 'TEMP_ID' + parentElementId + testType;
-    tempIds.push(tempId);
 
     const newTestForUI: TestSuiteDto = {
       id: tempId,
@@ -434,4 +443,251 @@ export async function changeTest(
       }
     }
   }
+}
+
+function buildNewTest(
+  parentElementId: string,
+  parentInfo: ParentInfo,
+  testType: TestType,
+  newTestState: NewTestState
+): [CreateQuantTestSuiteProps, TestSuiteDto] {
+  const { databaseName, schemaName, matName, col } = parentInfo;
+  const { newActivatedState, newFrequency } = newTestState;
+
+  const isTestActivated =
+    newActivatedState === undefined ? false : newActivatedState;
+  const testCron =
+    newFrequency === undefined ? DEFAULT_FREQUENCY : newFrequency;
+
+  const newTestForSnowflake: CreateQuantTestSuiteProps = {
+    activated: isTestActivated,
+    ...(col && { columnName: col.name }),
+    databaseName: databaseName,
+    schemaName: schemaName,
+    materializationName: matName,
+    materializationType: MATERIALIZATION_TYPE,
+    targetResourceId: parentElementId,
+    type: testType,
+    executionType: EXECUTION_TYPE,
+    threshold: HARDCODED_THRESHOLD,
+    cron: testCron,
+  };
+
+  // create temp test for the ui
+  // id will be added after api request gives the new id
+  const tempId = 'TEMP_ID' + parentElementId + testType;
+
+  const newTestForUI: TestSuiteDto = {
+    id: tempId,
+    target: {
+      databaseName: databaseName,
+      targetResourceId: parentElementId,
+      schemaName: schemaName,
+      materializationType: MATERIALIZATION_TYPE,
+      materializationName: matName,
+      ...(col && { columnName: col.name }),
+    },
+    activated: isTestActivated,
+    type: testType,
+    cron: testCron,
+    executionType: EXECUTION_TYPE,
+    boundsIntervalRelative: HARDCODED_THRESHOLD,
+    importanceThreshold: HARDCODED_THRESHOLD,
+    threshold: HARDCODED_THRESHOLD,
+  };
+  return [newTestForSnowflake, newTestForUI];
+}
+function buildNewQualTest(
+  parentElementId: string,
+  parentInfo: ParentInfo,
+  testType: TestType,
+  newTestState: NewTestState
+): [CreateQualTestSuiteProps, QualTestSuiteDto] {
+  const { databaseName, schemaName, matName, col } = parentInfo;
+  const { newActivatedState, newFrequency } = newTestState;
+
+  const isTestActivated =
+    newActivatedState === undefined ? false : newActivatedState;
+  const testCron =
+    newFrequency === undefined ? DEFAULT_FREQUENCY : newFrequency;
+
+  const newTestForSnowflake: CreateQualTestSuiteProps = {
+    activated: isTestActivated,
+    cron: testCron,
+    executionType: EXECUTION_TYPE,
+    databaseName: databaseName,
+    schemaName: schemaName,
+    materializationName: matName,
+    materializationType: MATERIALIZATION_TYPE,
+    targetResourceId: parentElementId,
+    type: testType,
+    ...(col && { columnName: col.name }),
+  };
+
+  // create temp test for the ui
+  // id will be added after api request gives the new id
+  const temp_id = 'TEMP_ID' + parentElementId + testType;
+
+  const newTestForUI: QualTestSuiteDto = {
+    id: temp_id,
+    target: {
+      databaseName: databaseName,
+      targetResourceId: parentElementId,
+      schemaName: schemaName,
+      materializationType: MATERIALIZATION_TYPE,
+      materializationName: matName,
+    },
+    activated: isTestActivated,
+    type: testType,
+    cron: testCron,
+    executionType: EXECUTION_TYPE,
+  };
+
+  return [newTestForSnowflake, newTestForUI];
+}
+
+export async function changeTests(
+  parentElementIds: string[],
+  testTypes: TestType[],
+  testIds: string[],
+  newTestState: NewTestState,
+  currentTestStates: CurrentTestStates,
+  level: Level,
+  tableData: TableData,
+  jwt: string
+) {
+  const { tests, qualTests } = currentTestStates;
+  const [testSuite, setTestSuite] = tests;
+  const [qualTestSuite, setQualTestSuite] = tests;
+
+  // tests
+  const testsToCreateSnowflake: CreateQuantTestSuiteProps[] = [];
+  const testsToCreateUI: TestSuiteDto[] = [];
+  // qual tests
+  const qualTestsToCreateSnowflake: CreateQualTestSuiteProps[] = [];
+  const qualTestsToCreateUI: QualTestSuiteDto[] = [];
+  // tests update
+  const testsToUpdate: string[] = [];
+  // qual tests update
+  const qualTestsToUpdate: string[] = [];
+
+  // updates
+  if (testIds.length > 0) {
+    testIds.forEach((testId) => {
+      if (testSuite.find((test) => test.id === testId))
+        testsToUpdate.push(testId);
+      if (qualTestSuite.find((test) => test.id === testId))
+        qualTestsToUpdate.push(testId);
+    });
+  }
+
+  // creation
+  if (parentElementIds.length > 0) {
+    parentElementIds.forEach((parentElementId) => {
+      const parentInfo = getParentInfo(tableData, parentElementId);
+
+      testTypes.forEach((testType) => {
+        // is the parent not a column
+        if (!parentInfo.col && parentInfo.mat) {
+          // and the testType is tabletest
+          if (testsOnlyForTables.includes(testType)) {
+            let matHasTest = false;
+            parentInfo.mat.tests.forEach((test) => {
+              if (test.type === testType) {
+                matHasTest = true;
+                if (test.type === 'MaterializationSchemaChange') {
+                  qualTestsToUpdate.push(test.id);
+                } else {
+                  testsToUpdate.push(test.id);
+                }
+                return;
+              }
+            });
+            if (!matHasTest) {
+              if (testType === 'MaterializationSchemaChange') {
+                const [newQualTestSnowflake, newQualTestUI] = buildNewQualTest(
+                  parentElementId,
+                  parentInfo,
+                  testType,
+                  newTestState
+                );
+                qualTestsToCreateSnowflake.push(newQualTestSnowflake);
+                qualTestsToCreateUI.push(newQualTestUI);
+              } else {
+                const [newTestSnowflake, newTestUI] = buildNewTest(
+                  parentElementId,
+                  parentInfo,
+                  testType,
+                  newTestState
+                );
+                testsToCreateSnowflake.push(newTestSnowflake);
+                testsToCreateUI.push(newTestUI);
+              }
+            }
+            // if testType is not for tables, create or update all tests of the columns of the table
+          } else if (!testsOnlyForTables.includes(testType)) {
+            parentInfo.mat.columns.forEach((column, columnId) => {
+              let hasTest = false;
+              column.tests.forEach((test) => {
+                if (test.type === testType) {
+                  testsToUpdate.push(test.id);
+                  hasTest = true;
+                  return;
+                }
+              });
+              if (!hasTest) {
+                const [newTestSnowflake, newTestUI] = buildNewTest(
+                  parentElementId,
+                  parentInfo,
+                  testType,
+                  newTestState
+                );
+                testsToCreateSnowflake.push(newTestSnowflake);
+                testsToCreateUI.push(newTestUI);
+              }
+            });
+          }
+        } else if (parentInfo.col) {
+          let hasTest = false;
+          parentInfo.col.tests.forEach((test) => {
+            if (test.type === testType) {
+              testsToUpdate.push(test.id);
+              hasTest = true;
+              return;
+            }
+          });
+          if (!hasTest) {
+            const [newTestSnowflake, newTestUI] = buildNewTest(
+              parentElementId,
+              parentInfo,
+              testType,
+              newTestState
+            );
+            testsToCreateSnowflake.push(newTestSnowflake);
+            testsToCreateUI.push(newTestUI);
+          }
+        } else {
+          return new Error('Every ID should have either a column or table/mat');
+        }
+      });
+    });
+  }
+
+  console.log('ttcs', testsToCreateSnowflake)
+  console.log('ttcui', testsToCreateUI)
+  console.log('qttcs', qualTestsToCreateSnowflake)
+  console.log('qttcui', qualTestsToCreateUI)
+  console.log('ttu', testsToUpdate)
+  console.log('qttu', qualTestsToUpdate)
+  console.log('state', newTestState)
+  return
+
+  // create Tests
+  ObservabilityApiRepo.postTestSuites;
+  // create QualTests
+  ObservabilityApiRepo.postQualTestSuites;
+  // update Tests
+  ObservabilityApiRepo.updateTestSuites;
+  // update QualTests
+  ObservabilityApiRepo.updateQualTestSuites;
 }

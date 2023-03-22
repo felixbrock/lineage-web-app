@@ -13,7 +13,7 @@ import {
   Test,
 } from './dataComponents/buildTableData';
 import { Dialog, Transition } from '@headlessui/react';
-import { changeTest } from './dataComponents/handleTestData';
+import { changeTest, changeTests } from './dataComponents/handleTestData';
 import { classNames } from './utils/tailwind';
 import { Theme, colorConfig, GlobalTableColorConfig, Level } from './config';
 import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
@@ -44,8 +44,9 @@ interface TableContextProps {
     setCurrentTheme: React.Dispatch<React.SetStateAction<Theme>>;
   };
   handleTestChange: (
-    parentElementId: string,
-    test: Test,
+    parentElementIds: string[],
+    testTypes: TestType[],
+    testIds: string[],
     newTestState: NewTestState,
     level: Level
   ) => Promise<void>;
@@ -119,14 +120,26 @@ export default function NewTest() {
   }, [mats, cols, testSuite, testQualSuite]);
 
   async function handleTestChange(
-    parentElementId: string,
-    test: Test,
+    parentElementIds: string[],
+    testTypes: TestType[],
+    testIds: string[],
     newTestState: NewTestState,
     level: Level
   ): Promise<void> {
-    await changeTest(
-      parentElementId,
-      test,
+    /*
+      await changeTest(
+        parentElementId,
+        test,
+        newTestState,
+        currentTestStates,
+        level,
+        tableState.tableData,
+        jwt
+        */
+    await changeTests(
+      parentElementIds,
+      testTypes,
+      testIds,
       newTestState,
       currentTestStates,
       level,
@@ -179,6 +192,7 @@ export default function NewTest() {
 }
 
 import { XMarkIcon } from '@heroicons/react/20/solid';
+import { TestType } from './dataComponents/buildTestData';
 
 function Alert({
   alertInfo,

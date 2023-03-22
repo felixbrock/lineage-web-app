@@ -7,6 +7,7 @@ import {
   HARDCODED_THRESHOLD,
   Level,
   testsOnlyForTables,
+  TEST_TYPES,
 } from '../config';
 import {
   Column,
@@ -598,7 +599,6 @@ function TableComponent({
                 />
                 <button
                   type="button"
-                  onClick={() => tableContext.handleTestChange()}
                   className={classNames(
                     'inline-flex items-center rounded border border-gray-300 bg-cito px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30'
                   )}
@@ -637,7 +637,7 @@ function TableComponent({
                     </th>
                   ))}
                   <th scope="col" className="relative py-3.5 pl-3 pr-6 sm:pr-3">
-                    {level === 'table' &&<ButtonLegend />}
+                    {level === 'table' && <ButtonLegend />}
                     <span className="sr-only">Edit</span>
                   </th>
                 </tr>

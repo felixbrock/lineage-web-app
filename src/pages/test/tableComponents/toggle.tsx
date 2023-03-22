@@ -51,8 +51,9 @@ export default function Toggle({
   function toggleSwitch(switchValue: boolean) {
     setEnabled(switchValue)
     tableContext.handleTestChange(
-      parentElementId,
-      test,
+      [parentElementId],
+      [test.type],
+      [test.id],
       {newActivatedState: switchValue, newFrequency: undefined},
       level
     );

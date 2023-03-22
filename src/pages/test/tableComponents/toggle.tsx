@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Switch } from '@headlessui/react';
 import { Test } from '../dataComponents/buildTableData';
 import { TableContext } from '../newtest';
@@ -29,42 +29,31 @@ function getColor({ active, cron, summary }: ColorPicker) {
 
 export default function Toggle({
   test,
-  newTestState,
-  setNewTestState,
   parentElementId,
   level,
 }: {
   test: Test;
-  newTestState: NewTestState;
-  setNewTestState: React.Dispatch<React.SetStateAction<NewTestState>>;
   parentElementId: string;
   level: Level;
 }) {
   const tableContext = useContext(TableContext);
-  const setAlertInfo = tableContext.setAlertInfo;
 
   const { id, active, cron, summary } = test;
+  const [enabled, setEnabled] = useState(active);
+
+  useEffect(() => {
+      setEnabled(active)
+  }, [active])
+
+  // if active state is changed alse change newTestState
+  // necessary for Table Tests to Reflect all children column tests
 
   function toggleSwitch(switchValue: boolean) {
-    if (switchValue && cron === '') {
-      setAlertInfo({
-        show: true,
-        title: 'No Cron Job Specified',
-        description:
-          'We cannot apply a range of cron frequencies to tests. Please choose one.',
-      });
-      return;
-    }
-
-    const updatedTestState = {
-      ...newTestState,
-      newActivatedState: switchValue,
-    };
-    setNewTestState(updatedTestState);
+    setEnabled(switchValue)
     tableContext.handleTestChange(
       parentElementId,
       test,
-      updatedTestState,
+      {newActivatedState: switchValue, newFrequency: undefined},
       level
     );
   }
@@ -72,18 +61,18 @@ export default function Toggle({
   return (
     <Switch.Group as="div" className="flex items-center">
       <Switch
-        checked={active}
+        checked={enabled}
         disabled={id.includes('TEMP_ID')}
         onChange={toggleSwitch}
         className={classNames(
-          getColor({ active: active, cron, summary }),
+          getColor({ active: enabled, cron, summary }),
           'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2'
         )}
       >
         <span
           aria-hidden="true"
           className={classNames(
-            active ? 'translate-x-5' : 'translate-x-0',
+            enabled ? 'translate-x-5' : 'translate-x-0',
             'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
           )}
         />

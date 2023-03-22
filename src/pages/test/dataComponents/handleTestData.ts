@@ -9,6 +9,7 @@ import {
   TestSuiteDto,
 } from '../../../infrastructure/observability-api/test-suite-dto';
 import {
+  DEFAULT_FREQUENCY,
   EXECUTION_TYPE,
   HARDCODED_THRESHOLD,
   Level,
@@ -88,8 +89,14 @@ async function createColumnTest(
 
     if (!col) return new Error('No column found but there should be one');
 
+    // if new state is not given create test with the default (off or false)
+    const isTestActivated =
+      newActivatedState === undefined ? false : newActivatedState;
+    const testCron =
+      newFrequency === undefined ? DEFAULT_FREQUENCY : newFrequency;
+
     const newTestForSnowflake: CreateQuantTestSuiteProps = {
-      activated: newActivatedState,
+      activated: isTestActivated,
       columnName: col.name,
       databaseName: databaseName,
       schemaName: schemaName,
@@ -99,7 +106,7 @@ async function createColumnTest(
       type: testType,
       executionType: EXECUTION_TYPE,
       threshold: HARDCODED_THRESHOLD,
-      cron: newFrequency,
+      cron: testCron,
     };
 
     testsToCreateSnowflake.push(newTestForSnowflake);
@@ -119,9 +126,9 @@ async function createColumnTest(
         materializationName: matName,
         columnName: col.name,
       },
-      activated: newActivatedState,
+      activated: isTestActivated,
       type: testType,
-      cron: newFrequency,
+      cron: testCron,
       executionType: EXECUTION_TYPE,
       boundsIntervalRelative: HARDCODED_THRESHOLD,
       importanceThreshold: HARDCODED_THRESHOLD,
@@ -153,8 +160,12 @@ export function updateColumnTest(
   setTestSuite(
     testSuite.map((existingTest) => {
       if (testIds.includes(existingTest.id)) {
-        existingTest.cron = newFrequency ?? existingTest?.cron;
-        existingTest.activated = newActivatedState;
+        if (!(newFrequency === undefined)) {
+          existingTest.cron = newFrequency;
+        }
+        if (!(newActivatedState === undefined)) {
+          existingTest.activated = newActivatedState;
+        }
       }
       return existingTest;
     })
@@ -163,8 +174,10 @@ export function updateColumnTest(
     testIds.map((testId) => ({
       id: testId,
       props: {
-        ...{ activated: newActivatedState },
-        ...(newFrequency && { cron: newFrequency }),
+        ...(!(newActivatedState === undefined) && {
+          activated: newActivatedState,
+        }),
+        ...(!(newFrequency === undefined) && { cron: newFrequency }),
       },
     })),
     jwt
@@ -187,10 +200,16 @@ export async function createTableTest(
     tableData,
     parentElementId
   );
+  const { newActivatedState, newFrequency } = newTestState;
+
+  const isTestActivated =
+    newActivatedState === undefined ? false : newActivatedState;
+  const testCron =
+    newFrequency === undefined ? DEFAULT_FREQUENCY : newFrequency;
 
   const newTestForSnowflake: CreateQualTestSuiteProps = {
-    activated: newTestState.newActivatedState,
-    cron: newTestState.newFrequency,
+    activated: isTestActivated,
+    cron: testCron,
     executionType: EXECUTION_TYPE,
     databaseName: databaseName,
     schemaName: schemaName,
@@ -213,9 +232,9 @@ export async function createTableTest(
       materializationType: MATERIALIZATION_TYPE,
       materializationName: matName,
     },
-    activated: newTestState.newActivatedState,
+    activated: isTestActivated,
     type: test.type,
-    cron: newTestState.newFrequency,
+    cron: testCron,
     executionType: EXECUTION_TYPE,
   };
 
@@ -227,19 +246,12 @@ export async function createTableTest(
     // set new test for visual feedback
     setTestQualSuite(updatedTestSuite);
 
-    const acceptedTest = await ObservabilityApiRepo.postQualTestSuites(
+    const acceptedTests = await ObservabilityApiRepo.postQualTestSuites(
       [newTestForSnowflake],
       jwt
     );
 
-    setTestQualSuite(
-      updatedTestSuite.map((test) => {
-        if (test.id === temp_id) {
-          test.id === acceptedTest[0].id;
-        }
-        return test;
-      })
-    );
+    setTestQualSuite([...testQualSuite, ...acceptedTests]);
   } else {
     const [testSuite, setTestSuite] = currentTestStates.tests;
 
@@ -256,18 +268,11 @@ export async function createTableTest(
     // set new test for visual feedback
     setTestSuite(updatedTestSuite);
 
-    const acceptedTest = await ObservabilityApiRepo.postTestSuites(
+    const acceptedTests = await ObservabilityApiRepo.postTestSuites(
       [{ ...newTestForSnowflake, threshold: HARDCODED_THRESHOLD }],
       jwt
     );
-    setTestSuite(
-      updatedTestSuite.map((test) => {
-        if (test.id === temp_id) {
-          test.id === acceptedTest[0].id;
-        }
-        return test;
-      })
-    );
+    setTestSuite([...testSuite, ...acceptedTests]);
   }
 }
 
@@ -303,8 +308,10 @@ export function updateTableTest(
       {
         id: test.id,
         props: {
-          ...{ activated: newActivatedState },
-          ...(newFrequency && { cron: newFrequency }),
+          ...(!(newActivatedState === undefined) && {
+            activated: newActivatedState,
+          }),
+          ...(!(newFrequency === undefined) && { cron: newFrequency }),
         },
       },
     ],
@@ -314,8 +321,12 @@ export function updateTableTest(
     // @ts-ignore
     testSuite.map((existingTest) => {
       if (existingTest.id === test.id) {
-        existingTest.cron = newFrequency ?? existingTest?.cron;
-        existingTest.activated = newActivatedState ?? existingTest?.activated;
+        if (!(newFrequency === undefined)) {
+          existingTest.cron = newFrequency;
+        }
+        if (!(newActivatedState === undefined)) {
+          existingTest.activated = newActivatedState;
+        }
       }
       return existingTest;
     })

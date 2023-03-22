@@ -1,4 +1,4 @@
-import { Fragment, useContext } from 'react';
+import { Fragment, useContext, useState } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import { Test } from '../dataComponents/buildTableData';
@@ -26,28 +26,32 @@ function getShownFrequency(cron: string, test?: Test) {
 }
 export default function FrequencyDropdown({
   test,
-  newTestState,
-  setNewTestState,
   parentElementId,
   level,
 }: {
   test: Test;
-  newTestState: NewTestState;
-  setNewTestState: React.Dispatch<React.SetStateAction<NewTestState>>;
   parentElementId: string;
   level: Level;
 }) {
   const tableContext = useContext(TableContext);
-  const selected = newTestState.newFrequency
+  const [selected, setSelected] = useState(test.cron);
 
   function changeFrequencySelection(newCron: string) {
-    const updatedTestState = { ...newTestState, newFrequency: newCron }
-    setNewTestState(updatedTestState);
-    tableContext.handleTestChange(parentElementId, test, updatedTestState, level);
+    setSelected(newCron);
+    tableContext.handleTestChange(
+      parentElementId,
+      test,
+      {newFrequency: newCron, newActivatedState: undefined},
+      level
+    );
   }
 
   return (
-    <Listbox value={selected} disabled={test.id.includes('TEMP_ID')} onChange={changeFrequencySelection}>
+    <Listbox
+      value={selected}
+      disabled={test.id.includes('TEMP_ID')}
+      onChange={changeFrequencySelection}
+    >
       {({ open }) => (
         <>
           <div className="relative">
@@ -132,8 +136,7 @@ export function BulkFrequencyDropdown({
   newTestState: NewTestState;
   setNewTestState: React.Dispatch<React.SetStateAction<NewTestState>>;
 }) {
-
-  const selected = newTestState.newFrequency
+  const selected = newTestState.newFrequency;
 
   function changeFrequencySelection(newCron: string) {
     setNewTestState({ ...newTestState, newFrequency: newCron });
@@ -145,9 +148,7 @@ export function BulkFrequencyDropdown({
         <>
           <div className="relative">
             <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-cito focus:outline-none focus:ring-1 focus:ring-cito sm:text-sm">
-              <span className="block truncate">
-              {getFrequency(selected)}h
-              </span>
+              <span className="block truncate">{getFrequency(selected)}h</span>
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon
                   className="h-5 w-5 text-gray-400"

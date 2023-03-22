@@ -180,8 +180,8 @@ function ButtonLegend() {
 }
 
 export interface NewTestState {
-  newActivatedState: boolean;
-  newFrequency: string;
+  newActivatedState: boolean | undefined;
+  newFrequency: string | undefined;
 }
 
 function TestMenu({
@@ -193,11 +193,6 @@ function TestMenu({
   parentElementId: string;
   level: Level;
 }) {
-  const [newTestState, setNewTestState] = useState<NewTestState>({
-    newActivatedState: test.active,
-    newFrequency: test.cron,
-  });
-
   // render option Menu with 0 opacity to keep alignment
   // also easier for future design changes
   const hidden: boolean =
@@ -209,8 +204,6 @@ function TestMenu({
         <div className={hidden ? 'opacity-0' : ''}>
           <OptionMenu
             test={test}
-            newTestState={newTestState}
-            setNewTestState={setNewTestState}
             parentElementId={parentElementId}
             level={level}
           />

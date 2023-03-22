@@ -16,7 +16,7 @@ interface PostAnomalyFeedbackDto {
   testType: string;
   userFeedbackIsAnomaly: string;
   testSuiteId?: string;
-  thresholdValue?: string;
+  detectedValue?: string;
   thresholdType?: string;
 }
 
@@ -46,6 +46,8 @@ interface BaseUpdateTestSuiteObjProps {
 interface UpdateTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
   customLowerThreshold?: CustomThreshold;
   customUpperThreshold?: CustomThreshold;
+  feedbackLowerThreshold?: number;
+  feedbackUpperThreshold?: number;
 }
 
 export interface UpdateTestSuiteObject {
@@ -168,13 +170,7 @@ export default class ObservabilityApiRepo {
     postAnomalyFeedbackDto: PostAnomalyFeedbackDto
   ): Promise<unknown> => {
     try {
-      const data = {
-        alertId: postAnomalyFeedbackDto.alertId,
-        testSuiteId: postAnomalyFeedbackDto.testSuiteId,
-        userFeedbackIsAnomaly: postAnomalyFeedbackDto.userFeedbackIsAnomaly,
-        testType: postAnomalyFeedbackDto.testType,
-        threshold: postAnomalyFeedbackDto.threshold,
-      };
+      const data = { ...postAnomalyFeedbackDto };
 
       const response = await this.client.post(
         `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/anomaly/feedback`,

@@ -23,6 +23,8 @@ export interface TestSuiteDto extends BaseTestSuiteDto {
   customUpperThreshold?: number;
   customLowerThresholdMode: CustomThresholdMode;
   customUpperThresholdMode: CustomThresholdMode;
+  feedbackLowerThreshold?: number;
+  feedbackUpperThreshold?: number;
 }
 
 export const instanceOfTestSuiteDto = (obj: unknown): obj is TestSuiteDto =>

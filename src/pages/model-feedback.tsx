@@ -26,11 +26,11 @@ export default (): ReactElement => {
       throw new Error('User feedback callback is missing query param(s)');
 
     const testSuiteId = searchParams.get('testSuiteId');
-    const thresholdValue = searchParams.get('thresholdValue');
+    const detectedValue = searchParams.get('detectedValue');
     const thresholdType = searchParams.get('thresholdType');
     if (
       userFeedbackIsAnomaly === '0' &&
-      !(thresholdValue || thresholdType || testSuiteId)
+      !(detectedValue || thresholdType || testSuiteId)
     )
       throw new Error(
         'Expected threshold information and testSuiteId value for reported false-positive '
@@ -40,7 +40,7 @@ export default (): ReactElement => {
       alertId,
       userFeedbackIsAnomaly,
       testType,
-      thresholdValue: thresholdValue || undefined,
+      detectedValue: detectedValue || undefined,
       thresholdType: thresholdType || undefined,
       testSuiteId: testSuiteId || undefined,
     })

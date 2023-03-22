@@ -23,10 +23,9 @@ export interface TestSuiteDto extends BaseTestSuiteDto {
   customUpperThreshold?: number;
   customLowerThresholdMode: CustomThresholdMode;
   customUpperThresholdMode: CustomThresholdMode;
-  importanceThreshold: number;
 }
 
 export const instanceOfTestSuiteDto = (obj: unknown): obj is TestSuiteDto =>
-  !!obj && typeof obj === 'object' && 'importanceThreshold' in obj;
+  !!obj && typeof obj === 'object' && 'customLowerThresholdMode' in obj;
 
 export type QualTestSuiteDto = BaseTestSuiteDto;

@@ -26,17 +26,22 @@ export default (): ReactElement => {
       throw new Error('User feedback callback is missing query param(s)');
 
     const testSuiteId = searchParams.get('testSuiteId');
-    const importance = searchParams.get('importance');
-    if (userFeedbackIsAnomaly === '0' && !(importance || testSuiteId))
+    const thresholdValue = searchParams.get('thresholdValue');
+    const thresholdType = searchParams.get('thresholdType');
+    if (
+      userFeedbackIsAnomaly === '0' &&
+      !(thresholdValue || thresholdType || testSuiteId)
+    )
       throw new Error(
-        'Expected importance and testSuiteId value for reported false-positive '
+        'Expected threshold information and testSuiteId value for reported false-positive '
       );
 
     ObservabilityApiRepo.adjustDetectedAnomaly({
       alertId,
       userFeedbackIsAnomaly,
       testType,
-      importance: importance || undefined,
+      thresholdValue: thresholdValue || undefined,
+      thresholdType: thresholdType || undefined,
       testSuiteId: testSuiteId || undefined,
     })
       .then(() => {

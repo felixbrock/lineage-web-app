@@ -1,4 +1,5 @@
-import { Disclosure } from '@headlessui/react';
+import { Dialog, Disclosure, Switch, Transition } from '@headlessui/react';
+import { InformationCircleIcon } from '@heroicons/react/20/solid';
 
 import { Fragment, useContext, useLayoutEffect, useRef, useState } from 'react';
 import {
@@ -16,10 +17,18 @@ import {
   Test,
 } from '../dataComponents/buildTableData';
 import { TableContext } from '../newtest';
-import {getFrequency } from '../utils/cron';
+import { getFrequency } from '../utils/cron';
 import { classNames } from '../utils/tailwind';
+import { BulkFrequencyDropdown } from './frequencyDropdown';
 import { OptionMenu } from './optionMenu';
-import Toggle from './toggle';
+import Toggle, {
+  BulkToggle,
+  buttonColorOff,
+  buttonColorOffFrequencyRange,
+  buttonColorOffNoFrequencyRange,
+  buttonColorOn,
+  buttonColorOnFrequencyRange,
+} from './toggle';
 
 // this object controls the order of table columns
 // changes are respected by the test columns
@@ -49,62 +58,124 @@ export const testTypes: { [name: string]: string } = {
 };
 
 function ButtonLegend() {
+  let [isOpen, setIsOpen] = useState(false);
+
+  function closeModal() {
+    setIsOpen(false);
+  }
+
+  function openModal() {
+    setIsOpen(true);
+  }
+
+  function Button({ active, color }: { active: boolean; color: string }) {
+    return (
+      <Switch.Group as="div" className="flex items-center">
+        <Switch
+          checked={active}
+          disabled={true}
+          className={classNames(
+            color,
+            'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2'
+          )}
+        >
+          <span
+            aria-hidden="true"
+            className={classNames(
+              active ? 'translate-x-5' : 'translate-x-0',
+              'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+            )}
+          />
+        </Switch>
+      </Switch.Group>
+    );
+  }
+
   return (
-    <div className="absolute -top-8 right-12 flex items-center justify-center">
-      <table className="border-separate border-spacing-2 border border-slate-500">
-        <thead>
-          <tr>
-            <th></th>
-            <th>On</th>
-            <th>Some On</th>
-            <th>Off</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Frequency Same</td>
-            <td>
-              <Toggle
-                active={true}
-                hasOnChildren={false}
-                frequencyRange={[1, 1]}
-              />
-            </td>
-            <td>
-              <Toggle
-                active={false}
-                hasOnChildren={true}
-                frequencyRange={[24, 24]}
-              />
-            </td>
-            <td>
-              <Toggle
-                active={false}
-                hasOnChildren={false}
-                frequencyRange={[1, 24]}
-              />
-            </td>
-          </tr>
-          <tr>
-            <td>Frequency Different</td>
-            <td>
-              <Toggle
-                active={true}
-                hasOnChildren={false}
-                frequencyRange={[1, 12]}
-              />
-            </td>
-            <td>
-              <Toggle
-                active={false}
-                hasOnChildren={true}
-                frequencyRange={[3, 6]}
-              />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <>
+      <button
+        type="button"
+        onClick={openModal}
+        className="relative inline-flex items-center rounded-xl bg-white px-2 py-2 text-cito ring-1 ring-inset ring-cito hover:bg-gray-50 focus:z-10"
+      >
+        <span className="sr-only">Open Info</span>
+        <InformationCircleIcon className="h-5 w-5" aria-hidden="true" />
+      </button>
+      <Transition appear show={isOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-10" onClose={closeModal}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <table className="border-separate border-spacing-2">
+                    <thead>
+                      <tr>
+                        <th></th>
+                        <th>On</th>
+                        <th>Some On</th>
+                        <th>Off</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Frequency Same</td>
+                        <td>
+                          <Button color={buttonColorOn} active={true} />
+                        </td>
+                        <td>
+                          <Button
+                            color={buttonColorOffNoFrequencyRange}
+                            active={false}
+                          />
+                        </td>
+                        <td>
+                          <Button color={buttonColorOff} active={false} />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Frequency Different</td>
+                        <td>
+                          <Button
+                            color={buttonColorOnFrequencyRange}
+                            active={true}
+                          />
+                        </td>
+                        <td>
+                          <Button
+                            color={buttonColorOffFrequencyRange}
+                            active={false}
+                          />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+    </>
   );
 }
 
@@ -219,7 +290,7 @@ function TestMenus({
 
         if (test)
           return (
-            <Fragment key={parentElementId+index}>
+            <Fragment key={parentElementId + index}>
               <TestMenu
                 level={level}
                 test={test}
@@ -432,6 +503,7 @@ export function DataTable({
       <ColumnComponent
         columns={tableData.columns}
         ids={ids}
+        // @ts-ignore tailwind
         setIds={setIds}
         buttonText={buttonText}
         level={level}
@@ -454,6 +526,7 @@ export function DataTable({
         )}
         <TableComponent
           ids={ids}
+          // @ts-ignore tailwind
           setIds={setIds}
           allIdsToSelect={allIdsToSelect}
           level={level}
@@ -485,6 +558,12 @@ function TableComponent({
   const [checked, setChecked] = useState(false);
   const [indeterminate, setIndeterminate] = useState(false);
 
+  // for bulk changes
+  const [newTestState, setNewTestState] = useState<NewTestState>({
+    newActivatedState: false,
+    newFrequency: DEFAULT_FREQUENCY,
+  });
+
   useLayoutEffect(() => {
     const isIndeterminate =
       ids.length > 0 && ids.length < allIdsToSelect.length;
@@ -513,16 +592,25 @@ function TableComponent({
             {ids.length > 0 && (
               <div
                 className={classNames(
-                  'absolute top-0 left-16 flex h-12 items-center space-x-3 sm:left-12'
+                  'fixed top-20 left-4 z-50 flex items-center space-x-3 rounded-xl bg-gray-100 p-2'
                 )}
               >
+                <BulkToggle
+                  newTestState={newTestState}
+                  setNewTestState={setNewTestState}
+                />
+                <BulkFrequencyDropdown
+                  newTestState={newTestState}
+                  setNewTestState={setNewTestState}
+                />
                 <button
                   type="button"
+                  onClick={() => tableContext.handleTestChange()}
                   className={classNames(
-                    'inline-flex items-center rounded border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30'
+                    'inline-flex items-center rounded border border-gray-300 bg-cito px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30'
                   )}
                 >
-                  Enable All Tests
+                  Apply
                 </button>
               </div>
             )}
@@ -556,6 +644,7 @@ function TableComponent({
                     </th>
                   ))}
                   <th scope="col" className="relative py-3.5 pl-3 pr-6 sm:pr-3">
+                    {level === 'table' &&<ButtonLegend />}
                     <span className="sr-only">Edit</span>
                   </th>
                 </tr>

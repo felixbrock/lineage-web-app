@@ -51,7 +51,7 @@ export function MenuComponent({
     tableContext.theme.colorConfig[currentTheme].table[level];
   const { textColor } = tableColorConfig;
 
-  const { id, active, cron, threshold, summary } = test;
+  const { id, active, threshold, summary } = test;
   return (
     <Popover className="relative">
       <Popover.Button disabled={id.includes('TEMP_ID')} className="flex">
@@ -88,15 +88,15 @@ export function MenuComponent({
                     </div>
                   </div>
                   <div className="flex items-center justify-center rounded-lg p-4 hover:bg-gray-50">
-                    {level === 'column' &&
+                    {level === 'column' || !summary &&
                       (active ? <h1>Active</h1> : <h1>Deactive</h1>)}
-                    {level === 'table' && <TestCounter summary={summary} />}
+                    {level === 'table' && summary && <TestCounter summary={summary} />}
                   </div>
                   <div className="flex items-center justify-center rounded-lg p-4 hover:bg-gray-50">
                     <Threshold threshold={threshold} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 divide-x divide-gray-900/5 bg-gray-50">
+                <div className="hidden grid-cols-2 divide-x divide-gray-900/5 bg-gray-50">
                   {callsToAction.map((item) => (
                     <a
                       key={item.name}

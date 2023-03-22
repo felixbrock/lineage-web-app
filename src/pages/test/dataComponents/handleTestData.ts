@@ -379,7 +379,22 @@ export async function changeTest(
   console.log(newTestState);
 
   if (level === 'column') {
-    return console.log(newTestState, test);
+    if (test.id === 'newTest') {
+      await createColumnTest(
+        [
+          {
+            parentElementId: parentElementId,
+            testType: test.type,
+          },
+        ],
+        newTestState,
+        currentTestStates,
+        tableData,
+        jwt
+      );
+    } else {
+      updateColumnTest([test.id], newTestState, currentTestStates, jwt);
+    }
   }
 
   if (level === 'table') {

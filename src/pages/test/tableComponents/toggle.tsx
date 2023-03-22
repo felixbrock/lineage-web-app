@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext } from 'react';
 import { Switch } from '@headlessui/react';
 import { Test } from '../dataComponents/buildTableData';
 import { TableContext } from '../newtest';
@@ -38,11 +38,6 @@ export default function Toggle({
   const setAlertInfo = tableContext.setAlertInfo;
 
   const { id, active, cron, summary } = test;
-  const [enabled, setEnabled] = useState(active);
-  const [color, setColor] = useState(getColor({ active, cron, summary }));
-  useEffect(() => {
-    setColor(getColor({ active: enabled, cron, summary }));
-  }, [enabled]);
 
   function toggleSwitch(switchValue: boolean) {
     if (switchValue && cron === '') {
@@ -55,7 +50,6 @@ export default function Toggle({
       return;
     }
 
-    setEnabled(switchValue);
     const updatedTestState = {
       ...newTestState,
       newActivatedState: switchValue,
@@ -72,18 +66,18 @@ export default function Toggle({
   return (
     <Switch.Group as="div" className="flex items-center">
       <Switch
-        checked={enabled}
+        checked={active}
         disabled={id.includes('TEMP_ID')}
         onChange={toggleSwitch}
         className={classNames(
-          color,
+          getColor({active: active, cron, summary}),
           'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2'
         )}
       >
         <span
           aria-hidden="true"
           className={classNames(
-            enabled ? 'translate-x-5' : 'translate-x-0',
+            active ? 'translate-x-5' : 'translate-x-0',
             'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
           )}
         />

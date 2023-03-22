@@ -16,12 +16,12 @@ import {
 } from '../config';
 import { AlertInfo, CurrentTestStates } from '../newtest';
 import { NewTestState } from '../tableComponents/mainTable';
-import { Column, Table, TableData, Test } from './buildTableData';
+import { Column, Table, TableData, Test, TestType } from './buildTableData';
 import { testsOnlyForTables } from '../config';
 
-interface TestToUpdate {
+interface TestToCreate {
   parentElementId: string;
-  test: Test;
+  testType: TestType;
 }
 
 function getParentInfo(tableData: TableData, parentElementId: string) {
@@ -66,7 +66,7 @@ function getParentInfo(tableData: TableData, parentElementId: string) {
 }
 
 async function createColumnTest(
-  tests: TestToUpdate[],
+  tests: TestToCreate[],
   newTestState: NewTestState,
   currentTestStates: CurrentTestStates,
   tableData: TableData,
@@ -77,7 +77,7 @@ async function createColumnTest(
   const testsToCreateUI: TestSuiteDto[] = [];
   const tempIds: string[] = [];
 
-  tests.forEach(({ parentElementId, test }) => {
+  tests.forEach(({ parentElementId, testType }) => {
     // this is unnecessary since the targetResourceId is already known but since the interface demands
     // the names, they need to be looked up
     // might be worth changing
@@ -96,7 +96,7 @@ async function createColumnTest(
       materializationName: matName,
       materializationType: MATERIALIZATION_TYPE,
       targetResourceId: parentElementId,
-      type: test.type,
+      type: testType,
       executionType: EXECUTION_TYPE,
       threshold: HARDCODED_THRESHOLD,
       cron: newFrequency,
@@ -106,7 +106,7 @@ async function createColumnTest(
 
     // create temp test for the ui
     // id will be added after api request gives the new id
-    const tempId = 'TEMP_ID' + parentElementId + test.type;
+    const tempId = 'TEMP_ID' + parentElementId + testType;
     tempIds.push(tempId);
 
     const newTestForUI: TestSuiteDto = {
@@ -120,7 +120,7 @@ async function createColumnTest(
         columnName: col.name,
       },
       activated: newActivatedState,
-      type: test.type,
+      type: testType,
       cron: newFrequency,
       executionType: EXECUTION_TYPE,
       boundsIntervalRelative: HARDCODED_THRESHOLD,
@@ -144,31 +144,31 @@ async function createColumnTest(
 
 export function updateColumnTest(
   testIds: string[],
-  newTestState: any,
-  tableContextData: any
+  newTestState: NewTestState,
+  currentTestStates: CurrentTestStates,
+  jwt: string
 ) {
+  const [testSuite, setTestSuite] = currentTestStates.tests;
   const { newActivatedState, newFrequency } = newTestState;
-  const testsToUpdate: UpdateTestSuiteObject[] = [];
-  const newTests: QualTestSuiteDto[] = tableContextData.testSuite;
-
-  for (let testId of testIds) {
-    const oldTest = newTests.find((test) => test.id === testId);
-    if (oldTest) {
-      oldTest.cron = newFrequency ?? oldTest?.cron;
-      oldTest.activated = newActivatedState ?? oldTest?.activated;
-    }
-
-    testsToUpdate.push({
+  setTestSuite(
+    testSuite.map((existingTest) => {
+      if (testIds.includes(existingTest.id)) {
+        existingTest.cron = newFrequency ?? existingTest?.cron;
+        existingTest.activated = newActivatedState;
+      }
+      return existingTest;
+    })
+  );
+  ObservabilityApiRepo.updateTestSuites(
+    testIds.map((testId) => ({
       id: testId,
       props: {
         ...{ activated: newActivatedState },
         ...(newFrequency && { cron: newFrequency }),
       },
-    });
-  }
-  console.log('uct testsToUpdate', testsToUpdate);
-  ObservabilityApiRepo.updateTestSuites(testsToUpdate, tableContextData.jwt);
-  tableContextData.setTestSuite(newTests);
+    })),
+    jwt
+  );
 }
 
 export async function createTableTest(
@@ -331,52 +331,37 @@ export async function bulkChangeTests(
   jwt: string
 ) {
   const testType = test.type;
-  const { newActivatedState, newFrequency } = newTestState;
-  const [testSuite, setTestSuite] = currentTestStates.tests;
+  const testIdsToUpdate: string[] = [];
+  const testsToCreate: TestToCreate[] = [];
 
-  const testsToUpdate: string[] = [];
-  const testsToCreateSnowflake: CreateQuantTestSuiteProps[] = [];
-  const testsToCreateUI: TestSuiteDto[] = [];
-
-  const { databaseName, schemaName, matName, mat } = getParentInfo(
-    tableData,
-    parentElementId
-  );
+  const { mat } = getParentInfo(tableData, parentElementId);
 
   if (!mat) return new Error('Mat not found but there should be one');
 
   mat.columns.forEach((column, columnId) => {
     let hasTest = false;
-    for (let test of column.tests) {
+    column.tests.forEach((test) => {
       if (test.type === testType) {
-        testsToUpdate.push(test.id);
+        testIdsToUpdate.push(test.id);
         hasTest = true;
-        break;
+        return;
       }
-    }
+    });
     if (!hasTest) {
-
+      testsToCreate.push({ parentElementId: columnId, testType: testType });
+    }
   });
 
-  if (testsToUpdate.length > 0)
-    // set new test for visual feedback
-    setTestSuite([...testSuite, ...testsToCreateUI]);
-
-  const acceptedTest = await ObservabilityApiRepo.postTestSuites(
-    [{ ...newTestForSnowflake, threshold: HARDCODED_THRESHOLD }],
-    jwt
-  );
-  setTestSuite(
-    updatedTestSuite.map((test) => {
-      if (test.id === temp_id) {
-        test.id === acceptedTest[0].id;
-      }
-      return test;
-    })
-  );
-  updateColumnTest(testsToUpdate, newTestState, tableContextData);
+  if (testIdsToUpdate.length > 0)
+    updateColumnTest(testIdsToUpdate, newTestState, currentTestStates, jwt);
   if (testsToCreate.length > 0)
-    await createColumnTest(testsToCreate, tableContextData);
+    await createColumnTest(
+      testsToCreate,
+      newTestState,
+      currentTestStates,
+      tableData,
+      jwt
+    );
 }
 
 export async function changeTest(
@@ -392,7 +377,6 @@ export async function changeTest(
     new Error('Implement custom cron jobs');
   }
   console.log(newTestState);
-  return;
 
   if (level === 'column') {
     return console.log(newTestState, test);
@@ -401,7 +385,14 @@ export async function changeTest(
   if (level === 'table') {
     if (!testsOnlyForTables.includes(test.type)) {
       // bulk create or change the tests for each column of the table
-      await bulkChangeTests(parentElementId, test, newTestState);
+      await bulkChangeTests(
+        parentElementId,
+        test,
+        newTestState,
+        currentTestStates,
+        tableData,
+        jwt
+      );
     } else {
       if (test.id === 'newTest') {
         await createTableTest(

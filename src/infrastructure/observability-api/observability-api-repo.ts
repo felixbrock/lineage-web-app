@@ -43,7 +43,6 @@ interface BaseUpdateTestSuiteObjProps {
 
 interface UpdateTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
   threshold?: number;
-  importanceThreshold?: number;
   boundsIntervalRelative?: number;
 }
 

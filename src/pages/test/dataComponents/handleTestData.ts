@@ -140,7 +140,6 @@ async function createColumnTest(
       cron: testCron,
       executionType: EXECUTION_TYPE,
       boundsIntervalRelative: HARDCODED_THRESHOLD,
-      importanceThreshold: HARDCODED_THRESHOLD,
       threshold: HARDCODED_THRESHOLD,
     };
     testsToCreateUI.push(newTestForUI);
@@ -269,7 +268,6 @@ export async function createTableTest(
       {
         ...newTestForUI,
         threshold: HARDCODED_THRESHOLD,
-        importanceThreshold: HARDCODED_THRESHOLD,
         boundsIntervalRelative: HARDCODED_THRESHOLD,
       },
     ];
@@ -492,7 +490,6 @@ function buildNewTest(
     cron: testCron,
     executionType: EXECUTION_TYPE,
     boundsIntervalRelative: HARDCODED_THRESHOLD,
-    importanceThreshold: HARDCODED_THRESHOLD,
     threshold: HARDCODED_THRESHOLD,
   };
   return [newTestForSnowflake, newTestForUI];
@@ -673,14 +670,14 @@ export async function changeTests(
     });
   }
 
-  console.log('ttcs', testsToCreateSnowflake)
-  console.log('ttcui', testsToCreateUI)
-  console.log('qttcs', qualTestsToCreateSnowflake)
-  console.log('qttcui', qualTestsToCreateUI)
-  console.log('ttu', testsToUpdate)
-  console.log('qttu', qualTestsToUpdate)
-  console.log('state', newTestState)
-  return
+  console.log('ttcs', testsToCreateSnowflake);
+  console.log('ttcui', testsToCreateUI);
+  console.log('qttcs', qualTestsToCreateSnowflake);
+  console.log('qttcui', qualTestsToCreateUI);
+  console.log('ttu', testsToUpdate);
+  console.log('qttu', qualTestsToUpdate);
+  console.log('state', newTestState);
+  return;
 
   // create Tests
   ObservabilityApiRepo.postTestSuites;

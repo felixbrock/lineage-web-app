@@ -14,7 +14,7 @@ import {
   HARDCODED_THRESHOLD,
   MATERIALIZATION_TYPE,
 } from '../config';
-import { CurrentTestStates } from '../newtest';
+import { AlertInfo, CurrentTestStates, TableContext } from '../newtest';
 import { NewTestState } from '../tableComponents/mainTable';
 import { Column, Table, TableData, TestType } from './buildTableData';
 import { testsOnlyForTables } from '../config';
@@ -213,9 +213,9 @@ export async function changeTests(
   newTestState: NewTestState,
   currentTestStates: CurrentTestStates,
   tableData: TableData,
+  setAlertInfo: any,
   jwt: string
 ) {
-console.log(parentElementIds)
   const { tests, qualTests } = currentTestStates;
   const [testSuite, setTestSuite] = tests;
   const [qualTestSuite, setQualTestSuite] = qualTests;
@@ -287,7 +287,7 @@ console.log(parentElementIds)
               if (!hasTest) {
                 const [newTestSnowflake, newTestUI] = buildNewTest(
                   columnId,
-                  {...parentInfo, col: column},
+                  { ...parentInfo, col: column },
                   testType,
                   newTestState
                 );
@@ -323,6 +323,18 @@ console.log(parentElementIds)
     });
   }
 
+  // check that no update Ids contain 'TEMP_ID'
+  for (let id of [...testsToUpdate, ...qualTestsToUpdate]) {
+    if (id.includes('TEMP_ID')) {
+      setAlertInfo({
+        show: true,
+        title: 'Update/Creation in process',
+        description: 'Please wait until we updated and created all tests',
+      });
+      return;
+    }
+  }
+
   // temp test suites add 'TEMP_ID' to the ids of each test to mark them as temporary changes
   // they are displayed differently in the ui until the updates are accepted by the api repo
   const [updatedTestSuiteTempUI, updatedTestSuiteSnowflake] =
@@ -355,41 +367,40 @@ console.log(parentElementIds)
   setTestSuite([...updatedTestSuiteTempUI, ...testsToCreateUI]);
   setQualTestSuite([...updatedQualTestSuiteTempUI, ...qualTestsToCreateUI]);
 
+  /*
+        let acceptedTestSuite;
+        let acceptedQualTestSuite;
 
-/*
-  let acceptedTestSuite;
-  let acceptedQualTestSuite;
+        // create Tests
+        if (testsToCreateSnowflake.length > 0) {
+          acceptedTestSuite = await ObservabilityApiRepo.postTestSuites(
+            testsToCreateSnowflake,
+            jwt
+          );
+          }
 
-  // create Tests
-  if (testsToCreateSnowflake.length > 0) {
-    acceptedTestSuite = await ObservabilityApiRepo.postTestSuites(
-      testsToCreateSnowflake,
-      jwt
-    );
-    }
+        if (qualTestsToCreateSnowflake.length > 0) {
+          // create QualTests
+          acceptedQualTestSuite = await ObservabilityApiRepo.postQualTestSuites(
+            qualTestsToCreateSnowflake,
+            jwt
+          );
+          }
 
-  if (qualTestsToCreateSnowflake.length > 0) {
-    // create QualTests
-    acceptedQualTestSuite = await ObservabilityApiRepo.postQualTestSuites(
-      qualTestsToCreateSnowflake,
-      jwt
-    );
-    }
+        if (updatedTestSuiteSnowflake.length > 0) {
+          // update Tests
+          ObservabilityApiRepo.updateTestSuites(updatedTestSuiteSnowflake, jwt);
+          }
 
-  if (updatedTestSuiteSnowflake.length > 0) {
-    // update Tests
-    ObservabilityApiRepo.updateTestSuites(updatedTestSuiteSnowflake, jwt);
-    }
+        if (updatedQualTestSuiteSnowflake.length > 0) {
+          // update QualTests
+          ObservabilityApiRepo.updateQualTestSuites(
+            updatedQualTestSuiteSnowflake,
+            jwt
+          );
+          }
 
-  if (updatedQualTestSuiteSnowflake.length > 0) {
-    // update QualTests
-    ObservabilityApiRepo.updateQualTestSuites(
-      updatedQualTestSuiteSnowflake,
-      jwt
-    );
-    }
-
-  setTestSuite([...testSuite, ...acceptedTestSuite]);
-  setQualTestSuite([...qualTestSuite, ...acceptedQualTestSuite]);
-  */
+        setTestSuite([...testSuite, ...acceptedTestSuite]);
+        setQualTestSuite([...qualTestSuite, ...acceptedQualTestSuite]);
+        */
 }

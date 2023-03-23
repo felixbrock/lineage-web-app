@@ -126,6 +126,7 @@ export default function NewTest() {
       newTestState,
       currentTestStates,
       tableState.tableData,
+      setAlertInfo,
       jwt
     );
   }

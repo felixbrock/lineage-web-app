@@ -581,7 +581,7 @@ function TableComponent({
     tableContext.theme.colorConfig[currentTheme].table[level];
 
   return (
-    <div className={classNames('mt-8 flow-root', themeColorConfig.bgColor)}>
+    <div className={classNames('flow-root', themeColorConfig.bgColor)}>
       <div className="-my-2 -mx-6 overflow-x-auto lg:-mx-8">
         <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
           <div className="relative">

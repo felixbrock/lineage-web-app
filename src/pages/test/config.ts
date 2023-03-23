@@ -26,6 +26,13 @@ export const testsOnlyForTables = [
   'MaterializationSchemaChange',
 ];
 
+export const headingsOnlyForTables = [
+  'Row Count',
+  'Column Count',
+  'Table Freshness',
+  'Schema Change',
+];
+
 export interface TableColorConfig {
   textColor: string;
   bgColor: string;

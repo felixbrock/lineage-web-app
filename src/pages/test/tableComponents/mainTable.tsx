@@ -5,6 +5,7 @@ import { Fragment, useContext, useLayoutEffect, useRef, useState } from 'react';
 import {
   DEFAULT_FREQUENCY,
   HARDCODED_THRESHOLD,
+  headingsOnlyForTables,
   Level,
   testsOnlyForTables,
   TEST_TYPES,
@@ -16,13 +17,14 @@ import {
   TableData,
   Tables,
   Test,
+  TestType,
 } from '../dataComponents/buildTableData';
 import { TableContext } from '../newtest';
 import { getFrequency } from '../utils/cron';
 import { classNames } from '../utils/tailwind';
 import { BulkFrequencyDropdown } from './frequencyDropdown';
 import { OptionMenu } from './optionMenu';
-import Toggle, {
+import {
   BulkToggle,
   buttonColorOff,
   buttonColorOffFrequencyRange,
@@ -34,7 +36,7 @@ import Toggle, {
 // this object controls the order of table columns
 // changes are respected by the test columns
 const tableHeadings = [
-  'Table Name',
+  'Name',
   'Column Freshness',
   'Cardinality',
   'Nullness',
@@ -229,7 +231,7 @@ function TestMenus({
     <>
       {tableHeadings.map((heading: string, index) => {
         // use tableHeadings so that order is persistent for changes
-        const testType = testTypes[heading];
+        const testType = testTypes[heading] as TestType;
 
         if (!testType) return;
 
@@ -638,10 +640,11 @@ function TableComponent({
                       className={classNames(
                         'px-3 py-3.5 text-left text-sm font-semibold',
                         themeColorConfig.textColor,
-                        index == 0 ? 'pl-6' : 'relative left-6'
+                        index === 0 ? 'pl-6' : 'relative left-6'
                       )}
                     >
-                      {heading}
+                      {index === 0 ? (level.charAt(0).toUpperCase() + level.slice(1) + ' ' + heading) : (!headingsOnlyForTables.includes(heading) && heading)}
+                      {headingsOnlyForTables.includes(heading) && level === 'table' && heading}
                     </th>
                   ))}
                   <th scope="col" className="relative py-3.5 pl-3 pr-6 sm:pr-3">

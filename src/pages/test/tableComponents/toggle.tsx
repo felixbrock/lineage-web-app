@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Switch } from '@headlessui/react';
 import { Test } from '../dataComponents/buildTableData';
 import { TableContext } from '../newtest';
-import { NewTestState } from './mainTable';
+import { BulkNewTestState, NewTestState } from './mainTable';
 import { classNames } from '../utils/tailwind';
 import { Level } from '../config';
 
@@ -85,8 +85,8 @@ export function BulkToggle({
   newTestState,
   setNewTestState,
 }: {
-  newTestState: NewTestState;
-  setNewTestState: React.Dispatch<React.SetStateAction<NewTestState>>;
+  newTestState: BulkNewTestState;
+  setNewTestState: React.Dispatch<React.SetStateAction<BulkNewTestState>>;
 }) {
   const enable = newTestState.newActivatedState;
 

@@ -1,7 +1,14 @@
 import { Dialog, Disclosure, Switch, Transition } from '@headlessui/react';
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
 
-import { Fragment, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  Fragment,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   DEFAULT_FREQUENCY,
   HARDCODED_THRESHOLD,
@@ -24,6 +31,7 @@ import { getFrequency } from '../utils/cron';
 import { classNames } from '../utils/tailwind';
 import { BulkFrequencyDropdown } from './frequencyDropdown';
 import { OptionMenu } from './optionMenu';
+import { TestTypeFrequencyDropdown } from './testTypeDropdown';
 import {
   BulkToggle,
   buttonColorOff,
@@ -48,7 +56,7 @@ const tableHeadings = [
   'Schema Change',
 ];
 
-export const testTypes: { [name: string]: string } = {
+export const testTypes: { [name: string]: TestType } = {
   'Column Freshness': 'ColumnFreshness',
   Cardinality: 'ColumnCardinality',
   Nullness: 'ColumnNullness',
@@ -185,6 +193,10 @@ function ButtonLegend() {
 export interface NewTestState {
   newActivatedState: boolean | undefined;
   newFrequency: string | undefined;
+}
+
+export interface BulkNewTestState extends NewTestState {
+  forTestTypes: TestType[];
 }
 
 function TestMenu({
@@ -444,8 +456,8 @@ export function DataTable({
   let columnComponent = <></>;
 
   useEffect(() => {
-      setIds([])
-  }, [page])
+    setIds([]);
+  }, [page]);
 
   if (level === 'table') {
     tableData = tableData as TableData;
@@ -561,9 +573,10 @@ function TableComponent({
   const [indeterminate, setIndeterminate] = useState(false);
 
   // for bulk changes
-  const [newTestState, setNewTestState] = useState<NewTestState>({
+  const [newBulkTestState, setNewBulkTestState] = useState<BulkNewTestState>({
     newActivatedState: false,
     newFrequency: DEFAULT_FREQUENCY,
+    forTestTypes: [...TEST_TYPES],
   });
 
   useLayoutEffect(() => {
@@ -598,20 +611,27 @@ function TableComponent({
                 )}
               >
                 <BulkToggle
-                  newTestState={newTestState}
-                  setNewTestState={setNewTestState}
+                  newTestState={newBulkTestState}
+                  setNewTestState={setNewBulkTestState}
                 />
                 <BulkFrequencyDropdown
-                  newTestState={newTestState}
-                  setNewTestState={setNewTestState}
+                  newTestState={newBulkTestState}
+                  setNewTestState={setNewBulkTestState}
+                />
+                <TestTypeFrequencyDropdown
+                  newTestState={newBulkTestState}
+                  setNewTestState={setNewBulkTestState}
                 />
                 <button
                   type="button"
                   onClick={() =>
                     tableContext.handleTestChange(
                       ids,
-                      [...TEST_TYPES],
-                      newTestState,
+                      newBulkTestState.forTestTypes,
+                      {
+                        newActivatedState: newBulkTestState.newActivatedState,
+                        newFrequency: newBulkTestState.newFrequency,
+                      },
                       level
                     )
                   }
@@ -649,8 +669,15 @@ function TableComponent({
                         index === 0 ? 'pl-6' : 'relative left-6'
                       )}
                     >
-                      {index === 0 ? (level.charAt(0).toUpperCase() + level.slice(1) + ' ' + heading) : (!headingsOnlyForTables.includes(heading) && heading)}
-                      {headingsOnlyForTables.includes(heading) && level === 'table' && heading}
+                      {index === 0
+                        ? level.charAt(0).toUpperCase() +
+                          level.slice(1) +
+                          ' ' +
+                          heading
+                        : !headingsOnlyForTables.includes(heading) && heading}
+                      {headingsOnlyForTables.includes(heading) &&
+                        level === 'table' &&
+                        heading}
                     </th>
                   ))}
                   <th scope="col" className="relative py-3.5 pl-3 pr-6 sm:pr-3">

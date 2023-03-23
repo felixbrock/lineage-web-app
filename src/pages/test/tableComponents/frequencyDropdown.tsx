@@ -3,7 +3,7 @@ import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import { Test } from '../dataComponents/buildTableData';
 import { TableContext } from '../newtest';
-import { NewTestState } from './mainTable';
+import { BulkNewTestState, NewTestState } from './mainTable';
 import { Level } from '../config';
 import { buildCronExpression, frequencies, getFrequency } from '../utils/cron';
 import { classNames } from '../utils/tailwind';
@@ -133,8 +133,8 @@ export function BulkFrequencyDropdown({
   newTestState,
   setNewTestState,
 }: {
-  newTestState: NewTestState;
-  setNewTestState: React.Dispatch<React.SetStateAction<NewTestState>>;
+  newTestState: BulkNewTestState;
+  setNewTestState: React.Dispatch<React.SetStateAction<BulkNewTestState>>;
 }) {
   const selected = newTestState.newFrequency;
 

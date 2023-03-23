@@ -8,6 +8,8 @@ import ObservabilityApiRepo from '../../infrastructure/observability-api/observa
 import React, { createContext, Fragment, useEffect, useState } from 'react';
 import {
   buildTableData,
+  Database,
+  Schema,
   TableData,
 } from './dataComponents/buildTableData';
 import { Transition } from '@headlessui/react';
@@ -89,6 +91,8 @@ export default function NewTest() {
     qualTests: [testQualSuite, setTestQualSuite],
   };
 
+  const [initialTableData, setInitialTableData] = useState(new Map());
+
   const [tableState, setTableState] = useState({
     loading: true,
     tableData: new Map(),
@@ -103,14 +107,16 @@ export default function NewTest() {
 
   useEffect(() => {
     if (mats && cols && testSuite && testQualSuite) {
+      const tableData = buildTableData(
+        mats as MaterializationDto[],
+        cols as ColumnDto[],
+        testSuite as TestSuiteDto[],
+        testQualSuite as QualTestSuiteDto[]
+      );
+      setInitialTableData(tableData);
       setTableState({
         loading: false,
-        tableData: buildTableData(
-          mats as MaterializationDto[],
-          cols as ColumnDto[],
-          testSuite as TestSuiteDto[],
-          testQualSuite as QualTestSuiteDto[]
-        ),
+        tableData: searchTableData(tableData, searchString),
       });
     }
   }, [mats, cols, testSuite, testQualSuite]);
@@ -118,7 +124,7 @@ export default function NewTest() {
   async function handleTestChange(
     parentElementIds: string[],
     testTypes: TestType[],
-    newTestState: NewTestState,
+    newTestState: NewTestState
   ): Promise<void> {
     await changeTests(
       parentElementIds,
@@ -132,6 +138,52 @@ export default function NewTest() {
   }
 
   console.log(tableState);
+
+  function searchTableData(tableData: TableData, searchString: string) {
+    const searchResults: TableData = new Map();
+
+    tableData.forEach((database, databaseName) => {
+      database.schemas.forEach((schema, schemaName) => {
+        schema.tables.forEach((table, tableId) => {
+          if (
+            !table.name.includes(searchString) &&
+            !schemaName.includes(searchString) &&
+            !databaseName.includes(searchString)
+          )
+            return;
+          const currentDb = searchResults.get(databaseName);
+          if (currentDb) {
+            const currentSchema = currentDb.schemas.get(schemaName);
+            if (currentSchema) {
+              currentSchema.tables.set(tableId, table);
+            } else {
+              const newSchema: Schema = { tables: new Map([[tableId, table]]) };
+              currentDb.schemas.set(schemaName, newSchema);
+            }
+          } else {
+            const newSchema: Schema = { tables: new Map([[tableId, table]]) };
+            const newDatabase: Database = {
+              schemas: new Map([[schemaName, newSchema]]),
+            };
+            searchResults.set(databaseName, newDatabase);
+          }
+        });
+      });
+    });
+
+    console.log(searchResults);
+    if (searchResults.size === 0) return tableData;
+    return searchResults;
+  }
+
+  const [searchString, setSearchString] = useState('');
+
+  useEffect(() => {
+    setTableState({
+      ...tableState,
+      tableData: searchTableData(initialTableData, searchString),
+    });
+  }, [searchString]);
 
   return (
     <TableContext.Provider
@@ -154,14 +206,14 @@ export default function NewTest() {
             <SearchBox
               placeholder="Search..."
               label="testsearchbox"
-              onChange={() => {}}
+              onChange={(e) => setSearchString(e.target.value)}
             />
           </div>
         </div>
         {tableState.loading ? (
-          <> </>
+          <>Loading...</>
         ) : (
-          <DataTable
+          <Paginator
             tableData={tableState.tableData as TableData}
             buttonText={'Columns'}
             tableTitle="Tables"
@@ -176,6 +228,7 @@ export default function NewTest() {
 
 import { XMarkIcon } from '@heroicons/react/20/solid';
 import { TestType } from './dataComponents/buildTestData';
+import { Paginator } from './tableComponents/pagination';
 
 function Alert({
   alertInfo,

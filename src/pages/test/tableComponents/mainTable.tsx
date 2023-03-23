@@ -1,7 +1,7 @@
 import { Dialog, Disclosure, Switch, Transition } from '@headlessui/react';
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
 
-import { Fragment, useContext, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   DEFAULT_FREQUENCY,
   HARDCODED_THRESHOLD,
@@ -419,12 +419,13 @@ export function ColumnComponent({
   );
 }
 
-type DataTableProps = {
+export type DataTableProps = {
   tableData: TableData | Table;
   buttonText: string;
   tableTitle?: string;
   tableDescription?: string;
   level: 'database' | 'schema' | 'table' | 'column';
+  page?: number;
 };
 
 export function DataTable({
@@ -433,6 +434,7 @@ export function DataTable({
   tableTitle,
   tableDescription,
   level,
+  page,
 }: DataTableProps) {
   // columns are the ui columns, not the Snowflake columns
   // table is the ui table, not the Snowflake table/mat
@@ -440,6 +442,10 @@ export function DataTable({
   const [ids, setIds] = useState([]);
   const allIdsToSelect: string[] = [];
   let columnComponent = <></>;
+
+  useEffect(() => {
+      setIds([])
+  }, [page])
 
   if (level === 'table') {
     tableData = tableData as TableData;

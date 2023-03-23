@@ -41,9 +41,9 @@ export interface Schema {
   tables: Tables;
 }
 
-type Schemas = Map<string, Schema>;
+export type Schemas = Map<string, Schema>;
 
-interface Database {
+export interface Database {
   schemas: Schemas;
 }
 
@@ -224,7 +224,5 @@ export function buildTableData(
       });
     }
   });
-  ///////////////
-  return new Map([['test_Dbx', tableData.get('test_Dbx')]])
   return tableData;
 }

@@ -1,5 +1,4 @@
 import Navbar from '../../components/navbar';
-import { XCircleIcon } from '@heroicons/react/20/solid';
 import { DataTable, NewTestState } from './tableComponents/mainTable';
 import SearchBox from '../lineage/components/search-box';
 import { useAccount, useApiRepository } from './dataComponents/useData';
@@ -10,11 +9,9 @@ import React, { createContext, Fragment, useEffect, useState } from 'react';
 import {
   buildTableData,
   TableData,
-  Test,
 } from './dataComponents/buildTableData';
-import { Dialog, Transition } from '@headlessui/react';
-import { changeTest, changeTests } from './dataComponents/handleTestData';
-import { classNames } from './utils/tailwind';
+import { Transition } from '@headlessui/react';
+import { changeTests } from './dataComponents/handleTestData';
 import { Theme, colorConfig, GlobalTableColorConfig, Level } from './config';
 import MaterializationDto from '../../infrastructure/lineage-api/materializations/materialization-dto';
 import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
@@ -46,7 +43,6 @@ interface TableContextProps {
   handleTestChange: (
     parentElementIds: string[],
     testTypes: TestType[],
-    testIds: string[],
     newTestState: NewTestState,
     level: Level
   ) => Promise<void>;
@@ -122,27 +118,13 @@ export default function NewTest() {
   async function handleTestChange(
     parentElementIds: string[],
     testTypes: TestType[],
-    testIds: string[],
     newTestState: NewTestState,
-    level: Level
   ): Promise<void> {
-    /*
-      await changeTest(
-        parentElementId,
-        test,
-        newTestState,
-        currentTestStates,
-        level,
-        tableState.tableData,
-        jwt
-        */
     await changeTests(
       parentElementIds,
       testTypes,
-      testIds,
       newTestState,
       currentTestStates,
-      level,
       tableState.tableData,
       jwt
     );

@@ -53,7 +53,6 @@ export default function Toggle({
     tableContext.handleTestChange(
       [parentElementId],
       [test.type],
-      [test.id],
       {newActivatedState: switchValue, newFrequency: undefined},
       level
     );

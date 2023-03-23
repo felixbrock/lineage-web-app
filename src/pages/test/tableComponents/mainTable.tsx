@@ -599,6 +599,14 @@ function TableComponent({
                 />
                 <button
                   type="button"
+                  onClick={() =>
+                    tableContext.handleTestChange(
+                      ids,
+                      [...TEST_TYPES],
+                      newTestState,
+                      level
+                    )
+                  }
                   className={classNames(
                     'inline-flex items-center rounded border border-gray-300 bg-cito px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30'
                   )}

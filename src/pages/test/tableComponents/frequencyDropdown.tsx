@@ -41,7 +41,6 @@ export default function FrequencyDropdown({
     tableContext.handleTestChange(
       [parentElementId],
       [test.type],
-      [test.id],
       {newFrequency: newCron, newActivatedState: undefined},
       level
     );

@@ -126,7 +126,7 @@ export function OptionMenu(props: {
     >
       {props.test.id.includes('TEMP_ID') ? (
         <>
-        Creating Test...
+Loading...
         </>
       ) : (
         <>

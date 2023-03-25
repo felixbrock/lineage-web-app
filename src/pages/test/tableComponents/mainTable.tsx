@@ -1,5 +1,9 @@
 import { Dialog, Disclosure, Switch, Transition } from '@headlessui/react';
-import { InformationCircleIcon } from '@heroicons/react/20/solid';
+import {
+  InformationCircleIcon,
+  StarIcon as StarIconSolid,
+} from '@heroicons/react/20/solid';
+import { StarIcon } from '@heroicons/react/24/outline';
 
 import {
   Fragment,
@@ -312,6 +316,23 @@ function TestMenus({
   );
 }
 
+function Fav() {
+  //////////////////////////////////////
+  // only for demo
+  const [fav, setFav] = useState(false);
+  return (
+    <div className="absolute inset-y-0 -left-4 flex items-center justify-center text-cito outline-cito">
+      <button onClick={() => setFav(!fav)}>
+        {fav ? (
+          <StarIconSolid className="h-6 w-6" />
+        ) : (
+          <StarIcon className="h-6 w-6" />
+        )}
+      </button>
+    </div>
+  );
+}
+
 type ColumnComponent = {
   columns: Tables | Columns;
   ids: string[];
@@ -361,8 +382,10 @@ export function ColumnComponent({
                     )}
                   >
                     <td className="relative w-16 px-8 sm:w-12 sm:px-6">
-                      {ids.includes(columnId) && (
+                      {ids.includes(columnId) ? (
                         <div className="absolute inset-y-0 left-0 w-0.5 bg-cito" />
+                      ) : (
+                        <Fav />
                       )}
                       <input
                         type="checkbox"
@@ -483,7 +506,7 @@ export function DataTable({
                   ([schemaName, schema], index) => {
                     return (
                       <Fragment key={schemaName + index}>
-                        <div className="relative left-4 ml-1 top-px">
+                        <div className="relative left-4 top-px ml-1">
                           <div className="absolute h-3 w-px bg-gray-800"></div>
                           <div className="absolute mt-3 h-px w-4 bg-gray-800"></div>
                         </div>

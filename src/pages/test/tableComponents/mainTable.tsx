@@ -612,7 +612,7 @@ function TableComponent({
                   'fixed top-20 left-4 z-50 flex items-center rounded-xl bg-gray-100 p-2'
                 )}
               >
-                <div className="mr-4 flex space-x-2 items-center justify-center">
+                <div className="mr-4 flex items-center justify-center space-x-2">
                   <input
                     type="checkbox"
                     className="row-span-1 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito"
@@ -625,7 +625,7 @@ function TableComponent({
                     sendState={sendState}
                   />
                 </div>
-                <div className="mr-4 flex space-x-2 items-center justify-center">
+                <div className="mr-4 flex items-center justify-center space-x-2">
                   <input
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito"
@@ -637,11 +637,11 @@ function TableComponent({
                     sendFrequency={sendFrequency}
                   />
                 </div>
-                <div className='mr-6'>
-                <TestTypeFrequencyDropdown
-                  newTestState={newBulkTestState}
-                  setNewTestState={setNewBulkTestState}
-                />
+                <div className="mr-6">
+                  <TestTypeFrequencyDropdown
+                    newTestState={newBulkTestState}
+                    setNewTestState={setNewBulkTestState}
+                  />
                 </div>
                 <button
                   type="button"
@@ -689,6 +689,11 @@ function TableComponent({
                       key={heading}
                       scope="col"
                       className={classNames(
+                        headingsOnlyForTables.includes(heading) &&
+                          level === 'column'
+                          ? 'opacity-0'
+                          : 'opacity-100',
+
                         'px-3 py-3.5 text-left text-sm font-semibold',
                         themeColorConfig.textColor,
                         index === 0 ? 'pl-6' : 'relative left-6'
@@ -699,10 +704,7 @@ function TableComponent({
                           level.slice(1) +
                           ' ' +
                           heading
-                        : !headingsOnlyForTables.includes(heading) && heading}
-                      {headingsOnlyForTables.includes(heading) &&
-                        level === 'table' &&
-                        heading}
+                        : heading}
                     </th>
                   ))}
                   <th scope="col" className="relative py-3.5 pl-3 pr-6 sm:pr-3">

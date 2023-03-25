@@ -84,9 +84,11 @@ export default function Toggle({
 export function BulkToggle({
   newTestState,
   setNewTestState,
+  sendState,
 }: {
   newTestState: BulkNewTestState;
   setNewTestState: React.Dispatch<React.SetStateAction<BulkNewTestState>>;
+  sendState: boolean;
 }) {
   const enable = newTestState.newActivatedState;
 
@@ -101,8 +103,10 @@ export function BulkToggle({
     <Switch.Group as="div" className="flex items-center">
       <Switch
         checked={enable}
+        disabled={!sendState}
         onChange={toggleSwitch}
         className={classNames(
+        !sendState ? 'opacity-50' : 'opacity-100',
           enable ? buttonColorOn : buttonColorOff,
           'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2'
         )}

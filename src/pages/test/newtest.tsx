@@ -126,6 +126,19 @@ export default function NewTest() {
     testTypes: TestType[],
     newTestState: NewTestState
   ): Promise<void> {
+    if (
+      newTestState.newFrequency === undefined &&
+      newTestState.newActivatedState === undefined
+    ) {
+      setAlertInfo({
+        show: true,
+        title: 'Not enough arguments.',
+        description:
+          'Please specify a frequency, an activation state, or both.',
+      });
+      return;
+    }
+
     await changeTests(
       parentElementIds,
       testTypes,

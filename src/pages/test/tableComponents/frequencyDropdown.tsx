@@ -41,7 +41,7 @@ export default function FrequencyDropdown({
     tableContext.handleTestChange(
       [parentElementId],
       [test.type],
-      {newFrequency: newCron, newActivatedState: undefined},
+      { newFrequency: newCron, newActivatedState: undefined },
       level
     );
   }
@@ -132,9 +132,11 @@ export default function FrequencyDropdown({
 export function BulkFrequencyDropdown({
   newTestState,
   setNewTestState,
+  sendFrequency,
 }: {
   newTestState: BulkNewTestState;
   setNewTestState: React.Dispatch<React.SetStateAction<BulkNewTestState>>;
+  sendFrequency: boolean;
 }) {
   const selected = newTestState.newFrequency;
 
@@ -143,12 +145,21 @@ export function BulkFrequencyDropdown({
   }
 
   return (
-    <Listbox value={selected} onChange={changeFrequencySelection}>
+    <Listbox
+      disabled={!sendFrequency}
+      value={selected}
+      onChange={changeFrequencySelection}
+    >
       {({ open }) => (
         <>
-          <div className="relative">
+          <div
+            className={classNames(
+              'relative',
+              !sendFrequency ? 'opacity-50' : 'opacity-100'
+            )}
+          >
             <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-cito focus:outline-none focus:ring-1 focus:ring-cito sm:text-sm">
-              <span className="block truncate">{getFrequency(selected)}h</span>
+              <span className="block truncate">{selected ? getFrequency(selected): ''}h</span>
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon
                   className="h-5 w-5 text-gray-400"

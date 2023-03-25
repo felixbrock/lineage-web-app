@@ -578,6 +578,8 @@ function TableComponent({
     newFrequency: DEFAULT_FREQUENCY,
     forTestTypes: [...TEST_TYPES],
   });
+  const [sendState, setSendState] = useState(false);
+  const [sendFrequency, setSendFrequency] = useState(false);
 
   useLayoutEffect(() => {
     const isIndeterminate =
@@ -607,21 +609,40 @@ function TableComponent({
             {ids.length > 0 && (
               <div
                 className={classNames(
-                  'fixed top-20 left-4 z-50 flex items-center space-x-3 rounded-xl bg-gray-100 p-2'
+                  'fixed top-20 left-4 z-50 flex items-center rounded-xl bg-gray-100 p-2'
                 )}
               >
-                <BulkToggle
-                  newTestState={newBulkTestState}
-                  setNewTestState={setNewBulkTestState}
-                />
-                <BulkFrequencyDropdown
-                  newTestState={newBulkTestState}
-                  setNewTestState={setNewBulkTestState}
-                />
+                <div className="mr-4 flex space-x-2 items-center justify-center">
+                  <input
+                    type="checkbox"
+                    className="row-span-1 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito"
+                    onChange={(e) => setSendState(e.target.checked)}
+                  />
+
+                  <BulkToggle
+                    newTestState={newBulkTestState}
+                    setNewTestState={setNewBulkTestState}
+                    sendState={sendState}
+                  />
+                </div>
+                <div className="mr-4 flex space-x-2 items-center justify-center">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito"
+                    onChange={(e) => setSendFrequency(e.target.checked)}
+                  />
+                  <BulkFrequencyDropdown
+                    newTestState={newBulkTestState}
+                    setNewTestState={setNewBulkTestState}
+                    sendFrequency={sendFrequency}
+                  />
+                </div>
+                <div className='mr-6'>
                 <TestTypeFrequencyDropdown
                   newTestState={newBulkTestState}
                   setNewTestState={setNewBulkTestState}
                 />
+                </div>
                 <button
                   type="button"
                   onClick={() =>
@@ -629,14 +650,18 @@ function TableComponent({
                       ids,
                       newBulkTestState.forTestTypes,
                       {
-                        newActivatedState: newBulkTestState.newActivatedState,
-                        newFrequency: newBulkTestState.newFrequency,
+                        newActivatedState: sendState
+                          ? newBulkTestState.newActivatedState
+                          : undefined,
+                        newFrequency: sendFrequency
+                          ? newBulkTestState.newFrequency
+                          : undefined,
                       },
                       level
                     )
                   }
                   className={classNames(
-                    'inline-flex items-center rounded border border-gray-300 bg-cito px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30'
+                    'rounded border border-gray-300 bg-cito px-5 py-2.5 text-xs font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30'
                   )}
                 >
                   Apply

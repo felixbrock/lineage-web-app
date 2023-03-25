@@ -474,18 +474,20 @@ export function DataTable({
           return (
             <Fragment key={databaseName + index}>
               <div className="relative h-6 w-full">
-                <h1 className="absolute w-64">Database: {databaseName}</h1>
+                <h1 className="absolute left-4 w-64">
+                  Database: {databaseName}
+                </h1>
               </div>
               <>
                 {Array.from(database.schemas).map(
                   ([schemaName, schema], index) => {
                     return (
                       <Fragment key={schemaName + index}>
-                        <div className="relative ml-1">
+                        <div className="relative left-4 ml-1 top-px">
                           <div className="absolute h-3 w-px bg-gray-800"></div>
                           <div className="absolute mt-3 h-px w-4 bg-gray-800"></div>
                         </div>
-                        <div className="relative h-6 w-full">
+                        <div className="relative left-4 h-6 w-full">
                           <h1 className="absolute left-6 w-64">
                             Schema: {schemaName}
                           </h1>
@@ -609,7 +611,7 @@ function TableComponent({
             {ids.length > 0 && (
               <div
                 className={classNames(
-                  'absolute shadow-2xl left-4 -top-10 z-50 flex items-center rounded-xl bg-gray-100 p-2'
+                  'absolute left-4 -top-10 z-50 flex items-center rounded-xl bg-gray-100 p-2 shadow-2xl'
                 )}
               >
                 <div className="mr-4 flex items-center justify-center space-x-2">

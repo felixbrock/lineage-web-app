@@ -609,7 +609,7 @@ function TableComponent({
             {ids.length > 0 && (
               <div
                 className={classNames(
-                  'fixed top-20 left-4 z-50 flex items-center rounded-xl bg-gray-100 p-2'
+                  'absolute shadow-2xl left-4 -top-10 z-50 flex items-center rounded-xl bg-gray-100 p-2'
                 )}
               >
                 <div className="mr-4 flex items-center justify-center space-x-2">

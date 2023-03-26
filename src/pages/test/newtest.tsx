@@ -1,5 +1,5 @@
 import Navbar from '../../components/navbar';
-import { DataTable, NewTestState } from './tableComponents/mainTable';
+import { NewTestState } from './tableComponents/mainTable';
 import SearchBox from '../lineage/components/search-box';
 import { useAccount, useApiRepository } from './dataComponents/useData';
 import MaterializationsApiRepository from '../../infrastructure/lineage-api/materializations/materializations-api-repository';
@@ -211,7 +211,7 @@ export default function NewTest() {
         setAlertInfo: setAlertInfo,
       }}
     >
-      <div className="h-screen w-full overflow-y-auto">
+      <div className="h-full w-full overflow-y-auto">
         <Navbar current="tests" jwt={jwt} />
         <Alert alertInfo={alertInfo} setAlertInfo={setAlertInfo} />
         <div className="items-top relative flex h-20 justify-center">

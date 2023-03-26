@@ -8,7 +8,6 @@ import {
 } from 'react-router-dom';
 import './App.scss';
 import Lineage from './pages/lineage/lineage';
-import Test from './pages/test/test';
 import GithubRedirect from './pages/github-redirect';
 import SlackRedirect from './pages/slack-redirect';
 import appConfig from './config';
@@ -65,8 +64,7 @@ export default (): ReactElement => {
               <Routes>
                 <Route path="/model-feedback" element={<ModelFeedback />} />
                 <Route path="/lineage" element={<Lineage />} />
-                <Route path="/test" element={<Test />} />
-                <Route path="/newtest" element={<NewTest />} />
+                <Route path="/test" element={<NewTest />} />
                 {/* in development copy query params and manually call Github redirect: https://smee.io/XeUBYbnaoGxxxcf */}
                 <Route
                   path="/oauth/github/:code/:installationId/:state"

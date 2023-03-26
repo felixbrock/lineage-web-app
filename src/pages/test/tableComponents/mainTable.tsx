@@ -207,10 +207,12 @@ function TestMenu({
   test,
   parentElementId,
   level,
+  index,
 }: {
   test: Test;
   parentElementId: string;
   level: Level;
+  index: number;
 }) {
   // render option Menu with 0 opacity to keep alignment
   // also easier for future design changes
@@ -225,6 +227,7 @@ function TestMenu({
             test={test}
             parentElementId={parentElementId}
             level={level}
+            index={index}
           />
         </div>
       </td>
@@ -307,6 +310,7 @@ function TestMenus({
                 level={level}
                 test={test}
                 parentElementId={parentElementId}
+                index={index}
               />
             </Fragment>
           );
@@ -627,14 +631,16 @@ function TableComponent({
     tableContext.theme.colorConfig[currentTheme].table[level];
 
   return (
-    <div className={classNames('flow-root', themeColorConfig.bgColor)}>
-      <div className="-my-2 -mx-6 lg:-mx-8">
-        <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+    <div className={classNames('flow-root', themeColorConfig.bgColor, level === 'table' ? 'overflow-x-hidden' : '')}>
+
+        <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+          <div className="inline-block min-w-full align-middle sm:px-6 lg:px-8">
+
           <div className="relative">
             {ids.length > 0 && (
               <div
                 className={classNames(
-                  'absolute left-4 -top-10 z-50 flex items-center rounded-xl bg-gray-100 p-2 shadow-2xl'
+                  'absolute left-20 z-50 flex items-center rounded-xl bg-gray-100 p-2 shadow-2xl'
                 )}
               >
                 <div className="mr-4 flex items-center justify-center space-x-2">

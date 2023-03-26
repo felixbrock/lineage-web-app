@@ -34,10 +34,12 @@ export function MenuComponent({
   test,
   parentElementId,
   level,
+  index,
 }: {
   test: Test;
   parentElementId: string;
   level: Level;
+  index: number;
 }) {
   const tableContext = useContext(TableContext);
   const currentTheme = tableContext.theme.currentTheme;
@@ -46,11 +48,17 @@ export function MenuComponent({
   const { textColor } = tableColorConfig;
 
   const { id, active, threshold, summary } = test;
+
+
+  // open last menu to the left
+  const translate = index !== 9 ? '-translate-x-1/2' : '-translate-x-3/4'
+
+
   return (
     <Popover className="relative">
       <Popover.Button disabled={id.includes('TEMP_ID')} className="flex">
         <EllipsisVerticalIcon
-          className={'h-5 w-5 ' + textColor}
+          className={'h-5 w-5 relative z-10 ' + textColor}
           aria-hidden="true"
         />
       </Popover.Button>
@@ -64,7 +72,7 @@ export function MenuComponent({
         leaveFrom="opacity-100 translate-y-0"
         leaveTo="opacity-0 translate-y-1"
       >
-        <Popover.Panel className="absolute left-1/2 z-10 mt-2 flex w-screen max-w-max -translate-x-1/2 px-4">
+        <Popover.Panel className={classNames("absolute left-1/2 z-20 mt-2 flex w-screen max-w-max px-4", translate)}>
           {({ close }) => {
             if (id.includes('TEMP_ID')) close();
             return (
@@ -116,6 +124,7 @@ export function OptionMenu(props: {
   test: Test;
   parentElementId: string;
   level: Level;
+  index: number;
 }) {
   return (
     <div

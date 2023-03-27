@@ -212,7 +212,7 @@ export default function NewTest() {
         setAlertInfo: setAlertInfo,
       }}
     >
-      <div className="h-full w-full overflow-y-auto">
+      <div className="mb-20 h-full w-full overflow-y-auto">
         <Navbar current="tests" jwt={jwt} />
         <Alert alertInfo={alertInfo} setAlertInfo={setAlertInfo} />
         <div className="items-top relative flex h-20 justify-center">

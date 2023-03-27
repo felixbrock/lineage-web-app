@@ -6,6 +6,8 @@ export const MATERIALIZATION_TYPE = 'Table';
 export type Level = 'database' | 'schema' | 'table' | 'column';
 export type Theme = 'light' | 'dark';
 
+export const ENTRIES_PER_PAGE = [25, 50, 75]
+
 export const TEST_TYPES = [
   'ColumnFreshness',
   'ColumnCardinality',

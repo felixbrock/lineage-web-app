@@ -47,7 +47,7 @@ interface TableContextProps {
     testTypes: TestType[],
     newTestState: NewTestState,
     level: Level
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   setAlertInfo: React.Dispatch<React.SetStateAction<AlertInfo>>;
 }
 
@@ -57,7 +57,7 @@ const tableContext: TableContextProps = {
     currentTheme: colorConfig.defaultTheme,
     setCurrentTheme: () => {},
   },
-  handleTestChange: () => Promise.resolve(),
+  handleTestChange: () => Promise.resolve(false),
   setAlertInfo: () => {},
 };
 
@@ -125,7 +125,7 @@ export default function NewTest() {
     parentElementIds: string[],
     testTypes: TestType[],
     newTestState: NewTestState
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (
       newTestState.newFrequency === undefined &&
       newTestState.newActivatedState === undefined
@@ -136,10 +136,10 @@ export default function NewTest() {
         description:
           'Please specify a frequency, an activation state, or both.',
       });
-      return;
+      return false;
     }
 
-    await changeTests(
+    const success = await changeTests(
       parentElementIds,
       testTypes,
       newTestState,
@@ -148,6 +148,7 @@ export default function NewTest() {
       setAlertInfo,
       jwt
     );
+    return success;
   }
 
   console.log(tableState);

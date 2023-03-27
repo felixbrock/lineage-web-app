@@ -3,7 +3,7 @@ import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import { Test } from '../dataComponents/buildTableData';
 import { TableContext } from '../newtest';
-import { BulkNewTestState, NewTestState } from './mainTable';
+import { BulkNewTestState } from './mainTable';
 import { Level } from '../config';
 import { buildCronExpression, frequencies, getFrequency } from '../utils/cron';
 import { classNames } from '../utils/tailwind';
@@ -36,14 +36,14 @@ export default function FrequencyDropdown({
   const tableContext = useContext(TableContext);
   const [selected, setSelected] = useState(test.cron);
 
-  function changeFrequencySelection(newCron: string) {
-    setSelected(newCron);
-    tableContext.handleTestChange(
+  async function changeFrequencySelection(newCron: string) {
+    const success = await tableContext.handleTestChange(
       [parentElementId],
       [test.type],
       { newFrequency: newCron, newActivatedState: undefined },
       level
     );
+    if (success) setSelected(newCron);
   }
 
   return (

@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Switch } from '@headlessui/react';
 import { Test } from '../dataComponents/buildTableData';
 import { TableContext } from '../newtest';
-import { BulkNewTestState, NewTestState } from './mainTable';
+import { BulkNewTestState } from './mainTable';
 import { classNames } from '../utils/tailwind';
 import { Level } from '../config';
 
@@ -42,20 +42,20 @@ export default function Toggle({
   const [enabled, setEnabled] = useState(active);
 
   useEffect(() => {
-      setEnabled(active)
-  }, [active])
+    setEnabled(active);
+  }, [active]);
 
   // if active state is changed alse change newTestState
   // necessary for Table Tests to Reflect all children column tests
 
-  function toggleSwitch(switchValue: boolean) {
-    setEnabled(switchValue)
-    tableContext.handleTestChange(
+  async function toggleSwitch(switchValue: boolean) {
+    const success = await tableContext.handleTestChange(
       [parentElementId],
       [test.type],
-      {newActivatedState: switchValue, newFrequency: undefined},
+      { newActivatedState: switchValue, newFrequency: undefined },
       level
     );
+    if (success) setEnabled(switchValue);
   }
 
   return (
@@ -106,7 +106,7 @@ export function BulkToggle({
         disabled={!sendState}
         onChange={toggleSwitch}
         className={classNames(
-        !sendState ? 'opacity-50' : 'opacity-100',
+          !sendState ? 'opacity-50' : 'opacity-100',
           enable ? buttonColorOn : buttonColorOff,
           'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-cito focus:ring-offset-2'
         )}

@@ -331,7 +331,7 @@ export async function changeTests(
         title: 'Update/Creation in process',
         description: 'Please wait until we updated and created all tests',
       });
-      return;
+      return false;
     }
   }
 
@@ -403,4 +403,6 @@ export async function changeTests(
         setTestSuite([...testSuite, ...acceptedTestSuite]);
         setQualTestSuite([...qualTestSuite, ...acceptedQualTestSuite]);
         */
+
+        return true;
 }

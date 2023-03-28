@@ -73,7 +73,7 @@ export const testTypes: { [name: string]: TestType } = {
 };
 
 function ButtonLegend() {
-  let [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   function closeModal() {
     setIsOpen(false);
@@ -275,21 +275,18 @@ function TestMenus({
         if (!testType) return;
 
         let test: Test | undefined = testData.find(
-          (test) => test.type === testType
+          (t: Test) => t.type === testType
         );
 
         // create empty tests for correct display
         if (!test) {
           if (level === 'table') {
             totalChildren = totalChildren as number;
-            let cron: string;
             let hasSummary: boolean;
 
             if (testsOnlyForTables.includes(testType)) {
-              cron = DEFAULT_FREQUENCY;
               hasSummary = false;
             } else {
-              cron = '';
               hasSummary = true;
             }
 
@@ -358,7 +355,7 @@ function Fav() {
   );
 }
 
-type ColumnComponent = {
+type ColumnComponentProps = {
   columns: Tables | Columns;
   ids: string[];
   setIds: React.Dispatch<React.SetStateAction<string[]>>;
@@ -372,7 +369,7 @@ export function ColumnComponent({
   setIds,
   buttonText,
   level,
-}: ColumnComponent) {
+}: ColumnComponentProps) {
   const tableContext = useContext(TableContext);
   const currentTheme = tableContext.theme.currentTheme;
   const tableColorConfig =
@@ -397,81 +394,79 @@ export function ColumnComponent({
 
           return (
             <Disclosure key={columnId}>
-              {({ open }) => (
-                <>
-                  <tr
-                    key={columnId}
+              <>
+                <tr
+                  key={columnId}
+                  className={classNames(
+                    ids.includes(columnId) ? selectionBgColor : '',
+                    'relative left-6 h-14 border border-gray-100'
+                  )}
+                >
+                  <td className="relative w-16 px-8 sm:w-12 sm:px-6">
+                    {ids.includes(columnId) ? (
+                      <div className="absolute inset-y-0 left-0 w-0.5 bg-cito" />
+                    ) : (
+                      <Fav />
+                    )}
+                    <input
+                      type="checkbox"
+                      className="absolute left-6 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito sm:left-4"
+                      value={columnData.name}
+                      checked={ids.includes(columnId)}
+                      onChange={(e) =>
+                        setIds(
+                          e.target.checked
+                            ? [...ids, columnId]
+                            : ids.filter((id: string) => id !== columnId)
+                        )
+                      }
+                    />
+                  </td>
+                  <td
                     className={classNames(
-                      ids.includes(columnId) ? selectionBgColor : '',
-                      'relative left-6 h-14 border border-gray-100'
+                      'hover:' + bgColor,
+                      'relative min-w-[8rem] max-w-[8rem] py-4 pr-3',
+                      ids.includes(columnId) ? selectionTextColor : textColor
                     )}
                   >
-                    <td className="relative w-16 px-8 sm:w-12 sm:px-6">
-                      {ids.includes(columnId) ? (
-                        <div className="absolute inset-y-0 left-0 w-0.5 bg-cito" />
-                      ) : (
-                        <Fav />
-                      )}
-                      <input
-                        type="checkbox"
-                        className="absolute left-6 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito sm:left-4"
-                        value={columnData.name}
-                        checked={ids.includes(columnId)}
-                        onChange={(e) =>
-                          setIds(
-                            e.target.checked
-                              ? [...ids, columnId]
-                              : ids.filter((id: string) => id !== columnId)
-                          )
-                        }
-                      />
-                    </td>
-                    <td
+                    <div
                       className={classNames(
-                        'hover:' + bgColor,
-                        'relative min-w-[8rem] max-w-[8rem] py-4 pr-3',
-                        ids.includes(columnId) ? selectionTextColor : textColor
+                        'flex items-center justify-start hover:absolute hover:inset-y-0 hover:z-50',
+                        'hover:' + bgColor
                       )}
                     >
-                      <div
-                        className={classNames(
-                          'flex items-center justify-start hover:absolute hover:inset-y-0 hover:z-50',
-                          'hover:' + bgColor
-                        )}
-                      >
-                        <h1 className="truncate text-sm font-medium">
-                          {columnData.name}
-                        </h1>
-                      </div>
-                    </td>
-                    <TestMenus
-                      testData={columnData.tests}
-                      parentElementId={columnId}
-                      level={level}
-                      totalChildren={totalChildren}
-                      selected={ids.includes(columnId)}
-                    />
-                    <td className="relative right-6 min-w-[6rem] whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium sm:pr-3">
-                      {buttonText && (
-                        <Disclosure.Button className={buttonTextColor}>
-                          {buttonText}
-                        </Disclosure.Button>
-                      )}
-                    </td>
-                  </tr>
-                  <Disclosure.Panel as="tr">
-                    <td colSpan={12}>
-                      {level === 'table' && (
-                        <DataTable
-                          tableData={columnData as Table}
-                          buttonText={''}
-                          level={'column'}
-                        />
-                      )}
-                    </td>
-                  </Disclosure.Panel>
-                </>
-              )}
+                      <h1 className="truncate text-sm font-medium">
+                        {columnData.name}
+                      </h1>
+                    </div>
+                  </td>
+                  <TestMenus
+                    testData={columnData.tests}
+                    parentElementId={columnId}
+                    level={level}
+                    totalChildren={totalChildren}
+                    selected={ids.includes(columnId)}
+                  />
+                  <td className="relative right-6 min-w-[6rem] whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium sm:pr-3">
+                    {buttonText && (
+                      <Disclosure.Button className={buttonTextColor}>
+                        {buttonText}
+                      </Disclosure.Button>
+                    )}
+                  </td>
+                </tr>
+                <Disclosure.Panel as="tr">
+                  <td colSpan={12}>
+                    {level === 'table' && (
+                      <DataTable
+                        tableData={columnData as Table}
+                        buttonText={''}
+                        level={'column'}
+                      />
+                    )}
+                  </td>
+                </Disclosure.Panel>
+              </>
             </Disclosure>
           );
         }
@@ -529,9 +524,9 @@ export function DataTable({
               </div>
               <>
                 {Array.from(database.schemas).map(
-                  ([schemaName, schema], index) => {
+                  ([schemaName, schema], ind) => {
                     return (
-                      <Fragment key={schemaName + index}>
+                      <Fragment key={schemaName + ind}>
                         <div className="relative left-4 top-px ml-1">
                           <div className="absolute h-3 w-px bg-gray-800"></div>
                           <div className="absolute mt-3 h-px w-4 bg-gray-800"></div>

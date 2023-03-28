@@ -208,12 +208,19 @@ function TestMenu({
   parentElementId,
   level,
   index,
+  selected,
 }: {
   test: Test;
   parentElementId: string;
   level: Level;
   index: number;
+  selected: boolean;
 }) {
+  const tableContext = useContext(TableContext);
+  const currentTheme = tableContext.theme.currentTheme;
+  const tableColorConfig =
+    tableContext.theme.colorConfig[currentTheme].table[level];
+
   // render option Menu with 0 opacity to keep alignment
   // also easier for future design changes
   const hidden: boolean =
@@ -222,7 +229,18 @@ function TestMenu({
   return (
     <>
       <td className={classNames('w-96 whitespace-nowrap px-3 text-sm')}>
-        <div className={hidden ? 'opacity-0' : ''}>
+        <div className={hidden ? 'relative opacity-50' : ''}>
+          {/** Overlay hidden option menu to hide mouse hover **/}
+          {hidden && (
+            <div
+              className={classNames(
+                'absolute inset-0 z-50',
+                selected
+                  ? tableColorConfig.selectionBgColor
+                  : tableColorConfig.bgColor
+              )}
+            ></div>
+          )}
           <OptionMenu
             test={test}
             parentElementId={parentElementId}
@@ -240,11 +258,13 @@ function TestMenus({
   level,
   parentElementId,
   totalChildren,
+  selected,
 }: {
   testData: Test[];
   level: Level;
   parentElementId: string;
   totalChildren?: number;
+  selected: boolean;
 }) {
   return (
     <>
@@ -311,6 +331,7 @@ function TestMenus({
                 test={test}
                 parentElementId={parentElementId}
                 index={index}
+                selected={selected}
               />
             </Fragment>
           );
@@ -428,6 +449,7 @@ export function ColumnComponent({
                       parentElementId={columnId}
                       level={level}
                       totalChildren={totalChildren}
+                      selected={ids.includes(columnId)}
                     />
                     <td className="relative right-6 min-w-[6rem] whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium sm:pr-3">
                       {buttonText && (
@@ -631,11 +653,15 @@ function TableComponent({
     tableContext.theme.colorConfig[currentTheme].table[level];
 
   return (
-    <div className={classNames('flow-root', themeColorConfig.bgColor, level === 'table' ? 'overflow-x-hidden' : '')}>
-
-        <div className="-mx-4 sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full align-middle sm:px-6 lg:px-8">
-
+    <div
+      className={classNames(
+        'flow-root',
+        themeColorConfig.bgColor,
+        level === 'table' ? 'overflow-x-hidden' : ''
+      )}
+    >
+      <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+        <div className="inline-block min-w-full align-middle sm:px-6 lg:px-8">
           <div className="relative">
             {ids.length > 0 && (
               <div

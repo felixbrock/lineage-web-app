@@ -1578,7 +1578,7 @@ export default (): ReactElement => {
       );
 
       const matchCountError = (testType: TestType) => {
-        throw new Error(
+        console.error(
           `Multiple mat test suites for ${testType} test type in place`
         );
       };

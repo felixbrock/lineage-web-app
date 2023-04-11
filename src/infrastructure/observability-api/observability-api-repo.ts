@@ -41,6 +41,7 @@ interface BaseUpdateTestSuiteObjProps {
   activated?: boolean;
   cron?: string;
   executionType?: ExecutionType;
+  lastAlertSent?: string;
 }
 
 interface UpdateTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {

@@ -16,6 +16,7 @@ interface BaseTestSuiteDto {
   cron: string;
   executionType: ExecutionType;
   deletedAt?: string;
+  lastAlertSent?: string;
 }
 
 export interface TestSuiteDto extends BaseTestSuiteDto {

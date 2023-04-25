@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Switch } from '@headlessui/react';
 import { Test } from '../dataComponents/buildTableData';
-import { TableContext } from '../newtest';
+import { TableContext } from '../test';
 import { BulkNewTestState } from './mainTable';
 import { classNames } from '../utils/tailwind';
 import { Level } from '../config';

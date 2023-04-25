@@ -2,7 +2,7 @@ import { Fragment, useContext, useState } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import { Test } from '../dataComponents/buildTableData';
-import { TableContext } from '../newtest';
+import { TableContext } from '../test';
 import { BulkNewTestState } from './mainTable';
 import { Level } from '../config';
 import { buildCronExpression, frequencies, getFrequency } from '../utils/cron';

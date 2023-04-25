@@ -8,7 +8,7 @@ import {
 } from '@heroicons/react/20/solid';
 import FrequencyDropdown from './frequencyDropdown';
 import { Test } from '../dataComponents/buildTableData';
-import { TableContext } from '../newtest';
+import { TableContext } from '../test';
 import { Level } from '../config';
 import { classNames } from '../utils/tailwind';
 

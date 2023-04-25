@@ -30,7 +30,7 @@ import {
   Test,
   TestType,
 } from '../dataComponents/buildTableData';
-import { TableContext } from '../newtest';
+import { TableContext } from '../test';
 import { getFrequency } from '../utils/cron';
 import { classNames } from '../utils/tailwind';
 import { BulkFrequencyDropdown } from './frequencyDropdown';

@@ -63,7 +63,7 @@ const tableContext: TableContextProps = {
 
 export const TableContext = createContext(tableContext);
 
-export default function NewTest() {
+export default function Test() {
   const [jwt, account] = useAccount();
   const [currentTheme, setCurrentTheme] = useState(
     tableContext.theme.currentTheme

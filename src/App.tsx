@@ -12,7 +12,7 @@ import GithubRedirect from './pages/github-redirect';
 import SlackRedirect from './pages/slack-redirect';
 import appConfig from './config';
 import ModelFeedback from './pages/model-feedback';
-import NewTest from './pages/test/newtest';
+import Test from './pages/test/test';
 
 export default (): ReactElement => {
   Auth.configure({
@@ -64,7 +64,7 @@ export default (): ReactElement => {
               <Routes>
                 <Route path="/model-feedback" element={<ModelFeedback />} />
                 <Route path="/lineage" element={<Lineage />} />
-                <Route path="/test" element={<NewTest />} />
+                <Route path="/test" element={<Test />} />
                 {/* in development copy query params and manually call Github redirect: https://smee.io/XeUBYbnaoGxxxcf */}
                 <Route
                   path="/oauth/github/:code/:installationId/:state"

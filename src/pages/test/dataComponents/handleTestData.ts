@@ -14,7 +14,7 @@ import {
   HARDCODED_THRESHOLD,
   MATERIALIZATION_TYPE,
 } from '../config';
-import { AlertInfo, CurrentTestStates, TableContext } from '../test';
+import { CurrentTestStates } from '../test';
 import { NewTestState } from '../tableComponents/mainTable';
 import { Column, Table, TableData, TestType } from './buildTableData';
 import { testsOnlyForTables } from '../config';

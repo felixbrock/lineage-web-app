@@ -1,4 +1,5 @@
-import { ExecutionType } from '../../pages/test/test';
+import { EXECUTION_TYPE } from '../../pages/test/config';
+type ExecutionType = typeof EXECUTION_TYPE;
 
 interface BaseTestSuiteDto {
   id: string;

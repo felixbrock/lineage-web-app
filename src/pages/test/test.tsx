@@ -21,6 +21,7 @@ import {
   QualTestSuiteDto,
   TestSuiteDto,
 } from '../../infrastructure/observability-api/test-suite-dto';
+import { TestType } from './dataComponents/buildTableData';
 
 export interface AlertInfo {
   show: boolean;
@@ -241,7 +242,6 @@ export default function Test() {
 }
 
 import { XMarkIcon } from '@heroicons/react/20/solid';
-import { TestType } from './dataComponents/buildTestData';
 import { Paginator } from './tableComponents/pagination';
 
 function Alert({

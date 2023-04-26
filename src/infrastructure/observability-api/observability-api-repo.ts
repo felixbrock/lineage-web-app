@@ -1,11 +1,11 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import appConfig from '../../config';
-import {
-  ExecutionType,
-  MaterializationType,
-  TestType,
-} from '../../pages/test/test';
+import { EXECUTION_TYPE, TEST_TYPES, MATERIALIZATION_TYPE } from '../../pages/test/config';
 import { QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
+
+type ExecutionType = typeof EXECUTION_TYPE;
+type MaterializationType = typeof MATERIALIZATION_TYPE;
+type TestType = typeof TEST_TYPES[number];
 
 interface PostAnomalyFeedbackDto {
   alertId: string;

@@ -1,3 +1,5 @@
+import { AxiosRequestConfig } from 'axios';
+import { TestHistoryEntry } from '../../components/metrics-graph';
 import appConfig from '../../config';
 import { CustomThreshold } from '../../pages/test/components/custom-threshold';
 import {
@@ -183,5 +185,146 @@ export default class ObservabilityApiRepo {
     } catch (error: any) {
       return Promise.reject(new Error(error.response.data.message));
     }
+  };
+
+  static getSelectionTestHistories = async (
+    testSuiteReps: {
+      id: string;
+      type: string;
+    }[],
+  ): Promise<TestHistoryEntry[]> => {
+    const testHistory = testSuiteReps.reduce(
+      (
+        accumulation: { [testSuiteId: string]: TestHistoryEntry },
+        el
+      ): { [testSuiteId: string]: TestHistoryEntry } => {
+        const localAcc = accumulation;
+
+        localAcc[el.id] = {
+          testType: el.type,
+          testSuiteId: el.id,
+          historyDataSet: [],
+        };
+
+        return localAcc;
+      },
+      {}
+    );
+
+    const ids = Object.values(testHistory).map(el => el.testSuiteId);
+
+    const params = new URLSearchParams({
+      ids: JSON.stringify(ids)
+    })
+
+    const config: AxiosRequestConfig = {
+      params
+    }
+
+    const response = await this.client.get(
+      `/${this.apiRoot}/${this.version}/front-end/history`, config);
+    const testHistoryResults = await response.data;
+
+    if (response.status !== 200) throw new Error(testHistoryResults);
+
+    const results: { [key: string]: unknown }[] =
+      testHistoryResults.reverse();
+
+    results.forEach((el: { [key: string]: unknown }) => {
+      const {
+        value,
+        test_suite_id: entryTestSuiteId,
+        executed_on: executedOn,
+        value_upper_bound: valueUpperBound,
+        value_lower_bound: valueLowerBound,
+        is_anomaly: isAnomaly,
+        user_feedback_is_anomaly: userFeedbackIsAnomaly,
+      } = el;
+
+      const isOptionalOfType = <T>(
+        val: unknown,
+        targetType:
+          | 'string'
+          | 'number'
+          | 'bigint'
+          | 'boolean'
+          | 'symbol'
+          | 'undefined'
+          | 'object'
+          | 'function'
+      ): val is T => val === null || typeof val === targetType;
+
+      const isAnomalyValue = typeof isAnomaly === 'string' ? JSON.parse(isAnomaly) : isAnomaly;
+
+      let valueLowerBoundNum  = valueLowerBound;
+      if (!valueLowerBound) valueLowerBoundNum = null;
+
+      let valueUpperBoundNum  = valueUpperBound;
+      if (!valueUpperBound) valueUpperBoundNum = null;
+
+      if (
+        typeof value !== 'number' ||
+        typeof entryTestSuiteId !== 'string' ||
+        typeof executedOn !== 'string' ||
+        typeof isAnomalyValue !== 'boolean' ||
+        typeof userFeedbackIsAnomaly !== 'number' ||
+        !isOptionalOfType<number>(valueLowerBoundNum, 'number') ||
+        !isOptionalOfType<number>(valueUpperBoundNum, 'number')
+      )
+        throw new Error('Received unexpected type');
+
+      testHistory[entryTestSuiteId].historyDataSet.push({
+        isAnomaly: isAnomalyValue,
+        userFeedbackIsAnomaly,
+        timestamp: executedOn,
+        valueLowerBound: valueLowerBoundNum,
+        valueUpperBound: valueUpperBoundNum,
+        value,
+      });
+    });
+
+    return Object.values(testHistory);
+  };
+
+  static getTestSuiteData = async (
+    targetResourceId: string,
+    activated: boolean,
+  ): Promise<Document[]> => {
+
+    const params = {
+      targetResourceId,
+      activated: activated.toString()
+    };
+
+    const config: AxiosRequestConfig = {
+      params
+    }
+
+    const response = await this.client.get(
+      `/${this.apiRoot}/${this.version}/front-end/selected`, config);
+    
+    const results = await response.data;
+    if (response.status === 200) return results;
+    throw new Error(results);
+  };
+
+  static getAlertData = async (
+    ids: string[] 
+  ) => {
+
+    const params = new URLSearchParams({
+      ids: JSON.stringify(ids)
+    });
+
+    const config: AxiosRequestConfig = {
+      params,
+    }
+
+    const response = await this.client.get(
+      `/${this.apiRoot}/${this.version}/front-end/alerts`, config);
+    const results = await response.data;
+    if (response.status === 200) return results;
+
+    throw new Error(results);
   };
 }

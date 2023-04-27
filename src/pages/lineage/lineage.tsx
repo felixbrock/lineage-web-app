@@ -33,7 +33,6 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import DashboardDto from '../../infrastructure/lineage-api/dashboards/dashboard-dto';
 import DashboardsApiRepository from '../../infrastructure/lineage-api/dashboards/dashboards-api-repository';
 import AccountApiRepository from '../../infrastructure/account-api/account-api-repo';
-import IntegrationApiRepo from '../../infrastructure/integration-api/integration-api-repo';
 import Github from '../../components/integration/github/github';
 import Slack from '../../components/integration/slack/slack';
 import Snowflake from '../../components/integration/snowflake/snowflake';
@@ -62,6 +61,7 @@ import IntegrationTabs from './components/integration-tabs';
 import ColumnDto from '../../infrastructure/lineage-api/columns/column-dto';
 import DependencyDto from '../../infrastructure/lineage-api/dependencies/dependency-dto';
 import DependenciesApiRepository from '../../infrastructure/lineage-api/dependencies/dependencies-api-repository';
+import ObservabilityApiRepo from '../../infrastructure/observability-api/observability-api-repo';
 
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ');
@@ -659,58 +659,37 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!account) return;
 
-    const binds: (string | number)[] = [selectedNodeId, 'true'];
-
-    const testSuiteQuery = `select id, test_type from cito.observability.test_suites
-     where target_resource_id = '${binds[0]}' and activated = ${binds[1]} and deleted_at is null`;
-
     let testHistory: { [testSuiteId: string]: TestHistoryEntry };
-    IntegrationApiRepo.querySnowflake(testSuiteQuery)
+    ObservabilityApiRepo.getTestSuiteData(selectedNodeId, true)
       .then((results) => {
-        const reps = results[account.organizationId].map(
+        const reps = results.map(
           (el: any): { id: string; type: string } => ({
-            id: el.ID,
-            type: el.TEST_TYPE,
+            id: el.id,
+            type: el.test_type,
           })
         );
 
-        return IntegrationApiRepo.getSelectionTestHistories(
+        return ObservabilityApiRepo.getSelectionTestHistories(
           reps,
-          account.organizationId
         );
       })
       .then((selectionTestHistories) => {
         setSelectionTests(selectionTestHistories);
 
-        const whereCondition = `array_contains(test_alerts.test_suite_id::variant, array_construct(${Object.values(
-          testHistory
-        )
-          .map((el) => `'${el.testSuiteId}'`)
-          .join(', ')}))`;
+        const ids = Object.values(testHistory).map((el) => el.testSuiteId);
 
-        const alertQuery = `select test_alerts.test_suite_id as test_suite_id, test_results.deviation as deviation, test_executions.executed_on as executed_on
-        from cito.observability.test_alerts as test_alerts
-        join cito.observability.test_results as test_results
-          on test_alerts.execution_id = test_results.execution_id
-        join cito.observability.test_executions as test_executions
-          on test_alerts.execution_id = test_executions.id
-        where ${whereCondition}
-        order by test_executions.executed_on desc
-        limit 200;`;
-
-        return IntegrationApiRepo.querySnowflake(alertQuery);
+        return ObservabilityApiRepo.getAlertData(ids);
       })
       .then((alertHistoryResults) => {
-        const results = alertHistoryResults[account.organizationId];
 
         const testSuiteRepresentations = Object.values(testHistory);
 
-        const alertHistoryEntries: AlertHistoryEntry[] = results.map(
+        const alertHistoryEntries: AlertHistoryEntry[] = alertHistoryResults.map(
           (el: { [key: string]: unknown }): AlertHistoryEntry => {
             const {
-              TEST_SUITE_ID: testSuiteId,
-              DEVIATION: deviation,
-              EXECUTED_ON: executedOn,
+              test_suite_id: testSuiteId,
+              deviation,
+              executed_on: executedOn,
             } = el;
 
             if (

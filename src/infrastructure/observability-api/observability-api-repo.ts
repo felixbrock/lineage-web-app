@@ -1,12 +1,17 @@
 import appConfig from '../../config';
+
 import { CustomThreshold } from '../../pages/test/components/custom-threshold';
 import {
-  ExecutionType,
-  MaterializationType,
-  TestType,
-} from '../../pages/test/test';
-import getApiClient from '../api-client';
+  EXECUTION_TYPE,
+  TEST_TYPES,
+  MATERIALIZATION_TYPE,
+} from '../../pages/test/config';
 import { QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
+import getApiClient from '../api-client';
+
+type ExecutionType = typeof EXECUTION_TYPE;
+type MaterializationType = typeof MATERIALIZATION_TYPE;
+type TestType = typeof TEST_TYPES[number];
 
 export const customThresholdModes = ['absolute', 'relative'] as const;
 export type CustomThresholdMode = typeof customThresholdModes[number];

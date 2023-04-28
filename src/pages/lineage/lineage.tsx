@@ -659,7 +659,7 @@ export default (): ReactElement => {
   useEffect(() => {
     if (!account) return;
 
-    let testHistory: { [testSuiteId: string]: TestHistoryEntry };
+    const testHistory: { [testSuiteId: string]: TestHistoryEntry } = {};
     ObservabilityApiRepo.getTestSuiteData(selectedNodeId, true)
       .then((results) => {
         const reps = results.map(
@@ -675,7 +675,7 @@ export default (): ReactElement => {
       })
       .then((selectionTestHistories) => {
         setSelectionTests(selectionTestHistories);
-
+        selectionTestHistories.forEach((el) => testHistory[el.testSuiteId] = el);
         const ids = Object.values(testHistory).map((el) => el.testSuiteId);
 
         return ObservabilityApiRepo.getAlertData(ids);

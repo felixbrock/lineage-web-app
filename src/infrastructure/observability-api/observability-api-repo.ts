@@ -227,6 +227,8 @@ export default class ObservabilityApiRepo {
 
     if (response.status !== 200) throw new Error(testHistoryResults);
 
+    if (!testHistoryResults || testHistoryResults === null) return [];
+
     const results: { [key: string]: unknown }[] =
       testHistoryResults.reverse();
 
@@ -235,8 +237,8 @@ export default class ObservabilityApiRepo {
         value,
         test_suite_id: entryTestSuiteId,
         executed_on: executedOn,
-        value_upper_bound: valueUpperBound,
-        value_lower_bound: valueLowerBound,
+        expected_value_upper_bound: valueUpperBound,
+        expected_value_lower_bound: valueLowerBound,
         is_anomaly: isAnomaly,
         user_feedback_is_anomaly: userFeedbackIsAnomaly,
       } = el;

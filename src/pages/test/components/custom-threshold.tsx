@@ -8,7 +8,7 @@ import MetricsGraph, {
   HistoryDataSet,
 } from '../../../components/metrics-graph';
 import Toggle from '../../../components/toggle';
-import IntegrationApiRepo from '../../../infrastructure/integration-api/integration-api-repo';
+import ObservabilityApiRepo from '../../../infrastructure/observability-api/observability-api-repo';
 
 export const thresholdModes = ['absolute', 'relative'] as const;
 export type ThresholdMode = typeof thresholdModes[number];
@@ -47,7 +47,6 @@ export default ({
   state,
   target,
   testSuiteRep,
-  orgId,
 
   closeCallback,
   savedScheduleCallback,
@@ -358,7 +357,7 @@ export default ({
   useEffect(() => {
     if (!show) return;
 
-    IntegrationApiRepo.getSelectionTestHistories([testSuiteRep], orgId)
+    ObservabilityApiRepo.getSelectionTestHistories([testSuiteRep])
       .then((testHistories) => {
         if (!testHistories || !testHistories.length) {
           if (state.lower.mode === 'relative') {

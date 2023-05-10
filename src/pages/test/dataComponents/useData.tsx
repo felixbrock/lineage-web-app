@@ -20,7 +20,12 @@ export function useSessionStorageData(...storageItems: string[]) {
   return finalStorageObject;
 }
 
-type ApiRepositoryResults = MaterializationDto[] | ColumnDto[] | TestSuiteDto[] | QualTestSuiteDto[] | undefined
+type ApiRepositoryResults =
+  | MaterializationDto[]
+  | ColumnDto[]
+  | TestSuiteDto[]
+  | QualTestSuiteDto[]
+  | undefined;
 
 export function useApiRepository(
   jwt: string,
@@ -35,10 +40,12 @@ export function useApiRepository(
   useEffect(() => {
     if (!jwt) return;
     if (urlSearchParams === undefined) {
-      apiRepositoryCallback(jwt).then((returnedDtos: ApiRepositoryResults) => setDtos(returnedDtos));
-    } else {
-      apiRepositoryCallback(new URLSearchParams({}), jwt).then((returnedDtos: ApiRepositoryResults) =>
+      apiRepositoryCallback(jwt).then((returnedDtos: ApiRepositoryResults) =>
         setDtos(returnedDtos)
+      );
+    } else {
+      apiRepositoryCallback(new URLSearchParams({}), jwt).then(
+        (returnedDtos: ApiRepositoryResults) => setDtos(returnedDtos)
       );
     }
   }, [jwt, urlSearchParams, apiRepositoryCallback]);
@@ -65,10 +72,7 @@ export function useAccount() {
 
             const jwtToken = accessToken.getJwtToken();
             setJwt(jwtToken);
-            return AccountApiRepository.getBy(
-              new URLSearchParams({}),
-              jwtToken
-            );
+            return AccountApiRepository.getBy(new URLSearchParams({}));
           })
           .catch((error) => {
             console.trace(typeof error === 'string' ? error : error.message);

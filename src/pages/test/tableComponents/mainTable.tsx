@@ -15,7 +15,6 @@ import {
 } from 'react';
 import {
   DEFAULT_FREQUENCY,
-  HARDCODED_THRESHOLD,
   headingsOnlyForTables,
   Level,
   testsOnlyForTables,

@@ -4,7 +4,7 @@ import {
   QualTestSuiteDto,
   TestSuiteDto,
 } from '../../../infrastructure/observability-api/test-suite-dto';
-import { HARDCODED_THRESHOLD, TEST_TYPES } from '../config';
+import { TEST_TYPES } from '../config';
 import { buildCronExpression, Frequency, getFrequency } from '../utils/cron';
 
 export type TestType = typeof TEST_TYPES[number];
@@ -90,7 +90,6 @@ export function buildTableData(
       type: test.type as TestType,
       cron: test.cron,
       active: test.activated,
-      threshold: HARDCODED_THRESHOLD,
     };
 
     // check if column test or table test

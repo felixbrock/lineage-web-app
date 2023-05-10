@@ -11,7 +11,6 @@ import {
 import {
   DEFAULT_FREQUENCY,
   EXECUTION_TYPE,
-  HARDCODED_THRESHOLD,
   MATERIALIZATION_TYPE,
 } from '../config';
 import { CurrentTestStates } from '../test';
@@ -47,13 +46,13 @@ function getParentInfo(
         mat = table;
         return;
       } else {
-        schema.tables.forEach((table) => {
-          const column = table.columns.get(parentElementId);
+        schema.tables.forEach((el) => {
+          const column = el.columns.get(parentElementId);
           if (column) {
             dName = databaseName;
             sName = schemaName;
-            mName = table.name;
-            mat = table;
+            mName = el.name;
+            mat = el;
             col = column;
             return;
           }
@@ -95,7 +94,6 @@ function buildNewTest(
     targetResourceId: parentElementId,
     type: testType,
     executionType: EXECUTION_TYPE,
-    threshold: HARDCODED_THRESHOLD,
     cron: testCron,
   };
 
@@ -117,8 +115,8 @@ function buildNewTest(
     type: testType,
     cron: testCron,
     executionType: EXECUTION_TYPE,
-    boundsIntervalRelative: HARDCODED_THRESHOLD,
-    threshold: HARDCODED_THRESHOLD,
+    customLowerThresholdMode: 'absolute',
+    customUpperThresholdMode: 'absolute',
   };
   return [newTestForSnowflake, newTestForUI];
 }
@@ -151,10 +149,10 @@ function buildNewQualTest(
 
   // create temp test for the ui
   // id will be added after api request gives the new id
-  const temp_id = 'TEMP_ID' + parentElementId + testType;
+  const tempId = 'TEMP_ID' + parentElementId + testType;
 
   const newTestForUI: QualTestSuiteDto = {
-    id: temp_id,
+    id: tempId,
     target: {
       databaseName: databaseName,
       targetResourceId: parentElementId,
@@ -213,8 +211,7 @@ export async function changeTests(
   newTestState: NewTestState,
   currentTestStates: CurrentTestStates,
   tableData: TableData,
-  setAlertInfo: any,
-  jwt: string
+  setAlertInfo: any
 ) {
   const { tests, qualTests } = currentTestStates;
   const [testSuite, setTestSuite] = tests;
@@ -324,7 +321,7 @@ export async function changeTests(
   }
 
   // check that no update Ids contain 'TEMP_ID'
-  for (let id of [...testsToUpdate, ...qualTestsToUpdate]) {
+  for (const id of [...testsToUpdate, ...qualTestsToUpdate]) {
     if (id.includes('TEMP_ID')) {
       setAlertInfo({
         show: true,
@@ -404,5 +401,5 @@ export async function changeTests(
         setQualTestSuite([...qualTestSuite, ...acceptedQualTestSuite]);
         */
 
-        return true;
+  return true;
 }

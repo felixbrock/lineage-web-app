@@ -180,8 +180,7 @@ export default function Test() {
       newTestState,
       currentTestStates,
       tableState.tableData,
-      setAlertInfo,
-      jwt
+      setAlertInfo
     );
     return success;
   }

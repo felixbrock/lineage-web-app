@@ -10,9 +10,9 @@ import {
 } from '../../../infrastructure/observability-api/test-suite-dto';
 
 export function useSessionStorageData(...storageItems: string[]) {
-  let finalStorageObject: { [index: string]: any } = {};
+  const finalStorageObject: { [index: string]: string[] } = {};
 
-  for (let item of storageItems) {
+  for (const item of storageItems) {
     const sessionStorageItem = sessionStorage.getItem(item);
     if (!sessionStorageItem) continue;
     finalStorageObject[item] = JSON.parse(sessionStorageItem);
@@ -23,25 +23,25 @@ export function useSessionStorageData(...storageItems: string[]) {
 type ApiRepositoryResults = MaterializationDto[] | ColumnDto[] | TestSuiteDto[] | QualTestSuiteDto[] | undefined
 
 export function useApiRepository(
-  jwt: any,
+  jwt: string,
   apiRepositoryCallback: any,
-  urlSearchParams?: any
+  urlSearchParams?: any // currently unused, would delete
 ): [
   dtos: ApiRepositoryResults,
-  setDtos: React.Dispatch<React.SetStateAction<any>>
+  setDtos: React.Dispatch<React.SetStateAction<ApiRepositoryResults>>
 ] {
-  const [dtos, setDtos] = useState();
+  const [dtos, setDtos] = useState<ApiRepositoryResults>();
 
   useEffect(() => {
     if (!jwt) return;
     if (urlSearchParams === undefined) {
-      apiRepositoryCallback(jwt).then((dtos: any) => setDtos(dtos));
+      apiRepositoryCallback(jwt).then((returnedDtos: ApiRepositoryResults) => setDtos(returnedDtos));
     } else {
-      apiRepositoryCallback(new URLSearchParams({}), jwt).then((dtos: any) =>
-        setDtos(dtos)
+      apiRepositoryCallback(new URLSearchParams({}), jwt).then((returnedDtos: ApiRepositoryResults) =>
+        setDtos(returnedDtos)
       );
     }
-  }, [jwt]);
+  }, [jwt, urlSearchParams, apiRepositoryCallback]);
 
   return [dtos, setDtos];
 }
@@ -50,8 +50,7 @@ export function useAccount() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  const [jwt, setJwt] = useState<any>();
-  const [account, setAccount] = useState<any>();
+  const [jwt, setJwt] = useState<string>('');
 
   useEffect(() => {
     if (!location || !searchParams) return;
@@ -64,20 +63,12 @@ export function useAccount() {
           .then((session) => {
             const accessToken = session.getAccessToken();
 
-            let jwtToken = accessToken.getJwtToken();
+            const jwtToken = accessToken.getJwtToken();
             setJwt(jwtToken);
             return AccountApiRepository.getBy(
               new URLSearchParams({}),
               jwtToken
             );
-          })
-          .then((accounts) => {
-            if (!accounts.length) throw new Error(`No accounts found for user`);
-
-            if (accounts.length > 1)
-              throw new Error(`Multiple accounts found for user`);
-
-            setAccount(accounts[0]);
           })
           .catch((error) => {
             console.trace(typeof error === 'string' ? error : error.message);
@@ -94,5 +85,5 @@ export function useAccount() {
       });
   }, [location, searchParams]);
 
-  return [jwt, account];
+  return jwt;
 }

@@ -8,11 +8,11 @@ import {
 } from 'react-router-dom';
 import './App.scss';
 import Lineage from './pages/lineage/lineage';
-import Test from './pages/test/test';
 import GithubRedirect from './pages/github-redirect';
 import SlackRedirect from './pages/slack-redirect';
 import appConfig from './config';
 import ModelFeedback from './pages/model-feedback';
+import Test from './pages/test/test';
 
 export default (): ReactElement => {
   Auth.configure({

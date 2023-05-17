@@ -2,16 +2,16 @@ import { AxiosRequestConfig } from 'axios';
 import { TestHistoryEntry } from '../../components/metrics-graph';
 import appConfig from '../../config';
 import { CustomThreshold } from '../../pages/test/components/custom-threshold';
-import {
-  ExecutionType,
-  MaterializationType,
-  TestType,
-} from '../../pages/test/test';
 import getApiClient from '../api-client';
-import { QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
 
 export const customThresholdModes = ['absolute', 'relative'] as const;
 export type CustomThresholdMode = typeof customThresholdModes[number];
+import { EXECUTION_TYPE, TEST_TYPES, MATERIALIZATION_TYPE } from '../../pages/test/config';
+import { QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
+
+type ExecutionType = typeof EXECUTION_TYPE;
+type MaterializationType = typeof MATERIALIZATION_TYPE;
+type TestType = typeof TEST_TYPES[number];
 
 interface PostAnomalyFeedbackDto {
   alertId: string;

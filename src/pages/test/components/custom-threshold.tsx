@@ -48,7 +48,7 @@ export default ({
   target,
   testSuiteRep,
 
-  closeCallback,
+  // closeCallback,
   savedScheduleCallback,
 }: {
   show: boolean;
@@ -418,7 +418,7 @@ export default ({
                   <button
                     type="button"
                     className="flex items-center justify-center px-4 py-2"
-                    onClick={closeCallback}
+                    // onClick={closeCallback}
                   >
                     <MdClose className="flex h-6 w-6 content-center justify-center fill-gray-500 text-center hover:fill-cito" />
                   </button>

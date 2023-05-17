@@ -1,6 +1,11 @@
 $hivediveBlue: #6f47ef;
 $hivediveGrey: #dfdfdf;
 
+body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
 /* div */
 #lineageContainer {
     position: relative;

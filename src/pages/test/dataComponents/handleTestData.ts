@@ -11,9 +11,7 @@ import {
 import {
   DEFAULT_FREQUENCY,
   EXECUTION_TYPE,
-  HARDCODED_LOWER_THRESHOLD,
   HARDCODED_THRESHOLD_MODE,
-  HARDCODED_UPPER_THRESHOLD,
   MATERIALIZATION_TYPE,
 } from '../config';
 import { CurrentTestStates } from '../test';
@@ -49,13 +47,13 @@ function getParentInfo(
         mat = table;
         return;
       } else {
-        schema.tables.forEach((table) => {
-          const column = table.columns.get(parentElementId);
+        schema.tables.forEach((el) => {
+          const column = el.columns.get(parentElementId);
           if (column) {
             dName = databaseName;
             sName = schemaName;
-            mName = table.name;
-            mat = table;
+            mName = el.name;
+            mat = el;
             col = column;
             return;
           }
@@ -374,32 +372,24 @@ export async function changeTests(
   // create Tests
   if (testsToCreateSnowflake.length > 0) {
     acceptedTestSuite = await ObservabilityApiRepo.postTestSuites(
-      testsToCreateSnowflake,
-      // jwt
-    );
+      testsToCreateSnowflake);
   }
 
   if (qualTestsToCreateSnowflake.length > 0) {
     // create QualTests
     acceptedQualTestSuite = await ObservabilityApiRepo.postQualTestSuites(
-      qualTestsToCreateSnowflake,
-      // jwt
-    );
+      qualTestsToCreateSnowflake);
   }
 
   if (updatedTestSuiteSnowflake.length > 0) {
     // update Tests
-    ObservabilityApiRepo.updateTestSuites(updatedTestSuiteSnowflake, 
-      // jwt
-    );
+    ObservabilityApiRepo.updateTestSuites(updatedTestSuiteSnowflake);
   }
 
   if (updatedQualTestSuiteSnowflake.length > 0) {
     // update QualTests
     ObservabilityApiRepo.updateQualTestSuites(
-      updatedQualTestSuiteSnowflake,
-      // jwt
-    );
+      updatedQualTestSuiteSnowflake);
   }
 
   setTestSuite([...testSuite, ...acceptedTestSuite]);

@@ -12,7 +12,6 @@ import { Level } from '../config';
 import { classNames } from '../utils/tailwind';
 import CustomThreshold, { CustomThresholdState } from '../components/custom-threshold';
 import ObservabilityApiRepo from '../../../infrastructure/observability-api/observability-api-repo';
-import AccountApiRepository from '../../../infrastructure/account-api/account-api-repo';
 
 const callsToAction = [
   { name: 'Example', href: '#', icon: PlayCircleIcon },
@@ -54,8 +53,6 @@ export function MenuComponent({
   }>({
     show: false,
   });
-
-  const [orgId, setOrgId] = useState<string>();
 
   const { id, 
           active,
@@ -119,19 +116,6 @@ export function MenuComponent({
       show: true,
       target
     });
-
-    AccountApiRepository.getBy(new URLSearchParams({}))
-    .then((accounts) => {
-      if (!accounts.length) throw new Error(`No accounts found for user`);
-
-      if (accounts.length > 1)
-        throw new Error(`Multiple accounts found for user`);
-
-      setOrgId(accounts[0].organizationId);
-    })
-    .catch((error) => {
-      throw new Error(error);
-    });
   };
 
   useEffect(renderCustomThresholdComponent, []); 
@@ -165,7 +149,6 @@ export function MenuComponent({
                       state={customThresholdState.target!.testSuiteRep.state}
                       target={customThresholdState.target!.target}
                       testSuiteRep={customThresholdState.target!.testSuiteRep}
-                      orgId={orgId!}
                       test={test}
                       level={level}
                       parentElementId={parentElementId}

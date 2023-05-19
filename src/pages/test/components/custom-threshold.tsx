@@ -1,6 +1,5 @@
 import { Transition } from '@headlessui/react';
 import { Fragment, useEffect, useState } from 'react';
-import { MdClose } from 'react-icons/md';
 import LoadingScreen from '../../../components/loading-screen';
 import MetricsGraph, {
   defaultOption,
@@ -15,8 +14,6 @@ import FrequencyDropdown from '../tableComponents/frequencyDropdown';
 
 export const thresholdModes = ['absolute', 'relative'] as const;
 export type ThresholdMode = typeof thresholdModes[number];
-
-type Summary = Pick<Test, 'summary'>;
 
 export const parseThresholdMode = (type: unknown): ThresholdMode => {
   if (typeof type !== 'string')
@@ -52,8 +49,6 @@ export default ({
   state,
   target,
   testSuiteRep,
-  // closeCallback,
-  orgId,
   savedScheduleCallback,
   test,
   level,
@@ -68,8 +63,6 @@ export default ({
     type: string;
     active: boolean;
   };
-  orgId: string;
-  // closeCallback: () => void;
   savedScheduleCallback: (
     state: CustomThresholdState,
     testSuiteId: string,
@@ -410,13 +403,13 @@ export default ({
       });
   }, [show]);
 
-  function TestCounter({ summary }: Summary) {
+  function TestCounter() {
     return (
       <h1>
         {summary?.activeChildren}/{summary?.totalChildren}
       </h1>
     );
-  }
+  };
 
   return (
     <Transition appear show={show} as={Fragment}>
@@ -446,7 +439,7 @@ export default ({
                   <div className="flex items-center justify-center rounded-lg p-4 hover:bg-gray-50">
                     {(level === 'column' || !summary) &&
                       (testSuiteRep.active ? <h1>Active</h1> : <h1>Deactive</h1>)}
-                    {level === 'table' && summary && <TestCounter summary={summary} />}
+                    {level === 'table' && summary && <TestCounter />}
                   </div>
                 </div>
                 <div className="flex justify-between">
@@ -455,7 +448,7 @@ export default ({
                   </h3>
                 </div>
                 {isLoading ? (
-                  <LoadingScreen tailwindCss="fixed flex w-full h-4 items-center justify-center" />
+                  <LoadingScreen tailwindCss="fixed flex w-full items-center justify-center" />
                 ) : (
                   <>
                     {yMinMax && testHistory ? (

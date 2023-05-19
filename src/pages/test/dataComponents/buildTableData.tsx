@@ -16,6 +16,7 @@ export interface Test {
   type: TestType;
   active: boolean;
   cron: string; // is either '' (then has frequencyRange) or 'custom' or a cron string
+  targetResourceId: string;
   customLowerThreshold: number;
   customUpperThreshold: number;
   customLowerThresholdMode: CustomThresholdMode;
@@ -97,6 +98,7 @@ export function buildTableData(
       type: test.type as TestType,
       cron: test.cron,
       active: test.activated,
+      targetResourceId: test.target.targetResourceId,
       customLowerThresholdMode: 
         instanceOfTestSuiteDto(test) ? 
           test.customLowerThresholdMode :
@@ -224,6 +226,7 @@ export function buildTableData(
             type: columnTest.type,
             active: false,
             cron: buildCronExpression(numericalFrequency),
+            targetResourceId: columnTest.targetResourceId,
             customLowerThresholdMode: columnTest.customLowerThresholdMode,
             customUpperThresholdMode: columnTest.customUpperThresholdMode,
             customLowerThreshold: columnTest.customLowerThreshold,

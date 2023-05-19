@@ -4,7 +4,7 @@ import getApiClient from '../api-client';
 import AccountDto from './account-dto';
 
 // TODO - Implement Interface regarding clean architecture
-export default class AccountApiRepo {
+export default class AccountApiRepository {
   private static version = 'v1';
 
   private static apiRoot = 'api';
@@ -18,7 +18,7 @@ export default class AccountApiRepo {
       };
 
       const response = await this.client.get(
-        `/${AccountApiRepo.apiRoot}/${AccountApiRepo.version}/accounts`,
+        `/${AccountApiRepository.apiRoot}/${AccountApiRepository.version}/accounts`,
         config
       );
       const jsonResponse = response.data;

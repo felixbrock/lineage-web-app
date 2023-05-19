@@ -9,9 +9,14 @@ import MetricsGraph, {
 } from '../../../components/metrics-graph';
 import Toggle from '../../../components/toggle';
 import ObservabilityApiRepo from '../../../infrastructure/observability-api/observability-api-repo';
+import { Test } from '../dataComponents/buildTableData';
+import { Level } from '../config';
+import FrequencyDropdown from '../tableComponents/frequencyDropdown';
 
 export const thresholdModes = ['absolute', 'relative'] as const;
 export type ThresholdMode = typeof thresholdModes[number];
+
+type Summary = Pick<Test, 'summary'>;
 
 export const parseThresholdMode = (type: unknown): ThresholdMode => {
   if (typeof type !== 'string')
@@ -47,9 +52,13 @@ export default ({
   state,
   target,
   testSuiteRep,
-
   // closeCallback,
+  orgId,
   savedScheduleCallback,
+  test,
+  level,
+  parentElementId,
+  summary
 }: {
   show: boolean;
   state: CustomThresholdState;
@@ -57,14 +66,19 @@ export default ({
   testSuiteRep: {
     id: string;
     type: string;
+    active: boolean;
   };
   orgId: string;
-  closeCallback: () => void;
+  // closeCallback: () => void;
   savedScheduleCallback: (
     state: CustomThresholdState,
     testSuiteId: string,
     target: { id: string; matId?: string }
   ) => Promise<void>;
+  test: Test;
+  level: Level;
+  parentElementId: string;
+  summary: any;
 }) => {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -396,6 +410,14 @@ export default ({
       });
   }, [show]);
 
+  function TestCounter({ summary }: Summary) {
+    return (
+      <h1>
+        {summary?.activeChildren}/{summary?.totalChildren}
+      </h1>
+    );
+  }
+
   return (
     <Transition appear show={show} as={Fragment}>
       <div className="relative z-10">
@@ -410,21 +432,30 @@ export default ({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <div className="m-4 w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <div className="mx-4 w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white p-1 text-left align-middle transition-all">
+                <div className="grid grid-cols-2 p-0">
+                  <div className="flex items-center justify-center rounded-lg p-0 hover:bg-gray-50">
+                    <div className="absolute">
+                      <FrequencyDropdown
+                        test={test}
+                        level={level}
+                        parentElementId={parentElementId}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center rounded-lg p-4 hover:bg-gray-50">
+                    {(level === 'column' || !summary) &&
+                      (testSuiteRep.active ? <h1>Active</h1> : <h1>Deactive</h1>)}
+                    {level === 'table' && summary && <TestCounter summary={summary} />}
+                  </div>
+                </div>
                 <div className="flex justify-between">
                   <h3 className="mb-2 text-lg font-bold leading-6 text-gray-900">
                     Define Custom Threshold
                   </h3>
-                  <button
-                    type="button"
-                    className="flex items-center justify-center px-4 py-2"
-                    // onClick={closeCallback}
-                  >
-                    <MdClose className="flex h-6 w-6 content-center justify-center fill-gray-500 text-center hover:fill-cito" />
-                  </button>
                 </div>
                 {isLoading ? (
-                  <LoadingScreen tailwindCss="fixed flex w-full h-full items-center justify-center" />
+                  <LoadingScreen tailwindCss="fixed flex w-full h-4 items-center justify-center" />
                 ) : (
                   <>
                     {yMinMax && testHistory ? (
@@ -519,7 +550,7 @@ export default ({
                   }
                 >
                   <p className="font-bold">Relative Mode Disabled</p>
-                  <p className="break-normal">
+                  <p className="whitespace-normal">
                     You cannot define relative custom thresholds at the moment,
                     due to absent monitoring history or due to a median value
                     (the base value needed to calculate relative thresholds) of

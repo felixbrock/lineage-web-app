@@ -3,11 +3,11 @@ import { TestHistoryEntry } from '../../components/metrics-graph';
 import appConfig from '../../config';
 import { CustomThreshold } from '../../pages/test/components/custom-threshold';
 import getApiClient from '../api-client';
+import { EXECUTION_TYPE, TEST_TYPES, MATERIALIZATION_TYPE } from '../../pages/test/config';
+import { QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
 
 export const customThresholdModes = ['absolute', 'relative'] as const;
 export type CustomThresholdMode = typeof customThresholdModes[number];
-import { EXECUTION_TYPE, TEST_TYPES, MATERIALIZATION_TYPE } from '../../pages/test/config';
-import { QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
 
 type ExecutionType = typeof EXECUTION_TYPE;
 type MaterializationType = typeof MATERIALIZATION_TYPE;

@@ -11,6 +11,7 @@ import ObservabilityApiRepo from '../../../infrastructure/observability-api/obse
 import { Test } from '../dataComponents/buildTableData';
 import { Level } from '../config';
 import FrequencyDropdown from '../tableComponents/frequencyDropdown';
+import { MdClose } from 'react-icons/md';
 
 export const thresholdModes = ['absolute', 'relative'] as const;
 export type ThresholdMode = typeof thresholdModes[number];
@@ -45,9 +46,9 @@ const calcRelativeThreshold = (absoluteThreshold: number, median: number) =>
   median === 0 ? 0 : absoluteThreshold / median;
 
 export default ({
+  closeOverlay,
   show,
   state,
-  target,
   testSuiteRep,
   savedScheduleCallback,
   test,
@@ -55,9 +56,9 @@ export default ({
   parentElementId,
   summary
 }: {
+  closeOverlay: () => void;
   show: boolean;
   state: CustomThresholdState;
-  target: { id: string; matId?: string };
   testSuiteRep: {
     id: string;
     type: string;
@@ -65,13 +66,16 @@ export default ({
   };
   savedScheduleCallback: (
     state: CustomThresholdState,
-    testSuiteId: string,
-    target: { id: string; matId?: string }
+    testSuiteId: string
   ) => Promise<void>;
   test: Test;
   level: Level;
   parentElementId: string;
-  summary: any;
+  summary: {
+    frequencyRange: [number, number];
+    activeChildren: number;
+    totalChildren: number;
+  } | undefined;
 }) => {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -107,9 +111,10 @@ export default ({
         upper: { value: customUpperThreshold, mode: customUpperThresholdMode },
         lower: { value: customLowerThreshold, mode: customLowerThresholdMode },
       },
-      testSuiteRep.id,
-      target
+      testSuiteRep.id
     );
+
+    closeOverlay();
   };
 
   const handleCustomLowerThresholdModeChange = (checked: boolean) => {
@@ -405,9 +410,11 @@ export default ({
 
   function TestCounter() {
     return (
-      <h1>
-        {summary?.activeChildren}/{summary?.totalChildren}
-      </h1>
+      <div>
+        <h1>
+          {summary?.activeChildren}/{summary?.totalChildren}
+        </h1>
+      </div>
     );
   };
 
@@ -425,10 +432,11 @@ export default ({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <div className="mx-4 w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white p-1 text-left align-middle transition-all">
-                <div className="grid grid-cols-2 p-0">
-                  <div className="flex items-center justify-center rounded-lg p-0 hover:bg-gray-50">
-                    <div className="absolute">
+              <div className="mx-4 w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle transition-all">
+                <div className="grid grid-cols-3 p-2">
+                  <div className="flex items-center justify-center rounded-lg p-2 hover:bg-gray-50">
+                    <h1 className='mr-2'>Frequency:</h1>
+                    <div>
                       <FrequencyDropdown
                         test={test}
                         level={level}
@@ -436,12 +444,22 @@ export default ({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center justify-center rounded-lg p-4 hover:bg-gray-50">
+                  <div className="flex items-center justify-center rounded-lg p-2 hover:bg-gray-50">
                     {(level === 'column' || !summary) &&
                       (testSuiteRep.active ? <h1>Active</h1> : <h1>Deactive</h1>)}
+                    {level === 'table' && summary && <h1 className='mr-2'>Active Tests:</h1>}
                     {level === 'table' && summary && <TestCounter />}
                   </div>
+                  <button
+                      type="button"
+                      className="flex items-center justify-end px-4 py-2"
+                      onClick={closeOverlay}
+                    >
+                      <MdClose className="flex h-6 w-6 content-center justify-end fill-gray-500 text-center hover:fill-cito" />
+                  </button>
                 </div>
+
+
                 <div className="flex justify-between">
                   <h3 className="mb-2 text-lg font-bold leading-6 text-gray-900">
                     Define Custom Threshold

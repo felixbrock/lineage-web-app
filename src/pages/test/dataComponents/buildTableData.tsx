@@ -222,7 +222,7 @@ export function buildTableData(
           }
         } else {
           const testSummary: Test = {
-            id: 'testSummary',
+            id: columnTest.id,
             type: columnTest.type,
             active: false,
             cron: buildCronExpression(numericalFrequency),

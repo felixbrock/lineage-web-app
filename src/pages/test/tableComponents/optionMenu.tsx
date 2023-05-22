@@ -22,7 +22,6 @@ export function MenuComponent({
   test,
   parentElementId,
   level,
-  index,
 }: {
   test: Test;
   parentElementId: string;
@@ -47,8 +46,12 @@ export function MenuComponent({
         type: string;
         active: boolean;
         state: CustomThresholdState;
+        summary?: {
+          frequencyRange: [number, number];
+          activeChildren: number;
+          totalChildren: number;
+        };
       };
-      summary: any;
     };
   }>({
     show: false,
@@ -85,9 +88,6 @@ export function MenuComponent({
     });
   };
 
-  // open last menu to the left
-  const translate = index !== 9 ? '-translate-x-1/2' : '-translate-x-3/4'
-
   const renderCustomThresholdComponent = () => {
     const target = {
       target: {
@@ -107,9 +107,9 @@ export function MenuComponent({
             mode: customUpperThresholdMode,
             value: customUpperThreshold,
           }
-        }
+        },
+        summary
       },
-      summary
     };
     
     setCustomThresholdState({
@@ -118,7 +118,7 @@ export function MenuComponent({
     });
   };
 
-  useEffect(renderCustomThresholdComponent, []); 
+  useEffect(renderCustomThresholdComponent, []);
 
   return (
     <Popover className="relative">
@@ -128,53 +128,56 @@ export function MenuComponent({
           aria-hidden="true"
         />
       </Popover.Button>
-
-      <Transition
-        as={Fragment}
-        enter="transition ease-out duration-200"
-        enterFrom="opacity-0 translate-y-1"
-        enterTo="opacity-100 translate-y-0"
-        leave="transition ease-in duration-150"
-        leaveFrom="opacity-100 translate-y-0"
-        leaveTo="opacity-0 translate-y-1"
-      >
-        <Popover.Panel className={classNames("absolute left-1/2 z-20 mt-0 flex w-screen max-w-max pb-4 px-4", translate)}>
+        <Popover.Panel className={"fixed inset-0 flex items-center justify-center z-20"}>
           {({ close }) => {
-            if (id.includes('TEMP_ID')) close();
+            if (id.includes('TEMP_ID')) close(); 
             return (
-              <div className="w-screen max-w-md h-screen min-h-full flex-auto overflow-hidden rounded-3xl bg-white text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
-                    <CustomThreshold
-                      savedScheduleCallback={saveCustomThresholdCallback}
-                      show={customThresholdState.show}
-                      state={customThresholdState.target!.testSuiteRep.state}
-                      target={customThresholdState.target!.target}
-                      testSuiteRep={customThresholdState.target!.testSuiteRep}
-                      test={test}
-                      level={level}
-                      parentElementId={parentElementId}
-                      summary={customThresholdState.target!.summary}
-                    />
+              <>
+                <div className="fixed inset-0 bg-black opacity-50"></div>
 
-                <div className="hidden grid-cols-2 divide-x divide-gray-900/5 bg-gray-50">
-                  {callsToAction.map((item) => (
-                    <a
-                      key={item.name}
-                      href={item.href}
-                      className="flex items-center justify-center gap-x-2.5 p-1 font-semibold text-gray-900 hover:bg-gray-100"
-                    >
-                      <item.icon
-                        className="h-5 w-5 flex-none text-gray-400"
-                        aria-hidden="true"
+                <Transition
+                  as={Fragment}
+                  enter="transition ease-out duration-200"
+                  enterFrom="opacity-0 scale-95"
+                  enterTo="opacity-100 scale-100"
+                  leave="transition ease-in duration-150"
+                  leaveFrom='opacity-100 scale-100'
+                  leaveTo='opacity-0 scale-95'
+                >
+                <div className="flex-auto overflow-hidden rounded-3xl bg-white text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
+                      <CustomThreshold
+                        closeOverlay={close}
+                        savedScheduleCallback={saveCustomThresholdCallback}
+                        show={customThresholdState.show}
+                        state={customThresholdState.target!.testSuiteRep.state}
+                        testSuiteRep={customThresholdState.target!.testSuiteRep}
+                        test={test}
+                        level={level}
+                        parentElementId={parentElementId}
+                        summary={customThresholdState.target!.testSuiteRep.summary}
                       />
-                      {item.name}
-                    </a>
-                  ))}
+
+                  <div className="hidden grid-cols-2 divide-x divide-gray-900/5 bg-gray-50">
+                    {callsToAction.map((item) => (
+                      <a
+                        key={item.name}
+                        href={item.href}
+                        className="flex items-center justify-center gap-x-2.5 p-1 font-semibold text-gray-900 hover:bg-gray-100"
+                      >
+                        <item.icon
+                          className="h-5 w-5 flex-none text-gray-400"
+                          aria-hidden="true"
+                        />
+                        {item.name}
+                      </a>
+                    ))}
+                  </div>
                 </div>
-              </div>
+                </Transition>
+              </>
             );
           }}
         </Popover.Panel>
-      </Transition>
     </Popover>
   );
 }

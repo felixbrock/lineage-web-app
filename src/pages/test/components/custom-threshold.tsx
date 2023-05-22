@@ -459,133 +459,135 @@ export default ({
                   </button>
                 </div>
 
-
-                <div className="flex justify-between">
-                  <h3 className="mb-2 text-lg font-bold leading-6 text-gray-900">
-                    Define Custom Threshold
-                  </h3>
-                </div>
-                {isLoading ? (
-                  <LoadingScreen tailwindCss="fixed flex w-full items-center justify-center" />
-                ) : (
+                {(level === 'column' || !summary) && test.active && (
                   <>
-                    {yMinMax && testHistory ? (
-                      <MetricsGraph
-                        option={defaultOption(
-                          getDefaultYAxis(
-                            yMinMax,
-                            !!customLowerThreshold,
-                            !!customUpperThreshold
-                          ),
-                          graphData
-                        )}
-                      />
+                    <div className="flex justify-between">
+                      <h3 className="mb-2 text-lg font-bold leading-6 text-gray-900">
+                        Define Custom Threshold
+                      </h3>
+                    </div>
+                    {isLoading ? (
+                      <LoadingScreen tailwindCss="fixed flex w-full items-center justify-center" />
                     ) : (
-                      <></>
-                    )}
-                    <div className="grid grid-cols-3 items-end gap-3">
-                      <div className="flex flex-col items-center">
-                        <h3>Lower Threshold</h3>
-                        <Toggle
-                          mode={customLowerThresholdMode}
-                          modeChangeCallback={
-                            handleCustomLowerThresholdModeChange
-                          }
-                          disabled={relativeModeDisabled}
-                          modeOptions={[...thresholdModes]}
-                        ></Toggle>
-                        <div className="mt-4 flex items-center">
-                          <input
-                            className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 py-2 px-4 leading-tight text-gray-700 focus:border-gray-500 focus:bg-white focus:outline-none"
-                            id="lower-threshold"
-                            type="number"
-                            value={customLowerThreshold}
-                            onChange={handleCustomLowerThresholdOnChange}
-                            onBlur={handleCustomLowerThresholdOnBlur}
+                      <>
+                        {yMinMax && testHistory ? (
+                          <MetricsGraph
+                            option={defaultOption(
+                              getDefaultYAxis(
+                                yMinMax,
+                                !!customLowerThreshold,
+                                !!customUpperThreshold
+                              ),
+                              graphData
+                            )}
                           />
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <h3>Upper Threshold</h3>
-                        <Toggle
-                          mode={customUpperThresholdMode}
-                          modeChangeCallback={
-                            handleCustomUpperThresholdModeChange
-                          }
-                          modeOptions={[...thresholdModes]}
-                          disabled={relativeModeDisabled}
-                        ></Toggle>
-                        <div className="mt-4 flex items-center">
-                          <input
-                            className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 py-2 px-4 leading-tight text-gray-700 focus:border-gray-500 focus:bg-white focus:outline-none"
-                            id="upper-threshold"
-                            type="number"
-                            value={customUpperThreshold}
-                            onChange={handleCustomUpperThresholdOnChange}
-                            onBlur={handleCustomUpperThresholdOnBlur}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        {(customLowerThresholdMode === 'relative' ||
-                          customUpperThresholdMode === 'relative') &&
-                        valueBase ? (
-                          <>
-                            <h3 className="break-normal">
-                              Median (Relative Base Value)
-                            </h3>
-                            <div className="mt-4 flex items-center">
-                              <input
-                                className="block w-full appearance-none rounded border border-gray-200 bg-violet-200 py-2 px-4 leading-tight text-violet-700 "
-                                id="median-value"
-                                type="number"
-                                disabled={true}
-                                value={valueBase.median}
-                              />
-                            </div>
-                          </>
                         ) : (
                           <></>
                         )}
-                      </div>
+                        <div className="grid grid-cols-3 items-end gap-3">
+                          <div className="flex flex-col items-center">
+                            <h3>Lower Threshold</h3>
+                            <Toggle
+                              mode={customLowerThresholdMode}
+                              modeChangeCallback={
+                                handleCustomLowerThresholdModeChange
+                              }
+                              disabled={relativeModeDisabled}
+                              modeOptions={[...thresholdModes]}
+                            ></Toggle>
+                            <div className="mt-4 flex items-center">
+                              <input
+                                className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 py-2 px-4 leading-tight text-gray-700 focus:border-gray-500 focus:bg-white focus:outline-none"
+                                id="lower-threshold"
+                                type="number"
+                                value={customLowerThreshold}
+                                onChange={handleCustomLowerThresholdOnChange}
+                                onBlur={handleCustomLowerThresholdOnBlur}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <h3>Upper Threshold</h3>
+                            <Toggle
+                              mode={customUpperThresholdMode}
+                              modeChangeCallback={
+                                handleCustomUpperThresholdModeChange
+                              }
+                              modeOptions={[...thresholdModes]}
+                              disabled={relativeModeDisabled}
+                            ></Toggle>
+                            <div className="mt-4 flex items-center">
+                              <input
+                                className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 py-2 px-4 leading-tight text-gray-700 focus:border-gray-500 focus:bg-white focus:outline-none"
+                                id="upper-threshold"
+                                type="number"
+                                value={customUpperThreshold}
+                                onChange={handleCustomUpperThresholdOnChange}
+                                onBlur={handleCustomUpperThresholdOnBlur}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            {(customLowerThresholdMode === 'relative' ||
+                              customUpperThresholdMode === 'relative') &&
+                            valueBase ? (
+                              <>
+                                <h3 className="break-normal">
+                                  Median (Relative Base Value)
+                                </h3>
+                                <div className="mt-4 flex items-center">
+                                  <input
+                                    className="block w-full appearance-none rounded border border-gray-200 bg-violet-200 py-2 px-4 leading-tight text-violet-700 "
+                                    id="median-value"
+                                    type="number"
+                                    disabled={true}
+                                    value={valueBase.median}
+                                  />
+                                </div>
+                              </>
+                            ) : (
+                              <></>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    <div
+                      className="mt-4 border-l-4 border-orange-500 bg-orange-100 p-4 text-orange-700"
+                      role="alert"
+                      hidden={
+                        testHistory &&
+                        testHistory.length !== 0 &&
+                        valueBase.median !== 0
+                      }
+                    >
+                      <p className="font-bold">Relative Mode Disabled</p>
+                      <p className="whitespace-normal">
+                        You cannot define relative custom thresholds at the moment,
+                        due to absent monitoring history or due to a median value
+                        (the base value needed to calculate relative thresholds) of
+                        0.
+                      </p>
                     </div>
-                  </>
-                )}
-                <div
-                  className="mt-4 border-l-4 border-orange-500 bg-orange-100 p-4 text-orange-700"
-                  role="alert"
-                  hidden={
-                    testHistory &&
-                    testHistory.length !== 0 &&
-                    valueBase.median !== 0
-                  }
-                >
-                  <p className="font-bold">Relative Mode Disabled</p>
-                  <p className="whitespace-normal">
-                    You cannot define relative custom thresholds at the moment,
-                    due to absent monitoring history or due to a median value
-                    (the base value needed to calculate relative thresholds) of
-                    0.
-                  </p>
-                </div>
-                <div className="mt-4">
-                  <button
-                    type="button"
-                    className={`inline-flex justify-center rounded-md border border-transparent ${
-                      customUpperThreshold === state.upper.value &&
-                      customLowerThreshold === state.lower.value
-                        ? 'bg-gray-100'
-                        : 'bg-violet-200 hover:bg-white hover:text-cito hover:ring-2 hover:ring-cito hover:ring-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-cito focus-visible:ring-offset-2'
-                    } px-4 py-2 text-sm font-medium text-black`}
-                    onClick={handleSaveClick}
-                    disabled={
-                      customUpperThreshold === state.upper.value &&
-                      customLowerThreshold === state.lower.value
-                    }
-                  >
-                    Save
-                  </button>
-                </div>
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        className={`inline-flex justify-center rounded-md border border-transparent ${
+                          customUpperThreshold === state.upper.value &&
+                          customLowerThreshold === state.lower.value
+                            ? 'bg-gray-100'
+                            : 'bg-violet-200 hover:bg-white hover:text-cito hover:ring-2 hover:ring-cito hover:ring-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-cito focus-visible:ring-offset-2'
+                        } px-4 py-2 text-sm font-medium text-black`}
+                        onClick={handleSaveClick}
+                        disabled={
+                          customUpperThreshold === state.upper.value &&
+                          customLowerThreshold === state.lower.value
+                        }
+                      >
+                        Save
+                      </button>
+                    </div>
+                </>)}
               </div>
             </Transition.Child>
           </div>

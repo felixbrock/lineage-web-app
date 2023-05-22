@@ -1,5 +1,5 @@
-export const HARDCODED_LOWER_THRESHOLD = 3;
-export const HARDCODED_UPPER_THRESHOLD = 5;
+export const HARDCODED_LOWER_THRESHOLD = 0;
+export const HARDCODED_UPPER_THRESHOLD = 0;
 export const HARDCODED_THRESHOLD_MODE = "absolute"
 export const DEFAULT_FREQUENCY = '25 * * * ? *';
 export const EXECUTION_TYPE = 'frequency';

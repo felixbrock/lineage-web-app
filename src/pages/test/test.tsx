@@ -172,7 +172,7 @@ export default function Test() {
       });
     });
 
-    console.log(searchResults);
+    // console.log(searchResults);
     if (searchResults.size === 0) return tableData;
     return searchResults;
   }
@@ -224,7 +224,7 @@ export default function Test() {
     return success;
   }
 
-  console.log(tableState);
+  // console.log(tableState);
 
   useEffect(() => {
     setTableState({

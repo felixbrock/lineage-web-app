@@ -346,20 +346,20 @@ export async function changeTests(
       UpdateQualTestSuiteObject[]
     ];
 
-  console.log('ttcs', testsToCreateSnowflake);
-  console.log('ttcui', testsToCreateUI);
-  console.log('qttcs', qualTestsToCreateSnowflake);
-  console.log('qttcui', qualTestsToCreateUI);
-  console.log('ttu', testsToUpdate);
-  console.log('qttu', qualTestsToUpdate);
-  console.log('tempui', updatedTestSuiteTempUI);
-  console.log('SAM', testSuite);
-  console.log('snow', updatedTestSuiteSnowflake);
-  console.log('Qtempui', updatedQualTestSuiteTempUI);
-  console.log('SAM', qualTestSuite);
-  console.log('Qsnow', updatedQualTestSuiteSnowflake);
-  console.log('state', newTestState);
-  console.log('----------------------------');
+  // console.log('ttcs', testsToCreateSnowflake);
+  // console.log('ttcui', testsToCreateUI);
+  // console.log('qttcs', qualTestsToCreateSnowflake);
+  // console.log('qttcui', qualTestsToCreateUI);
+  // console.log('ttu', testsToUpdate);
+  // console.log('qttu', qualTestsToUpdate);
+  // console.log('tempui', updatedTestSuiteTempUI);
+  // console.log('SAM', testSuite);
+  // console.log('snow', updatedTestSuiteSnowflake);
+  // console.log('Qtempui', updatedQualTestSuiteTempUI);
+  // console.log('SAM', qualTestSuite);
+  // console.log('Qsnow', updatedQualTestSuiteSnowflake);
+  // console.log('state', newTestState);
+  // console.log('----------------------------');
 
   // set new test for visual feedback
   // setTestSuite([...updatedTestSuiteTempUI, ...testsToCreateUI]);

@@ -412,7 +412,7 @@ export default ({
     return (
       <div>
         <h1>
-          {summary?.activeChildren}/{summary?.totalChildren}
+          {Math.min(summary!.activeChildren, summary!.totalChildren)}/{summary?.totalChildren}
         </h1>
       </div>
     );
@@ -432,7 +432,7 @@ export default ({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <div className="mx-4 w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle transition-all">
+              <div className="mx-4 w-full max-w-4xl transform rounded-2xl bg-white p-6 text-left align-middle transition-all">
                 <div className="grid grid-cols-3 p-2">
                   <div className="flex items-center justify-center rounded-lg p-2 hover:bg-gray-50">
                     <h1 className='mr-2'>Frequency:</h1>

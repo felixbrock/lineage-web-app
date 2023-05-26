@@ -7,6 +7,7 @@ import MaterializationDto from '../../../infrastructure/lineage-api/materializat
 import {
   QualTestSuiteDto,
   TestSuiteDto,
+  CustomTestSuiteDto
 } from '../../../infrastructure/observability-api/test-suite-dto';
 
 export function useSessionStorageData(...storageItems: string[]) {
@@ -20,7 +21,7 @@ export function useSessionStorageData(...storageItems: string[]) {
   return finalStorageObject;
 }
 
-type ApiRepositoryResults = MaterializationDto[] | ColumnDto[] | TestSuiteDto[] | QualTestSuiteDto[] | undefined
+type ApiRepositoryResults = MaterializationDto[] | ColumnDto[] | TestSuiteDto[] | QualTestSuiteDto[] | CustomTestSuiteDto[] | undefined
 
 export function useApiRepository(
   jwt: string,

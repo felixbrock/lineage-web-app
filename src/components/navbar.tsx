@@ -12,6 +12,7 @@ type SnapshotState = 'loading' | 'creating' | 'available' | 'not available';
 const navigation = [
   { name: 'Lineage', href: '/lineage', current: true },
   { name: 'Anomaly Monitors', href: '/test', current: false },
+  { name: 'Custom Tests', href: '/custom-sql', current: false},
 ];
 const subNavigation = [
   { name: 'Overview', isShown: true, toggle: () => {} },
@@ -41,9 +42,15 @@ export default function Navbar({
   if (current === 'lineage') {
     navigation[0].current = true;
     navigation[1].current = false;
-  } else {
+    navigation[2].current = false;
+  } else if (current === 'tests') {
     navigation[0].current = false;
     navigation[1].current = true;
+    navigation[2].current = false;
+  } else {
+    navigation[0].current = false;
+    navigation[1].current = false;
+    navigation[2].current = true;
   }
 
   const getSnapshotInfo = (state: SnapshotState, createdAt?: string) => {

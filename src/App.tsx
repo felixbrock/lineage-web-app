@@ -13,6 +13,7 @@ import SlackRedirect from './pages/slack-redirect';
 import appConfig from './config';
 import ModelFeedback from './pages/model-feedback';
 import Test from './pages/test/test';
+import CustomSql from './pages/custom-sql/custom-sql';
 
 export default (): ReactElement => {
   Auth.configure({
@@ -65,6 +66,7 @@ export default (): ReactElement => {
                 <Route path="/model-feedback" element={<ModelFeedback />} />
                 <Route path="/lineage" element={<Lineage />} />
                 <Route path="/test" element={<Test />} />
+                <Route path="/custom-sql" element={<CustomSql />} />
                 {/* in development copy query params and manually call Github redirect: https://smee.io/XeUBYbnaoGxxxcf */}
                 <Route
                   path="/oauth/github/:code/:installationId/:state"

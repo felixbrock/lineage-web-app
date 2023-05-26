@@ -4,7 +4,7 @@ import appConfig from '../../config';
 import { CustomThreshold } from '../../pages/test/components/custom-threshold';
 import getApiClient from '../api-client';
 import { EXECUTION_TYPE, TEST_TYPES, MATERIALIZATION_TYPE } from '../../pages/test/config';
-import { QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
+import { CustomTestSuiteDto, QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
 
 export const customThresholdModes = ['absolute', 'relative'] as const;
 export type CustomThresholdMode = typeof customThresholdModes[number];
@@ -168,6 +168,19 @@ export default class ObservabilityApiRepo {
       return Promise.reject(new Error(error.response.data.message));
     }
   };
+
+  static getCustomTestSuites = async (): Promise<CustomTestSuiteDto[]> => {
+    try {
+      const response = await this.client.get(
+        `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/custom-test-suites`
+      );
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  }
 
   static adjustDetectedAnomaly = async (
     postAnomalyFeedbackDto: PostAnomalyFeedbackDto

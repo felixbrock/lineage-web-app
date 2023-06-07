@@ -6,11 +6,12 @@ import { Fragment, useEffect, useState } from "react";
 import SearchBox from "../lineage/components/search-box";
 import ObservabilityApiRepo from "../../infrastructure/observability-api/observability-api-repo";
 import { CustomTestSuiteDto } from "../../infrastructure/observability-api/test-suite-dto";
-import Toggle from "../custom-sql/components/toggle";
+import Toggle from "./components/custom-toggle";
 import { getFrequency } from "../test/utils/cron";
 import { Transition } from "@headlessui/react";
-import { MdClose } from "react-icons/md";
-import FrequencyDropdown from "./components/frequency-dropdown";
+import { MdClose, MdDelete } from "react-icons/md";
+import FrequencyDropdown from "./components/custom-frequency-dropdown";
+import { DEFAULT_FREQUENCY, EXECUTION_TYPE } from "../test/config";
 
 
 export default function CustomSql() {
@@ -19,14 +20,13 @@ export default function CustomSql() {
     const [tests, setTests] = useState<CustomTestSuiteDto[]>([]);
     const [searchString, setSearchString] = useState('');
     const [searchResults, setSearchResults] = useState<CustomTestSuiteDto[]>([]);
+    const [visibleTests, setVisibleTests] = useState<boolean[]>(Array(searchResults.length).fill(true));
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const [newTestName, setNewTestName] = useState('');
     const [newTestDescription, setNewTestDescription] = useState('');
     const [newTestSql, setNewTestSql] = useState('');
     const [newTestFrequency, setNewTestFrequency] = useState('');
-    const [newTestLowerThreshold, setNewTestLowerThreshold] = useState('');
-    const [newTestUpperThreshold, setNewTestUpperThreshold] = useState('');
     
     const alertInfoInit: AlertInfo = {
         show: false,
@@ -51,6 +51,7 @@ export default function CustomSql() {
         const results = await ObservabilityApiRepo.getCustomTestSuites();
         setTests(results);
         setSearchResults(results);
+        setVisibleTests(Array(results.length).fill(true));
     };
 
     const searchTests = () => {
@@ -63,26 +64,97 @@ export default function CustomSql() {
         });
 
         setSearchResults(results);
+        setVisibleTests(Array(results.length).fill(true));
     };
 
     const toggleModal = () => {
         setIsModalOpen(!isModalOpen);
     };
 
-    const handleCancelButton = () => {
+    const clearStates = () => {
         setNewTestName('');
         setNewTestDescription('');
         setNewTestSql('');
         setNewTestFrequency('');
-        setNewTestLowerThreshold('');
-        setNewTestUpperThreshold('');
+    };
+
+    const handleCancelButton = () => {
+        clearStates();
         
         toggleModal();
     };
 
-    const handleSubmitButton = () => {
-
+    const buildCronExpression = (frequency: string) => {
+        const currentDate = new Date();
+        const currentMinutes = currentDate.getUTCMinutes();
+        const currentHours = currentDate.getUTCHours();
+      
+        switch (frequency) {
+          case '1h':
+            return `${currentMinutes} * * * ? *`;
+      
+          case '3h':
+            return `${currentMinutes} */3 * * ? *`;
+      
+          case '6h':
+            return `${currentMinutes} */6 * * ? *`;
+      
+          case '12h':
+            return `${currentMinutes} */12 * * ? *`;
+      
+          case '24h':
+            return `${currentMinutes} ${currentHours} * * ? *`;
+          default:
+            return '';
+        }
     };
+
+    const handleSubmitButton = async () => {
+        const existingTests = [...tests];
+        const cronString = buildCronExpression(newTestFrequency);
+
+        const acceptedCustomTestSuite 
+            = await ObservabilityApiRepo.postCustomTestSuite({
+                activated: true,
+                name: newTestName,
+                description: newTestDescription,
+                executionType: EXECUTION_TYPE,
+                cron: cronString ? cronString : DEFAULT_FREQUENCY,
+                sqlLogic: newTestSql,
+                targetResourceIds: [],
+            });
+        
+        existingTests.push(acceptedCustomTestSuite);
+        setTests(existingTests);
+
+        clearStates();
+        toggleModal();
+    };
+
+    const handleSoftDeleteCustomTest = async (index: number, id: string) => {
+        const updatedVisibleTests = [...visibleTests];
+        updatedVisibleTests[index] = false;
+        setVisibleTests(updatedVisibleTests);
+
+        setTimeout(async () => {
+            await ObservabilityApiRepo.deleteCustomTestSuite(id, 'soft');
+            
+            const existingTests = [...tests];
+            const existingSearchResults = [...searchResults];
+
+            const testIndex = existingTests.findIndex((el) => el.id === id);
+            if (testIndex !== -1) {
+                existingTests.splice(testIndex, 1);
+            }
+
+            existingSearchResults.splice(index, 1);
+            visibleTests.splice(index, 1);
+
+            setTests(existingTests);
+            setSearchResults(existingSearchResults);
+        }, 500);
+        
+    }
 
     useEffect(() => {
         renderTests();
@@ -115,19 +187,33 @@ export default function CustomSql() {
                 </div>
                 <div className="p-6">
                     {searchResults.map((test, index) => (
-                        <div key={index} className="p-4 shadow-2xl mb-6 border-2 hover:border-purple-600 transition-all duration-500 rounded-lg">
-                            <div className="flex items-center">
-                                <h1 className="flex-grow"><span className="font-bold">Test Name: </span>{test.name}</h1>
-                                <Toggle test={test} />
+                        <Transition
+                            key={index}
+                            show={visibleTests[index] ?? false}
+                            enter="transition-opacity duration-500"
+                            enterFrom="opacity-0"
+                            enterTo="opacity-100"
+                            leave="transition-opacity duration-500"
+                            leaveFrom="opacity-100"
+                            leaveTo="opacity-0"
+                        >
+                            <div className="p-4 shadow-2xl mb-6 border-2 hover:border-purple-600 transition-all duration-500 rounded-lg">
+                                <div className="flex items-center">
+                                    <h1 className="flex-grow"><span className="font-bold">Test Name: </span>{test.name}</h1>
+                                    <Toggle test={test} />
+                                    <button type="button" onClick={() => handleSoftDeleteCustomTest(index, test.id)}>
+                                        <MdDelete className="h-8 w-8 fill-gray-500 hover:fill-cito transition-all duration-500"/>
+                                    </button>
+                                </div>
+                                {test.activated ? <p>Active</p> : <p>Deactive</p>}
+                                {test.description ? <p><span className="font-bold">Test Description: </span>{test.description}</p> : <></>}
+                                <p><span className="font-bold">Test ID: </span>{test.id}</p>
+                                <p><span className="font-bold">SQL Query: </span>{test.sqlLogic}</p>
+                                <p><span className="font-bold">Frequency: </span>{getFrequency(test.cron)}h</p>
+                                {test.customLowerThreshold ? <p><span className="font-bold">Lower Threshold: </span>{test.customLowerThreshold}</p> : <></>}
+                                {test.customUpperThreshold ? <p><span className="font-bold">Upper Threshold: </span>{test.customUpperThreshold}</p> : <></>}
                             </div>
-                            {test.activated ? <p>Active</p> : <p>Deactive</p>}
-                            {test.description ? <p><span className="font-bold">Test Description: </span>{test.description}</p> : <></>}
-                            <p><span className="font-bold">Test ID: </span>{test.id}</p>
-                            <p><span className="font-bold">SQL Query: </span>{test.sqlLogic}</p>
-                            <p><span className="font-bold">Frequency: </span>{getFrequency(test.cron)}h</p>
-                            {test.customLowerThreshold ? <p><span className="font-bold">Lower Threshold: </span>{test.customLowerThreshold}</p> : <></>}
-                            {test.customUpperThreshold ? <p><span className="font-bold">Upper Threshold: </span>{test.customUpperThreshold}</p> : <></>}
-                        </div>
+                        </Transition>
                         ))
                     }
                 </div>
@@ -156,7 +242,7 @@ export default function CustomSql() {
                             <p className="text-right text-sm text-red-500 mt-2 mb-4">* Indicates required field</p>
                             
                             <div className="flex items-center mb-2">
-                                <h2 className="mr-2">Name<span className="text-red-500">*</span></h2>
+                                <h2 className="mr-2">Name<span className="text-red-500"> *</span></h2>
                             </div>
                             <input
                                 className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 p-2 leading-tight text-gray-700 
@@ -181,10 +267,10 @@ export default function CustomSql() {
                             />
                             
                             <div className="mt-4 flex items-center mb-2">
-                                <h2 className="mr-2">SQL Logic<span className="text-red-500">*</span></h2>
+                                <h2 className="mr-2">SQL Logic<span className="text-red-500"> *</span></h2>
                             </div>
                             <textarea
-                                rows={2}
+                                rows={3}
                                 className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 p-2 leading-tight text-gray-700 
                                             focus:border-gray-500 focus:bg-white focus:outline-none transition duration-300"
                                 required
@@ -194,38 +280,15 @@ export default function CustomSql() {
                             />
 
                             <div className="mt-4 flex items-center mb-2">
-                                <h2 className="mr-2">Frequency<span className="text-red-500">*</span></h2>                                
+                                <h2 className="mr-2">Frequency</h2>                                
                             </div>
                             <FrequencyDropdown newTestFrequency={newTestFrequency} setNewTestFrequency={setNewTestFrequency} />
-                            <div className="mt-4 flex items-center mb-2">
-                                <h2 className="mr-2">Lower Threshold</h2>
-                            </div>
-                            <input
-                                className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 p-2 leading-tight text-gray-700 
-                                            focus:border-gray-500 focus:bg-white focus:outline-none transition duration-300"
-                                type="number"
-                                placeholder="Enter the lower threshold for your test..."
-                                value={newTestLowerThreshold}
-                                onChange={(e) => setNewTestLowerThreshold(e.target.value)}
-                            />
 
-                            <div className="mt-4 flex items-center mb-2">
-                                <h2 className="mr-2">Upper Threshold</h2>
-                            </div>
-                            <input
-                                className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 p-2 leading-tight text-gray-700 
-                                            focus:border-gray-500 focus:bg-white focus:outline-none transition duration-300"
-                                type="number"
-                                placeholder="Enter the upper threshold for your test..."
-                                value={newTestUpperThreshold}
-                                onChange={(e) => setNewTestUpperThreshold(e.target.value)}
-                            />
-
-                            <div className="flex flex-row mt-4 justify-end">
+                            <div className="flex flex-row mt-6 justify-end">
                                 <button 
                                     className="border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white transition-all 
                                                 duration-500 p-2 mb-2 mr-4 rounded"
-                                    onClick={toggleModal}
+                                    onClick={handleSubmitButton}
                                 >
                                     Submit
                                 </button>
@@ -243,6 +306,5 @@ export default function CustomSql() {
                 </>
             </Transition>
         </ThemeProvider>
-
     );
 }

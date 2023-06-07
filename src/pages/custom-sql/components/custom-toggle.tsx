@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Switch } from '@headlessui/react';
 import { CustomTestSuiteDto } from '../../../infrastructure/observability-api/test-suite-dto';
 import { classNames } from '../../test/utils/tailwind';
+import ObservabilityApiRepo from '../../../infrastructure/observability-api/observability-api-repo';
 
 const buttonColorOn = 'bg-green-600';
 const buttonColorOff = 'bg-gray-200';
@@ -25,11 +26,20 @@ export default function Toggle({
   }, [activated]);
 
   async function toggleSwitch() {
+
+    await ObservabilityApiRepo.updateCustomTestSuite({
+      id: test.id,
+      props: {
+        activated: !test.activated
+      }
+    });
+
+    test.activated = !test.activated;
     setEnabled(!enabled);
   }
 
   return (
-    <Switch.Group as="div" className="flex items-center">
+    <Switch.Group as="div" className="flex items-center pr-2">
       <Switch
         checked={enabled}
         disabled={id.includes('TEMP_ID')}

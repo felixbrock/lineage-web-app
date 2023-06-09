@@ -67,6 +67,10 @@ interface UpdateCustomTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
   name?: string;
   description?: string;
   sqlLogic?: string;
+  customLowerThreshold?: CustomThreshold;
+  customUpperThreshold?: CustomThreshold;
+  feedbackLowerThreshold?: number;
+  feedbackUpperThreshold?: number;
 }
 
 export interface UpdateTestSuiteObject {
@@ -355,10 +359,10 @@ export default class ObservabilityApiRepo {
 
       const isAnomalyValue = typeof isAnomaly === 'string' ? JSON.parse(isAnomaly) : isAnomaly;
 
-      let valueLowerBoundNum  = valueLowerBound;
+      let valueLowerBoundNum = valueLowerBound;
       if (!valueLowerBound) valueLowerBoundNum = null;
 
-      let valueUpperBoundNum  = valueUpperBound;
+      let valueUpperBoundNum = valueUpperBound;
       if (!valueUpperBound) valueUpperBoundNum = null;
 
       if (

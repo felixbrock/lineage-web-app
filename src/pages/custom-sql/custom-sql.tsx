@@ -14,8 +14,33 @@ import FrequencyDropdown from "./components/custom-frequency-dropdown";
 import { DEFAULT_FREQUENCY, EXECUTION_TYPE } from "../test/config";
 import ModelVisualiser from "../../components/model-visualiser";
 import { format } from 'sql-formatter';
+import CustomOptionMenu, { CustomThresholdState } from "./components/custom-option-menu";
+import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 
-const TRANSITION_TIMEOUT = 500;
+export const buildCronExpression = (frequency: string) => {
+    const currentDate = new Date();
+    const currentMinutes = currentDate.getUTCMinutes();
+    const currentHours = currentDate.getUTCHours();
+  
+    switch (frequency) {
+      case '1h':
+        return `${currentMinutes} * * * ? *`;
+  
+      case '3h':
+        return `${currentMinutes} */3 * * ? *`;
+  
+      case '6h':
+        return `${currentMinutes} */6 * * ? *`;
+  
+      case '12h':
+        return `${currentMinutes} */12 * * ? *`;
+  
+      case '24h':
+        return `${currentMinutes} ${currentHours} * * ? *`;
+      default:
+        return '';
+    }
+};
 
 export default function CustomSql() {
 
@@ -27,6 +52,7 @@ export default function CustomSql() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedTest, setSelectedTest] = useState<CustomTestSuiteDto>();
     const [showSelectedTest, setShowSelectedTest] = useState(false);
+    const [showDefineThresholdScreen, setShowDefineThresholdScreen] = useState(false);
 
     const [newTestName, setNewTestName] = useState('');
     const [newTestDescription, setNewTestDescription] = useState('');
@@ -89,31 +115,6 @@ export default function CustomSql() {
         toggleModal();
     };
 
-    const buildCronExpression = (frequency: string) => {
-        const currentDate = new Date();
-        const currentMinutes = currentDate.getUTCMinutes();
-        const currentHours = currentDate.getUTCHours();
-      
-        switch (frequency) {
-          case '1h':
-            return `${currentMinutes} * * * ? *`;
-      
-          case '3h':
-            return `${currentMinutes} */3 * * ? *`;
-      
-          case '6h':
-            return `${currentMinutes} */6 * * ? *`;
-      
-          case '12h':
-            return `${currentMinutes} */12 * * ? *`;
-      
-          case '24h':
-            return `${currentMinutes} ${currentHours} * * ? *`;
-          default:
-            return '';
-        }
-    };
-
     const handleSubmitButton = async () => {
         const existingTests = [...tests];
         const cronString = buildCronExpression(newTestFrequency);
@@ -161,21 +162,26 @@ export default function CustomSql() {
             setTests(existingTests);
             setSearchResults(existingSearchResults);
             setVisibleTests(existingVisibleTests);
-        }, TRANSITION_TIMEOUT);
+        }, 500);
     };
 
-    const selectTest = (test: CustomTestSuiteDto) => {
+    const selectTest = (test: CustomTestSuiteDto, showingThresholdScreen: boolean) => {
         setSelectedTest(test);
-        setShowSelectedTest(true);
-    }
+        
+        if (showingThresholdScreen)
+            setShowDefineThresholdScreen(true);
+        else
+            setShowSelectedTest(true);
+    };
 
     const deselectTest = () => {
         setShowSelectedTest(false);
+        setShowDefineThresholdScreen(false);
 
         setTimeout(() => {
             setSelectedTest(undefined);
         }, 200);
-    }
+    };
 
     const formatSqlQuery = (query: string) => {
         return format(query, {
@@ -183,7 +189,76 @@ export default function CustomSql() {
             tabWidth: 2,
             keywordCase: 'upper'
         })
-    }
+    };
+
+    const saveCustomThresholdCallback = async (
+        state: CustomThresholdState, 
+        testSuiteId: string) => {
+            await ObservabilityApiRepo.updateCustomTestSuite({
+                id: testSuiteId,
+                props: {
+                    customLowerThreshold: state.lower,
+                    customUpperThreshold: state.upper
+                }
+            })
+    };
+
+    const updateFrequency = (testId: string, frequency: string) => {
+        
+        const testIndex = tests.findIndex((el) => el.id === testId);
+        const searchResultIndex = searchResults.findIndex((el) => el.id === testId);
+
+        if (testIndex !== -1) {
+            const updatedTests = [...tests];
+            updatedTests[testIndex] = {
+                ...updatedTests[testIndex],
+                cron: buildCronExpression(frequency)
+            };
+
+            setTests(updatedTests);
+        }
+
+        if (searchResultIndex !== -1) {
+            const updatedSearchResults = [...searchResults];
+            updatedSearchResults[searchResultIndex] = {
+                ...updatedSearchResults[searchResultIndex],
+                cron: buildCronExpression(frequency)
+            };
+
+            setSearchResults(updatedSearchResults);
+        }
+    };
+
+    const buildCustomThresholdComponent = () => {
+
+        if (!selectedTest) return <></>;
+
+        const lowerThreshold = {
+            value: selectedTest.customLowerThreshold,
+            mode: selectedTest.customUpperThresholdMode
+        };
+
+        const upperThreshold = {
+            value: selectedTest.customUpperThreshold,
+            mode: selectedTest.customUpperThresholdMode,
+        };
+
+        const thresholdState = {
+            lower: lowerThreshold,
+            upper: upperThreshold
+        };
+
+        return (
+            <CustomOptionMenu 
+                closeOverlay={deselectTest} 
+                show={showDefineThresholdScreen} 
+                state={thresholdState} 
+                savedThresholdCallback={saveCustomThresholdCallback}
+                savedFrequencyCallback={updateFrequency}
+                test={selectedTest}
+            />
+        );
+    };
 
     useEffect(() => {
         renderTests();
@@ -228,13 +303,16 @@ export default function CustomSql() {
                         >
                             <div className="p-4 shadow-2xl mb-4 border-2 hover:border-purple-600 transition-all duration-500 rounded-lg">
                                 <div className="flex items-center">
-                                    <h1 className="flex-grow font-bold text-2xl" onClick={() => selectTest(test)}>{test.name}</h1>
+                                    <h1 className="flex-grow font-bold text-2xl" onClick={() => selectTest(test, false)}>{test.name}</h1>
+                                    <button type="button" onClick={(() => selectTest(test, true))}>
+                                        <EllipsisVerticalIcon className="h-5 w-5 z-10 mr-2" />
+                                    </button>
                                     <Toggle test={test} />
                                     <button type="button" onClick={() => handleSoftDeleteCustomTest(index, test.id)}>
                                         <MdDelete className="h-8 w-8 fill-gray-500 hover:fill-cito transition-all duration-500"/>
                                     </button>
                                 </div>
-                                <div onClick={() => selectTest(test)}>
+                                <div onClick={() => selectTest(test, false)}>
                                     <div className="mb-2">
                                         {test.description ? (<p className="text-lg italic mb-2">{test.description}</p>) : (<br className="mb-2"/>)}
                                     </div>
@@ -249,6 +327,27 @@ export default function CustomSql() {
                 </div>
             </div>
 
+            <Transition appear show={showDefineThresholdScreen} className="relative">
+                    <>
+                        <div className="fixed inset-0 z-60 bg-black opacity-50" onClick={deselectTest}></div>
+
+                        <Transition.Child
+                            as={Fragment}
+                            enter="transition ease-out duration-200"
+                            enterFrom="opacity-0 scale-95"
+                            enterTo="opacity-100 scale-100"
+                            leave="transition ease-in duration-150"
+                            leaveFrom='opacity-100 scale-100'
+                            leaveTo='opacity-0 scale-95'
+                        >
+                            <div className="fixed inset-0 flex items-center justify-center" style={{top: "5%"}}>
+                                {buildCustomThresholdComponent()}
+                            </div>
+                        </Transition.Child>
+
+                    </>
+            </Transition>
+
             <Transition appear show={showSelectedTest} className="relative">
                 <>
                     <div className="fixed inset-0 z-60 bg-black opacity-50" onClick={deselectTest}></div>
@@ -262,7 +361,8 @@ export default function CustomSql() {
                         leaveFrom='opacity-100 scale-100'
                         leaveTo='opacity-0 scale-95'
                     >
-                        <div className="fixed inset-x-0 z-60 mx-auto w-3/4 max-w-3xl overflow-y-auto flex flex-col bg-white rounded-2xl p-6 transition-all" style={{top: "10%"}}>
+                        <div className="fixed inset-x-0 z-60 mx-auto w-3/4 max-w-3xl overflow-y-auto flex flex-col bg-white rounded-2xl p-6 transition-all" 
+                            style={{top: "8%", maxHeight: "90vh"}}>
                             <div className="flex justify-between mb-1">
                                 <div className="flex items-center">
                                     <h3 className="text-3xl mt-2 ml-2 font-bold leading-6 text-gray-900">{selectedTest?.name}</h3>
@@ -344,7 +444,7 @@ export default function CustomSql() {
                             <div className="mt-4 flex items-center mb-2">
                                 <h2 className="mr-2">Frequency</h2>                                
                             </div>
-                            <FrequencyDropdown newTestFrequency={newTestFrequency} setNewTestFrequency={setNewTestFrequency} />
+                            <FrequencyDropdown newTestFrequency={newTestFrequency} setNewTestFrequency={setNewTestFrequency} changingFrequency={false} />
 
                             <div className="mt-4 flex items-center mb-2">
                                 <h2 className="mr-2">SQL Logic<span className="text-red-500"> *</span></h2>

@@ -1,19 +1,41 @@
 import React, { Fragment } from "react";
 import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
+import ObservabilityApiRepo from "../../../infrastructure/observability-api/observability-api-repo";
+import { buildCronExpression } from "../custom-sql";
+import { DEFAULT_FREQUENCY } from "../../test/config";
 
 export default function FrequencyDropdown({
     newTestFrequency,
-    setNewTestFrequency
+    setNewTestFrequency,
+    changingFrequency,
+    savedFrequencyCallback,
+    testId
 }: {
     newTestFrequency: string,
-    setNewTestFrequency: React.Dispatch<React.SetStateAction<string>>
+    setNewTestFrequency: React.Dispatch<React.SetStateAction<string>>,
+    changingFrequency: boolean;
+    savedFrequencyCallback?: (testId: string, frequency: string) => void;
+    testId?: string;
 }) {
 
     const frequencies = ['1h', '3h', '6h', '12h', '24h'];
 
-    const handleChange = (event: string) => {
+    const handleChange = async (event: string) => {
         setNewTestFrequency(event);
+
+        if (changingFrequency && testId !== undefined && savedFrequencyCallback) {
+          const cronString = buildCronExpression(event);
+
+          await ObservabilityApiRepo.updateCustomTestSuite({
+            id: testId,
+            props: {
+              cron: cronString ? cronString : DEFAULT_FREQUENCY
+            }
+          });
+
+          savedFrequencyCallback(testId, event);
+        }
     }
    
     return (
@@ -88,19 +110,3 @@ export default function FrequencyDropdown({
       </Listbox>
     );
   }
-
-  {/* <select 
-    className="block w-full px-4 py-2 cursor-default absolute z-40 mt-1 w-full min-w-[7rem] overflow-auto rounded-md bg-white text-base 
-                border border-gray-200 bg-gray-200 focus:border-gray-500 focus:bg-white focus:outline-none focus:border-cito transition 
-                duration-300 focus:ring-1 focus:ring-cito sm:text-sm"
-    required
-    value={newTestFrequency}
-    onChange={(e) => setNewTestFrequency(e.target.value)}
-  >
-    <option value="">Select Frequency...</option>
-    <option value="1h">1h...</option>
-    <option value="3h">3h...</option>
-    <option value="6h">6h...</option>
-    <option value="12h">12h...</option>
-    <option value="24h">24h...</option>
-  </select> */}

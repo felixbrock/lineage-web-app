@@ -1,10 +1,5 @@
-import { Dialog, Disclosure, Switch, Transition } from '@headlessui/react';
-import {
-  InformationCircleIcon,
-  StarIcon as StarIconSolid,
-} from '@heroicons/react/20/solid';
-import { StarIcon } from '@heroicons/react/24/outline';
-
+import { Dialog, Switch, Transition } from '@headlessui/react';
+import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import {
   Fragment,
   useContext,
@@ -24,11 +19,8 @@ import {
   HARDCODED_UPPER_THRESHOLD,
 } from '../config';
 import {
-  Column,
-  Columns,
   Table,
   TableData,
-  Tables,
   Test,
   TestType,
 } from '../dataComponents/buildTableData';
@@ -46,6 +38,7 @@ import {
   buttonColorOn,
   buttonColorOnFrequencyRange,
 } from './toggle';
+import { ColumnComponent } from './columnComponent';
 
 // this object controls the order of table columns
 // changes are respected by the test columns
@@ -255,7 +248,7 @@ function TestMenu({
   );
 }
 
-function TestMenus({
+export function TestMenus({
   testData,
   level,
   parentElementId,
@@ -348,266 +341,6 @@ function TestMenus({
           );
         return new Error('No test found or created');
       })}
-    </>
-  );
-}
-
-function Fav() {
-  //////////////////////////////////////
-  // only for demo
-  const [fav, setFav] = useState(false);
-  return (
-    <div className="absolute inset-y-0 -left-4 flex items-center justify-center text-cito outline-cito">
-      <button onClick={() => setFav(!fav)}>
-        {fav ? (
-          <StarIconSolid className="h-6 w-6" />
-        ) : (
-          <StarIcon className="h-6 w-6" />
-        )}
-      </button>
-    </div>
-  );
-}
-
-type ColumnComponentProps = {
-  columns: Tables | Columns;
-  ids: string[];
-  setIds: React.Dispatch<React.SetStateAction<string[]>>;
-  buttonText: string;
-  level: Level;
-};
-
-export function ColumnComponent({
-  columns,
-  ids,
-  setIds,
-  buttonText,
-  level,
-}: ColumnComponentProps) {
-  const tableContext = useContext(TableContext);
-  const currentTheme = tableContext.theme.currentTheme;
-  const tableColorConfig =
-    tableContext.theme.colorConfig[currentTheme].table[level];
-  const {
-    textColor,
-    buttonTextColor,
-    selectionBgColor,
-    selectionTextColor,
-    bgColor,
-  } = tableColorConfig;
-
-  return (
-    <>
-      {Array.from(columns).map(
-        ([columnId, columnData]: [string, Table | Column]) => {
-          let totalChildren: number | undefined = undefined;
-          if (level === 'table') {
-            const cData = columnData as Table;
-            totalChildren = cData.columns.size;
-          }
-
-          return (
-            <Disclosure key={columnId}>
-              <>
-                <tr
-                  key={columnId}
-                  className={classNames(
-                    ids.includes(columnId) ? selectionBgColor : '',
-                    'relative left-6 h-14 border border-gray-100'
-                  )}
-                >
-                  <td className="relative w-16 px-8 sm:w-12 sm:px-6">
-                    {ids.includes(columnId) ? (
-                      <div className="absolute inset-y-0 left-0 w-0.5 bg-cito" />
-                    ) : (
-                      <Fav />
-                    )}
-                    <input
-                      type="checkbox"
-                      className="absolute left-6 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito sm:left-4"
-                      value={columnData.name}
-                      checked={ids.includes(columnId)}
-                      onChange={(e) =>
-                        setIds(
-                          e.target.checked
-                            ? [...ids, columnId]
-                            : ids.filter((id: string) => id !== columnId)
-                        )
-                      }
-                    />
-                  </td>
-                  <td
-                    className={classNames(
-                      'hover:' + bgColor,
-                      'relative min-w-[8rem] max-w-[8rem] py-4 pr-3',
-                      ids.includes(columnId) ? selectionTextColor : textColor
-                    )}
-                  >
-                    <div
-                      className={classNames(
-                        'flex items-center justify-start hover:absolute hover:inset-y-0 hover:z-50',
-                        'hover:' + bgColor
-                      )}
-                    >
-                      <h1 className="truncate text-sm font-medium">
-                        {columnData.name}
-                      </h1>
-                    </div>
-                  </td>
-                  <TestMenus
-                    testData={columnData.tests}
-                    parentElementId={columnId}
-                    level={level}
-                    totalChildren={totalChildren}
-                    selected={ids.includes(columnId)}
-                  />
-                  <td className="relative right-6 min-w-[6rem] whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium sm:pr-3">
-                    {buttonText && (
-                      <Disclosure.Button className={buttonTextColor}>
-                        {buttonText}
-                      </Disclosure.Button>
-                    )}
-                  </td>
-                </tr>
-                <Disclosure.Panel as="tr">
-                  <td colSpan={12}>
-                    {level === 'table' && (
-                      <DataTable
-                        tableData={columnData as Table}
-                        buttonText={''}
-                        level={'column'}
-                      />
-                    )}
-                  </td>
-                </Disclosure.Panel>
-              </>
-            </Disclosure>
-          );
-        }
-      )}
-    </>
-  );
-}
-
-export type DataTableProps = {
-  tableData: TableData | Table;
-  buttonText: string;
-  tableTitle?: string;
-  tableDescription?: string;
-  level: 'database' | 'schema' | 'table' | 'column';
-  page?: number;
-};
-
-export function DataTable({
-  tableData,
-  buttonText,
-  tableTitle,
-  tableDescription,
-  level,
-  page,
-}: DataTableProps) {
-  // columns are the ui columns, not the Snowflake columns
-  // table is the ui table, not the Snowflake table/mat
-
-  const [ids, setIds] = useState([]);
-  const allIdsToSelect: string[] = [];
-  let columnComponent = <></>;
-
-  useEffect(() => {
-    setIds([]);
-  }, [page]);
-
-  if (level === 'table') {
-    tableData = tableData as TableData;
-
-    tableData.forEach((database) => {
-      database.schemas.forEach((schema) => {
-        allIdsToSelect.push(...Array.from(schema.tables.keys()));
-      });
-    });
-
-    columnComponent = (
-      <>
-        {Array.from(tableData).map(([databaseName, database], index) => {
-          return (
-            <Fragment key={databaseName + index}>
-              <div className="relative h-6 w-full">
-                <h1 className="absolute left-4 w-64">
-                  Database: {databaseName}
-                </h1>
-              </div>
-              <>
-                {Array.from(database.schemas).map(
-                  ([schemaName, schema], ind) => {
-                    return (
-                      <Fragment key={schemaName + ind}>
-                        <div className="relative left-4 top-px ml-1">
-                          <div className="absolute h-3 w-px bg-gray-800"></div>
-                          <div className="absolute mt-3 h-px w-4 bg-gray-800"></div>
-                        </div>
-                        <div className="relative left-4 h-6 w-full">
-                          <h1 className="absolute left-6 w-64">
-                            Schema: {schemaName}
-                          </h1>
-                        </div>
-                        <ColumnComponent
-                          columns={schema.tables}
-                          ids={ids}
-                          // @ts-ignore tailwind
-                          setIds={setIds}
-                          buttonText={buttonText}
-                          level={level}
-                        />
-                      </Fragment>
-                    );
-                  }
-                )}
-              </>
-            </Fragment>
-          );
-        })}
-      </>
-    );
-  }
-
-  if (level === 'column') {
-    tableData = tableData as Table;
-    allIdsToSelect.push(...Array.from(tableData.columns.keys()));
-    columnComponent = (
-      <ColumnComponent
-        columns={tableData.columns}
-        ids={ids}
-        // @ts-ignore tailwind
-        setIds={setIds}
-        buttonText={buttonText}
-        level={level}
-      />
-    );
-  }
-
-  return (
-    <>
-      <div className="w-full">
-        {(tableTitle || tableDescription) && (
-          <div className="relative pl-4 sm:flex sm:items-center">
-            <div className="sm:flex-auto">
-              <h1 className="text-base font-semibold leading-6 text-gray-900">
-                {tableTitle}
-              </h1>
-              <p className="mt-2 text-sm text-gray-700">{tableDescription}</p>
-            </div>
-          </div>
-        )}
-        <TableComponent
-          ids={ids}
-          // @ts-ignore tailwind
-          setIds={setIds}
-          allIdsToSelect={allIdsToSelect}
-          level={level}
-        >
-          {columnComponent}
-        </TableComponent>
-      </div>
     </>
   );
 }
@@ -785,5 +518,128 @@ function TableComponent({
         </div>
       </div>
     </div>
+  );
+}
+
+export type DataTableProps = {
+  tableData: TableData | Table;
+  buttonText: string;
+  tableTitle?: string;
+  tableDescription?: string;
+  level: 'database' | 'schema' | 'table' | 'column';
+  page?: number;
+};
+
+export function DataTable({
+  tableData,
+  buttonText,
+  tableTitle,
+  tableDescription,
+  level,
+  page,
+}: DataTableProps) {
+  // columns are the ui columns, not the Snowflake columns
+  // table is the ui table, not the Snowflake table/mat
+
+  const [ids, setIds] = useState([]);
+  const allIdsToSelect: string[] = [];
+  let columnComponent = <></>;
+
+  useEffect(() => {
+    setIds([]);
+  }, [page]);
+
+  if (level === 'table') {
+    tableData = tableData as TableData;
+
+    tableData.forEach((database) => {
+      database.schemas.forEach((schema) => {
+        allIdsToSelect.push(...Array.from(schema.tables.keys()));
+      });
+    });
+
+    columnComponent = (
+      <>
+        {Array.from(tableData).map(([databaseName, database], index) => {
+          return (
+            <Fragment key={databaseName + index}>
+              <div className="relative h-6 w-full">
+                <h1 className="absolute left-4 w-64">
+                  Database: {databaseName}
+                </h1>
+              </div>
+              <>
+                {Array.from(database.schemas).map(
+                  ([schemaName, schema], ind) => {
+                    return (
+                      <Fragment key={schemaName + ind}>
+                        <div className="relative left-4 top-px ml-1">
+                          <div className="absolute h-3 w-px bg-gray-800"></div>
+                          <div className="absolute mt-3 h-px w-4 bg-gray-800"></div>
+                        </div>
+                        <div className="relative left-4 h-6 w-full">
+                          <h1 className="absolute left-6 w-64">
+                            Schema: {schemaName}
+                          </h1>
+                        </div>
+                        <ColumnComponent
+                          columns={schema.tables}
+                          ids={ids}
+                          // @ts-ignore tailwind
+                          setIds={setIds}
+                          buttonText={buttonText}
+                          level={level}
+                        />
+                      </Fragment>
+                    );
+                  }
+                )}
+              </>
+            </Fragment>
+          );
+        })}
+      </>
+    );
+  }
+
+  if (level === 'column') {
+    tableData = tableData as Table;
+    allIdsToSelect.push(...Array.from(tableData.columns.keys()));
+    columnComponent = (
+      <ColumnComponent
+        columns={tableData.columns}
+        ids={ids}
+        // @ts-ignore tailwind
+        setIds={setIds}
+        buttonText={buttonText}
+        level={level}
+      />
+    );
+  }
+
+  return (
+    <>
+      <div className="w-full">
+        {(tableTitle || tableDescription) && (
+          <div className="relative pl-4 sm:flex sm:items-center">
+            <div className="sm:flex-auto">
+              <h1 className="text-base font-semibold leading-6 text-gray-900">
+                {tableTitle}
+              </h1>
+              <p className="mt-2 text-sm text-gray-700">{tableDescription}</p>
+            </div>
+          </div>
+        )}
+        <TableComponent
+          ids={ids}
+          // @ts-ignore tailwind
+          setIds={setIds}
+          allIdsToSelect={allIdsToSelect}
+          level={level}
+        >
+          {columnComponent}
+        </TableComponent>
+      </div>
+    </>
   );
 }

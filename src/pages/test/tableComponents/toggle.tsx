@@ -14,7 +14,7 @@ export const buttonColorOffFrequencyRange = 'bg-yellow-400';
 
 type ColorPicker = Pick<Test, 'active' | 'cron' | 'summary'>;
 function getColor({ active, cron, summary }: ColorPicker) {
-  let hasFrequencyRange: boolean = cron === '' ? true : false;
+  const hasFrequencyRange: boolean = cron === '' ? true : false;
 
   let color = '';
   if (active && !hasFrequencyRange) color = buttonColorOn;

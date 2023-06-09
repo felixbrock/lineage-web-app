@@ -171,7 +171,7 @@ export function buildTableData(
 
     const database = tableData.get(databaseName);
 
-    let tableObject: Table = {
+    const tableObject: Table = {
       columns: new Map(),
       tests: [],
       name: mat.name,
@@ -189,7 +189,7 @@ export function buildTableData(
       column.tests.forEach((columnTest) => {
         // check for existing testSummary
         const tableTest = tableObject.tests.find(
-          (tableTest) => tableTest.type === columnTest.type
+          (t) => t.type === columnTest.type
         );
 
         // in h or 0 for custom

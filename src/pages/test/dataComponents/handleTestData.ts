@@ -176,21 +176,6 @@ function buildUpdatedTestSuite(
 ) {
   const { newActivatedState, newFrequency } = newTestState;
 
-  const updatedTestSuiteTempUI: TestSuiteDto[] | QualTestSuiteDto[] =
-    testSuite.map((existingTest) => {
-      if (testsToUpdate.includes(existingTest.id)) {
-        const id = existingTest.id + 'TEMP_ID';
-        if (!(newFrequency === undefined)) {
-          existingTest.cron = newFrequency;
-        }
-        if (!(newActivatedState === undefined)) {
-          existingTest.activated = newActivatedState;
-        }
-        return { ...existingTest, id };
-      }
-      return existingTest;
-    });
-
   const updatedTestSuiteSnowflake:
     | UpdateTestSuiteObject[]
     | UpdateQualTestSuiteObject[] = testsToUpdate.map((testId) => ({
@@ -203,7 +188,7 @@ function buildUpdatedTestSuite(
     },
   }));
 
-  return [updatedTestSuiteTempUI, updatedTestSuiteSnowflake];
+  return updatedTestSuiteSnowflake;
 }
 
 export async function changeTests(
@@ -335,16 +320,10 @@ export async function changeTests(
 
   // temp test suites add 'TEMP_ID' to the ids of each test to mark them as temporary changes
   // they are displayed differently in the ui until the updates are accepted by the api repo
-  const [updatedTestSuiteTempUI, updatedTestSuiteSnowflake] =
-    buildUpdatedTestSuite(testsToUpdate, testSuite, newTestState) as [
-      TestSuiteDto[],
-      UpdateTestSuiteObject[]
-    ];
-  const [updatedQualTestSuiteTempUI, updatedQualTestSuiteSnowflake] =
-    buildUpdatedTestSuite(qualTestsToUpdate, qualTestSuite, newTestState) as [
-      QualTestSuiteDto[],
-      UpdateQualTestSuiteObject[]
-    ];
+  const updatedTestSuiteSnowflake 
+    = buildUpdatedTestSuite(testsToUpdate, testSuite, newTestState) as UpdateTestSuiteObject[];
+  const updatedQualTestSuiteSnowflake 
+    = buildUpdatedTestSuite(qualTestsToUpdate, qualTestSuite, newTestState) as UpdateQualTestSuiteObject[];
 
   // console.log('ttcs', testsToCreateSnowflake);
   // console.log('ttcui', testsToCreateUI);

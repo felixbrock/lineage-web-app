@@ -34,7 +34,7 @@ export default function FrequencyDropdown({
   level: Level;
 }) {
   const tableContext = useContext(TableContext);
-  const [selected, setSelected] = useState(test.cron);
+  const [selectedFreq, setSelectedFreq] = useState(test.cron);
 
   async function changeFrequencySelection(newCron: string) {
     const success = await tableContext.handleTestChange(
@@ -43,12 +43,12 @@ export default function FrequencyDropdown({
       { newFrequency: newCron, newActivatedState: undefined },
       level
     );
-    if (success) setSelected(newCron);
+    if (success) setSelectedFreq(newCron);
   }
 
   return (
     <Listbox
-      value={selected}
+      value={selectedFreq}
       disabled={test.id.includes('TEMP_ID')}
       onChange={changeFrequencySelection}
     >
@@ -57,7 +57,7 @@ export default function FrequencyDropdown({
           <div className="relative">
             <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-cito focus:outline-none focus:ring-1 focus:ring-cito sm:text-sm">
               <span className="block truncate">
-                {getShownFrequency(selected, test)}
+                {getShownFrequency(selectedFreq, test)}
               </span>
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon
@@ -138,7 +138,7 @@ export function BulkFrequencyDropdown({
   setNewTestState: React.Dispatch<React.SetStateAction<BulkNewTestState>>;
   sendFrequency: boolean;
 }) {
-  const selected = newTestState.newFrequency;
+  const selectedFreq = newTestState.newFrequency;
 
   function changeFrequencySelection(newCron: string) {
     setNewTestState({ ...newTestState, newFrequency: newCron });
@@ -147,7 +147,7 @@ export function BulkFrequencyDropdown({
   return (
     <Listbox
       disabled={!sendFrequency}
-      value={selected}
+      value={selectedFreq}
       onChange={changeFrequencySelection}
     >
       {({ open }) => (
@@ -159,7 +159,7 @@ export function BulkFrequencyDropdown({
             )}
           >
             <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-cito focus:outline-none focus:ring-1 focus:ring-cito sm:text-sm">
-              <span className="block truncate">{selected ? getFrequency(selected): ''}h</span>
+              <span className="block truncate">{selectedFreq ? getFrequency(selectedFreq): ''}h</span>
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon
                   className="h-5 w-5 text-gray-400"

@@ -8,7 +8,7 @@ import {
   TestType,
 } from '../../pages/test/test';
 import getApiClient from '../api-client';
-import { QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
+import { QualTestSuiteDto, TestSuiteDto, CustomTestSuiteDto } from './test-suite-dto';
 
 export const customThresholdModes = ['absolute', 'relative'] as const;
 export type CustomThresholdMode = typeof customThresholdModes[number];
@@ -39,6 +39,16 @@ export type CreateQuantTestSuiteProps = CreateTestSuiteBaseProps;
 
 export type CreateQualTestSuiteProps = CreateTestSuiteBaseProps;
 
+interface CreateCustomTestSuiteProps {
+  activated: boolean;
+  cron: string;
+  name: string;
+  description?: string;
+  sqlLogic: string;
+  executionType: ExecutionType;
+  targetResourceIds: string[];
+};
+
 interface BaseUpdateTestSuiteObjProps {
   activated?: boolean;
   cron?: string;
@@ -53,6 +63,16 @@ interface UpdateTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
   feedbackUpperThreshold?: number;
 }
 
+interface UpdateCustomTestSuiteObjProps extends BaseUpdateTestSuiteObjProps {
+  name?: string;
+  description?: string;
+  sqlLogic?: string;
+  customLowerThreshold?: CustomThreshold;
+  customUpperThreshold?: CustomThreshold;
+  feedbackLowerThreshold?: number;
+  feedbackUpperThreshold?: number;
+}
+
 export interface UpdateTestSuiteObject {
   id: string;
   props: UpdateTestSuiteObjProps;
@@ -61,6 +81,11 @@ export interface UpdateTestSuiteObject {
 export interface UpdateQualTestSuiteObject {
   id: string;
   props: BaseUpdateTestSuiteObjProps;
+}
+
+export interface UpdateCustomTestSuiteObject {
+  id: string;
+  props: UpdateCustomTestSuiteObjProps;
 }
 
 // TODO - Implement Interface regarding clean architecture
@@ -101,6 +126,69 @@ export default class ObservabilityApiRepo {
       );
       const jsonResponse = response.data;
       if (response.status === 201) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
+  static postCustomTestSuite = async (
+    postCustomTestSuiteObject: CreateCustomTestSuiteProps
+  ): Promise<CustomTestSuiteDto> => {
+    try {
+      const payload = postCustomTestSuiteObject;
+
+      const response = await this.client.post(
+        `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/custom-test-suite`,
+        payload
+      );
+      const jsonResponse = response.data;
+      if (response.status === 201) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  }
+
+  static updateCustomTestSuite = async (
+    updateCustomTestSuiteObject: UpdateCustomTestSuiteObject
+  ): Promise<void> => {
+    try {
+      const id = updateCustomTestSuiteObject.id;
+      const payload = updateCustomTestSuiteObject.props;
+
+      const response = await this.client.patch(
+        `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/custom-test-suite/${id}`,
+        payload
+      );
+
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  };
+
+  static deleteCustomTestSuite = async (
+    id: string,
+    mode: string
+  ): Promise<void> => {
+    try {
+      const params = new URLSearchParams({
+        mode
+      });
+
+      const config: AxiosRequestConfig = {
+        params
+      };
+
+      const response = await this.client.delete(
+        `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/custom-test-suite/${id}`, config
+      );
+      
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
       throw new Error(jsonResponse);
     } catch (error: any) {
       return Promise.reject(new Error(error.response.data.message));
@@ -168,6 +256,19 @@ export default class ObservabilityApiRepo {
       return Promise.reject(new Error(error.response.data.message));
     }
   };
+
+  static getCustomTestSuites = async (): Promise<CustomTestSuiteDto[]> => {
+    try {
+      const response = await this.client.get(
+        `/${ObservabilityApiRepo.apiRoot}/${ObservabilityApiRepo.version}/custom-test-suites`
+      );
+      const jsonResponse = response.data;
+      if (response.status === 200) return jsonResponse;
+      throw new Error(jsonResponse);
+    } catch (error: any) {
+      return Promise.reject(new Error(error.response.data.message));
+    }
+  }
 
   static adjustDetectedAnomaly = async (
     postAnomalyFeedbackDto: PostAnomalyFeedbackDto

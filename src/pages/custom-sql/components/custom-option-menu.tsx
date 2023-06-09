@@ -471,7 +471,7 @@ export default ({
                                   className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 py-2 px-4 leading-tight text-gray-700 focus:border-gray-500 focus:bg-white focus:outline-none"
                                   id="lower-threshold"
                                   type="number"
-                                  value={customLowerThreshold ?? 0.0}
+                                  value={customLowerThreshold}
                                   onChange={handleCustomLowerThresholdOnChange}
                                   onBlur={handleCustomLowerThresholdOnBlur}
                                 />
@@ -492,7 +492,7 @@ export default ({
                                   className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 py-2 px-4 leading-tight text-gray-700 focus:border-gray-500 focus:bg-white focus:outline-none"
                                   id="upper-threshold"
                                   type="number"
-                                  value={customUpperThreshold ?? 0.0}
+                                  value={customUpperThreshold}
                                   onChange={handleCustomUpperThresholdOnChange}
                                   onBlur={handleCustomUpperThresholdOnBlur}
                                 />

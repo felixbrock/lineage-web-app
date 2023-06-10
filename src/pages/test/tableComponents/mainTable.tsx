@@ -361,7 +361,7 @@ function TableComponent({
   children,
 }: TableComponentProps) {
   const tableContext = useContext(TableContext);
-  const checkbox = useRef();
+  const checkbox = useRef<HTMLInputElement>(null);
   const [checked, setChecked] = useState(false);
   const [indeterminate, setIndeterminate] = useState(false);
 
@@ -379,12 +379,11 @@ function TableComponent({
       ids.length > 0 && ids.length < allIdsToSelect.length;
     setChecked(ids.length === allIdsToSelect.length);
     setIndeterminate(isIndeterminate);
-    //@ts-ignore // from tailwind
-    checkbox.current.indeterminate = isIndeterminate;
+    if (checkbox.current !== null)
+      checkbox.current.indeterminate = isIndeterminate;
   }, [ids]);
 
   function toggleAll() {
-    //@ts-ignore // from tailwind
     setIds(checked || indeterminate ? [] : allIdsToSelect);
     setChecked(!checked && !indeterminate);
     setIndeterminate(false);
@@ -477,7 +476,6 @@ function TableComponent({
                         'absolute top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-cito focus:ring-cito',
                         level === 'column' ? 'left-10' : 'left-6'
                       )}
-                      //@ts-ignore tailwind
                       ref={checkbox}
                       checked={checked}
                       onChange={toggleAll}
@@ -541,7 +539,7 @@ export function DataTable({
   // columns are the ui columns, not the Snowflake columns
   // table is the ui table, not the Snowflake table/mat
 
-  const [ids, setIds] = useState([]);
+  const [ids, setIds] = useState<string[]>([]);
   const allIdsToSelect: string[] = [];
   let columnComponent = <></>;
 
@@ -585,7 +583,6 @@ export function DataTable({
                         <ColumnComponent
                           columns={schema.tables}
                           ids={ids}
-                          // @ts-ignore tailwind
                           setIds={setIds}
                           buttonText={buttonText}
                           level={level}
@@ -609,7 +606,6 @@ export function DataTable({
       <ColumnComponent
         columns={tableData.columns}
         ids={ids}
-        // @ts-ignore tailwind
         setIds={setIds}
         buttonText={buttonText}
         level={level}
@@ -632,7 +628,6 @@ export function DataTable({
         )}
         <TableComponent
           ids={ids}
-          // @ts-ignore tailwind
           setIds={setIds}
           allIdsToSelect={allIdsToSelect}
           level={level}

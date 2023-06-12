@@ -275,7 +275,7 @@ export default function CustomSql() {
                         >
                             <div className="p-4 shadow-2xl mb-4 border-2 hover:border-purple-600 transition-all duration-500 rounded-lg">
                                 <div className="flex items-center">
-                                    <h1 className="flex-grow font-bold text-2xl" onClick={() => selectTest(test, false)}>{test.name}</h1>
+                                    <h1 className="flex-grow font-bold text-2xl truncate" onClick={() => selectTest(test, false)}>{test.name}</h1>
                                     <button type="button" onClick={(() => selectTest(test, true))}>
                                         <EllipsisVerticalIcon className="h-5 w-5 z-10 mr-2" />
                                     </button>
@@ -286,7 +286,7 @@ export default function CustomSql() {
                                 </div>
                                 <div onClick={() => selectTest(test, false)}>
                                     <div className="mb-2">
-                                        {test.description ? (<p className="text-lg italic mb-2">{test.description}</p>) : (<br className="mb-2"/>)}
+                                        {test.description ? (<p className="text-lg italic mb-2 truncate pr-10 mr-10">{test.description}</p>) : (<br className="mb-2"/>)}
                                     </div>
                                     <p><span className="font-bold">Test ID: </span>{test.id}</p>
                                     <p><span className="font-bold">Frequency: </span>{getFrequency(test.cron)}h</p>

@@ -1,6 +1,31 @@
 export const frequencies = [1, 3, 6, 12, 24, 0];
 export type Frequency = typeof frequencies[number];
 
+export const buildCronExpression = (frequency: string) => {
+    const currentDate = new Date();
+    const currentMinutes = currentDate.getUTCMinutes();
+    const currentHours = currentDate.getUTCHours();
+  
+    switch (frequency) {
+      case '1h':
+        return `${currentMinutes} * * * ? *`;
+  
+      case '3h':
+        return `${currentMinutes} */3 * * ? *`;
+  
+      case '6h':
+        return `${currentMinutes} */6 * * ? *`;
+  
+      case '12h':
+        return `${currentMinutes} */12 * * ? *`;
+  
+      case '24h':
+        return `${currentMinutes} ${currentHours} * * ? *`;
+      default:
+        return '';
+    }
+};
+
 export const getFrequency = (cron: string): Frequency => {
   if (cron === 'custom') return 0;
   const parts = cron.split(' ');
@@ -42,30 +67,6 @@ export const getFrequency = (cron: string): Frequency => {
   return 0;
 };
 
-export const buildCronExpression = (frequency: Frequency) => {
-  const currentDate = new Date();
-  const currentMinutes = currentDate.getUTCMinutes();
-  const currentHours = currentDate.getUTCHours();
-
-  switch (frequency) {
-    case 0:
-      return 'custom';
-
-    case 1:
-      return `${currentMinutes} * * * ? *`;
-
-    case 3:
-      return `${currentMinutes} */3 * * ? *`;
-
-    case 6:
-      return `${currentMinutes} */6 * * ? *`;
-
-    case 12:
-      return `${currentMinutes} */12 * * ? *`;
-
-    case 24:
-      return `${currentMinutes} ${currentHours} * * ? *`;
-    default:
-      throw new Error('Unhandled frequency type');
-  }
-};
+export function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(' ');
+}

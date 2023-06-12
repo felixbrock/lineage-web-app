@@ -2,20 +2,20 @@ import React, { Fragment } from "react";
 import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import ObservabilityApiRepo from "../../../infrastructure/observability-api/observability-api-repo";
-import { buildCronExpression } from "../custom-sql";
-import { DEFAULT_FREQUENCY } from "../../test/config";
+import { buildCronExpression } from "./custom-utils";
+import { DEFAULT_FREQUENCY } from "../config-custom";
 
 export default function FrequencyDropdown({
     newTestFrequency,
     setNewTestFrequency,
     changingFrequency,
-    savedFrequencyCallback,
+    updateFrequencyCallback,
     testId
 }: {
     newTestFrequency: string,
     setNewTestFrequency: React.Dispatch<React.SetStateAction<string>>,
     changingFrequency: boolean;
-    savedFrequencyCallback?: (testId: string, frequency: string) => void;
+    updateFrequencyCallback?: (testId: string, frequency: string) => void;
     testId?: string;
 }) {
 
@@ -24,7 +24,7 @@ export default function FrequencyDropdown({
     const handleChange = async (event: string) => {
         setNewTestFrequency(event);
 
-        if (changingFrequency && testId !== undefined && savedFrequencyCallback) {
+        if (changingFrequency && testId !== undefined && updateFrequencyCallback) {
           const cronString = buildCronExpression(event);
 
           await ObservabilityApiRepo.updateCustomTestSuite({
@@ -34,7 +34,7 @@ export default function FrequencyDropdown({
             }
           });
 
-          savedFrequencyCallback(testId, event);
+          updateFrequencyCallback(testId, event);
         }
     }
    

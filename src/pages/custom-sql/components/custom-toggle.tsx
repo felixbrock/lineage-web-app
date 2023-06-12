@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Switch } from '@headlessui/react';
 import { CustomTestSuiteDto } from '../../../infrastructure/observability-api/test-suite-dto';
-import { classNames } from '../../test/utils/tailwind';
+import { classNames } from './custom-utils';
 import ObservabilityApiRepo from '../../../infrastructure/observability-api/observability-api-repo';
 
 const buttonColorOn = 'bg-green-600';

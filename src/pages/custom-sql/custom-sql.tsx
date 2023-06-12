@@ -1,63 +1,38 @@
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { useAccount } from "../test/dataComponents/useData";
+import { useAccount } from "./components/custom-use-data";
 import Navbar from "../../components/navbar";
-import { Alert, AlertInfo } from "../test/tableComponents/alert";
+import { Alert, AlertInfo } from "./components/custom-alert";
 import { Fragment, useEffect, useState } from "react";
 import SearchBox from "../lineage/components/search-box";
 import ObservabilityApiRepo from "../../infrastructure/observability-api/observability-api-repo";
 import { CustomTestSuiteDto } from "../../infrastructure/observability-api/test-suite-dto";
 import Toggle from "./components/custom-toggle";
-import { getFrequency } from "../test/utils/cron";
+import { getFrequency, buildCronExpression } from "./components/custom-utils";
 import { Transition } from "@headlessui/react";
 import { MdClose, MdDelete, MdFiberManualRecord } from "react-icons/md";
 import FrequencyDropdown from "./components/custom-frequency-dropdown";
-import { DEFAULT_FREQUENCY, EXECUTION_TYPE } from "../test/config";
+import { DEFAULT_FREQUENCY, EXECUTION_TYPE } from "./config-custom";
 import ModelVisualiser from "../../components/model-visualiser";
 import { format } from 'sql-formatter';
 import CustomOptionMenu, { CustomThresholdState } from "./components/custom-option-menu";
 import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 
-export const buildCronExpression = (frequency: string) => {
-    const currentDate = new Date();
-    const currentMinutes = currentDate.getUTCMinutes();
-    const currentHours = currentDate.getUTCHours();
-  
-    switch (frequency) {
-      case '1h':
-        return `${currentMinutes} * * * ? *`;
-  
-      case '3h':
-        return `${currentMinutes} */3 * * ? *`;
-  
-      case '6h':
-        return `${currentMinutes} */6 * * ? *`;
-  
-      case '12h':
-        return `${currentMinutes} */12 * * ? *`;
-  
-      case '24h':
-        return `${currentMinutes} ${currentHours} * * ? *`;
-      default:
-        return '';
-    }
-};
-
 export default function CustomSql() {
 
     const jwt = useAccount();
     const [tests, setTests] = useState<CustomTestSuiteDto[]>([]);
-    const [searchString, setSearchString] = useState('');
+    const [searchString, setSearchString] = useState<string>('');
     const [searchResults, setSearchResults] = useState<CustomTestSuiteDto[]>([]);
     const [visibleTests, setVisibleTests] = useState<boolean[]>([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [openTestForm, setOpenTestForm] = useState<boolean>(false);
     const [selectedTest, setSelectedTest] = useState<CustomTestSuiteDto>();
-    const [showSelectedTest, setShowSelectedTest] = useState(false);
-    const [showDefineThresholdScreen, setShowDefineThresholdScreen] = useState(false);
+    const [showSelectedTest, setShowSelectedTest] = useState<boolean>(false);
+    const [showDefineThresholdScreen, setShowDefineThresholdScreen] = useState<boolean>(false);
 
-    const [newTestName, setNewTestName] = useState('');
-    const [newTestDescription, setNewTestDescription] = useState('');
-    const [newTestSql, setNewTestSql] = useState('');
-    const [newTestFrequency, setNewTestFrequency] = useState('');
+    const [newTestName, setNewTestName] = useState<string>('');
+    const [newTestDescription, setNewTestDescription] = useState<string>('');
+    const [newTestSql, setNewTestSql] = useState<string>('');
+    const [newTestFrequency, setNewTestFrequency] = useState<string>('');
     
     const alertInfoInit: AlertInfo = {
         show: false,
@@ -65,7 +40,7 @@ export default function CustomSql() {
         description: '',
     };
 
-    const [alertInfo, setAlertInfo] = useState(alertInfoInit);
+    const [alertInfo, setAlertInfo] = useState<AlertInfo>(alertInfoInit);
 
     const theme = createTheme({
         palette: {
@@ -98,11 +73,11 @@ export default function CustomSql() {
         setVisibleTests(Array(results.length).fill(true));
     };
 
-    const toggleModal = () => {
-        setIsModalOpen(!isModalOpen);
+    const toggleTestForm = () => {
+        setOpenTestForm(!openTestForm);
     };
 
-    const clearStates = () => {
+    const clearFormFields = () => {
         setNewTestName('');
         setNewTestDescription('');
         setNewTestSql('');
@@ -110,9 +85,8 @@ export default function CustomSql() {
     };
 
     const handleCancelButton = () => {
-        clearStates();
-        
-        toggleModal();
+        clearFormFields();
+        toggleTestForm();
     };
 
     const handleSubmitButton = async () => {
@@ -135,8 +109,8 @@ export default function CustomSql() {
         setSearchResults(existingTests);
         setVisibleTests(Array(existingTests.length).fill(true));
 
-        clearStates();
-        toggleModal();
+        clearFormFields();
+        toggleTestForm();
     };
 
     const handleSoftDeleteCustomTest = async (index: number, id: string) => {
@@ -165,16 +139,16 @@ export default function CustomSql() {
         }, 500);
     };
 
-    const selectTest = (test: CustomTestSuiteDto, showingThresholdScreen: boolean) => {
+    const selectTest = (test: CustomTestSuiteDto, showThresholdScreen: boolean) => {
         setSelectedTest(test);
         
-        if (showingThresholdScreen)
+        if (showThresholdScreen)
             setShowDefineThresholdScreen(true);
         else
             setShowSelectedTest(true);
     };
 
-    const deselectTest = () => {
+    const unselectTest = () => {
         setShowSelectedTest(false);
         setShowDefineThresholdScreen(false);
 
@@ -191,7 +165,7 @@ export default function CustomSql() {
         })
     };
 
-    const saveCustomThresholdCallback = async (
+    const updateCustomThreshold = async (
         state: CustomThresholdState, 
         testSuiteId: string) => {
             await ObservabilityApiRepo.updateCustomTestSuite({
@@ -204,7 +178,6 @@ export default function CustomSql() {
     };
 
     const updateFrequency = (testId: string, frequency: string) => {
-        
         const testIndex = tests.findIndex((el) => el.id === testId);
         const searchResultIndex = searchResults.findIndex((el) => el.id === testId);
 
@@ -230,7 +203,6 @@ export default function CustomSql() {
     };
 
     const buildCustomThresholdComponent = () => {
-
         if (!selectedTest) return <></>;
 
         const lowerThreshold = {
@@ -250,11 +222,11 @@ export default function CustomSql() {
 
         return (
             <CustomOptionMenu 
-                closeOverlay={deselectTest} 
+                closeOverlay={unselectTest} 
                 show={showDefineThresholdScreen} 
                 state={thresholdState} 
-                savedThresholdCallback={saveCustomThresholdCallback}
-                savedFrequencyCallback={updateFrequency}
+                updateThresholdCallback={updateCustomThreshold}
+                updateFrequencyCallback={updateFrequency}
                 test={selectedTest}
             />
         );
@@ -284,7 +256,7 @@ export default function CustomSql() {
                     <div className="absolute right-0 p-6">
                             <button 
                                 className="border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white transition-all duration-500 px-4 py-2 rounded"
-                                onClick={toggleModal}>
+                                onClick={toggleTestForm}>
                                 Create New Test
                             </button>
                     </div>
@@ -329,7 +301,7 @@ export default function CustomSql() {
 
             <Transition appear show={showDefineThresholdScreen} className="relative">
                     <>
-                        <div className="fixed inset-0 z-60 bg-black opacity-50" onClick={deselectTest}></div>
+                        <div className="fixed inset-0 z-60 bg-black opacity-50" onClick={unselectTest}></div>
 
                         <Transition.Child
                             as={Fragment}
@@ -350,7 +322,7 @@ export default function CustomSql() {
 
             <Transition appear show={showSelectedTest} className="relative">
                 <>
-                    <div className="fixed inset-0 z-60 bg-black opacity-50" onClick={deselectTest}></div>
+                    <div className="fixed inset-0 z-60 bg-black opacity-50" onClick={unselectTest}></div>
                     
                     <Transition.Child
                         as={Fragment}
@@ -372,7 +344,7 @@ export default function CustomSql() {
                                       <MdFiberManualRecord className="h-6 w-6 mt-2 ml-2 fill-red-500" />
                                     )}
                                 </div>
-                                <button type="button" className="flex items-center justify-end px-4 py-2" onClick={deselectTest}>
+                                <button type="button" className="flex items-center justify-end px-4 py-2" onClick={unselectTest}>
                                     <MdClose className="h-6 w-6 fill-gray-500 hover:fill-cito" />
                                 </button>
                             </div>
@@ -393,7 +365,7 @@ export default function CustomSql() {
                 </>
             </Transition>
 
-            <Transition appear show={isModalOpen} className="relative">
+            <Transition appear show={openTestForm} className="relative">
                 <>
                     <div className="fixed inset-0 z-60 bg-black opacity-50"></div>
 

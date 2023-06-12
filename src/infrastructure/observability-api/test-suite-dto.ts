@@ -1,5 +1,5 @@
 import { CustomThresholdMode } from './observability-api-repo';
-import { EXECUTION_TYPE } from '../../pages/test/config';
+import { EXECUTION_TYPE } from '../../pages/custom-sql/config-custom';
 type ExecutionType = typeof EXECUTION_TYPE;
 
 interface BaseTestSuiteDto {

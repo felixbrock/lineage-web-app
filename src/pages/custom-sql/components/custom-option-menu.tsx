@@ -10,7 +10,7 @@ import ObservabilityApiRepo from '../../../infrastructure/observability-api/obse
 import FrequencyDropdown from './custom-frequency-dropdown';
 import { MdClose } from 'react-icons/md';
 import { CustomTestSuiteDto } from '../../../infrastructure/observability-api/test-suite-dto';
-import { getFrequency } from '../../test/utils/cron';
+import { getFrequency } from './custom-utils';
 
 export const thresholdModes = ['absolute', 'relative'] as const;
 export type ThresholdMode = typeof thresholdModes[number];
@@ -48,18 +48,18 @@ export default ({
   closeOverlay,
   show,
   state,
-  savedThresholdCallback,
-  savedFrequencyCallback,
+  updateThresholdCallback,
+  updateFrequencyCallback,
   test,
 }: {
   closeOverlay: () => void;
   show: boolean;
   state: CustomThresholdState;
-  savedThresholdCallback: (
+  updateThresholdCallback: (
     state: CustomThresholdState,
     testSuiteId: string
   ) => Promise<void>;
-  savedFrequencyCallback: (
+  updateFrequencyCallback: (
     testId: string,
     frequency: string
   ) => void;
@@ -96,7 +96,7 @@ export default ({
     !testHistory || testHistory.length === 0 || valueBase.median === 0;
 
   const handleSaveClick = () => {
-    savedThresholdCallback(
+    updateThresholdCallback(
       {
         upper: { value: customUpperThreshold, mode: customUpperThresholdMode },
         lower: { value: customLowerThreshold, mode: customLowerThresholdMode },
@@ -414,7 +414,7 @@ export default ({
                           newTestFrequency={testFrequency} 
                           setNewTestFrequency={setTestFrequency} 
                           changingFrequency={true} 
-                          savedFrequencyCallback={savedFrequencyCallback} 
+                          updateFrequencyCallback={updateFrequencyCallback} 
                           testId={test.id} />
                       </div>
                     </div>

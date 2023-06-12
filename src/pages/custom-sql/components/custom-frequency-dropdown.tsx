@@ -3,7 +3,7 @@ import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import ObservabilityApiRepo from "../../../infrastructure/observability-api/observability-api-repo";
 import { buildCronExpression } from "../custom-sql";
-import { DEFAULT_FREQUENCY } from "../../test/config";
+import { DEFAULT_FREQUENCY } from "../config-custom";
 
 export default function FrequencyDropdown({
     newTestFrequency,

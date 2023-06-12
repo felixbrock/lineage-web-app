@@ -10,7 +10,7 @@ import ObservabilityApiRepo from '../../../infrastructure/observability-api/obse
 import FrequencyDropdown from './custom-frequency-dropdown';
 import { MdClose } from 'react-icons/md';
 import { CustomTestSuiteDto } from '../../../infrastructure/observability-api/test-suite-dto';
-import { getFrequency } from '../../test/utils/cron';
+import { getFrequency } from './custom-utils';
 
 export const thresholdModes = ['absolute', 'relative'] as const;
 export type ThresholdMode = typeof thresholdModes[number];

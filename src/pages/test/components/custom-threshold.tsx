@@ -1,5 +1,6 @@
 import { Transition } from '@headlessui/react';
 import { Fragment, useEffect, useState } from 'react';
+import { MdClose } from 'react-icons/md';
 import LoadingScreen from '../../../components/loading-screen';
 import MetricsGraph, {
   defaultOption,
@@ -8,10 +9,6 @@ import MetricsGraph, {
 } from '../../../components/metrics-graph';
 import Toggle from '../../../components/toggle';
 import ObservabilityApiRepo from '../../../infrastructure/observability-api/observability-api-repo';
-import { Test } from '../dataComponents/buildTableData';
-import { Level } from '../config';
-import FrequencyDropdown from '../tableComponents/frequencyDropdown';
-import { MdClose } from 'react-icons/md';
 
 export const thresholdModes = ['absolute', 'relative'] as const;
 export type ThresholdMode = typeof thresholdModes[number];
@@ -46,36 +43,27 @@ const calcRelativeThreshold = (absoluteThreshold: number, median: number) =>
   median === 0 ? 0 : absoluteThreshold / median;
 
 export default ({
-  closeOverlay,
   show,
   state,
+  target,
   testSuiteRep,
+  closeCallback,
   savedScheduleCallback,
-  test,
-  level,
-  parentElementId,
-  summary
 }: {
-  closeOverlay: () => void;
   show: boolean;
   state: CustomThresholdState;
+  target: { id: string; matId?: string };
   testSuiteRep: {
     id: string;
     type: string;
-    active: boolean;
   };
+  orgId: string;
+  closeCallback: () => void;
   savedScheduleCallback: (
     state: CustomThresholdState,
-    testSuiteId: string
+    testSuiteId: string,
+    target: { id: string; matId?: string }
   ) => Promise<void>;
-  test: Test;
-  level: Level;
-  parentElementId: string;
-  summary: {
-    frequencyRange: [number, number];
-    activeChildren: number;
-    totalChildren: number;
-  } | undefined;
 }) => {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -111,10 +99,9 @@ export default ({
         upper: { value: customUpperThreshold, mode: customUpperThresholdMode },
         lower: { value: customLowerThreshold, mode: customLowerThresholdMode },
       },
-      testSuiteRep.id
+      testSuiteRep.id,
+      target
     );
-
-    closeOverlay();
   };
 
   const handleCustomLowerThresholdModeChange = (checked: boolean) => {
@@ -408,16 +395,6 @@ export default ({
       });
   }, [show]);
 
-  function TestCounter() {
-    return (
-      <div>
-        <h1>
-          {Math.min(summary!.activeChildren, summary!.totalChildren)}/{summary?.totalChildren}
-        </h1>
-      </div>
-    );
-  };
-
   return (
     <Transition appear show={show} as={Fragment}>
       <div className="relative z-10">
@@ -432,162 +409,140 @@ export default ({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <div className="mx-4 w-full max-w-4xl transform rounded-2xl bg-white p-6 text-left align-middle transition-all">
-                <div className="grid grid-cols-3 p-2">
-                  <div className="flex items-center justify-center rounded-lg p-2 hover:bg-gray-50">
-                    <h1 className='mr-2'>Frequency:</h1>
-                    <div>
-                      <FrequencyDropdown
-                        test={test}
-                        level={level}
-                        parentElementId={parentElementId}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center rounded-lg p-2 hover:bg-gray-50">
-                    {(level === 'column' || !summary) &&
-                      (testSuiteRep.active ? <h1>Active</h1> : <h1>Deactive</h1>)}
-                    {level === 'table' && summary && <h1 className='mr-2'>Active Tests:</h1>}
-                    {level === 'table' && summary && <TestCounter />}
-                  </div>
+              <div className="m-4 w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                <div className="flex justify-between">
+                  <h3 className="mb-2 text-lg font-bold leading-6 text-gray-900">
+                    Define Custom Threshold
+                  </h3>
                   <button
-                      type="button"
-                      className="flex items-center justify-end px-4 py-2"
-                      onClick={closeOverlay}
-                    >
-                      <MdClose className="flex h-6 w-6 content-center justify-end fill-gray-500 text-center hover:fill-cito" />
+                    type="button"
+                    className="flex items-center justify-center px-4 py-2"
+                    onClick={closeCallback}
+                  >
+                    <MdClose className="flex h-6 w-6 content-center justify-center fill-gray-500 text-center hover:fill-cito" />
                   </button>
                 </div>
-
-                {(level === 'column' || !summary) && test.active && (
+                {isLoading ? (
+                  <LoadingScreen tailwindCss="fixed flex w-full h-full items-center justify-center" />
+                ) : (
                   <>
-                    <div className="flex justify-between">
-                      <h3 className="mb-2 text-lg font-bold leading-6 text-gray-900">
-                        Define Custom Threshold
-                      </h3>
-                    </div>
-                    {isLoading ? (
-                      <LoadingScreen tailwindCss="fixed flex w-full items-center justify-center" />
+                    {yMinMax && testHistory ? (
+                      <MetricsGraph
+                        option={defaultOption(
+                          getDefaultYAxis(
+                            yMinMax,
+                            !!customLowerThreshold,
+                            !!customUpperThreshold
+                          ),
+                          graphData
+                        )}
+                      />
                     ) : (
-                      <>
-                        {yMinMax && testHistory ? (
-                          <MetricsGraph
-                            option={defaultOption(
-                              getDefaultYAxis(
-                                yMinMax,
-                                !!customLowerThreshold,
-                                !!customUpperThreshold
-                              ),
-                              graphData
-                            )}
+                      <></>
+                    )}
+                    <div className="grid grid-cols-3 items-end gap-3">
+                      <div className="flex flex-col items-center">
+                        <h3>Lower Threshold</h3>
+                        <Toggle
+                          mode={customLowerThresholdMode}
+                          modeChangeCallback={
+                            handleCustomLowerThresholdModeChange
+                          }
+                          disabled={relativeModeDisabled}
+                          modeOptions={[...thresholdModes]}
+                        ></Toggle>
+                        <div className="mt-4 flex items-center">
+                          <input
+                            className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 py-2 px-4 leading-tight text-gray-700 focus:border-gray-500 focus:bg-white focus:outline-none"
+                            id="lower-threshold"
+                            type="number"
+                            value={customLowerThreshold}
+                            onChange={handleCustomLowerThresholdOnChange}
+                            onBlur={handleCustomLowerThresholdOnBlur}
                           />
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <h3>Upper Threshold</h3>
+                        <Toggle
+                          mode={customUpperThresholdMode}
+                          modeChangeCallback={
+                            handleCustomUpperThresholdModeChange
+                          }
+                          modeOptions={[...thresholdModes]}
+                          disabled={relativeModeDisabled}
+                        ></Toggle>
+                        <div className="mt-4 flex items-center">
+                          <input
+                            className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 py-2 px-4 leading-tight text-gray-700 focus:border-gray-500 focus:bg-white focus:outline-none"
+                            id="upper-threshold"
+                            type="number"
+                            value={customUpperThreshold}
+                            onChange={handleCustomUpperThresholdOnChange}
+                            onBlur={handleCustomUpperThresholdOnBlur}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        {(customLowerThresholdMode === 'relative' ||
+                          customUpperThresholdMode === 'relative') &&
+                        valueBase ? (
+                          <>
+                            <h3 className="break-normal">
+                              Median (Relative Base Value)
+                            </h3>
+                            <div className="mt-4 flex items-center">
+                              <input
+                                className="block w-full appearance-none rounded border border-gray-200 bg-violet-200 py-2 px-4 leading-tight text-violet-700 "
+                                id="median-value"
+                                type="number"
+                                disabled={true}
+                                value={valueBase.median}
+                              />
+                            </div>
+                          </>
                         ) : (
                           <></>
                         )}
-                        <div className="grid grid-cols-3 items-end gap-3">
-                          <div className="flex flex-col items-center">
-                            <h3>Lower Threshold</h3>
-                            <Toggle
-                              mode={customLowerThresholdMode}
-                              modeChangeCallback={
-                                handleCustomLowerThresholdModeChange
-                              }
-                              disabled={relativeModeDisabled}
-                              modeOptions={[...thresholdModes]}
-                            ></Toggle>
-                            <div className="mt-4 flex items-center">
-                              <input
-                                className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 py-2 px-4 leading-tight text-gray-700 focus:border-gray-500 focus:bg-white focus:outline-none"
-                                id="lower-threshold"
-                                type="number"
-                                value={customLowerThreshold}
-                                onChange={handleCustomLowerThresholdOnChange}
-                                onBlur={handleCustomLowerThresholdOnBlur}
-                              />
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-center">
-                            <h3>Upper Threshold</h3>
-                            <Toggle
-                              mode={customUpperThresholdMode}
-                              modeChangeCallback={
-                                handleCustomUpperThresholdModeChange
-                              }
-                              modeOptions={[...thresholdModes]}
-                              disabled={relativeModeDisabled}
-                            ></Toggle>
-                            <div className="mt-4 flex items-center">
-                              <input
-                                className="block w-full appearance-none rounded border border-gray-200 bg-gray-200 py-2 px-4 leading-tight text-gray-700 focus:border-gray-500 focus:bg-white focus:outline-none"
-                                id="upper-threshold"
-                                type="number"
-                                value={customUpperThreshold}
-                                onChange={handleCustomUpperThresholdOnChange}
-                                onBlur={handleCustomUpperThresholdOnBlur}
-                              />
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-center">
-                            {(customLowerThresholdMode === 'relative' ||
-                              customUpperThresholdMode === 'relative') &&
-                            valueBase ? (
-                              <>
-                                <h3 className="break-normal">
-                                  Median (Relative Base Value)
-                                </h3>
-                                <div className="mt-4 flex items-center">
-                                  <input
-                                    className="block w-full appearance-none rounded border border-gray-200 bg-violet-200 py-2 px-4 leading-tight text-violet-700 "
-                                    id="median-value"
-                                    type="number"
-                                    disabled={true}
-                                    value={valueBase.median}
-                                  />
-                                </div>
-                              </>
-                            ) : (
-                              <></>
-                            )}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    <div
-                      className="mt-4 border-l-4 border-orange-500 bg-orange-100 p-4 text-orange-700"
-                      role="alert"
-                      hidden={
-                        testHistory &&
-                        testHistory.length !== 0 &&
-                        valueBase.median !== 0
-                      }
-                    >
-                      <p className="font-bold">Relative Mode Disabled</p>
-                      <p className="whitespace-normal">
-                        You cannot define relative custom thresholds at the moment,
-                        due to absent monitoring history or due to a median value
-                        (the base value needed to calculate relative thresholds) of
-                        0.
-                      </p>
+                      </div>
                     </div>
-                    <div className="mt-4">
-                      <button
-                        type="button"
-                        className={`inline-flex justify-center rounded-md border border-transparent ${
-                          customUpperThreshold === state.upper.value &&
-                          customLowerThreshold === state.lower.value
-                            ? 'bg-gray-100'
-                            : 'bg-violet-200 hover:bg-white hover:text-cito hover:ring-2 hover:ring-cito hover:ring-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-cito focus-visible:ring-offset-2'
-                        } px-4 py-2 text-sm font-medium text-black`}
-                        onClick={handleSaveClick}
-                        disabled={
-                          customUpperThreshold === state.upper.value &&
-                          customLowerThreshold === state.lower.value
-                        }
-                      >
-                        Save
-                      </button>
-                    </div>
-                </>)}
+                  </>
+                )}
+                <div
+                  className="mt-4 border-l-4 border-orange-500 bg-orange-100 p-4 text-orange-700"
+                  role="alert"
+                  hidden={
+                    testHistory &&
+                    testHistory.length !== 0 &&
+                    valueBase.median !== 0
+                  }
+                >
+                  <p className="font-bold">Relative Mode Disabled</p>
+                  <p className="break-normal">
+                    You cannot define relative custom thresholds at the moment,
+                    due to absent monitoring history or due to a median value
+                    (the base value needed to calculate relative thresholds) of
+                    0.
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    className={`inline-flex justify-center rounded-md border border-transparent ${
+                      customUpperThreshold === state.upper.value &&
+                      customLowerThreshold === state.lower.value
+                        ? 'bg-gray-100'
+                        : 'bg-violet-200 hover:bg-white hover:text-cito hover:ring-2 hover:ring-cito hover:ring-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-cito focus-visible:ring-offset-2'
+                    } px-4 py-2 text-sm font-medium text-black`}
+                    onClick={handleSaveClick}
+                    disabled={
+                      customUpperThreshold === state.upper.value &&
+                      customLowerThreshold === state.lower.value
+                    }
+                  >
+                    Save
+                  </button>
+                </div>
               </div>
             </Transition.Child>
           </div>

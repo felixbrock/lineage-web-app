@@ -3,14 +3,13 @@ import { TestHistoryEntry } from '../../components/metrics-graph';
 import appConfig from '../../config';
 import { CustomThreshold } from '../../pages/test/components/custom-threshold';
 import getApiClient from '../api-client';
-import { EXECUTION_TYPE, TEST_TYPES, MATERIALIZATION_TYPE } from '../../pages/test/config';
+import { EXECUTION_TYPE, TEST_TYPES, MaterializationType } from '../../pages/custom-sql/config-custom';
 import { CustomTestSuiteDto, QualTestSuiteDto, TestSuiteDto } from './test-suite-dto';
 
 export const customThresholdModes = ['absolute', 'relative'] as const;
 export type CustomThresholdMode = typeof customThresholdModes[number];
 
 type ExecutionType = typeof EXECUTION_TYPE;
-type MaterializationType = typeof MATERIALIZATION_TYPE;
 type TestType = typeof TEST_TYPES[number];
 
 interface PostAnomalyFeedbackDto {
